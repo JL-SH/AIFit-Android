@@ -2,19 +2,21 @@ package com.jlsh.aifit.core.ui.components.buttons
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.FullShape
 
@@ -26,14 +28,19 @@ fun SecondaryButton(
     isLoading: Boolean = false,
     enabled: Boolean = true,
 ) {
+    val isActive = enabled && !isLoading
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp),
-        enabled = enabled && !isLoading,
+            .heightIn(min = 52.dp),
+        enabled = isActive,
         shape = FullShape,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (isActive) MaterialTheme.colorScheme.outline
+            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+        ),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.Transparent,
             contentColor = MaterialTheme.colorScheme.onSurface,
@@ -45,6 +52,7 @@ fun SecondaryButton(
             pressedElevation = 0.dp,
             disabledElevation = 0.dp,
         ),
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 0.dp),
     ) {
         if (isLoading) {
             CircularProgressIndicator(
@@ -56,6 +64,7 @@ fun SecondaryButton(
             Text(
                 text = text.uppercase(),
                 style = MaterialTheme.typography.labelLarge,
+                letterSpacing = 0.5.sp,
             )
         }
     }
@@ -76,3 +85,34 @@ private fun SecondaryButtonPreview() {
     }
 }
 
+@Preview(
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    name = "Dark - Loading"
+)
+@Composable
+private fun SecondaryButtonLoadingPreview() {
+    AIFitTheme {
+        SecondaryButton(
+            text = "Cancelar",
+            onClick = {},
+            isLoading = true,
+        )
+    }
+}
+
+@Preview(
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    name = "Dark - Disabled"
+)
+@Composable
+private fun SecondaryButtonDisabledPreview() {
+    AIFitTheme {
+        SecondaryButton(
+            text = "Cancelar",
+            onClick = {},
+            enabled = false,
+        )
+    }
+}

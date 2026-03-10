@@ -1,14 +1,16 @@
 package com.jlsh.aifit.core.ui.components.buttons
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -22,11 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
-import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.core.ui.theme.FullShape
 
 @Composable
@@ -38,23 +40,23 @@ fun AiGenerateButton(
     loadingText: String = text,
     enabled: Boolean = true,
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "AiGeneratePulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.7f,
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.65f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 800),
+            animation = tween(durationMillis = 900, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
         ),
-        label = "PulseAlpha",
+        label = "alpha",
     )
 
     Button(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp)
-            .then(if (isLoading) Modifier.alpha(pulseAlpha) else Modifier),
+            .heightIn(min = 52.dp)
+            .graphicsLayer { this.alpha = if (isLoading) alpha else 1f },
         enabled = enabled && !isLoading,
         shape = FullShape,
         colors = ButtonDefaults.buttonColors(
@@ -68,6 +70,7 @@ fun AiGenerateButton(
             pressedElevation = 0.dp,
             disabledElevation = 0.dp,
         ),
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 0.dp),
     ) {
         if (isLoading) {
             CircularProgressIndicator(
@@ -75,21 +78,23 @@ fun AiGenerateButton(
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 strokeWidth = 2.dp,
             )
-            Spacer(modifier = Modifier.width(AiFitSpacing.sm))
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = loadingText.uppercase(),
                 style = MaterialTheme.typography.labelLarge,
+                letterSpacing = 0.5.sp,
             )
         } else {
             Icon(
                 imageVector = Icons.Rounded.AutoAwesome,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(18.dp),
             )
-            Spacer(modifier = Modifier.width(AiFitSpacing.sm))
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = text.uppercase(),
                 style = MaterialTheme.typography.labelLarge,
+                letterSpacing = 0.5.sp,
             )
         }
     }
@@ -122,8 +127,7 @@ private fun AiGenerateButtonLoadingPreview() {
             text = "Generar plan",
             onClick = {},
             isLoading = true,
-            loadingText = "Generating your plan...",
+            loadingText = "Generando...",
         )
     }
 }
-

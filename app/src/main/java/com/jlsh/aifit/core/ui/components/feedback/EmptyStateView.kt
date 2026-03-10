@@ -3,9 +3,8 @@ package com.jlsh.aifit.core.ui.components.feedback
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FitnessCenter
@@ -20,7 +19,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
-import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
 @Composable
 fun EmptyStateView(
@@ -31,9 +29,11 @@ fun EmptyStateView(
     action: (@Composable () -> Unit)? = null,
 ) {
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Icon(
             imageVector = icon,
@@ -41,25 +41,22 @@ fun EmptyStateView(
             modifier = Modifier.size(56.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(AiFitSpacing.lg))
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         if (subtitle != null) {
-            Spacer(modifier = Modifier.height(AiFitSpacing.sm))
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 maxLines = 3,
             )
         }
         if (action != null) {
-            Spacer(modifier = Modifier.height(AiFitSpacing.lg))
             action()
         }
     }
@@ -80,4 +77,3 @@ private fun EmptyStateViewPreview() {
         )
     }
 }
-

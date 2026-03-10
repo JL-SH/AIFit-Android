@@ -1,6 +1,7 @@
 package com.jlsh.aifit.core.ui.components.layout
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -14,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,7 +32,6 @@ fun AiFitTopBar(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
             )
         },
         modifier = modifier,
@@ -40,7 +41,7 @@ fun AiFitTopBar(
                     Icon(
                         imageVector = Icons.Rounded.ArrowBackIosNew,
                         contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }
@@ -48,19 +49,22 @@ fun AiFitTopBar(
         actions = { actions() },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = background,
+            scrolledContainerColor = background,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurface,
         ),
     )
 }
 
-@Preview(
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark"
-)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark - With Back")
 @Composable
-private fun AiFitTopBarPreview() {
-    AIFitTheme(darkTheme = true) {
-        AiFitTopBar(title = "Training", onBack = {})
-    }
+private fun AiFitTopBarWithBackPreview() {
+    AIFitTheme { AiFitTopBar(title = "Training", onBack = {}) }
 }
 
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark - No Back")
+@Composable
+private fun AiFitTopBarNoBackPreview() {
+    AIFitTheme { AiFitTopBar(title = "Home") }
+}

@@ -1,10 +1,8 @@
 package com.jlsh.aifit.core.ui.components.display
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -15,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
-import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
 @Composable
 fun AiFitCard(
@@ -24,39 +21,31 @@ fun AiFitCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val elevation = CardDefaults.cardElevation(
+        defaultElevation = 0.dp,
+        pressedElevation = 0.dp,
+        hoveredElevation = 0.dp,
+    )
+    val colors = CardDefaults.cardColors(containerColor = containerColor)
+    val shape = MaterialTheme.shapes.large
+
     if (onClick != null) {
         Card(
             onClick = onClick,
             modifier = modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            colors = CardDefaults.cardColors(
-                containerColor = containerColor,
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 0.dp,
-            ),
-        ) {
-            Column(
-                modifier = Modifier.padding(AiFitSpacing.md),
-                content = content,
-            )
-        }
+            shape = shape,
+            colors = colors,
+            elevation = elevation,
+            content = content,
+        )
     } else {
         Card(
             modifier = modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            colors = CardDefaults.cardColors(
-                containerColor = containerColor,
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 0.dp,
-            ),
-        ) {
-            Column(
-                modifier = Modifier.padding(AiFitSpacing.md),
-                content = content,
-            )
-        }
+            shape = shape,
+            colors = colors,
+            elevation = elevation,
+            content = content,
+        )
     }
 }
 
@@ -82,4 +71,3 @@ private fun AiFitCardPreview() {
         }
     }
 }
-

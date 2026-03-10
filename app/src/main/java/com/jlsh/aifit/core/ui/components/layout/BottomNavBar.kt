@@ -16,9 +16,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
 val LocalBottomBarVisibility = compositionLocalOf { true }
@@ -30,11 +31,11 @@ data class BottomNavItem(
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem(label = "HOME", icon = Icons.Rounded.Home, route = "home"),
-    BottomNavItem(label = "TRAINING", icon = Icons.Rounded.FitnessCenter, route = "training"),
-    BottomNavItem(label = "NUTRITION", icon = Icons.Rounded.Restaurant, route = "nutrition"),
-    BottomNavItem(label = "COACH", icon = Icons.Rounded.SmartToy, route = "coach"),
-    BottomNavItem(label = "YO", icon = Icons.Rounded.Person, route = "profile"),
+    BottomNavItem(label = "Home", icon = Icons.Rounded.Home, route = "home"),
+    BottomNavItem(label = "Training", icon = Icons.Rounded.FitnessCenter, route = "training"),
+    BottomNavItem(label = "Nutrition", icon = Icons.Rounded.Restaurant, route = "nutrition"),
+    BottomNavItem(label = "Coach", icon = Icons.Rounded.SmartToy, route = "coach"),
+    BottomNavItem(label = "Yo", icon = Icons.Rounded.Person, route = "profile"),
 )
 
 @Composable
@@ -46,6 +47,7 @@ fun BottomNavBar(
     NavigationBar(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 0.dp,
     ) {
         bottomNavItems.forEach { item ->
             val selected = currentRoute == item.route
@@ -62,15 +64,15 @@ fun BottomNavBar(
                     Text(
                         text = item.label,
                         style = MaterialTheme.typography.labelSmall,
-                        letterSpacing = 1.5.sp,
                     )
                 },
+                alwaysShowLabel = true,
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.primaryContainer,
                     selectedTextColor = MaterialTheme.colorScheme.primaryContainer,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    indicatorColor = Color.Transparent,
                 ),
             )
         }

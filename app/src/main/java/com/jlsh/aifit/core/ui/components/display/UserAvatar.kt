@@ -50,8 +50,9 @@ fun UserAvatar(
         } else {
             Text(
                 text = buildInitials(name),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                style = if (size == AvatarSize.LARGE) MaterialTheme.typography.titleMedium
+                else MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }

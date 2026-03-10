@@ -47,13 +47,13 @@ fun StreakBadge(
         )
         Text(
             text = count.toString(),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
             color = accentColor,
         )
         Text(
             text = label.uppercase(),
             style = MaterialTheme.typography.labelSmall.copy(
-                letterSpacing = 1.5.sp,
+                letterSpacing = 1.sp,
             ),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

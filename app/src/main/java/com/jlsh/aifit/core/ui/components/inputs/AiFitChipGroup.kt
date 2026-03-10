@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
@@ -48,7 +50,7 @@ fun AiFitChipGroup(
                         style = MaterialTheme.typography.labelMedium,
                     )
                 },
-                shape = MaterialTheme.shapes.extraSmall,
+                shape = RoundedCornerShape(6.dp),
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -61,7 +63,7 @@ fun AiFitChipGroup(
                     FilterChipDefaults.filterChipBorder(
                         enabled = true,
                         selected = false,
-                        borderColor = MaterialTheme.colorScheme.outline,
+                        borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                         selectedBorderColor = Color.Transparent,
                     )
                 },

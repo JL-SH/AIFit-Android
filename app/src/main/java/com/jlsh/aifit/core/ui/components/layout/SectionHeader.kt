@@ -23,7 +23,7 @@ fun SectionHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = AiFitSpacing.lg),
+            .padding(top = AiFitSpacing.lg, bottom = AiFitSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(

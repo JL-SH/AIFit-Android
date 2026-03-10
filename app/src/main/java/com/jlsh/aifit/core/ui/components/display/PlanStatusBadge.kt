@@ -1,18 +1,18 @@
 package com.jlsh.aifit.core.ui.components.display
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
-import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
 @Composable
 fun PlanStatusBadge(
@@ -21,17 +21,19 @@ fun PlanStatusBadge(
 ) {
     val (backgroundColor, textColor) = statusColors(status)
 
-    Text(
-        text = status.uppercase(),
-        modifier = modifier
-            .clip(MaterialTheme.shapes.extraSmall)
-            .background(backgroundColor)
-            .padding(horizontal = AiFitSpacing.sm, vertical = AiFitSpacing.xs),
-        style = MaterialTheme.typography.labelSmall.copy(
-            letterSpacing = 1.5.sp,
-        ),
-        color = textColor,
-    )
+    Surface(
+        color = backgroundColor,
+        shape = RoundedCornerShape(6.dp),
+        modifier = modifier,
+    ) {
+        Text(
+            text = status.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            letterSpacing = 1.sp,
+            color = textColor,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+        )
+    }
 }
 
 @Composable
@@ -60,53 +62,26 @@ private fun statusColors(status: String): Pair<Color, Color> {
     }
 }
 
-@Preview(
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark - Active"
-)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark - Active")
 @Composable
 private fun PlanStatusBadgeActivePreview() {
-    AIFitTheme {
-        PlanStatusBadge(status = "ACTIVE")
-    }
+    AIFitTheme { PlanStatusBadge(status = "ACTIVE") }
 }
 
-@Preview(
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark - Completed"
-)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark - Completed")
 @Composable
 private fun PlanStatusBadgeCompletedPreview() {
-    AIFitTheme {
-        PlanStatusBadge(status = "COMPLETED")
-    }
+    AIFitTheme { PlanStatusBadge(status = "COMPLETED") }
 }
 
-@Preview(
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark - Draft"
-)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark - Draft")
 @Composable
 private fun PlanStatusBadgeDraftPreview() {
-    AIFitTheme {
-        PlanStatusBadge(status = "DRAFT")
-    }
+    AIFitTheme { PlanStatusBadge(status = "DRAFT") }
 }
 
-@Preview(
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark - Archived"
-)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark - Archived")
 @Composable
 private fun PlanStatusBadgeArchivedPreview() {
-    AIFitTheme {
-        PlanStatusBadge(status = "ARCHIVED")
-    }
+    AIFitTheme { PlanStatusBadge(status = "ARCHIVED") }
 }
-
-
-
