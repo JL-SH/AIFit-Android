@@ -1,0 +1,283 @@
+package com.jlsh.aifit.feature.user.ui
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.jlsh.aifit.core.common.Result
+import com.jlsh.aifit.core.common.toMessage
+import com.jlsh.aifit.core.datastore.UserPreferencesDataStore
+import com.jlsh.aifit.core.session.SessionManager
+import com.jlsh.aifit.feature.user.domain.model.ActivityLevel
+import com.jlsh.aifit.feature.user.domain.model.CreateUserProfileRequest
+import com.jlsh.aifit.feature.user.domain.model.DietPreference
+import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
+import com.jlsh.aifit.feature.user.domain.model.Gender
+import com.jlsh.aifit.feature.user.domain.model.GoalType
+import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
+import com.jlsh.aifit.feature.user.domain.model.UpdateUserProfileRequest
+import com.jlsh.aifit.feature.user.domain.model.UserProfile
+import com.jlsh.aifit.feature.user.domain.usecase.CreateUserProfileUseCase
+import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
+import com.jlsh.aifit.feature.user.domain.usecase.UpdateUserProfileUseCase
+import com.jlsh.aifit.feature.user.ui.state.UserUiEvent
+import com.jlsh.aifit.feature.user.ui.state.UserUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import javax.inject.Inject
+
+@HiltViewModel
+class UserViewModel @Inject constructor(
+    private val getUserProfileUseCase: GetUserProfileUseCase,
+    private val createUserProfileUseCase: CreateUserProfileUseCase,
+    private val updateUserProfileUseCase: UpdateUserProfileUseCase,
+    private val userPreferencesDataStore: UserPreferencesDataStore,
+    private val sessionManager: SessionManager,
+    savedStateHandle: SavedStateHandle,
+) : ViewModel() {
+
+    // 1. UI STATE
+    private val _uiState = MutableStateFlow<UserUiState>(UserUiState.Idle)
+    val uiState: StateFlow<UserUiState> = _uiState.asStateFlow()
+
+    // 2. EVENTS CHANNEL
+    private val _events = Channel<UserUiEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
+
+    // 2b. THEME
+    val isDarkTheme = userPreferencesDataStore.isDarkTheme
+
+    // 3. FORM FIELDS
+    private val _name = MutableStateFlow("")
+    val name: StateFlow<String> = _name.asStateFlow()
+
+    private val _birthDate = MutableStateFlow("")
+    val birthDate: StateFlow<String> = _birthDate.asStateFlow()
+
+    private val _gender = MutableStateFlow("")
+    val gender: StateFlow<String> = _gender.asStateFlow()
+
+    private val _height = MutableStateFlow("")
+    val height: StateFlow<String> = _height.asStateFlow()
+
+    private val _weight = MutableStateFlow("")
+    val weight: StateFlow<String> = _weight.asStateFlow()
+
+    private val _targetWeight = MutableStateFlow("")
+    val targetWeight: StateFlow<String> = _targetWeight.asStateFlow()
+
+    private val _goalType = MutableStateFlow("")
+    val goalType: StateFlow<String> = _goalType.asStateFlow()
+
+    private val _activityLevel = MutableStateFlow("")
+    val activityLevel: StateFlow<String> = _activityLevel.asStateFlow()
+
+    private val _fitnessLevel = MutableStateFlow("")
+    val fitnessLevel: StateFlow<String> = _fitnessLevel.asStateFlow()
+
+    private val _preferredLocation = MutableStateFlow("")
+    val preferredLocation: StateFlow<String> = _preferredLocation.asStateFlow()
+
+    private val _dietPreference = MutableStateFlow("")
+    val dietPreference: StateFlow<String> = _dietPreference.asStateFlow()
+
+    private val _weeklyWorkoutDays = MutableStateFlow("")
+    val weeklyWorkoutDays: StateFlow<String> = _weeklyWorkoutDays.asStateFlow()
+
+    private val _availableMinutes = MutableStateFlow("")
+    val availableMinutes: StateFlow<String> = _availableMinutes.asStateFlow()
+
+    private val _injuries = MutableStateFlow("")
+    val injuries: StateFlow<String> = _injuries.asStateFlow()
+
+    private val _calorieTarget = MutableStateFlow("")
+    val calorieTarget: StateFlow<String> = _calorieTarget.asStateFlow()
+
+    val isEditMode: Boolean = savedStateHandle.get<String>("mode") == "edit"
+
+    // 4. INIT
+    init {
+        if (isEditMode) {
+            loadProfile()
+        }
+    }
+
+    // 5. PUBLIC FUNCTIONS
+    fun onNameChanged(value: String) { _name.value = value }
+    fun onBirthDateChanged(value: String) { _birthDate.value = value }
+    fun onGenderChanged(value: String) { _gender.value = value }
+    fun onHeightChanged(value: String) { _height.value = value }
+    fun onWeightChanged(value: String) { _weight.value = value }
+    fun onTargetWeightChanged(value: String) { _targetWeight.value = value }
+    fun onGoalTypeChanged(value: String) { _goalType.value = value }
+    fun onActivityLevelChanged(value: String) { _activityLevel.value = value }
+    fun onFitnessLevelChanged(value: String) { _fitnessLevel.value = value }
+    fun onPreferredLocationChanged(value: String) { _preferredLocation.value = value }
+    fun onDietPreferenceChanged(value: String) { _dietPreference.value = value }
+    fun onWeeklyWorkoutDaysChanged(value: String) { _weeklyWorkoutDays.value = value }
+    fun onAvailableMinutesChanged(value: String) { _availableMinutes.value = value }
+    fun onInjuriesChanged(value: String) { _injuries.value = value }
+    fun onCalorieTargetChanged(value: String) { _calorieTarget.value = value }
+
+    fun onSaveProfile() {
+        if (isEditMode) updateProfile() else createProfile()
+    }
+
+    fun onRefresh() {
+        loadProfile()
+    }
+
+    fun onLogout() {
+        sessionManager.logout()
+    }
+
+    fun onToggleTheme() {
+        viewModelScope.launch {
+            val current = userPreferencesDataStore.isDarkTheme.first()
+            userPreferencesDataStore.setDarkTheme(!current)
+        }
+    }
+
+    fun onNavigateToEditProfile() {
+        emitEvent(UserUiEvent.NavigateToEditProfile)
+    }
+
+    // 6. PRIVATE HELPERS
+    private fun loadProfile() {
+        viewModelScope.launch {
+            _uiState.value = UserUiState.Loading
+            getUserProfileUseCase().collect { result ->
+                when (result) {
+                    is Result.Success -> {
+                        populateForm(result.data)
+                        _uiState.value = UserUiState.Success(result.data)
+                    }
+                    is Result.Error -> {
+                        _uiState.value = UserUiState.Error(result.exception.toMessage())
+                    }
+                    is Result.Loading -> {
+                        _uiState.value = UserUiState.Loading
+                    }
+                }
+            }
+        }
+    }
+
+    private fun populateForm(profile: UserProfile) {
+        _name.value = profile.name
+        _birthDate.value = profile.birthDate?.toString() ?: ""
+        _gender.value = profile.gender?.name ?: ""
+        _height.value = profile.height?.toString() ?: ""
+        _weight.value = profile.weight?.toString() ?: ""
+        _targetWeight.value = profile.targetWeight?.toString() ?: ""
+        _goalType.value = profile.goalType?.name ?: ""
+        _activityLevel.value = profile.activityLevel?.name ?: ""
+        _fitnessLevel.value = profile.fitnessLevel?.name ?: ""
+        _preferredLocation.value = profile.preferredLocation?.name ?: ""
+        _dietPreference.value = profile.dietPreference?.name ?: ""
+        _weeklyWorkoutDays.value = profile.weeklyWorkoutDays?.toString() ?: ""
+        _availableMinutes.value = profile.availableMinutesPerSession?.toString() ?: ""
+        _injuries.value = profile.injuries ?: ""
+        _calorieTarget.value = profile.calorieTarget?.toString() ?: ""
+    }
+
+    private fun buildCreateRequest(): CreateUserProfileRequest = CreateUserProfileRequest(
+        birthDate = _birthDate.value.takeIf { it.isNotBlank() }
+            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
+        gender = _gender.value.takeIf { it.isNotBlank() }
+            ?.let { Gender.fromString(it) },
+        goalType = _goalType.value.takeIf { it.isNotBlank() }
+            ?.let { GoalType.fromString(it) },
+        activityLevel = _activityLevel.value.takeIf { it.isNotBlank() }
+            ?.let { ActivityLevel.fromString(it) },
+        fitnessLevel = _fitnessLevel.value.takeIf { it.isNotBlank() }
+            ?.let { FitnessLevel.fromString(it) },
+        preferredLocation = _preferredLocation.value.takeIf { it.isNotBlank() }
+            ?.let { PreferredLocation.fromString(it) },
+        dietPreference = _dietPreference.value.takeIf { it.isNotBlank() }
+            ?.let { DietPreference.fromString(it) },
+        height = _height.value.toFloatOrNull(),
+        weight = _weight.value.toFloatOrNull(),
+        targetWeight = _targetWeight.value.toFloatOrNull(),
+        weeklyWorkoutDays = _weeklyWorkoutDays.value.toIntOrNull(),
+        availableMinutesPerSession = _availableMinutes.value.toIntOrNull(),
+        injuries = _injuries.value.takeIf { it.isNotBlank() },
+        calorieTarget = _calorieTarget.value.toIntOrNull(),
+    )
+
+    private fun buildUpdateRequest(): UpdateUserProfileRequest = UpdateUserProfileRequest(
+        birthDate = _birthDate.value.takeIf { it.isNotBlank() }
+            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
+        gender = _gender.value.takeIf { it.isNotBlank() }
+            ?.let { Gender.fromString(it) },
+        goalType = _goalType.value.takeIf { it.isNotBlank() }
+            ?.let { GoalType.fromString(it) },
+        activityLevel = _activityLevel.value.takeIf { it.isNotBlank() }
+            ?.let { ActivityLevel.fromString(it) },
+        fitnessLevel = _fitnessLevel.value.takeIf { it.isNotBlank() }
+            ?.let { FitnessLevel.fromString(it) },
+        preferredLocation = _preferredLocation.value.takeIf { it.isNotBlank() }
+            ?.let { PreferredLocation.fromString(it) },
+        dietPreference = _dietPreference.value.takeIf { it.isNotBlank() }
+            ?.let { DietPreference.fromString(it) },
+        height = _height.value.toFloatOrNull(),
+        weight = _weight.value.toFloatOrNull(),
+        targetWeight = _targetWeight.value.toFloatOrNull(),
+        weeklyWorkoutDays = _weeklyWorkoutDays.value.toIntOrNull(),
+        availableMinutesPerSession = _availableMinutes.value.toIntOrNull(),
+        injuries = _injuries.value.takeIf { it.isNotBlank() },
+        calorieTarget = _calorieTarget.value.toIntOrNull(),
+    )
+
+    private fun createProfile() {
+        viewModelScope.launch {
+            _uiState.value = UserUiState.Saving
+            when (val result = createUserProfileUseCase(buildCreateRequest())) {
+                is Result.Success -> {
+                    userPreferencesDataStore.setOnboardingCompleted(true)
+                    _uiState.value = UserUiState.Success(result.data)
+                    emitEvent(UserUiEvent.ProfileSaved)
+                }
+                is Result.Error -> {
+                    _uiState.value = UserUiState.Idle
+                    emitEvent(UserUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                is Result.Loading -> Unit
+            }
+        }
+    }
+
+    private fun updateProfile() {
+        viewModelScope.launch {
+            _uiState.value = UserUiState.Saving
+            when (val result = updateUserProfileUseCase(buildUpdateRequest())) {
+                is Result.Success -> {
+                    _uiState.value = UserUiState.Success(result.data)
+                    emitEvent(UserUiEvent.ShowSnackbar("Perfil actualizado"))
+                    emitEvent(UserUiEvent.NavigateBack)
+                }
+                is Result.Error -> {
+                    _uiState.value = UserUiState.Idle
+                    emitEvent(UserUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                is Result.Loading -> Unit
+            }
+        }
+    }
+
+    private fun emitEvent(event: UserUiEvent) {
+        viewModelScope.launch { _events.send(event) }
+    }
+}
+
+
+
+
+
+
