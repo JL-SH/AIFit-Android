@@ -1,8 +1,10 @@
 package com.jlsh.aifit.feature.auth.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,9 +27,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
@@ -36,12 +40,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.jlsh.aifit.BuildConfig
+import com.jlsh.aifit.core.ui.components.buttons.GoogleSignInButton
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
+import com.jlsh.aifit.core.ui.components.display.AiFitLogoSplit
 import com.jlsh.aifit.core.ui.components.inputs.AiFitPasswordField
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
-import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.auth.ui.state.AuthUiEvent
 import com.jlsh.aifit.feature.auth.ui.state.AuthUiState
 import kotlinx.coroutines.launch
@@ -75,125 +80,142 @@ fun LoginScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background,
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = AiFitSpacing.md)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Spacer(modifier = Modifier.height(AiFitSpacing.xxl))
-
-            Text(
-                text = "AIFit",
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.primaryContainer,
-            )
-
-            Spacer(modifier = Modifier.height(AiFitSpacing.xxl))
-
-            AiFitTextField(
-                value = email,
-                onValueChange = viewModel::onEmailChanged,
-                label = "Email",
-                error = emailError,
-            )
-
-            Spacer(modifier = Modifier.height(AiFitSpacing.md))
-
-            AiFitPasswordField(
-                value = password,
-                onValueChange = viewModel::onPasswordChanged,
-                label = "Contraseña",
-                error = passwordError,
-            )
-
-            Spacer(modifier = Modifier.height(AiFitSpacing.lg))
-
-            PrimaryButton(
-                text = "Iniciar sesión",
-                onClick = viewModel::onLoginClicked,
-                isLoading = uiState is AuthUiState.Loading,
-            )
-
-            Spacer(modifier = Modifier.height(AiFitSpacing.lg))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                )
+                Spacer(modifier = Modifier.height(48.dp))
+
+                AiFitLogoSplit()
+
+                Spacer(modifier = Modifier.height(6.dp))
+
                 Text(
-                    text = "o",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = "Tu entrenador de IA personal",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.outlineVariant,
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                AiFitTextField(
+                    value = email,
+                    onValueChange = viewModel::onEmailChanged,
+                    label = "Email",
+                    error = emailError,
+                    modifier = Modifier.fillMaxWidth(),
                 )
-            }
 
-            Spacer(modifier = Modifier.height(AiFitSpacing.lg))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            SecondaryButton(
-                text = "Continuar con Google",
-                onClick = {
-                    scope.launch {
-                        try {
-                            val credentialManager = CredentialManager.create(context)
-                            val googleIdOption = GetGoogleIdOption.Builder()
-                                .setFilterByAuthorizedAccounts(false)
-                                .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
-                                .build()
-                            val request = GetCredentialRequest.Builder()
-                                .addCredentialOption(googleIdOption)
-                                .build()
-                            val result = credentialManager.getCredential(context, request)
-                            val credential = result.credential
-                            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                            viewModel.onGoogleLoginResult(googleIdTokenCredential.idToken)
-                        } catch (_: GetCredentialCancellationException) {
-                            // User cancelled — do nothing
-                        } catch (e: Exception) {
-                            snackbarHostState.showSnackbar(
-                                e.localizedMessage ?: "Error al iniciar sesión con Google"
-                            )
+                AiFitPasswordField(
+                    value = password,
+                    onValueChange = viewModel::onPasswordChanged,
+                    label = "Contraseña",
+                    error = passwordError,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                PrimaryButton(
+                    text = "INICIAR SESIÓN",
+                    onClick = viewModel::onLoginClicked,
+                    isLoading = uiState is AuthUiState.Loading,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                    Text(
+                        text = " o ",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                GoogleSignInButton(
+                    text = "CONTINUAR CON GOOGLE",
+                    onClick = {
+                        scope.launch {
+                            try {
+                                val credentialManager = CredentialManager.create(context)
+                                val googleIdOption = GetGoogleIdOption.Builder()
+                                    .setFilterByAuthorizedAccounts(false)
+                                    .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
+                                    .build()
+                                val request = GetCredentialRequest.Builder()
+                                    .addCredentialOption(googleIdOption)
+                                    .build()
+                                val result = credentialManager.getCredential(context, request)
+                                val credential = result.credential
+                                val googleIdTokenCredential =
+                                    GoogleIdTokenCredential.createFrom(credential.data)
+                                viewModel.onGoogleLoginResult(googleIdTokenCredential.idToken)
+                            } catch (_: GetCredentialCancellationException) {
+                                // User cancelled — do nothing
+                            } catch (e: Exception) {
+                                snackbarHostState.showSnackbar(
+                                    e.localizedMessage
+                                        ?: "Error al iniciar sesión con Google"
+                                )
+                            }
                         }
-                    }
-                },
-                isLoading = false,
-            )
-
-            Spacer(modifier = Modifier.height(AiFitSpacing.lg))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    text = "¿No tienes cuenta? ",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    },
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                Text(
-                    text = "Crear una",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.clickable { viewModel.onNavigateToRegister() },
-                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = "¿No tienes cuenta?  ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = "Crear una",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.clickable { viewModel.onNavigateToRegister() },
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(48.dp))
             }
-
-            Spacer(modifier = Modifier.height(AiFitSpacing.xxl))
         }
     }
 }
@@ -201,25 +223,113 @@ fun LoginScreen(
 @Preview(
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark"
+    name = "LoginScreen Dark",
 )
 @Composable
 private fun LoginScreenPreview() {
-    AIFitTheme {
-        Column(
+    AIFitTheme(darkTheme = true) {
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(AiFitSpacing.md),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .background(MaterialTheme.colorScheme.background),
         ) {
-            Spacer(modifier = Modifier.height(AiFitSpacing.xxl))
-            Text(
-                text = "AIFit",
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                textAlign = TextAlign.Center,
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(modifier = Modifier.height(48.dp))
+
+                AiFitLogoSplit()
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = "Tu entrenador de IA personal",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                AiFitTextField(
+                    value = "usuario@ejemplo.com",
+                    onValueChange = {},
+                    label = "Email",
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                AiFitPasswordField(
+                    value = "••••••••",
+                    onValueChange = {},
+                    label = "Contraseña",
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                PrimaryButton(
+                    text = "INICIAR SESIÓN",
+                    onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                    Text(
+                        text = " o ",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                GoogleSignInButton(
+                    text = "CONTINUAR CON GOOGLE",
+                    onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = "¿No tienes cuenta?  ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = "Crear una",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(48.dp))
+            }
         }
     }
 }
-
