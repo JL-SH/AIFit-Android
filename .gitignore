@@ -1,0 +1,42 @@
+# --- Android ---
+*.apk
+*.aar
+*.ap_
+*.aab
+*.dex
+*.class
+
+# --- Build & Cache ---
+build/
+.gradle/
+bin/
+gen/
+out/
+
+# --- Local Config & Secrets (SEGURIDAD) ---
+local.properties
+google-services.json
+secrets.properties
+apikey.properties
+
+# --- Signing Keys (SEGURIDAD) ---
+*.jks
+*.keystore
+*.p12
+*.pem
+
+# --- Profiling & Logs ---
+*.hprof
+*.prof
+captures/
+*.log
+
+# --- IntelliJ / Android Studio ---
+.idea/
+*.iml
+
+# --- OS Junk ---
+.DS_Store
+Thumbs.db
+
+guide/
