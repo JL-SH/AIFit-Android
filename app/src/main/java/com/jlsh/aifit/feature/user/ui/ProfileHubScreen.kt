@@ -1,13 +1,16 @@
 package com.jlsh.aifit.feature.user.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -315,7 +318,7 @@ private fun MenuRow(
         Icon(
             imageVector = Icons.Rounded.ChevronRight,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
             modifier = Modifier.size(20.dp),
         )
     }
@@ -329,27 +332,33 @@ private fun MenuRow(
 @Composable
 private fun ProfileHubContentPreview() {
     AIFitTheme(darkTheme = true) {
-        ProfileHubContent(
-            paddingValues = PaddingValues(),
-            profile = UserProfile(
-                id = "1",
-                name = "Carlos García",
-                email = "carlos@ejemplo.com",
-                authProvider = "LOCAL",
-                goalType = GoalType.GAIN_MUSCLE,
-            ),
-            isDarkTheme = true,
-            onEditProfile = {},
-            onDashboard = {},
-            onBodyWeight = {},
-            onMetabolic = {},
-            onExport = {},
-            onAchievements = {},
-            onRecords = {},
-            onGlossary = {},
-            onThemeToggle = {},
-            onLogout = {},
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        ) {
+            ProfileHubContent(
+                paddingValues = PaddingValues(),
+                profile = UserProfile(
+                    id = "1",
+                    name = "Carlos García",
+                    email = "carlos@ejemplo.com",
+                    authProvider = "LOCAL",
+                    goalType = GoalType.GAIN_MUSCLE,
+                ),
+                isDarkTheme = true,
+                onEditProfile = {},
+                onDashboard = {},
+                onBodyWeight = {},
+                onMetabolic = {},
+                onExport = {},
+                onAchievements = {},
+                onRecords = {},
+                onGlossary = {},
+                onThemeToggle = {},
+                onLogout = {},
+            )
+        }
     }
 }
 
