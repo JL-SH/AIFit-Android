@@ -25,6 +25,11 @@ android {
             "API_BASE_URL",
             "\"https://aifit-api-production.up.railway.app/api/v1/\""
         )
+        buildConfigField(
+            "String",
+            "GOOGLE_WEB_CLIENT_ID",
+            "\"\""
+        )
     }
 
     buildTypes {
