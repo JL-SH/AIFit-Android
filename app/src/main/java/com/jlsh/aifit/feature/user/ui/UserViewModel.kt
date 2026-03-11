@@ -7,6 +7,10 @@ import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.core.datastore.UserPreferencesDataStore
 import com.jlsh.aifit.core.session.SessionManager
+import com.jlsh.aifit.feature.gamification.domain.model.StreakType
+import com.jlsh.aifit.feature.gamification.domain.usecase.GetPersonalRecordsUseCase
+import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserAchievementsUseCase
+import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserStreaksUseCase
 import com.jlsh.aifit.feature.user.domain.model.ActivityLevel
 import com.jlsh.aifit.feature.user.domain.model.CreateUserProfileRequest
 import com.jlsh.aifit.feature.user.domain.model.DietPreference
@@ -37,6 +41,9 @@ class UserViewModel @Inject constructor(
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val createUserProfileUseCase: CreateUserProfileUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
+    private val getUserStreaksUseCase: GetUserStreaksUseCase,
+    private val getUserAchievementsUseCase: GetUserAchievementsUseCase,
+    private val getPersonalRecordsUseCase: GetPersonalRecordsUseCase,
     private val userPreferencesDataStore: UserPreferencesDataStore,
     private val sessionManager: SessionManager,
     savedStateHandle: SavedStateHandle,
@@ -52,6 +59,16 @@ class UserViewModel @Inject constructor(
 
     // 2b. THEME
     val isDarkTheme = userPreferencesDataStore.isDarkTheme
+
+    // 2c. GAMIFICATION STATS
+    private val _streakCount = MutableStateFlow<String>("—")
+    val streakCount: StateFlow<String> = _streakCount.asStateFlow()
+
+    private val _achievementsCount = MutableStateFlow<String>("—")
+    val achievementsCount: StateFlow<String> = _achievementsCount.asStateFlow()
+
+    private val _recordsCount = MutableStateFlow<String>("—")
+    val recordsCount: StateFlow<String> = _recordsCount.asStateFlow()
 
     // 3. FORM FIELDS
     private val _name = MutableStateFlow("")
@@ -131,6 +148,7 @@ class UserViewModel @Inject constructor(
 
     fun onRefresh() {
         loadProfile()
+        loadGamificationStats()
     }
 
     fun onLogout() {
@@ -149,6 +167,33 @@ class UserViewModel @Inject constructor(
     }
 
     // 6. PRIVATE HELPERS
+    private fun loadGamificationStats() {
+        viewModelScope.launch {
+            // Streaks
+            when (val r = getUserStreaksUseCase()) {
+                is Result.Success -> {
+                    val combined = r.data.find { it.type == StreakType.COMBINED }
+                    _streakCount.value = (combined?.currentCount ?: r.data.maxOfOrNull { it.currentCount } ?: 0).toString()
+                }
+                else -> _streakCount.value = "—"
+            }
+        }
+        viewModelScope.launch {
+            // Achievements
+            when (val r = getUserAchievementsUseCase()) {
+                is Result.Success -> _achievementsCount.value = r.data.size.toString()
+                else -> _achievementsCount.value = "—"
+            }
+        }
+        viewModelScope.launch {
+            // Personal records
+            when (val r = getPersonalRecordsUseCase()) {
+                is Result.Success -> _recordsCount.value = r.data.size.toString()
+                else -> _recordsCount.value = "—"
+            }
+        }
+    }
+
     private fun loadProfile() {
         viewModelScope.launch {
             _uiState.value = UserUiState.Loading

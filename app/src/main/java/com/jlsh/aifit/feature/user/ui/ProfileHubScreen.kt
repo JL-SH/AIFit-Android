@@ -77,6 +77,9 @@ fun ProfileHubScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle(initialValue = true)
+    val streakCount by viewModel.streakCount.collectAsStateWithLifecycle()
+    val achievementsCount by viewModel.achievementsCount.collectAsStateWithLifecycle()
+    val recordsCount by viewModel.recordsCount.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.onRefresh()
@@ -108,6 +111,9 @@ fun ProfileHubScreen(
             paddingValues = paddingValues,
             profile = successState.profile,
             isDarkTheme = isDarkTheme,
+            streakCount = streakCount,
+            achievementsCount = achievementsCount,
+            recordsCount = recordsCount,
             onEditProfile = onNavigateToEditProfile,
             onDashboard = onNavigateToDashboard,
             onBodyWeight = onNavigateToBodyWeight,
@@ -139,6 +145,9 @@ private fun ProfileHubContent(
     paddingValues: PaddingValues,
     profile: UserProfile,
     isDarkTheme: Boolean,
+    streakCount: String = "—",
+    achievementsCount: String = "—",
+    recordsCount: String = "—",
     onEditProfile: () -> Unit,
     onDashboard: () -> Unit,
     onBodyWeight: () -> Unit,
@@ -197,9 +206,9 @@ private fun ProfileHubContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                StatColumn(value = "—", label = "Racha")
-                StatColumn(value = "—", label = "Logros")
-                StatColumn(value = "—", label = "Récords")
+                StatColumn(value = streakCount, label = "Racha")
+                StatColumn(value = achievementsCount, label = "Logros")
+                StatColumn(value = recordsCount, label = "Récords")
             }
             Spacer(modifier = Modifier.height(AiFitSpacing.sm))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
