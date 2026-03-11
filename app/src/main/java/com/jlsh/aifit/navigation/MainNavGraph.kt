@@ -28,6 +28,7 @@ import com.jlsh.aifit.core.ui.components.layout.LocalBottomBarVisibility
 import com.jlsh.aifit.core.ui.components.layout.bottomNavItems
 import com.jlsh.aifit.feature.diet.ui.DietDetailScreen
 import com.jlsh.aifit.feature.diet.ui.GenerateDietScreen
+import com.jlsh.aifit.feature.home.ui.HomeScreen
 import com.jlsh.aifit.feature.training.ui.GeneratePlanScreen
 import com.jlsh.aifit.feature.training.ui.TrainingDetailScreen
 import com.jlsh.aifit.feature.training.ui.TrainingHubScreen
@@ -97,7 +98,52 @@ private fun MainNavScreen() {
                     startDestination = HomeRoutes.HOME,
                 ) {
                     composable(HomeRoutes.HOME) {
-                        StubScreen("Home — Sprint 5")
+                        HomeScreen(
+                            onNavigateToWorkoutLog = { planId ->
+                                // Cross-tab: switch to Training tab + navigate to WorkoutLog
+                                tabNavController.navigate(TrainingRoutes.workoutLogRoute(planId)) {
+                                    popUpTo(HomeRoutes.GRAPH) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onNavigateToTrackMeal = {
+                                // Cross-tab: switch to Nutrition tab + navigate to TrackMeal
+                                tabNavController.navigate(NutritionRoutes.trackMealRoute()) {
+                                    popUpTo(HomeRoutes.GRAPH) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onNavigateToProgressDashboard = {
+                                tabNavController.navigate(HomeRoutes.DASHBOARD)
+                            },
+                            onNavigateToBodyWeight = {
+                                tabNavController.navigate(HomeRoutes.BODY_WEIGHT)
+                            },
+                            onNavigateToGamification = { tab ->
+                                // Cross-tab: switch to Profile tab + Gamification
+                                tabNavController.navigate(ProfileRoutes.gamificationRoute(tab)) {
+                                    popUpTo(HomeRoutes.GRAPH) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onNavigateToProfile = {
+                                // Cross-tab: switch to Profile tab
+                                tabNavController.navigate(ProfileRoutes.GRAPH) {
+                                    popUpTo(tabNavController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            onNavigateToGeneratePlan = {
+                                // Cross-tab: switch to Training tab + GeneratePlan
+                                tabNavController.navigate(TrainingRoutes.generateRoute()) {
+                                    popUpTo(HomeRoutes.GRAPH) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            },
+                        )
                     }
                     composable(HomeRoutes.DASHBOARD) {
                         StubScreen("Dashboard — Sprint 8")
