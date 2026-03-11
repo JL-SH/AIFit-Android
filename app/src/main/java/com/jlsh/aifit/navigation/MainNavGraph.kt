@@ -26,6 +26,8 @@ import androidx.navigation.navigation
 import com.jlsh.aifit.core.ui.components.layout.BottomNavBar
 import com.jlsh.aifit.core.ui.components.layout.LocalBottomBarVisibility
 import com.jlsh.aifit.core.ui.components.layout.bottomNavItems
+import com.jlsh.aifit.feature.chat.ui.ChatScreen
+import com.jlsh.aifit.feature.chat.ui.ChatSessionListScreen
 import com.jlsh.aifit.feature.diet.ui.DietDetailScreen
 import com.jlsh.aifit.feature.diet.ui.GenerateDietScreen
 import com.jlsh.aifit.feature.home.ui.HomeScreen
@@ -327,10 +329,21 @@ private fun MainNavScreen() {
                     startDestination = CoachRoutes.SESSION_LIST,
                 ) {
                     composable(CoachRoutes.SESSION_LIST) {
-                        StubScreen("Coach Sessions — Sprint 14")
+                        ChatSessionListScreen(
+                            onNavigateToChat = { sessionId ->
+                                tabNavController.navigate(CoachRoutes.chatRoute(sessionId))
+                            },
+                        )
                     }
-                    composable(CoachRoutes.CHAT) {
-                        StubScreen("Chat — Sprint 14")
+                    composable(
+                        route = CoachRoutes.CHAT,
+                        arguments = listOf(
+                            navArgument("sessionId") { type = NavType.StringType },
+                        ),
+                    ) {
+                        ChatScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                 }
 

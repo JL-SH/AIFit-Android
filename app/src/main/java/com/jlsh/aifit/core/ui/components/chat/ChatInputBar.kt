@@ -5,8 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
@@ -26,9 +29,10 @@ fun ChatInputBar(
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     placeholder: String = "Escribe un mensaje...",
 ) {
-    val isSendEnabled = value.isNotBlank()
+    val isSendEnabled = value.isNotBlank() && !isLoading
 
     Row(
         modifier = modifier
@@ -41,6 +45,7 @@ fun ChatInputBar(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.weight(1f),
+            enabled = !isLoading,
             placeholder = {
                 Text(
                     text = placeholder,
@@ -65,15 +70,23 @@ fun ChatInputBar(
             onClick = { if (isSendEnabled) onSend() },
             enabled = isSendEnabled,
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.Send,
-                contentDescription = "Enviar",
-                tint = if (isSendEnabled) {
-                    MaterialTheme.colorScheme.primaryContainer
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.Send,
+                    contentDescription = "Enviar",
+                    tint = if (isSendEnabled) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
         }
     }
 }
@@ -110,5 +123,19 @@ private fun ChatInputBarWithTextPreview() {
     }
 }
 
-
-
+@Preview(
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    name = "Dark - Loading"
+)
+@Composable
+private fun ChatInputBarLoadingPreview() {
+    AIFitTheme {
+        ChatInputBar(
+            value = "",
+            onValueChange = {},
+            onSend = {},
+            isLoading = true,
+        )
+    }
+}

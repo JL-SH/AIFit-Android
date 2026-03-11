@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable
 fun ChatBubble(
@@ -25,6 +26,7 @@ fun ChatBubble(
     isUser: Boolean,
     timestamp: String,
     modifier: Modifier = Modifier,
+    isMarkdown: Boolean = false,
 ) {
     val bubbleShape = if (isUser) {
         RoundedCornerShape(
@@ -67,11 +69,20 @@ fun ChatBubble(
                 .background(backgroundColor)
                 .padding(horizontal = AiFitSpacing.sm + AiFitSpacing.xs, vertical = AiFitSpacing.sm),
         ) {
-            Text(
-                text = content,
-                style = MaterialTheme.typography.bodyLarge,
-                color = textColor,
-            )
+            if (isMarkdown && !isUser) {
+                MarkdownText(
+                    markdown = content,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = textColor,
+                    ),
+                )
+            } else {
+                Text(
+                    text = content,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = textColor,
+                )
+            }
         }
         Text(
             text = timestamp,
@@ -101,17 +112,16 @@ private fun ChatBubbleUserPreview() {
 @Preview(
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark - Assistant"
+    name = "Dark - Assistant Markdown"
 )
 @Composable
 private fun ChatBubbleAssistantPreview() {
     AIFitTheme {
         ChatBubble(
-            content = "¡Claro! Voy a crear un plan personalizado basado en tu perfil.",
+            content = "¡Claro! Voy a crear un **plan personalizado** basado en tu perfil.\n\n- Frecuencia: 4 días\n- Enfoque: Hipertrofia",
             isUser = false,
             timestamp = "10:31",
+            isMarkdown = true,
         )
     }
 }
-
-
