@@ -3,16 +3,12 @@ package com.jlsh.aifit.navigation
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -30,12 +26,24 @@ import com.jlsh.aifit.feature.chat.ui.ChatScreen
 import com.jlsh.aifit.feature.chat.ui.ChatSessionListScreen
 import com.jlsh.aifit.feature.diet.ui.DietDetailScreen
 import com.jlsh.aifit.feature.diet.ui.GenerateDietScreen
+import com.jlsh.aifit.feature.education.ui.GlossaryScreen
+import com.jlsh.aifit.feature.gamification.ui.GamificationScreen
+import com.jlsh.aifit.feature.gamification.ui.ProgressExportScreen
 import com.jlsh.aifit.feature.home.ui.HomeScreen
+import com.jlsh.aifit.feature.metabolic.ui.MetabolicAnalysisScreen
+import com.jlsh.aifit.feature.nutrition.ui.NutritionHubScreen
+import com.jlsh.aifit.feature.nutrition.ui.NutritionTargetScreen
+import com.jlsh.aifit.feature.nutrition.ui.TrackMealScreen
+import com.jlsh.aifit.feature.progress.ui.BodyWeightScreen
+import com.jlsh.aifit.feature.progress.ui.ProgressDashboardScreen
+import com.jlsh.aifit.feature.progress.ui.WeeklySummaryScreen
 import com.jlsh.aifit.feature.shopping.ui.ShoppingDetailScreen
-import com.jlsh.aifit.feature.vision.ui.FoodVisionScreen
 import com.jlsh.aifit.feature.training.ui.GeneratePlanScreen
 import com.jlsh.aifit.feature.training.ui.TrainingDetailScreen
 import com.jlsh.aifit.feature.training.ui.TrainingHubScreen
+import com.jlsh.aifit.feature.user.ui.ProfileHubScreen
+import com.jlsh.aifit.feature.user.ui.UserProfileScreen
+import com.jlsh.aifit.feature.vision.ui.FoodVisionScreen
 import com.jlsh.aifit.feature.workout.ui.WorkoutDetailScreen
 import com.jlsh.aifit.feature.workout.ui.WorkoutLogScreen
 
@@ -59,14 +67,21 @@ private fun MainNavScreen() {
     val navBackStackEntry by tabNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Determine which tab graph is active based on the bottom nav item routes
     val currentTabRoute = bottomNavItems.firstOrNull { item ->
         currentRoute?.startsWith(item.route) == true
     }?.route
 
-    CompositionLocalProvider(LocalBottomBarVisibility provides true) {
-        val isBottomBarVisible = LocalBottomBarVisibility.current
+    // Routes where bottom bar should be hidden (focus mode)
+    val hideBottomBarRoutes = listOf(
+        "training/workout_log",
+        "coach/chat/",
+        "nutrition/food_vision",
+    )
+    val isBottomBarVisible = hideBottomBarRoutes.none { prefix ->
+        currentRoute?.startsWith(prefix) == true
+    }
 
+    CompositionLocalProvider(LocalBottomBarVisibility provides isBottomBarVisible) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
@@ -96,7 +111,7 @@ private fun MainNavScreen() {
                 startDestination = HomeRoutes.GRAPH,
                 modifier = Modifier.padding(paddingValues),
             ) {
-                // Home tab
+                // ── Home tab ─────────────────────────────────────────────
                 navigation(
                     route = HomeRoutes.GRAPH,
                     startDestination = HomeRoutes.HOME,
@@ -104,14 +119,12 @@ private fun MainNavScreen() {
                     composable(HomeRoutes.HOME) {
                         HomeScreen(
                             onNavigateToWorkoutLog = { planId ->
-                                // Cross-tab: switch to Training tab + navigate to WorkoutLog
                                 tabNavController.navigate(TrainingRoutes.workoutLogRoute(planId)) {
                                     popUpTo(HomeRoutes.GRAPH) { inclusive = false }
                                     launchSingleTop = true
                                 }
                             },
                             onNavigateToTrackMeal = {
-                                // Cross-tab: switch to Nutrition tab + navigate to TrackMeal
                                 tabNavController.navigate(NutritionRoutes.trackMealRoute()) {
                                     popUpTo(HomeRoutes.GRAPH) { inclusive = false }
                                     launchSingleTop = true
@@ -124,14 +137,12 @@ private fun MainNavScreen() {
                                 tabNavController.navigate(HomeRoutes.BODY_WEIGHT)
                             },
                             onNavigateToGamification = { tab ->
-                                // Cross-tab: switch to Profile tab + Gamification
                                 tabNavController.navigate(ProfileRoutes.gamificationRoute(tab)) {
                                     popUpTo(HomeRoutes.GRAPH) { inclusive = false }
                                     launchSingleTop = true
                                 }
                             },
                             onNavigateToProfile = {
-                                // Cross-tab: switch to Profile tab
                                 tabNavController.navigate(ProfileRoutes.GRAPH) {
                                     popUpTo(tabNavController.graph.startDestinationId) {
                                         saveState = true
@@ -141,7 +152,6 @@ private fun MainNavScreen() {
                                 }
                             },
                             onNavigateToGeneratePlan = {
-                                // Cross-tab: switch to Training tab + GeneratePlan
                                 tabNavController.navigate(TrainingRoutes.generateRoute()) {
                                     popUpTo(HomeRoutes.GRAPH) { inclusive = false }
                                     launchSingleTop = true
@@ -150,20 +160,37 @@ private fun MainNavScreen() {
                         )
                     }
                     composable(HomeRoutes.DASHBOARD) {
-                        StubScreen("Dashboard — Sprint 8")
+                        ProgressDashboardScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateToBodyWeight = {
+                                tabNavController.navigate(HomeRoutes.BODY_WEIGHT)
+                            },
+                            onNavigateToWeeklySummary = {
+                                tabNavController.navigate(HomeRoutes.WEEKLY_SUMMARY)
+                            },
+                            onNavigateToMetabolic = {
+                                tabNavController.navigate(HomeRoutes.METABOLIC_ANALYSIS)
+                            },
+                        )
                     }
                     composable(HomeRoutes.BODY_WEIGHT) {
-                        StubScreen("Body Weight — Sprint 8")
+                        BodyWeightScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                     composable(HomeRoutes.WEEKLY_SUMMARY) {
-                        StubScreen("Weekly Summary — Sprint 8")
+                        WeeklySummaryScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                     composable(HomeRoutes.METABOLIC_ANALYSIS) {
-                        StubScreen("Metabolic Analysis — Sprint 8")
+                        MetabolicAnalysisScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                 }
 
-                // Training tab
+                // ── Training tab ─────────────────────────────────────────
                 navigation(
                     route = TrainingRoutes.GRAPH,
                     startDestination = TrainingRoutes.HUB,
@@ -262,16 +289,51 @@ private fun MainNavScreen() {
                     }
                 }
 
-                // Nutrition tab
+                // ── Nutrition tab ────────────────────────────────────────
                 navigation(
                     route = NutritionRoutes.GRAPH,
                     startDestination = NutritionRoutes.HUB,
                 ) {
                     composable(NutritionRoutes.HUB) {
-                        StubScreen("Nutrition Hub — Sprint 9")
+                        NutritionHubScreen(
+                            onNavigateToTrackMeal = { mode ->
+                                tabNavController.navigate(NutritionRoutes.trackMealRoute(mode = mode))
+                            },
+                            onNavigateToFoodVision = {
+                                tabNavController.navigate(NutritionRoutes.FOOD_VISION)
+                            },
+                            onNavigateToNutritionTarget = {
+                                tabNavController.navigate(NutritionRoutes.TARGET)
+                            },
+                            onNavigateToDietDetail = { planId ->
+                                tabNavController.navigate(NutritionRoutes.dietDetailRoute(planId))
+                            },
+                            onNavigateToGenerateDiet = {
+                                tabNavController.navigate(NutritionRoutes.dietGenerateRoute())
+                            },
+                            onNavigateToShoppingDetail = { listId ->
+                                tabNavController.navigate(NutritionRoutes.shoppingDetailRoute(listId))
+                            },
+                        )
                     }
-                    composable(NutritionRoutes.TRACK_MEAL) {
-                        StubScreen("Track Meal — Sprint 10")
+                    composable(
+                        route = NutritionRoutes.TRACK_MEAL,
+                        arguments = listOf(
+                            navArgument("mode") {
+                                type = NavType.StringType
+                                defaultValue = ""
+                            },
+                            navArgument("prefilled") {
+                                type = NavType.StringType
+                                defaultValue = ""
+                            },
+                        ),
+                    ) { backStackEntry ->
+                        val mode = backStackEntry.arguments?.getString("mode") ?: ""
+                        TrackMealScreen(
+                            mode = mode,
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                     composable(NutritionRoutes.FOOD_VISION) {
                         FoodVisionScreen(
@@ -284,7 +346,9 @@ private fun MainNavScreen() {
                         )
                     }
                     composable(NutritionRoutes.TARGET) {
-                        StubScreen("Nutrition Target — Sprint 10")
+                        NutritionTargetScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                     composable(
                         route = NutritionRoutes.DIET_DETAIL,
@@ -339,7 +403,7 @@ private fun MainNavScreen() {
                     }
                 }
 
-                // Coach tab
+                // ── Coach tab ────────────────────────────────────────────
                 navigation(
                     route = CoachRoutes.GRAPH,
                     startDestination = CoachRoutes.SESSION_LIST,
@@ -363,58 +427,100 @@ private fun MainNavScreen() {
                     }
                 }
 
-                // Profile tab
+                // ── Profile tab ──────────────────────────────────────────
                 navigation(
                     route = ProfileRoutes.GRAPH,
                     startDestination = ProfileRoutes.HUB,
                 ) {
                     composable(ProfileRoutes.HUB) {
-                        StubScreen("Profile Hub — Sprint 13")
+                        ProfileHubScreen(
+                            onNavigateToEditProfile = {
+                                tabNavController.navigate(ProfileRoutes.EDIT)
+                            },
+                            onNavigateToDashboard = {
+                                tabNavController.navigate(ProfileRoutes.DASHBOARD)
+                            },
+                            onNavigateToBodyWeight = {
+                                tabNavController.navigate(ProfileRoutes.BODY_WEIGHT)
+                            },
+                            onNavigateToMetabolic = {
+                                tabNavController.navigate(ProfileRoutes.METABOLIC)
+                            },
+                            onNavigateToExport = {
+                                tabNavController.navigate(ProfileRoutes.EXPORT)
+                            },
+                            onNavigateToGamification = { tab ->
+                                tabNavController.navigate(ProfileRoutes.gamificationRoute(tab))
+                            },
+                            onNavigateToGlossary = {
+                                tabNavController.navigate(ProfileRoutes.GLOSSARY)
+                            },
+                        )
                     }
                     composable(ProfileRoutes.EDIT) {
-                        StubScreen("Edit Profile — Sprint 4")
+                        UserProfileScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                     composable(ProfileRoutes.DASHBOARD) {
-                        StubScreen("Profile Dashboard — Sprint 8")
+                        ProgressDashboardScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateToBodyWeight = {
+                                tabNavController.navigate(ProfileRoutes.BODY_WEIGHT)
+                            },
+                            onNavigateToWeeklySummary = {
+                                tabNavController.navigate(ProfileRoutes.WEEKLY_SUMMARY)
+                            },
+                            onNavigateToMetabolic = {
+                                tabNavController.navigate(ProfileRoutes.METABOLIC)
+                            },
+                        )
                     }
                     composable(ProfileRoutes.BODY_WEIGHT) {
-                        StubScreen("Body Weight — Sprint 8")
+                        BodyWeightScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                     composable(ProfileRoutes.WEEKLY_SUMMARY) {
-                        StubScreen("Weekly Summary — Sprint 8")
+                        WeeklySummaryScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                     composable(ProfileRoutes.METABOLIC) {
-                        StubScreen("Metabolic — Sprint 8")
+                        MetabolicAnalysisScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                     composable(ProfileRoutes.EXPORT) {
-                        StubScreen("Export — Sprint 13")
+                        ProgressExportScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
-                    composable(ProfileRoutes.GAMIFICATION) {
-                        StubScreen("Gamification — Sprint 11")
+                    composable(
+                        route = ProfileRoutes.GAMIFICATION,
+                        arguments = listOf(
+                            navArgument("tab") {
+                                type = NavType.StringType
+                                defaultValue = "ACHIEVEMENTS"
+                            },
+                        ),
+                    ) {
+                        GamificationScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateToExport = {
+                                tabNavController.navigate(ProfileRoutes.EXPORT)
+                            },
+                        )
                     }
                     composable(ProfileRoutes.GLOSSARY) {
-                        StubScreen("Glossary — Sprint 15")
+                        GlossaryScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                 }
             }
         }
     }
 }
-
-@Composable
-private fun StubScreen(label: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-    }
-}
-
-
 
 
