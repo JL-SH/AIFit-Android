@@ -31,6 +31,8 @@ import com.jlsh.aifit.feature.chat.ui.ChatSessionListScreen
 import com.jlsh.aifit.feature.diet.ui.DietDetailScreen
 import com.jlsh.aifit.feature.diet.ui.GenerateDietScreen
 import com.jlsh.aifit.feature.home.ui.HomeScreen
+import com.jlsh.aifit.feature.shopping.ui.ShoppingDetailScreen
+import com.jlsh.aifit.feature.vision.ui.FoodVisionScreen
 import com.jlsh.aifit.feature.training.ui.GeneratePlanScreen
 import com.jlsh.aifit.feature.training.ui.TrainingDetailScreen
 import com.jlsh.aifit.feature.training.ui.TrainingHubScreen
@@ -272,7 +274,14 @@ private fun MainNavScreen() {
                         StubScreen("Track Meal — Sprint 10")
                     }
                     composable(NutritionRoutes.FOOD_VISION) {
-                        StubScreen("Food Vision — Sprint 12")
+                        FoodVisionScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateToTrackMeal = { prefilled ->
+                                tabNavController.navigate(
+                                    NutritionRoutes.trackMealRoute(mode = "manual", prefilled = prefilled)
+                                )
+                            },
+                        )
                     }
                     composable(NutritionRoutes.TARGET) {
                         StubScreen("Nutrition Target — Sprint 10")
@@ -318,8 +327,15 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(NutritionRoutes.SHOPPING_DETAIL) {
-                        StubScreen("Shopping Detail — Sprint 11")
+                    composable(
+                        route = NutritionRoutes.SHOPPING_DETAIL,
+                        arguments = listOf(
+                            navArgument("listId") { type = NavType.StringType },
+                        ),
+                    ) {
+                        ShoppingDetailScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                 }
 

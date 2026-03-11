@@ -72,6 +72,10 @@ import com.jlsh.aifit.feature.nutrition.ui.components.TrackMealSheet
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionHubUiState
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionUiEvent
 import com.jlsh.aifit.feature.nutrition.ui.state.TodayState
+import com.jlsh.aifit.feature.shopping.ui.ShoppingViewModel
+import com.jlsh.aifit.feature.shopping.ui.components.GenerateShoppingListSheet
+import com.jlsh.aifit.feature.shopping.ui.state.ShoppingListUiState
+import com.jlsh.aifit.feature.shopping.ui.state.ShoppingUiEvent
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -86,6 +90,7 @@ fun NutritionHubScreen(
     onNavigateToNutritionTarget: () -> Unit,
     onNavigateToDietDetail: (planId: String) -> Unit,
     onNavigateToGenerateDiet: () -> Unit,
+    onNavigateToShoppingDetail: (listId: String) -> Unit,
     viewModel: NutritionViewModel = hiltViewModel(),
 ) {
     val hubState by viewModel.hubState.collectAsStateWithLifecycle()
@@ -129,10 +134,9 @@ fun NutritionHubScreen(
             ) {
                 FloatingActionButton(
                     onClick = {
-                        if (selectedTabIndex == 0) {
-                            showSheet = true
-                        } else {
-                            viewModel.onGenerateDietClicked()
+                        when (selectedTabIndex) {
+                            0 -> showSheet = true
+                            1 -> viewModel.onGenerateDietClicked()
                         }
                     },
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -140,7 +144,11 @@ fun NutritionHubScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Add,
-                        contentDescription = if (selectedTabIndex == 0) "Add Meal" else "New Plan",
+                        contentDescription = when (selectedTabIndex) {
+                            0 -> "Add Meal"
+                            1 -> "New Plan"
+                            else -> "Generate"
+                        },
                     )
                 }
             }
@@ -169,7 +177,10 @@ fun NutritionHubScreen(
                     onPlanClicked = viewModel::onDietPlanClicked,
                     onCreatePlan = { viewModel.onGenerateDietClicked() },
                 )
-                2 -> ShoppingTab()
+                2 -> ShoppingTab(
+                    dietPlans = successState.dietPlans,
+                    onNavigateToDetail = onNavigateToShoppingDetail,
+                )
             }
         }
     }
@@ -447,18 +458,172 @@ private fun DietPlanTab(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ShoppingTab() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = AiFitSpacing.xxl),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        EmptyStateView(
-            icon = Icons.Rounded.ShoppingCart,
-            title = "Las listas de compra estarán aquí",
-            subtitle = "Proximamente",
+private fun ShoppingTab(
+    dietPlans: List<DietPlan>,
+    onNavigateToDetail: (listId: String) -> Unit,
+) {
+    val shoppingViewModel: ShoppingViewModel = hiltViewModel()
+    val listState by shoppingViewModel.listState.collectAsStateWithLifecycle()
+    var showGenerateSheet by remember { mutableStateOf(false) }
+    var isGenerating by remember { mutableStateOf(false) }
+    var deleteDialogListId by remember { mutableStateOf<String?>(null) }
+    val generateSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    LaunchedEffect(Unit) {
+        shoppingViewModel.loadLists()
+    }
+
+    LaunchedEffect(Unit) {
+        shoppingViewModel.events.collect { event ->
+            when (event) {
+                is ShoppingUiEvent.ListGenerated -> {
+                    isGenerating = false
+                    showGenerateSheet = false
+                    onNavigateToDetail(event.listId)
+                }
+                is ShoppingUiEvent.ShowSnackbar -> { /* handled by parent snackbar */ }
+                else -> {}
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (val state = listState) {
+            is ShoppingListUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Cargando…",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            is ShoppingListUiState.Error -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = AiFitSpacing.xxl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    EmptyStateView(
+                        icon = Icons.Rounded.ShoppingCart,
+                        title = "Error al cargar listas",
+                        subtitle = state.message,
+                    )
+                }
+            }
+            is ShoppingListUiState.Success -> {
+                if (state.lists.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = AiFitSpacing.xxl),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        EmptyStateView(
+                            icon = Icons.Rounded.ShoppingCart,
+                            title = "Genera tu primera lista de compras",
+                            subtitle = "Basada en tu plan de dieta activo",
+                        )
+                        Spacer(modifier = Modifier.height(AiFitSpacing.md))
+                        PrimaryButton(
+                            text = "Generar lista",
+                            onClick = { showGenerateSheet = true },
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(
+                            start = AiFitSpacing.md,
+                            end = AiFitSpacing.md,
+                            top = AiFitSpacing.md,
+                            bottom = 88.dp,
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                    ) {
+                        items(state.lists, key = { it.id }) { shoppingList ->
+                            SwipeableListItem(
+                                onDelete = { deleteDialogListId = shoppingList.id },
+                            ) {
+                                AiFitCard(
+                                    onClick = { onNavigateToDetail(shoppingList.id) },
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(AiFitSpacing.md),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Column {
+                                            PlanStatusBadge(
+                                                status = shoppingList.period.name.replace("_", " "),
+                                            )
+                                            Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                                            Text(
+                                                text = shoppingList.generatedAt.take(10),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                        Icon(
+                                            imageVector = Icons.Rounded.ShoppingCart,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primaryContainer,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // FAB for generate
+        FloatingActionButton(
+            onClick = { showGenerateSheet = true },
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(AiFitSpacing.md),
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Add,
+                contentDescription = "Generar lista",
+            )
+        }
+    }
+
+    deleteDialogListId?.let { id ->
+        ConfirmationDialog(
+            title = "Eliminar lista",
+            message = "¿Seguro que quieres eliminar esta lista de compras?",
+            confirmText = "Eliminar",
+            onConfirm = {
+                shoppingViewModel.onDeleteList(id)
+                deleteDialogListId = null
+            },
+            onDismiss = { deleteDialogListId = null },
+        )
+    }
+
+    if (showGenerateSheet) {
+        GenerateShoppingListSheet(
+            sheetState = generateSheetState,
+            dietPlans = dietPlans,
+            isGenerating = isGenerating,
+            onDismiss = { showGenerateSheet = false },
+            onGenerate = { dietPlanId, period ->
+                isGenerating = true
+                shoppingViewModel.onGenerateList(dietPlanId, period)
+            },
         )
     }
 }
@@ -545,7 +710,10 @@ private fun NutritionHubShoppingPreview() {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            ShoppingTab()
+            ShoppingTab(
+                dietPlans = emptyList(),
+                onNavigateToDetail = {},
+            )
         }
     }
 }
