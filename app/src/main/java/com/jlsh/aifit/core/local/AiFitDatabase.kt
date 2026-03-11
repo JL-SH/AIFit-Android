@@ -7,6 +7,8 @@ import com.jlsh.aifit.feature.diet.data.local.DietPlanDao
 import com.jlsh.aifit.feature.diet.data.local.DietPlanEntity
 import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogDao
 import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogEntity
+import com.jlsh.aifit.feature.progress.data.local.BodyWeightDao
+import com.jlsh.aifit.feature.progress.data.local.BodyWeightEntity
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanDao
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanEntity
 import com.jlsh.aifit.feature.user.data.local.UserProfileDao
@@ -21,8 +23,9 @@ import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
         DietPlanEntity::class,
         WorkoutLogEntity::class,
         NutritionLogEntity::class,
+        BodyWeightEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -32,4 +35,5 @@ abstract class AiFitDatabase : RoomDatabase() {
     abstract fun dietPlanDao(): DietPlanDao
     abstract fun workoutLogDao(): WorkoutLogDao
     abstract fun nutritionLogDao(): NutritionLogDao
+    abstract fun bodyWeightDao(): BodyWeightDao
 }
