@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.TrendingUp
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,7 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -46,6 +49,10 @@ import com.jlsh.aifit.core.ui.components.layout.ExpandableSection
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.feature.education.ui.EducationViewModel
+import com.jlsh.aifit.feature.education.ui.components.ExerciseExplanationSheet
+import com.jlsh.aifit.feature.progression.ui.ProgressionViewModel
+import com.jlsh.aifit.feature.progression.ui.components.ProgressionRecommendationSheet
 import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.training.domain.model.TrainingDay
@@ -58,6 +65,7 @@ import com.jlsh.aifit.feature.user.domain.model.GoalType
 import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
 import java.time.LocalDateTime
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainingDetailScreen(
     planId: String,
@@ -65,9 +73,17 @@ fun TrainingDetailScreen(
     onNavigateToGenerate: (adaptive: Boolean, basePlanId: String?) -> Unit,
     onNavigateToWorkoutLog: (planId: String) -> Unit,
     viewModel: TrainingViewModel = hiltViewModel(),
+    educationViewModel: EducationViewModel = hiltViewModel(),
+    progressionViewModel: ProgressionViewModel = hiltViewModel(),
 ) {
     val detailState by viewModel.detailUiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val explanationState by educationViewModel.explanationState.collectAsStateWithLifecycle()
+    val recommendationState by progressionViewModel.recommendationState.collectAsStateWithLifecycle()
+
+    // Sheet state: which exercise id is currently showing a sheet
+    var showExplanationForExerciseId by remember { mutableStateOf<String?>(null) }
+    var showProgressionForExerciseId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(planId) {
         viewModel.loadPlanDetail(planId)
@@ -83,6 +99,29 @@ fun TrainingDetailScreen(
                 else -> {}
             }
         }
+    }
+
+    // ── Sheets ──
+    if (showExplanationForExerciseId != null) {
+        ExerciseExplanationSheet(
+            state = explanationState,
+            onDismiss = {
+                showExplanationForExerciseId = null
+                educationViewModel.resetExplanationState()
+            },
+            onRetry = { showExplanationForExerciseId?.let { educationViewModel.loadExerciseExplanation(it) } },
+        )
+    }
+
+    if (showProgressionForExerciseId != null) {
+        ProgressionRecommendationSheet(
+            state = recommendationState,
+            onDismiss = {
+                showProgressionForExerciseId = null
+                progressionViewModel.resetRecommendationState()
+            },
+            onRetry = { showProgressionForExerciseId?.let { progressionViewModel.loadExerciseRecommendation(it) } },
+        )
     }
 
     val topBarTitle = when (val state = detailState) {
@@ -132,6 +171,14 @@ fun TrainingDetailScreen(
     ) { paddingValues, successState ->
         TrainingDetailContent(
             plan = successState.plan,
+            onExerciseInfoClick = { exerciseId ->
+                showExplanationForExerciseId = exerciseId
+                educationViewModel.loadExerciseExplanation(exerciseId)
+            },
+            onExerciseProgressionClick = { exerciseId ->
+                showProgressionForExerciseId = exerciseId
+                progressionViewModel.loadExerciseRecommendation(exerciseId)
+            },
             modifier = Modifier.padding(paddingValues),
         )
     }
@@ -140,6 +187,8 @@ fun TrainingDetailScreen(
 @Composable
 private fun TrainingDetailContent(
     plan: TrainingPlan,
+    onExerciseInfoClick: (exerciseId: String) -> Unit,
+    onExerciseProgressionClick: (exerciseId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -267,7 +316,11 @@ private fun TrainingDetailContent(
                             modifier = Modifier.padding(bottom = AiFitSpacing.sm),
                         )
                         day.exercises.forEachIndexed { index, exercise ->
-                            ExerciseRow(exercise = exercise)
+                            ExerciseRow(
+                                exercise = exercise,
+                                onInfoClick = { onExerciseInfoClick(exercise.id) },
+                                onProgressionClick = { onExerciseProgressionClick(exercise.id) },
+                            )
                             if (index < day.exercises.lastIndex) {
                                 HorizontalDivider(
                                     color = MaterialTheme.colorScheme.outlineVariant,
@@ -334,6 +387,8 @@ private fun StatDivider() {
 @Composable
 private fun ExerciseRow(
     exercise: TrainingExercise,
+    onInfoClick: () -> Unit = {},
+    onProgressionClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -381,7 +436,7 @@ private fun ExerciseRow(
 
         Row {
             IconButton(
-                onClick = { /* Sprint 10: ExerciseExplanationSheet */ },
+                onClick = onInfoClick,
                 modifier = Modifier.size(32.dp),
             ) {
                 Icon(
@@ -392,7 +447,7 @@ private fun ExerciseRow(
                 )
             }
             IconButton(
-                onClick = { /* Sprint 10: ProgressionRecommendationSheet */ },
+                onClick = onProgressionClick,
                 modifier = Modifier.size(32.dp),
             ) {
                 Icon(
@@ -501,7 +556,11 @@ private fun TrainingDetailScreenPreview() {
                 ),
             )
 
-            TrainingDetailContent(plan = fakePlan)
+            TrainingDetailContent(
+                plan = fakePlan,
+                onExerciseInfoClick = {},
+                onExerciseProgressionClick = {},
+            )
         }
     }
 }

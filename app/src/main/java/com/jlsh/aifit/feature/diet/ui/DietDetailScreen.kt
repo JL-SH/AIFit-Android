@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.QuestionMark
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,7 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -46,6 +49,9 @@ import com.jlsh.aifit.core.ui.components.layout.ExpandableSection
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.feature.education.ui.EducationViewModel
+import com.jlsh.aifit.feature.education.ui.components.MealExplanationSheet
+import com.jlsh.aifit.feature.education.ui.components.WhyThisMealSheet
 import com.jlsh.aifit.feature.diet.domain.model.DietDay
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.model.Meal
@@ -57,15 +63,22 @@ import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.user.domain.model.DietPreference
 import java.time.LocalDateTime
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DietDetailScreen(
     planId: String,
     onNavigateBack: () -> Unit,
     onNavigateToGenerate: (adaptive: Boolean, basePlanId: String?) -> Unit,
     viewModel: DietViewModel = hiltViewModel(),
+    educationViewModel: EducationViewModel = hiltViewModel(),
 ) {
     val detailState by viewModel.detailUiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val explanationState by educationViewModel.explanationState.collectAsStateWithLifecycle()
+    val whyThisState by educationViewModel.whyThisState.collectAsStateWithLifecycle()
+
+    var showMealExplanationForId by remember { mutableStateOf<String?>(null) }
+    var showWhyThisMealForId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(planId) {
         viewModel.loadPlanDetail(planId)
@@ -79,6 +92,29 @@ fun DietDetailScreen(
                 is DietUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
             }
         }
+    }
+
+    // ── Sheets ──
+    if (showMealExplanationForId != null) {
+        MealExplanationSheet(
+            state = explanationState,
+            onDismiss = {
+                showMealExplanationForId = null
+                educationViewModel.resetExplanationState()
+            },
+            onRetry = { showMealExplanationForId?.let { educationViewModel.loadMealExplanation(it) } },
+        )
+    }
+
+    if (showWhyThisMealForId != null) {
+        WhyThisMealSheet(
+            state = whyThisState,
+            onDismiss = {
+                showWhyThisMealForId = null
+                educationViewModel.resetWhyThisState()
+            },
+            onRetry = { showWhyThisMealForId?.let { educationViewModel.loadWhyThisMeal(it) } },
+        )
     }
 
     val topBarTitle = when (val state = detailState) {
@@ -109,6 +145,14 @@ fun DietDetailScreen(
     ) { paddingValues, successState ->
         DietDetailContent(
             plan = successState.plan,
+            onMealInfoClick = { mealId ->
+                showMealExplanationForId = mealId
+                educationViewModel.loadMealExplanation(mealId)
+            },
+            onMealWhyClick = { mealId ->
+                showWhyThisMealForId = mealId
+                educationViewModel.loadWhyThisMeal(mealId)
+            },
             modifier = Modifier.padding(paddingValues),
         )
     }
@@ -117,6 +161,8 @@ fun DietDetailScreen(
 @Composable
 private fun DietDetailContent(
     plan: DietPlan,
+    onMealInfoClick: (mealId: String) -> Unit = {},
+    onMealWhyClick: (mealId: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -298,7 +344,11 @@ private fun DietDetailContent(
                             modifier = Modifier.padding(bottom = AiFitSpacing.sm),
                         )
                         day.meals.forEachIndexed { index, meal ->
-                            MealRow(meal = meal)
+                            MealRow(
+                                meal = meal,
+                                onInfoClick = { onMealInfoClick(meal.id) },
+                                onWhyClick = { onMealWhyClick(meal.id) },
+                            )
                             if (index < day.meals.lastIndex) {
                                 HorizontalDivider(
                                     color = MaterialTheme.colorScheme.outlineVariant,
@@ -361,7 +411,11 @@ private fun StatDivider() {
 }
 
 @Composable
-private fun MealRow(meal: Meal) {
+private fun MealRow(
+    meal: Meal,
+    onInfoClick: () -> Unit = {},
+    onWhyClick: () -> Unit = {},
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -413,7 +467,7 @@ private fun MealRow(meal: Meal) {
 
             Row {
                 IconButton(
-                    onClick = { /* Sprint 10: MealExplanationSheet */ },
+                    onClick = onInfoClick,
                     modifier = Modifier.size(32.dp),
                 ) {
                     Icon(
@@ -424,7 +478,7 @@ private fun MealRow(meal: Meal) {
                     )
                 }
                 IconButton(
-                    onClick = { /* Sprint 10: WhyThisMealSheet */ },
+                    onClick = onWhyClick,
                     modifier = Modifier.size(32.dp),
                 ) {
                     Icon(
