@@ -218,13 +218,7 @@ private fun RegisterScreenPreview() {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text(
-                    text = "AIFit",
-                    style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                AiFitLogoSplit()
 
                 Spacer(modifier = Modifier.height(6.dp))
 

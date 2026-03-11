@@ -16,14 +16,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.jlsh.aifit.core.ui.components.layout.BottomNavBar
 import com.jlsh.aifit.core.ui.components.layout.LocalBottomBarVisibility
 import com.jlsh.aifit.core.ui.components.layout.bottomNavItems
+import com.jlsh.aifit.feature.training.ui.GeneratePlanScreen
+import com.jlsh.aifit.feature.training.ui.TrainingDetailScreen
+import com.jlsh.aifit.feature.training.ui.TrainingHubScreen
 
 private val tabRouteToGraphRoute = mapOf(
     "home" to HomeRoutes.GRAPH,
@@ -110,13 +115,61 @@ private fun MainNavScreen() {
                     startDestination = TrainingRoutes.HUB,
                 ) {
                     composable(TrainingRoutes.HUB) {
-                        StubScreen("Training Hub — Sprint 5")
+                        TrainingHubScreen(
+                            onNavigateToDetail = { planId ->
+                                tabNavController.navigate(TrainingRoutes.detailRoute(planId))
+                            },
+                            onNavigateToGenerate = { adaptive, basePlanId ->
+                                tabNavController.navigate(TrainingRoutes.generateRoute(adaptive, basePlanId))
+                            },
+                            onNavigateToWorkoutLog = { planId ->
+                                tabNavController.navigate(TrainingRoutes.workoutLogRoute(planId))
+                            },
+                        )
                     }
-                    composable(TrainingRoutes.DETAIL) {
-                        StubScreen("Training Detail — Sprint 5")
+                    composable(
+                        route = TrainingRoutes.DETAIL,
+                        arguments = listOf(
+                            navArgument("planId") { type = NavType.StringType },
+                        ),
+                    ) { backStackEntry ->
+                        val planId = backStackEntry.arguments?.getString("planId") ?: ""
+                        TrainingDetailScreen(
+                            planId = planId,
+                            onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateToGenerate = { adaptive, basePlanId ->
+                                tabNavController.navigate(TrainingRoutes.generateRoute(adaptive, basePlanId))
+                            },
+                            onNavigateToWorkoutLog = { pId ->
+                                tabNavController.navigate(TrainingRoutes.workoutLogRoute(pId))
+                            },
+                        )
                     }
-                    composable(TrainingRoutes.GENERATE) {
-                        StubScreen("Generate Plan — Sprint 6")
+                    composable(
+                        route = TrainingRoutes.GENERATE,
+                        arguments = listOf(
+                            navArgument("adaptive") {
+                                type = NavType.StringType
+                                defaultValue = "false"
+                            },
+                            navArgument("basePlanId") {
+                                type = NavType.StringType
+                                defaultValue = ""
+                            },
+                        ),
+                    ) { backStackEntry ->
+                        val adaptive = backStackEntry.arguments?.getString("adaptive")?.toBooleanStrictOrNull() ?: false
+                        val basePlanId = backStackEntry.arguments?.getString("basePlanId")?.ifBlank { null }
+                        GeneratePlanScreen(
+                            adaptive = adaptive,
+                            basePlanId = basePlanId,
+                            onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateToDetail = { newPlanId ->
+                                tabNavController.navigate(TrainingRoutes.detailRoute(newPlanId)) {
+                                    popUpTo(TrainingRoutes.GENERATE) { inclusive = true }
+                                }
+                            },
+                        )
                     }
                     composable(TrainingRoutes.WORKOUT_LOG) {
                         StubScreen("Workout Log — Sprint 7")
