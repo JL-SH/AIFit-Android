@@ -26,6 +26,8 @@ import androidx.navigation.navigation
 import com.jlsh.aifit.core.ui.components.layout.BottomNavBar
 import com.jlsh.aifit.core.ui.components.layout.LocalBottomBarVisibility
 import com.jlsh.aifit.core.ui.components.layout.bottomNavItems
+import com.jlsh.aifit.feature.diet.ui.DietDetailScreen
+import com.jlsh.aifit.feature.diet.ui.GenerateDietScreen
 import com.jlsh.aifit.feature.training.ui.GeneratePlanScreen
 import com.jlsh.aifit.feature.training.ui.TrainingDetailScreen
 import com.jlsh.aifit.feature.training.ui.TrainingHubScreen
@@ -196,11 +198,46 @@ private fun MainNavScreen() {
                     composable(NutritionRoutes.TARGET) {
                         StubScreen("Nutrition Target — Sprint 10")
                     }
-                    composable(NutritionRoutes.DIET_DETAIL) {
-                        StubScreen("Diet Detail — Sprint 9")
+                    composable(
+                        route = NutritionRoutes.DIET_DETAIL,
+                        arguments = listOf(
+                            navArgument("planId") { type = NavType.StringType },
+                        ),
+                    ) { backStackEntry ->
+                        val planId = backStackEntry.arguments?.getString("planId") ?: ""
+                        DietDetailScreen(
+                            planId = planId,
+                            onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateToGenerate = { adaptive, basePlanId ->
+                                tabNavController.navigate(NutritionRoutes.dietGenerateRoute(adaptive, basePlanId))
+                            },
+                        )
                     }
-                    composable(NutritionRoutes.DIET_GENERATE) {
-                        StubScreen("Generate Diet — Sprint 10")
+                    composable(
+                        route = NutritionRoutes.DIET_GENERATE,
+                        arguments = listOf(
+                            navArgument("adaptive") {
+                                type = NavType.StringType
+                                defaultValue = "false"
+                            },
+                            navArgument("basePlanId") {
+                                type = NavType.StringType
+                                defaultValue = ""
+                            },
+                        ),
+                    ) { backStackEntry ->
+                        val adaptive = backStackEntry.arguments?.getString("adaptive")?.toBooleanStrictOrNull() ?: false
+                        val basePlanId = backStackEntry.arguments?.getString("basePlanId")?.ifBlank { null }
+                        GenerateDietScreen(
+                            adaptive = adaptive,
+                            basePlanId = basePlanId,
+                            onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateToDetail = { newPlanId ->
+                                tabNavController.navigate(NutritionRoutes.dietDetailRoute(newPlanId)) {
+                                    popUpTo(NutritionRoutes.DIET_GENERATE) { inclusive = true }
+                                }
+                            },
+                        )
                     }
                     composable(NutritionRoutes.SHOPPING_DETAIL) {
                         StubScreen("Shopping Detail — Sprint 11")
