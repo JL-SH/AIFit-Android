@@ -31,6 +31,8 @@ import com.jlsh.aifit.feature.diet.ui.GenerateDietScreen
 import com.jlsh.aifit.feature.training.ui.GeneratePlanScreen
 import com.jlsh.aifit.feature.training.ui.TrainingDetailScreen
 import com.jlsh.aifit.feature.training.ui.TrainingHubScreen
+import com.jlsh.aifit.feature.workout.ui.WorkoutDetailScreen
+import com.jlsh.aifit.feature.workout.ui.WorkoutLogScreen
 
 private val tabRouteToGraphRoute = mapOf(
     "home" to HomeRoutes.GRAPH,
@@ -127,6 +129,9 @@ private fun MainNavScreen() {
                             onNavigateToWorkoutLog = { planId ->
                                 tabNavController.navigate(TrainingRoutes.workoutLogRoute(planId))
                             },
+                            onNavigateToWorkoutDetail = { logId ->
+                                tabNavController.navigate(TrainingRoutes.workoutDetailRoute(logId))
+                            },
                         )
                     }
                     composable(
@@ -173,11 +178,37 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(TrainingRoutes.WORKOUT_LOG) {
-                        StubScreen("Workout Log — Sprint 7")
+                    composable(
+                        route = TrainingRoutes.WORKOUT_LOG,
+                        arguments = listOf(
+                            navArgument("planId") {
+                                type = NavType.StringType
+                                defaultValue = ""
+                            },
+                        ),
+                    ) { backStackEntry ->
+                        val planId = backStackEntry.arguments?.getString("planId") ?: ""
+                        WorkoutLogScreen(
+                            planId = planId,
+                            onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateToDetail = { logId ->
+                                tabNavController.navigate(TrainingRoutes.workoutDetailRoute(logId)) {
+                                    popUpTo(TrainingRoutes.WORKOUT_LOG) { inclusive = true }
+                                }
+                            },
+                        )
                     }
-                    composable(TrainingRoutes.WORKOUT_DETAIL) {
-                        StubScreen("Workout Detail — Sprint 7")
+                    composable(
+                        route = TrainingRoutes.WORKOUT_DETAIL,
+                        arguments = listOf(
+                            navArgument("logId") { type = NavType.StringType },
+                        ),
+                    ) { backStackEntry ->
+                        val logId = backStackEntry.arguments?.getString("logId") ?: ""
+                        WorkoutDetailScreen(
+                            logId = logId,
+                            onNavigateBack = { tabNavController.popBackStack() },
+                        )
                     }
                 }
 

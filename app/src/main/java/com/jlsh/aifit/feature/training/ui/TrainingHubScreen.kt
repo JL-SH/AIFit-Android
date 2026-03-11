@@ -58,6 +58,7 @@ import com.jlsh.aifit.feature.training.ui.state.TrainingUiState
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.GoalType
 import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
+import com.jlsh.aifit.feature.workout.ui.WorkoutHistoryScreen
 import java.time.LocalDateTime
 
 private val HUB_TABS = listOf("MY PLANS", "WORKOUT LOG")
@@ -67,6 +68,7 @@ fun TrainingHubScreen(
     onNavigateToDetail: (planId: String) -> Unit,
     onNavigateToGenerate: (adaptive: Boolean, basePlanId: String?) -> Unit,
     onNavigateToWorkoutLog: (planId: String) -> Unit,
+    onNavigateToWorkoutDetail: (logId: String) -> Unit,
     viewModel: TrainingViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -136,7 +138,9 @@ fun TrainingHubScreen(
                     },
                     onCreatePlan = { viewModel.onNavigateToGenerate() },
                 )
-                1 -> WorkoutHistoryPlaceholder()
+                1 -> WorkoutHistoryScreen(
+                        onNavigateToDetail = onNavigateToWorkoutDetail,
+                    )
             }
         }
     }
@@ -309,21 +313,6 @@ private fun PlanCard(
     }
 }
 
-@Composable
-fun WorkoutHistoryPlaceholder() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = AiFitSpacing.xxl),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        EmptyStateView(
-            icon = Icons.Rounded.FitnessCenter,
-            title = "Historial de sesiones",
-            subtitle = "El historial de sesiones aparecerá aquí",
-        )
-    }
-}
 
 @Preview(
     showBackground = true,
