@@ -5,6 +5,8 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.jlsh.aifit.feature.diet.data.local.DietPlanDao
 import com.jlsh.aifit.feature.diet.data.local.DietPlanEntity
+import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogDao
+import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogEntity
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanDao
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanEntity
 import com.jlsh.aifit.feature.user.data.local.UserProfileDao
@@ -18,8 +20,9 @@ import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
         TrainingPlanEntity::class,
         DietPlanEntity::class,
         WorkoutLogEntity::class,
+        NutritionLogEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -28,4 +31,5 @@ abstract class AiFitDatabase : RoomDatabase() {
     abstract fun trainingPlanDao(): TrainingPlanDao
     abstract fun dietPlanDao(): DietPlanDao
     abstract fun workoutLogDao(): WorkoutLogDao
+    abstract fun nutritionLogDao(): NutritionLogDao
 }
