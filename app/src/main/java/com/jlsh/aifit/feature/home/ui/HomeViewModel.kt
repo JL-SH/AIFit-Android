@@ -173,24 +173,21 @@ class HomeViewModel @Inject constructor(
         weeklySummary: WeeklyProgressSummary?,
     ): TodayTrainingState? {
         val activePlan = plans.find { it.status == PlanStatus.ACTIVE } ?: return null
-        if (activePlan.days.isEmpty()) return null
+        if (activePlan.totalDays == 0) return null
 
         val dayOfWeek = LocalDate.now().dayOfWeek.value
-        val dayIndex = (dayOfWeek - 1) % activePlan.days.size
-        val todayDay = activePlan.days.getOrNull(dayIndex) ?: activePlan.days.first()
+        val dayNumber = (dayOfWeek - 1) % activePlan.totalDays + 1
 
         val adherence = if (weeklySummary != null && weeklySummary.workoutsTarget > 0) {
             (weeklySummary.workoutsThisWeek.toFloat() / weeklySummary.workoutsTarget * 100f)
                 .coerceIn(0f, 100f)
-        } else {
-            0f
-        }
+        } else 0f
 
         return TodayTrainingState(
             planId = activePlan.id,
             planName = activePlan.name,
-            dayName = todayDay.name,
-            exerciseCount = todayDay.exercises.size,
+            dayName = "Día $dayNumber",
+            exerciseCount = 0,
             adherencePercentage = adherence,
         )
     }
