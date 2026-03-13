@@ -2,11 +2,10 @@ package com.jlsh.aifit.feature.diet.domain.model
 
 enum class MealType {
     BREAKFAST,
-    MORNING_SNACK,
+    MID_MORNING,
     LUNCH,
     AFTERNOON_SNACK,
     DINNER,
-    EVENING_SNACK,
     PRE_WORKOUT,
     POST_WORKOUT,
     UNKNOWN;

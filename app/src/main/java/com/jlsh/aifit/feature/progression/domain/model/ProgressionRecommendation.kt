@@ -1,11 +1,11 @@
 package com.jlsh.aifit.feature.progression.domain.model
 
 enum class ProgressionType {
-    WEIGHT_INCREASE,
-    REP_INCREASE,
-    SET_INCREASE,
-    MAINTAIN,
+    INCREASE_LOAD,
+    MAINTAIN_LOAD,
+    DECREASE_REPS,
     DELOAD,
+    CHANGE_REP_RANGE,
     INSUFFICIENT_DATA,
     UNKNOWN;
 

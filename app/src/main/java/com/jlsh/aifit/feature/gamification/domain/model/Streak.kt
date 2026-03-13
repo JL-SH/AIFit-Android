@@ -3,10 +3,9 @@ package com.jlsh.aifit.feature.gamification.domain.model
 import java.time.LocalDate
 
 enum class StreakType {
-    WORKOUT,
+    TRAINING,
     NUTRITION,
     COMBINED,
-    LOGIN,
     UNKNOWN;
 
     companion object {
@@ -17,8 +16,8 @@ enum class StreakType {
 
 enum class StreakStatus {
     ACTIVE,
-    FROZEN,
     BROKEN,
+    RECOVERING,
     UNKNOWN;
 
     companion object {

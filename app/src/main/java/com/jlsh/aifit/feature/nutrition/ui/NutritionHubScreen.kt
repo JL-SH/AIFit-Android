@@ -686,7 +686,7 @@ private fun NutritionHubTodayPreview() {
                         carbsTarget = 250.0,
                         fatTarget = 73.0,
                         effectiveFrom = LocalDate.now(),
-                        setBy = TargetSource.USER,
+                        setBy = TargetSource.MANUAL,
                     ),
                 ),
                 onRingClicked = {},

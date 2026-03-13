@@ -3,12 +3,9 @@ package com.jlsh.aifit.feature.metabolic.domain.model
 enum class AdjustmentType {
     INCREASE_CALORIES,
     DECREASE_CALORIES,
+    INCREASE_PROTEIN,
+    REBALANCE_MACROS,
     MAINTAIN,
-    RECALCULATE,
-    CALORIE_INCREASE,
-    CALORIE_DECREASE,
-    MAINTENANCE_HOLD,
-    REVERSE_DIET,
     UNKNOWN;
 
     companion object {
@@ -18,9 +15,9 @@ enum class AdjustmentType {
 }
 
 enum class AdjustmentMagnitude {
-    SMALL,
+    MINOR,
     MODERATE,
-    LARGE,
+    SIGNIFICANT,
     UNKNOWN;
 
     companion object {
@@ -30,9 +27,9 @@ enum class AdjustmentMagnitude {
 }
 
 enum class AdjustmentUrgency {
-    LOW,
-    MEDIUM,
-    HIGH,
+    INFORMATIONAL,
+    SUGGESTED,
+    RECOMMENDED,
     UNKNOWN;
 
     companion object {

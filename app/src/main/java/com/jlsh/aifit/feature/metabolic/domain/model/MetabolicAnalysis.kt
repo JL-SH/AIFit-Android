@@ -1,16 +1,12 @@
 package com.jlsh.aifit.feature.metabolic.domain.model
 
 enum class MetabolicStatus {
-    OPTIMAL,
-    PLATEAU,
-    CUTTING_TOO_FAST,
-    BULKING_TOO_FAST,
-    INSUFFICIENT_DATA,
-    MAINTENANCE_DEVIATION,
     ON_TRACK,
-    SLIGHT_DEVIATION,
-    SIGNIFICANT_DEVIATION,
-    REVERSE_TREND,
+    STAGNATED,
+    UNDER_EATING_SIGNAL,
+    OVER_EATING_SIGNAL,
+    PROGRESSING_TOO_FAST,
+    INSUFFICIENT_DATA,
     UNKNOWN;
 
     companion object {

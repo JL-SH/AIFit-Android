@@ -2,7 +2,7 @@ package com.jlsh.aifit.feature.progression.domain.model
 
 enum class ProgressTrend {
     IMPROVING,
-    PLATEAU,
+    MAINTAINING,
     DECLINING,
     INSUFFICIENT_DATA,
     UNKNOWN;

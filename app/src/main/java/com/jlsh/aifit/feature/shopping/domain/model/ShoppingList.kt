@@ -4,9 +4,6 @@ enum class ShoppingListPeriod {
     ONE_WEEK,
     TWO_WEEKS,
     ONE_MONTH,
-    WEEKLY,
-    BIWEEKLY,
-    MONTHLY,
     UNKNOWN;
 
     companion object {

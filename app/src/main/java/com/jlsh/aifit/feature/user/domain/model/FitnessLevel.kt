@@ -4,7 +4,6 @@ enum class FitnessLevel {
     BEGINNER,
     INTERMEDIATE,
     ADVANCED,
-    ELITE,
     UNKNOWN;
 
     companion object {

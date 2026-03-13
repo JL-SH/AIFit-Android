@@ -2,10 +2,10 @@ package com.jlsh.aifit.feature.user.domain.model
 
 enum class ActivityLevel {
     SEDENTARY,
-    LIGHTLY_ACTIVE,
-    MODERATELY_ACTIVE,
+    LIGHT,
+    MODERATE,
+    ACTIVE,
     VERY_ACTIVE,
-    EXTREMELY_ACTIVE,
     UNKNOWN;
 
     companion object {

@@ -4,7 +4,7 @@ enum class PreferredLocation {
     GYM,
     HOME,
     OUTDOOR,
-    ANY,
+    HOME_GYM,
     UNKNOWN;
 
     companion object {

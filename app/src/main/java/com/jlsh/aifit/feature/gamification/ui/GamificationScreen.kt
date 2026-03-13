@@ -266,7 +266,6 @@ private fun AchievementCard(
         AchievementRarity.COMMON -> MaterialTheme.colorScheme.surfaceVariant
         AchievementRarity.UNCOMMON -> MaterialTheme.colorScheme.surfaceVariant
         AchievementRarity.RARE -> MaterialTheme.colorScheme.tertiaryContainer
-        AchievementRarity.EPIC -> MaterialTheme.colorScheme.primaryContainer
         AchievementRarity.LEGENDARY -> MaterialTheme.colorScheme.errorContainer
         AchievementRarity.UNKNOWN -> MaterialTheme.colorScheme.surfaceVariant
     }
@@ -413,17 +412,16 @@ private fun RecordsTab(records: List<PersonalRecord>) {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 private fun streakTypeLabel(type: StreakType): String = when (type) {
-    StreakType.WORKOUT -> "Entrenamiento"
+    StreakType.TRAINING -> "Entrenamiento"
     StreakType.NUTRITION -> "Nutrición"
     StreakType.COMBINED -> "Combinada"
-    StreakType.LOGIN -> "Conexión"
     StreakType.UNKNOWN -> "Racha"
 }
 
 private fun StreakStatus.toBadgeStatus(): BadgeStreakStatus = when (this) {
     StreakStatus.ACTIVE -> BadgeStreakStatus.ACTIVE
-    StreakStatus.FROZEN -> BadgeStreakStatus.FROZEN
     StreakStatus.BROKEN -> BadgeStreakStatus.BROKEN
+    StreakStatus.RECOVERING -> BadgeStreakStatus.FROZEN
     StreakStatus.UNKNOWN -> BadgeStreakStatus.BROKEN
 }
 
@@ -443,7 +441,7 @@ private fun GamificationScreenPreview() {
             StreaksTab(
                 streaks = listOf(
                     Streak(
-                        type = StreakType.WORKOUT,
+                        type = StreakType.TRAINING,
                         status = StreakStatus.ACTIVE,
                         currentCount = 12,
                         longestCount = 15,
@@ -452,7 +450,7 @@ private fun GamificationScreenPreview() {
                     ),
                     Streak(
                         type = StreakType.NUTRITION,
-                        status = StreakStatus.FROZEN,
+                        status = StreakStatus.RECOVERING,
                         currentCount = 3,
                         longestCount = 20,
                         lastActivityDate = LocalDate.now().minusDays(2),

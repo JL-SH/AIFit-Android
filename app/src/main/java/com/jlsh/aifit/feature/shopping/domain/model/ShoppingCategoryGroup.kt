@@ -4,11 +4,10 @@ enum class ShoppingCategory {
     PROTEINS,
     VEGETABLES,
     FRUITS,
-    GRAINS,
+    GRAINS_AND_CARBS,
     DAIRY,
-    FATS_OILS,
-    CONDIMENTS,
-    BEVERAGES,
+    FATS_AND_OILS,
+    CONDIMENTS_AND_SPICES,
     OTHER,
     UNKNOWN;
 

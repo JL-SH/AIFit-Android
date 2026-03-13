@@ -1,14 +1,14 @@
 package com.jlsh.aifit.feature.user.domain.model
 
 enum class DietPreference {
-    STANDARD,
+    NONE,
     VEGETARIAN,
     VEGAN,
     KETO,
     PALEO,
-    MEDITERRANEAN,
     GLUTEN_FREE,
-    DAIRY_FREE,
+    LACTOSE_FREE,
+    MEDITERRANEAN,
     UNKNOWN;
 
     companion object {

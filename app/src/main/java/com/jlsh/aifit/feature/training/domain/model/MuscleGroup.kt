@@ -7,11 +7,9 @@ enum class MuscleGroup {
     BICEPS,
     TRICEPS,
     FOREARMS,
-    CORE,
+    LEGS,
     GLUTES,
-    QUADS,
-    HAMSTRINGS,
-    CALVES,
+    CORE,
     FULL_BODY,
     CARDIO,
     UNKNOWN;

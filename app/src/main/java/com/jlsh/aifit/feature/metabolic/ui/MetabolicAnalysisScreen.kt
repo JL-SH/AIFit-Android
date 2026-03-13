@@ -196,13 +196,11 @@ private fun MetabolicContent(
 @Composable
 private fun StatusSection(status: MetabolicStatus) {
     val statusLabel = when (status) {
-        MetabolicStatus.OPTIMAL, MetabolicStatus.ON_TRACK -> "ON TRACK"
-        MetabolicStatus.PLATEAU -> "PLATEAU"
-        MetabolicStatus.SLIGHT_DEVIATION, MetabolicStatus.MAINTENANCE_DEVIATION -> "SLIGHT DEVIATION"
-        MetabolicStatus.SIGNIFICANT_DEVIATION -> "SIGNIFICANT DEVIATION"
-        MetabolicStatus.CUTTING_TOO_FAST -> "CUTTING TOO FAST"
-        MetabolicStatus.BULKING_TOO_FAST -> "BULKING TOO FAST"
-        MetabolicStatus.REVERSE_TREND -> "REVERSE TREND"
+        MetabolicStatus.ON_TRACK -> "ON TRACK"
+        MetabolicStatus.STAGNATED -> "STAGNATED"
+        MetabolicStatus.UNDER_EATING_SIGNAL -> "UNDER EATING"
+        MetabolicStatus.OVER_EATING_SIGNAL -> "OVER EATING"
+        MetabolicStatus.PROGRESSING_TOO_FAST -> "PROGRESSING TOO FAST"
         MetabolicStatus.INSUFFICIENT_DATA -> "INSUFFICIENT DATA"
         MetabolicStatus.UNKNOWN -> "UNKNOWN"
     }
@@ -439,7 +437,7 @@ private fun MetabolicScreenPreview() {
                 paddingValues = PaddingValues(),
                 state = MetabolicUiState.Success(
                     analysis = MetabolicAnalysis(
-                        status = MetabolicStatus.PLATEAU,
+                        status = MetabolicStatus.STAGNATED,
                         weightTrend = WeightTrend(
                             averageWeeklyChange = -0.05,
                             trend = "STABLE",
@@ -455,15 +453,15 @@ private fun MetabolicScreenPreview() {
                             suggestedProteinTarget = 140.0,
                             suggestedCarbsTarget = 220.0,
                             suggestedFatTarget = 65.0,
-                            magnitude = AdjustmentMagnitude.SMALL,
-                            urgency = AdjustmentUrgency.MEDIUM,
+                            magnitude = AdjustmentMagnitude.MINOR,
+                            urgency = AdjustmentUrgency.SUGGESTED,
                         ),
                         rationale = "Your weight has plateaued for 2 weeks despite being in a caloric deficit. Consider reducing calories slightly to restart progress.",
                     ),
                     insights = listOf(
                         MetabolicInsight(
                             id = "1",
-                            statusAtTime = MetabolicStatus.CUTTING_TOO_FAST,
+                            statusAtTime = MetabolicStatus.PROGRESSING_TOO_FAST,
                             adjustmentType = AdjustmentType.INCREASE_CALORIES,
                             previousCalorieTarget = 1800,
                             newCalorieTarget = 2000,

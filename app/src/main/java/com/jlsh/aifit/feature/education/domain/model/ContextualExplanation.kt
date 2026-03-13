@@ -1,8 +1,10 @@
 package com.jlsh.aifit.feature.education.domain.model
 
 enum class ExplanationReferenceType {
-    EXERCISE,
+    TRAINING_EXERCISE,
     MEAL,
+    DIET_DAY,
+    TRAINING_DAY,
     UNKNOWN;
 
     companion object {

@@ -11,8 +11,7 @@ fun GoalType.displayName(): String = when (this) {
     GoalType.LOSE_WEIGHT -> "Perder peso"
     GoalType.GAIN_MUSCLE -> "Ganar músculo"
     GoalType.MAINTAIN -> "Mantener"
-    GoalType.IMPROVE_ENDURANCE -> "Mejorar resistencia"
-    GoalType.GENERAL_FITNESS -> "Fitness general"
+    GoalType.BODY_RECOMPOSITION -> "Recomposición corporal"
     GoalType.UNKNOWN -> "Desconocido"
 }
 
@@ -20,16 +19,15 @@ fun FitnessLevel.displayName(): String = when (this) {
     FitnessLevel.BEGINNER -> "Principiante"
     FitnessLevel.INTERMEDIATE -> "Intermedio"
     FitnessLevel.ADVANCED -> "Avanzado"
-    FitnessLevel.ELITE -> "Élite"
     FitnessLevel.UNKNOWN -> "Desconocido"
 }
 
 fun ActivityLevel.displayName(): String = when (this) {
     ActivityLevel.SEDENTARY -> "Sedentario"
-    ActivityLevel.LIGHTLY_ACTIVE -> "Ligeramente activo"
-    ActivityLevel.MODERATELY_ACTIVE -> "Moderadamente activo"
+    ActivityLevel.LIGHT -> "Ligeramente activo"
+    ActivityLevel.MODERATE -> "Moderadamente activo"
+    ActivityLevel.ACTIVE -> "Activo"
     ActivityLevel.VERY_ACTIVE -> "Muy activo"
-    ActivityLevel.EXTREMELY_ACTIVE -> "Extremadamente activo"
     ActivityLevel.UNKNOWN -> "Desconocido"
 }
 
@@ -37,7 +35,6 @@ fun Gender.displayName(): String = when (this) {
     Gender.MALE -> "Masculino"
     Gender.FEMALE -> "Femenino"
     Gender.OTHER -> "Otro"
-    Gender.PREFER_NOT_TO_SAY -> "Prefiero no decir"
     Gender.UNKNOWN -> "Desconocido"
 }
 
@@ -45,19 +42,19 @@ fun PreferredLocation.displayName(): String = when (this) {
     PreferredLocation.GYM -> "Gimnasio"
     PreferredLocation.HOME -> "Casa"
     PreferredLocation.OUTDOOR -> "Exterior"
-    PreferredLocation.ANY -> "Cualquiera"
+    PreferredLocation.HOME_GYM -> "Gimnasio en casa"
     PreferredLocation.UNKNOWN -> "Desconocido"
 }
 
 fun DietPreference.displayName(): String = when (this) {
-    DietPreference.STANDARD -> "Estándar"
+    DietPreference.NONE -> "Sin preferencia"
     DietPreference.VEGETARIAN -> "Vegetariano"
     DietPreference.VEGAN -> "Vegano"
     DietPreference.KETO -> "Keto"
     DietPreference.PALEO -> "Paleo"
-    DietPreference.MEDITERRANEAN -> "Mediterráneo"
     DietPreference.GLUTEN_FREE -> "Sin gluten"
-    DietPreference.DAIRY_FREE -> "Sin lácteos"
+    DietPreference.LACTOSE_FREE -> "Sin lactosa"
+    DietPreference.MEDITERRANEAN -> "Mediterráneo"
     DietPreference.UNKNOWN -> "Desconocido"
 }
 

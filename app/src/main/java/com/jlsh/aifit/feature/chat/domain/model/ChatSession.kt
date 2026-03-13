@@ -3,7 +3,6 @@ package com.jlsh.aifit.feature.chat.domain.model
 enum class ChatSessionStatus {
     ACTIVE,
     ARCHIVED,
-    DELETED,
     UNKNOWN;
 
     companion object {

@@ -536,17 +536,16 @@ private fun WeightTrendCard(
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 private fun streakLabel(type: StreakType): String = when (type) {
-    StreakType.WORKOUT -> "Entrenamiento"
+    StreakType.TRAINING -> "Entrenamiento"
     StreakType.NUTRITION -> "Nutrición"
     StreakType.COMBINED -> "Combinada"
-    StreakType.LOGIN -> "Conexión"
     StreakType.UNKNOWN -> "Racha"
 }
 
 private fun StreakStatus.toBadgeStatus(): BadgeStreakStatus = when (this) {
     StreakStatus.ACTIVE -> BadgeStreakStatus.ACTIVE
-    StreakStatus.FROZEN -> BadgeStreakStatus.FROZEN
     StreakStatus.BROKEN -> BadgeStreakStatus.BROKEN
+    StreakStatus.RECOVERING -> BadgeStreakStatus.FROZEN
     StreakStatus.UNKNOWN -> BadgeStreakStatus.BROKEN
 }
 
@@ -588,7 +587,7 @@ private fun HomeScreenPreview() {
                     ),
                     streaks = listOf(
                         Streak(
-                            type = StreakType.WORKOUT,
+                            type = StreakType.TRAINING,
                             status = StreakStatus.ACTIVE,
                             currentCount = 12,
                             longestCount = 15,

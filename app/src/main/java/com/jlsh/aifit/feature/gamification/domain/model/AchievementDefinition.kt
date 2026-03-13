@@ -1,12 +1,14 @@
 package com.jlsh.aifit.feature.gamification.domain.model
 
 enum class AchievementType {
-    WORKOUT_MILESTONE,
-    NUTRITION_MILESTONE,
-    STREAK,
+    STRENGTH_MILESTONE,
+    ADHERENCE_STREAK,
+    NUTRITION_CONSISTENCY,
+    KNOWLEDGE_ACQUIRED,
+    WEIGHT_GOAL,
+    FIRST_PLAN_COMPLETED,
+    CONSECUTIVE_WEEKS,
     PERSONAL_RECORD,
-    CONSISTENCY,
-    SPECIAL,
     UNKNOWN;
 
     companion object {
@@ -19,7 +21,6 @@ enum class AchievementRarity {
     COMMON,
     UNCOMMON,
     RARE,
-    EPIC,
     LEGENDARY,
     UNKNOWN;
 

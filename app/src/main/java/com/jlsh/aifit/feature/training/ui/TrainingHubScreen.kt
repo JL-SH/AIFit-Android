@@ -345,7 +345,7 @@ private fun TrainingHubScreenPreview() {
                 goalType = GoalType.LOSE_WEIGHT,
                 fitnessLevel = FitnessLevel.BEGINNER,
                 location = PreferredLocation.HOME,
-                status = PlanStatus.COMPLETED,
+                status = PlanStatus.ARCHIVED,
                 totalDays = 24,
                 createdAt = LocalDateTime.now(),
             ),

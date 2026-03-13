@@ -546,7 +546,7 @@ private fun TrainingDetailScreenPreview() {
                         exercises = listOf(
                             TrainingExercise(
                                 id = "e6", name = "Back Squat", description = null,
-                                primaryMuscle = MuscleGroup.QUADS,
+                                primaryMuscle = MuscleGroup.LEGS,
                                 secondaryMuscle = MuscleGroup.GLUTES,
                                 sets = 5, repsMin = 5, repsMax = 5, restSeconds = 240,
                                 notes = null, order = 1,

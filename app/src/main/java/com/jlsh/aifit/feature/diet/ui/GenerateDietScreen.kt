@@ -56,7 +56,7 @@ fun GenerateDietScreen(
     // Form state
     var durationWeeks by remember { mutableStateOf("4") }
     var mealsPerDay by remember { mutableStateOf("4") }
-    var dietPreference by remember { mutableStateOf(DietPreference.STANDARD.name) }
+    var dietPreference by remember { mutableStateOf(DietPreference.NONE.name) }
     var goalType by remember { mutableStateOf("") }
     var budget by remember { mutableStateOf("") }
     var allergies by remember { mutableStateOf("") }

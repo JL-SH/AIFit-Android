@@ -2,9 +2,8 @@ package com.jlsh.aifit.feature.training.domain.model
 
 enum class PlanStatus {
     ACTIVE,
-    DRAFT,
-    COMPLETED,
     ARCHIVED,
+    DELETED,
     UNKNOWN;
 
     companion object {

@@ -4,8 +4,7 @@ enum class GoalType {
     LOSE_WEIGHT,
     GAIN_MUSCLE,
     MAINTAIN,
-    IMPROVE_ENDURANCE,
-    GENERAL_FITNESS,
+    BODY_RECOMPOSITION,
     UNKNOWN;
 
     companion object {

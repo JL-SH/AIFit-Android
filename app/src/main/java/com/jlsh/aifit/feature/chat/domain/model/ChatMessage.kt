@@ -3,7 +3,6 @@ package com.jlsh.aifit.feature.chat.domain.model
 enum class ChatMessageRole {
     USER,
     ASSISTANT,
-    SYSTEM,
     UNKNOWN;
 
     companion object {

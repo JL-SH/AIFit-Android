@@ -1,8 +1,7 @@
 package com.jlsh.aifit.feature.nutrition.domain.model
 
 enum class TargetSource {
-    USER,
-    METABOLIC_ADJUSTMENT,
+    MANUAL,
     AI_GENERATED,
     UNKNOWN;
 

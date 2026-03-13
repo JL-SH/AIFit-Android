@@ -16,7 +16,7 @@ data class ProgressExport(
 enum class ExportPeriod(val apiValue: String) {
     LAST_WEEK("LAST_WEEK"),
     LAST_MONTH("LAST_MONTH"),
-    LAST_3_MONTHS("LAST_3_MONTHS"),
+    LAST_THREE_MONTHS("LAST_THREE_MONTHS"),
     ALL_TIME("ALL_TIME");
 }
 
