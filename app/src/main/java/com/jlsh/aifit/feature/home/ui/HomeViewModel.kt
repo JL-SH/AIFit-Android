@@ -75,16 +75,12 @@ class HomeViewModel @Inject constructor(
             val streaks = streaksDeferred.await()
             val weightEntries = weightDeferred.await()
 
-            // If profile fails, show error
             if (profile == null) {
                 _uiState.value = HomeUiState.Error("No se pudo cargar el perfil")
                 return@launch
             }
 
-            // Derive today's training
             val todayTraining = deriveTodayTraining(plans, weeklySummary)
-
-            // Derive today's nutrition
             val todayNutrition = deriveNutrition(nutritionPair.first, nutritionPair.second)
 
             _uiState.value = HomeUiState.Success(
@@ -130,27 +126,23 @@ class HomeViewModel @Inject constructor(
     // ── Private helpers ──
 
     private suspend fun loadProfile(): UserProfile? =
-        when (val r = getUserProfileUseCase().first()) {
-            is Result.Success -> r.data
-            else -> null
-        }
+        getUserProfileUseCase()
+            .first { it !is Result.Loading }
+            .let { r -> if (r is Result.Success) r.data else null }
 
     private suspend fun loadPlans(): List<TrainingPlan> =
-        when (val r = getTrainingPlansUseCase().first()) {
-            is Result.Success -> r.data
-            else -> emptyList()
-        }
+        getTrainingPlansUseCase()
+            .first { it !is Result.Loading }
+            .let { r -> if (r is Result.Success) r.data else emptyList() }
 
     private suspend fun loadNutrition(): Pair<NutritionLog?, NutritionTarget?> {
         val today = LocalDate.now()
-        val log = when (val r = getNutritionLogUseCase(today).first()) {
-            is Result.Success -> r.data
-            else -> null
-        }
-        val target = when (val r = getCurrentNutritionTargetUseCase().first()) {
-            is Result.Success -> r.data
-            else -> null
-        }
+        val log = getNutritionLogUseCase(today)
+            .first { it !is Result.Loading }
+            .let { r -> if (r is Result.Success) r.data else null }
+        val target = getCurrentNutritionTargetUseCase()
+            .first { it !is Result.Loading }
+            .let { r -> if (r is Result.Success) r.data else null }
         return log to target
     }
 
@@ -168,12 +160,12 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun loadWeightHistory(): List<BodyWeightLog> {
         val today = LocalDate.now()
-        val from = today.minusDays(30).toString()
-        val to = today.toString()
-        return when (val r = getBodyWeightHistoryUseCase(from, to).first()) {
-            is Result.Success -> r.data.takeLast(7)
-            else -> emptyList()
-        }
+        return getBodyWeightHistoryUseCase(
+            today.minusDays(30).toString(),
+            today.toString()
+        )
+            .first { it !is Result.Loading }
+            .let { r -> if (r is Result.Success) r.data.takeLast(7) else emptyList() }
     }
 
     private fun deriveTodayTraining(
@@ -183,12 +175,10 @@ class HomeViewModel @Inject constructor(
         val activePlan = plans.find { it.status == PlanStatus.ACTIVE } ?: return null
         if (activePlan.days.isEmpty()) return null
 
-        // Determine today's day index (rotate over frequency)
-        val dayOfWeek = LocalDate.now().dayOfWeek.value // 1=Monday
+        val dayOfWeek = LocalDate.now().dayOfWeek.value
         val dayIndex = (dayOfWeek - 1) % activePlan.days.size
         val todayDay = activePlan.days.getOrNull(dayIndex) ?: activePlan.days.first()
 
-        // Adherence approximation from weekly summary
         val adherence = if (weeklySummary != null && weeklySummary.workoutsTarget > 0) {
             (weeklySummary.workoutsThisWeek.toFloat() / weeklySummary.workoutsTarget * 100f)
                 .coerceIn(0f, 100f)
@@ -237,5 +227,3 @@ class HomeViewModel @Inject constructor(
         }
     }
 }
-
-
