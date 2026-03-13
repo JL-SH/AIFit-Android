@@ -25,6 +25,8 @@ import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import com.jlsh.aifit.feature.user.domain.usecase.UpdateUserProfileUseCase
 import com.jlsh.aifit.feature.user.ui.state.UserUiEvent
 import com.jlsh.aifit.feature.user.ui.state.UserUiState
+import com.jlsh.aifit.core.ui.components.inputs.DateValidationResult
+import com.jlsh.aifit.core.ui.components.inputs.DateValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -116,6 +118,9 @@ class UserViewModel @Inject constructor(
     private val _calorieTarget = MutableStateFlow("")
     val calorieTarget: StateFlow<String> = _calorieTarget.asStateFlow()
 
+    private val _birthDateError = MutableStateFlow<String?>(null)
+    val birthDateError: StateFlow<String?> = _birthDateError.asStateFlow()
+
     val isEditMode: Boolean = savedStateHandle.get<String>("mode") == "edit"
 
     // 4. INIT
@@ -127,7 +132,10 @@ class UserViewModel @Inject constructor(
 
     // 5. PUBLIC FUNCTIONS
     fun onNameChanged(value: String) { _name.value = value }
-    fun onBirthDateChanged(value: String) { _birthDate.value = value }
+    fun onBirthDateChanged(value: String) {
+        _birthDate.value = value
+        _birthDateError.value = null
+    }
     fun onGenderChanged(value: String) { _gender.value = value }
     fun onHeightChanged(value: String) { _height.value = value }
     fun onWeightChanged(value: String) { _weight.value = value }
@@ -143,6 +151,7 @@ class UserViewModel @Inject constructor(
     fun onCalorieTargetChanged(value: String) { _calorieTarget.value = value }
 
     fun onSaveProfile() {
+        if (!validateForm()) return
         if (isEditMode) updateProfile() else createProfile()
     }
 
@@ -167,6 +176,23 @@ class UserViewModel @Inject constructor(
     }
 
     // 6. PRIVATE HELPERS
+    private fun validateForm(): Boolean {
+        val dateStr = _birthDate.value
+        if (dateStr.isNotBlank()) {
+            val parsed = DateValidator.parseIsoString(dateStr)
+            if (parsed == null) {
+                _birthDateError.value = "Formato inválido. Usa yyyy-MM-dd (ej: 1995-03-15)"
+                return false
+            }
+            val result = DateValidator.validate(parsed)
+            if (result !is DateValidationResult.Valid) {
+                _birthDateError.value = result.toErrorMessage()
+                return false
+            }
+        }
+        return true
+    }
+
     private fun loadGamificationStats() {
         viewModelScope.launch {
             // Streaks
@@ -320,9 +346,3 @@ class UserViewModel @Inject constructor(
         viewModelScope.launch { _events.send(event) }
     }
 }
-
-
-
-
-
-

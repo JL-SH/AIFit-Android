@@ -8,6 +8,6 @@ fun AppException.toMessage(): String = when (this) {
     is AppException.ValidationException -> errors.values.firstOrNull() ?: "Datos inválidos."
     is AppException.ConflictException -> "El recurso ya existe o hay un conflicto."
     is AppException.ServerException -> "Error del servidor. Inténtalo más tarde."
-    is AppException.UnknownException -> "Error inesperado. Inténtalo de nuevo."
+    is AppException.UnknownException -> message.ifBlank { "Error inesperado. Inténtalo de nuevo." }
 }
 
