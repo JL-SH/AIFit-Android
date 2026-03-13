@@ -6,8 +6,8 @@ import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 
 data class TodayState(
-    val nutritionLog: NutritionLog,
-    val target: NutritionTarget,
+    val nutritionLog: NutritionLog? = null,
+    val target: NutritionTarget? = null,
 )
 
 sealed class NutritionHubUiState {

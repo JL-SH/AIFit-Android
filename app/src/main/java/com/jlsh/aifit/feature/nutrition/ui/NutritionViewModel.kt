@@ -76,30 +76,20 @@ class NutritionViewModel @Inject constructor(
             ) { logResult, targetResult, plansResult ->
                 Triple(logResult, targetResult, plansResult)
             }.collect { (logResult, targetResult, plansResult) ->
+                if (logResult is Result.Loading || targetResult is Result.Loading) {
+                    _hubState.value = NutritionHubUiState.Loading
+                    return@collect
+                }
+
                 val log = (logResult as? Result.Success)?.data
                 val target = (targetResult as? Result.Success)?.data
                 val plans = (plansResult as? Result.Success)?.data ?: emptyList()
 
-                when {
-                    logResult is Result.Loading || targetResult is Result.Loading ->
-                        _hubState.value = NutritionHubUiState.Loading
-
-                    log != null && target != null ->
-                        _hubState.value = NutritionHubUiState.Success(
-                            todayState = TodayState(nutritionLog = log, target = target),
-                            dietPlans = plans,
-                            selectedTabIndex = _selectedTabIndex.value,
-                        )
-
-                    logResult is Result.Error ->
-                        _hubState.value = NutritionHubUiState.Error(logResult.exception.toMessage())
-
-                    targetResult is Result.Error ->
-                        _hubState.value = NutritionHubUiState.Error(targetResult.exception.toMessage())
-
-                    else ->
-                        _hubState.value = NutritionHubUiState.Loading
-                }
+                _hubState.value = NutritionHubUiState.Success(
+                    todayState = TodayState(nutritionLog = log, target = target),
+                    dietPlans = plans,
+                    selectedTabIndex = _selectedTabIndex.value,
+                )
             }
         }
     }

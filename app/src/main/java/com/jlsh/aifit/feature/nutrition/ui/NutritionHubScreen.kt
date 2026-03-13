@@ -234,6 +234,29 @@ private fun TodayTab(
     val log = todayState.nutritionLog
     val target = todayState.target
 
+    if (log == null || target == null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = AiFitSpacing.xxl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            EmptyStateView(
+                icon = Icons.Rounded.Restaurant,
+                title = "Sin datos de hoy",
+                subtitle = "Configura tu objetivo calórico para empezar",
+                action = {
+                    PrimaryButton(
+                        text = "CONFIGURAR",
+                        onClick = onRingClicked,
+                        modifier = Modifier.padding(horizontal = AiFitSpacing.xl),
+                    )
+                },
+            )
+        }
+        return
+    }
+
     LazyColumn(
         contentPadding = PaddingValues(
             start = AiFitSpacing.md,
