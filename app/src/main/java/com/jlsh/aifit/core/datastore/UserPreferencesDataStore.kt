@@ -56,5 +56,12 @@ class UserPreferencesDataStore @Inject constructor(
             preferences[KEY_KNOWLEDGE_LEVEL] = level
         }
     }
+
+    suspend fun clearUserData() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(KEY_HAS_COMPLETED_ONBOARDING)
+            preferences.remove(KEY_KNOWLEDGE_LEVEL)
+        }
+    }
 }
 
