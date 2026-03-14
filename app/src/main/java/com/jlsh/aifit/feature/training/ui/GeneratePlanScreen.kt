@@ -40,7 +40,7 @@ import com.jlsh.aifit.feature.training.ui.state.GeneratePlanUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.GoalType
-import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
+import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 
 @Composable
 fun GeneratePlanScreen(
@@ -59,7 +59,7 @@ fun GeneratePlanScreen(
     var durationWeeks by remember { mutableStateOf("8") }
     var goalType by remember { mutableStateOf(GoalType.GAIN_MUSCLE.name) }
     var fitnessLevel by remember { mutableStateOf(FitnessLevel.INTERMEDIATE.name) }
-    var location by remember { mutableStateOf(PreferredLocation.GYM.name) }
+    var location by remember { mutableStateOf(WorkoutLocation.GYM.name) }
     var injuries by remember { mutableStateOf("") }
     var additionalNotes by remember { mutableStateOf("") }
 
@@ -144,7 +144,7 @@ fun GeneratePlanScreen(
 
             AiFitDropdown(
                 selectedValue = location,
-                options = PreferredLocation.entries.filter { it != PreferredLocation.UNKNOWN }.map { it.name },
+                options = WorkoutLocation.entries.filter { it != WorkoutLocation.UNKNOWN }.map { it.name },
                 onOptionSelected = { location = it },
                 label = "Location",
                 displayMapper = { it.replace("_", " ") },

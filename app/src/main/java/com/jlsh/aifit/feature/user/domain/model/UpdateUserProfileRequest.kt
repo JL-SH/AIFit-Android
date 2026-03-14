@@ -8,7 +8,7 @@ data class UpdateUserProfileRequest(
     val goalType: GoalType? = null,
     val activityLevel: ActivityLevel? = null,
     val fitnessLevel: FitnessLevel? = null,
-    val preferredLocation: PreferredLocation? = null,
+    val workoutLocation: WorkoutLocation? = null,
     val dietPreference: DietPreference? = null,
     val height: Float? = null,
     val weight: Float? = null,

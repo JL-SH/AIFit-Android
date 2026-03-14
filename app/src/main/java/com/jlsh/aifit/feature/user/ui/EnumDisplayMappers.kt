@@ -5,7 +5,7 @@ import com.jlsh.aifit.feature.user.domain.model.DietPreference
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.Gender
 import com.jlsh.aifit.feature.user.domain.model.GoalType
-import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
+import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 
 fun GoalType.displayName(): String = when (this) {
     GoalType.LOSE_WEIGHT -> "Perder peso"
@@ -38,12 +38,12 @@ fun Gender.displayName(): String = when (this) {
     Gender.UNKNOWN -> "Desconocido"
 }
 
-fun PreferredLocation.displayName(): String = when (this) {
-    PreferredLocation.GYM -> "Gimnasio"
-    PreferredLocation.HOME -> "Casa"
-    PreferredLocation.OUTDOOR -> "Exterior"
-    PreferredLocation.HOME_GYM -> "Gimnasio en casa"
-    PreferredLocation.UNKNOWN -> "Desconocido"
+fun WorkoutLocation.displayName(): String = when (this) {
+    WorkoutLocation.GYM -> "Gimnasio"
+    WorkoutLocation.HOME -> "Casa"
+    WorkoutLocation.OUTDOOR -> "Exterior"
+    WorkoutLocation.HOME_GYM -> "Gimnasio en casa"
+    WorkoutLocation.UNKNOWN -> "Desconocido"
 }
 
 fun DietPreference.displayName(): String = when (this) {
@@ -71,7 +71,7 @@ fun String.toGenderDisplay(): String =
     runCatching { Gender.valueOf(this).displayName() }.getOrDefault(this)
 
 fun String.toPreferredLocationDisplay(): String =
-    runCatching { PreferredLocation.valueOf(this).displayName() }.getOrDefault(this)
+    runCatching { WorkoutLocation.valueOf(this).displayName() }.getOrDefault(this)
 
 fun String.toDietPreferenceDisplay(): String =
     runCatching { DietPreference.valueOf(this).displayName() }.getOrDefault(this)

@@ -17,7 +17,7 @@ import com.jlsh.aifit.feature.user.domain.model.DietPreference
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.Gender
 import com.jlsh.aifit.feature.user.domain.model.GoalType
-import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
+import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 import com.jlsh.aifit.feature.user.domain.model.UpdateUserProfileRequest
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import com.jlsh.aifit.feature.user.domain.usecase.CreateUserProfileUseCase
@@ -250,7 +250,7 @@ class UserViewModel @Inject constructor(
         _goalType.value = profile.goalType?.name ?: ""
         _activityLevel.value = profile.activityLevel?.name ?: ""
         _fitnessLevel.value = profile.fitnessLevel?.name ?: ""
-        _preferredLocation.value = profile.preferredLocation?.name ?: ""
+        _preferredLocation.value = profile.workoutLocation?.name ?: ""
         _dietPreference.value = profile.dietPreference?.name ?: ""
         _weeklyWorkoutDays.value = profile.weeklyWorkoutDays?.toString() ?: ""
         _availableMinutes.value = profile.availableMinutesPerSession?.toString() ?: ""
@@ -269,8 +269,8 @@ class UserViewModel @Inject constructor(
             ?.let { ActivityLevel.fromString(it) },
         fitnessLevel = _fitnessLevel.value.takeIf { it.isNotBlank() }
             ?.let { FitnessLevel.fromString(it) },
-        preferredLocation = _preferredLocation.value.takeIf { it.isNotBlank() }
-            ?.let { PreferredLocation.fromString(it) },
+        workoutLocation = _preferredLocation.value.takeIf { it.isNotBlank() }
+            ?.let { WorkoutLocation.fromString(it) },
         dietPreference = _dietPreference.value.takeIf { it.isNotBlank() }
             ?.let { DietPreference.fromString(it) },
         height = _height.value.toFloatOrNull(),
@@ -293,8 +293,8 @@ class UserViewModel @Inject constructor(
             ?.let { ActivityLevel.fromString(it) },
         fitnessLevel = _fitnessLevel.value.takeIf { it.isNotBlank() }
             ?.let { FitnessLevel.fromString(it) },
-        preferredLocation = _preferredLocation.value.takeIf { it.isNotBlank() }
-            ?.let { PreferredLocation.fromString(it) },
+        workoutLocation = _preferredLocation.value.takeIf { it.isNotBlank() }
+            ?.let { WorkoutLocation.fromString(it) },
         dietPreference = _dietPreference.value.takeIf { it.isNotBlank() }
             ?.let { DietPreference.fromString(it) },
         height = _height.value.toFloatOrNull(),

@@ -62,7 +62,7 @@ import com.jlsh.aifit.feature.training.ui.state.TrainingDetailUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.GoalType
-import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
+import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -482,7 +482,7 @@ private fun TrainingDetailScreenPreview() {
                 durationWeeks = 8,
                 goalType = GoalType.GAIN_MUSCLE,
                 fitnessLevel = FitnessLevel.INTERMEDIATE,
-                location = PreferredLocation.GYM,
+                location = WorkoutLocation.GYM,
                 status = PlanStatus.ACTIVE,
                 totalDays = 24,
                 createdAt = LocalDateTime.now(),

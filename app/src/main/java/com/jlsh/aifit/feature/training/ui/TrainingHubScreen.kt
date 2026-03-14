@@ -57,7 +57,7 @@ import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiState
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.GoalType
-import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
+import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 import com.jlsh.aifit.feature.workout.ui.WorkoutHistoryScreen
 import java.time.LocalDateTime
 
@@ -331,7 +331,7 @@ private fun TrainingHubScreenPreview() {
                 durationWeeks = 8,
                 goalType = GoalType.GAIN_MUSCLE,
                 fitnessLevel = FitnessLevel.INTERMEDIATE,
-                location = PreferredLocation.GYM,
+                location = WorkoutLocation.GYM,
                 status = PlanStatus.ACTIVE,
                 totalDays = 24,
                 createdAt = LocalDateTime.now(),
@@ -344,7 +344,7 @@ private fun TrainingHubScreenPreview() {
                 durationWeeks = 6,
                 goalType = GoalType.LOSE_WEIGHT,
                 fitnessLevel = FitnessLevel.BEGINNER,
-                location = PreferredLocation.HOME,
+                location = WorkoutLocation.HOME,
                 status = PlanStatus.ARCHIVED,
                 totalDays = 24,
                 createdAt = LocalDateTime.now(),

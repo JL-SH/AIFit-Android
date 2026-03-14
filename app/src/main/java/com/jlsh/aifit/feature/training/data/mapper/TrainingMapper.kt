@@ -12,7 +12,7 @@ import com.jlsh.aifit.feature.training.domain.model.TrainingExercise
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.GoalType
-import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
+import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -30,7 +30,7 @@ object TrainingMapper {
         durationWeeks = durationWeeks,
         goalType = GoalType.fromString(goalType),
         fitnessLevel = FitnessLevel.fromString(fitnessLevel),
-        location = PreferredLocation.fromString(location),
+        location = WorkoutLocation.fromString(location),
         status = PlanStatus.fromString(status),
         totalDays = totalDays,
         createdAt = parseDateTime(createdAt),
@@ -45,7 +45,7 @@ object TrainingMapper {
         durationWeeks = durationWeeks,
         goalType = GoalType.fromString(goalType),
         fitnessLevel = FitnessLevel.fromString(fitnessLevel),
-        location = PreferredLocation.fromString(location),
+        location = WorkoutLocation.fromString(location),
         status = PlanStatus.fromString(status),
         totalDays = totalDays ?: days.size,
         createdAt = parseDateTime(createdAt),
@@ -96,7 +96,7 @@ object TrainingMapper {
         durationWeeks = durationWeeks,
         goalType = GoalType.fromString(goalType),
         fitnessLevel = FitnessLevel.fromString(fitnessLevel),
-        location = PreferredLocation.fromString(location),
+        location = WorkoutLocation.fromString(location),
         status = PlanStatus.fromString(status),
         totalDays = totalDays,
         createdAt = Instant.ofEpochMilli(createdAt).atZone(ZoneOffset.UTC).toLocalDateTime(),

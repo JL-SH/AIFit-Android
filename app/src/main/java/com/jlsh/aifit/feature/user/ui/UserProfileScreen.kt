@@ -42,7 +42,7 @@ import com.jlsh.aifit.feature.user.domain.model.DietPreference
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.Gender
 import com.jlsh.aifit.feature.user.domain.model.GoalType
-import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
+import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 import com.jlsh.aifit.feature.user.ui.state.UserUiEvent
 import com.jlsh.aifit.feature.user.ui.state.UserUiState
 
@@ -183,7 +183,7 @@ fun UserProfileScreen(
 
             AiFitDropdown(
                 selectedValue = preferredLocation,
-                options = PreferredLocation.entries.filter { it != PreferredLocation.UNKNOWN }.map { it.name },
+                options = WorkoutLocation.entries.filter { it != WorkoutLocation.UNKNOWN }.map { it.name },
                 onOptionSelected = viewModel::onPreferredLocationChanged,
                 label = "Ubicación preferida",
                 displayMapper = { it.toPreferredLocationDisplay() },

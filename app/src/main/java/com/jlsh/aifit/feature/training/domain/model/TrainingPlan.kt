@@ -2,7 +2,7 @@ package com.jlsh.aifit.feature.training.domain.model
 
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.GoalType
-import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
+import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 import java.time.LocalDateTime
 
 data class TrainingPlan(
@@ -13,7 +13,7 @@ data class TrainingPlan(
     val durationWeeks: Int,
     val goalType: GoalType,
     val fitnessLevel: FitnessLevel,
-    val location: PreferredLocation,
+    val location: WorkoutLocation,
     val status: PlanStatus,
     val totalDays: Int,
     val createdAt: LocalDateTime,

@@ -1,6 +1,6 @@
 package com.jlsh.aifit.feature.user.domain.model
 
-enum class PreferredLocation {
+enum class WorkoutLocation {
     GYM,
     HOME,
     OUTDOOR,
@@ -8,7 +8,7 @@ enum class PreferredLocation {
     UNKNOWN;
 
     companion object {
-        fun fromString(value: String?): PreferredLocation =
+        fun fromString(value: String?): WorkoutLocation =
             value?.let { runCatching { valueOf(it) }.getOrDefault(UNKNOWN) } ?: UNKNOWN
     }
 }

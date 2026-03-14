@@ -10,7 +10,7 @@ import com.jlsh.aifit.feature.user.domain.model.DietPreference
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.Gender
 import com.jlsh.aifit.feature.user.domain.model.GoalType
-import com.jlsh.aifit.feature.user.domain.model.PreferredLocation
+import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 import com.jlsh.aifit.feature.user.domain.model.UpdateUserProfileRequest
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import java.time.LocalDate
@@ -31,7 +31,7 @@ object UserMapper {
         goalType = GoalType.fromString(goalType),
         activityLevel = ActivityLevel.fromString(activityLevel),
         fitnessLevel = FitnessLevel.fromString(fitnessLevel),
-        preferredLocation = PreferredLocation.fromString(preferredLocation),
+        workoutLocation = WorkoutLocation.fromString(preferredLocation),
         dietPreference = DietPreference.fromString(dietPreference),
         knowledgeLevel = knowledgeLevel,
         weeklyWorkoutDays = weeklyWorkoutDays,
@@ -63,7 +63,7 @@ object UserMapper {
         goalType = goalType?.let { GoalType.fromString(it) },
         activityLevel = null,
         fitnessLevel = fitnessLevel?.let { FitnessLevel.fromString(it) },
-        preferredLocation = null,
+        workoutLocation = null,
         dietPreference = null,
         knowledgeLevel = null,
         weeklyWorkoutDays = null,
@@ -78,7 +78,7 @@ object UserMapper {
         goalType = goalType?.name,
         activityLevel = activityLevel?.name,
         fitnessLevel = fitnessLevel?.name,
-        preferredLocation = preferredLocation?.name,
+        preferredLocation = workoutLocation?.name,
         dietPreference = dietPreference?.name,
         height = height,
         weight = weight,
@@ -95,7 +95,7 @@ object UserMapper {
         goalType = goalType?.name,
         activityLevel = activityLevel?.name,
         fitnessLevel = fitnessLevel?.name,
-        preferredLocation = preferredLocation?.name,
+        preferredLocation = workoutLocation?.name,
         dietPreference = dietPreference?.name,
         height = height,
         weight = weight,
