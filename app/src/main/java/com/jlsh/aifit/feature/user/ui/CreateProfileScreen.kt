@@ -25,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -213,239 +214,252 @@ fun CreateProfileScreen(
             containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = AiFitSpacing.md, vertical = AiFitSpacing.md),
-            ) {
-                LinearProgressIndicator(
-                    progress = { (currentStep + 1) / TOTAL_STEPS.toFloat() },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
+            if (uiState is UserUiState.Loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(horizontal = AiFitSpacing.md, vertical = AiFitSpacing.md),
+                ) {
+                    LinearProgressIndicator(
+                        progress = { (currentStep + 1) / TOTAL_STEPS.toFloat() },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
 
-                Spacer(Modifier.height(AiFitSpacing.md))
+                    Spacer(Modifier.height(AiFitSpacing.md))
 
-                AnimatedContent(
-                    targetState = currentStep,
-                    transitionSpec = {
-                        if (targetState > initialState) {
-                            (slideInHorizontally { it } + fadeIn()) togetherWith
-                                (slideOutHorizontally { -it } + fadeOut())
-                        } else {
-                            (slideInHorizontally { -it } + fadeIn()) togetherWith
-                                (slideOutHorizontally { it } + fadeOut())
-                        }
-                    },
-                    label = "onboarding_step_transition",
-                    modifier = Modifier.weight(1f),
-                ) { step ->
-                    when (step) {
-                        0 -> WizardStepLayout(title = "¿Cuál es tu objetivo principal?") {
-                            OptionCards(
-                                options = goalOptions,
-                                selectedValue = selectedGoal,
-                                onSelected = { option ->
-                                    selectedGoal = option.value
-                                    viewModel.onGoalTypeChanged(option.value)
-                                },
-                            )
-                        }
-
-                        1 -> WizardStepLayout(title = "¿Cuánto tiempo llevas entrenando?") {
-                            OptionCardsIndexed(
-                                options = experienceOptions,
-                                selectedIndex = selectedExperienceIndex,
-                                onSelected = { index, option ->
-                                    selectedExperienceIndex = index
-                                    viewModel.onFitnessLevelChanged(option.value)
-                                },
-                            )
-                        }
-
-                        2 -> WizardStepLayout(title = "¿Dónde entrenas habitualmente?") {
-                            OptionCards(
-                                options = locationOptions,
-                                selectedValue = selectedLocation,
-                                onSelected = { option ->
-                                    selectedLocation = option.value
-                                    viewModel.onPreferredLocationChanged(option.value)
-                                },
-                            )
-                        }
-
-                        3 -> WizardStepLayout(title = "¿Cuántos días a la semana puedes entrenar?") {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-                            ) {
-                                (1..7).forEach { day ->
-                                    val value = day.toString()
-                                    FilterChip(
-                                        selected = selectedWorkoutDays == value,
-                                        onClick = {
-                                            selectedWorkoutDays = value
-                                            viewModel.onWeeklyWorkoutDaysChanged(value)
-                                        },
-                                        label = { Text(text = value) },
-                                    )
-                                }
+                    AnimatedContent(
+                        targetState = currentStep,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                (slideInHorizontally { it } + fadeIn()) togetherWith
+                                        (slideOutHorizontally { -it } + fadeOut())
+                            } else {
+                                (slideInHorizontally { -it } + fadeIn()) togetherWith
+                                        (slideOutHorizontally { it } + fadeOut())
                             }
-                        }
+                        },
+                        label = "onboarding_step_transition",
+                        modifier = Modifier.weight(1f),
+                    ) { step ->
+                        when (step) {
+                            0 -> WizardStepLayout(title = "¿Cuál es tu objetivo principal?") {
+                                OptionCards(
+                                    options = goalOptions,
+                                    selectedValue = selectedGoal,
+                                    onSelected = { option ->
+                                        selectedGoal = option.value
+                                        viewModel.onGoalTypeChanged(option.value)
+                                    },
+                                )
+                            }
 
-                        4 -> WizardStepLayout(title = "¿Cuánto tiempo tienes por sesión?") {
-                            OptionCards(
-                                options = sessionOptions,
-                                selectedValue = selectedAvailableMinutes,
-                                onSelected = { option ->
-                                    selectedAvailableMinutes = option.value
-                                    viewModel.onAvailableMinutesChanged(option.value)
-                                },
-                            )
-                        }
+                            1 -> WizardStepLayout(title = "¿Cuánto tiempo llevas entrenando?") {
+                                OptionCardsIndexed(
+                                    options = experienceOptions,
+                                    selectedIndex = selectedExperienceIndex,
+                                    onSelected = { index, option ->
+                                        selectedExperienceIndex = index
+                                        viewModel.onFitnessLevelChanged(option.value)
+                                    },
+                                )
+                            }
 
-                        5 -> WizardStepLayout(title = "¿Tienes alguna lesión o limitación física?") {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-                            ) {
-                                injuryOptions.forEach { injury ->
-                                    val checked = selectedInjuries.contains(injury)
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                selectedInjuries = when {
-                                                    injury == "Ninguna" && !checked -> listOf("Ninguna")
-                                                    injury == "Ninguna" && checked -> emptyList()
-                                                    checked -> selectedInjuries - injury
-                                                    else -> (selectedInjuries - "Ninguna") + injury
-                                                }
+                            2 -> WizardStepLayout(title = "¿Dónde entrenas habitualmente?") {
+                                OptionCards(
+                                    options = locationOptions,
+                                    selectedValue = selectedLocation,
+                                    onSelected = { option ->
+                                        selectedLocation = option.value
+                                        viewModel.onPreferredLocationChanged(option.value)
+                                    },
+                                )
+                            }
+
+                            3 -> WizardStepLayout(title = "¿Cuántos días a la semana puedes entrenar?") {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                                ) {
+                                    (1..7).forEach { day ->
+                                        val value = day.toString()
+                                        FilterChip(
+                                            selected = selectedWorkoutDays == value,
+                                            onClick = {
+                                                selectedWorkoutDays = value
+                                                viewModel.onWeeklyWorkoutDaysChanged(value)
                                             },
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        Checkbox(
-                                            checked = checked,
-                                            onCheckedChange = { isChecked ->
-                                                selectedInjuries = when {
-                                                    injury == "Ninguna" && isChecked -> listOf("Ninguna")
-                                                    injury == "Ninguna" && !isChecked -> emptyList()
-                                                    !isChecked -> selectedInjuries - injury
-                                                    else -> (selectedInjuries - "Ninguna") + injury
-                                                }
-                                            },
-                                        )
-                                        Text(
-                                            text = injury,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = MaterialTheme.colorScheme.onSurface,
+                                            label = { Text(text = value) },
                                         )
                                     }
                                 }
+                            }
 
-                                AiFitTextField(
-                                    value = injuriesDetail,
-                                    onValueChange = { injuriesDetail = it },
-                                    label = "Cuéntanos más... (opcional)",
-                                    singleLine = false,
-                                    modifier = Modifier.fillMaxWidth(),
+                            4 -> WizardStepLayout(title = "¿Cuánto tiempo tienes por sesión?") {
+                                OptionCards(
+                                    options = sessionOptions,
+                                    selectedValue = selectedAvailableMinutes,
+                                    onSelected = { option ->
+                                        selectedAvailableMinutes = option.value
+                                        viewModel.onAvailableMinutesChanged(option.value)
+                                    },
                                 )
                             }
-                        }
 
-                        6 -> WizardStepLayout(title = "Datos físicos básicos") {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable(
-                                            indication = null,
-                                            interactionSource = remember { MutableInteractionSource() },
-                                        ) { showDatePicker = true },
+                            5 -> WizardStepLayout(title = "¿Tienes alguna lesión o limitación física?") {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                                 ) {
+                                    injuryOptions.forEach { injury ->
+                                        val checked = selectedInjuries.contains(injury)
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    selectedInjuries = when {
+                                                        injury == "Ninguna" && !checked -> listOf("Ninguna")
+                                                        injury == "Ninguna" && checked -> emptyList()
+                                                        checked -> selectedInjuries - injury
+                                                        else -> (selectedInjuries - "Ninguna") + injury
+                                                    }
+                                                },
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Checkbox(
+                                                checked = checked,
+                                                onCheckedChange = { isChecked ->
+                                                    selectedInjuries = when {
+                                                        injury == "Ninguna" && isChecked -> listOf("Ninguna")
+                                                        injury == "Ninguna" && !isChecked -> emptyList()
+                                                        !isChecked -> selectedInjuries - injury
+                                                        else -> (selectedInjuries - "Ninguna") + injury
+                                                    }
+                                                },
+                                            )
+                                            Text(
+                                                text = injury,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                            )
+                                        }
+                                    }
+
                                     AiFitTextField(
-                                        value = birthDate,
-                                        onValueChange = {},
-                                        label = "Fecha de nacimiento",
-                                        error = birthDateError,
-                                        enabled = false,
-                                        trailingIcon = Icons.Rounded.CalendarMonth,
+                                        value = injuriesDetail,
+                                        onValueChange = { injuriesDetail = it },
+                                        label = "Cuéntanos más... (opcional)",
+                                        singleLine = false,
                                         modifier = Modifier.fillMaxWidth(),
                                     )
                                 }
+                            }
 
-                                AiFitNumberField(
-                                    value = weight,
-                                    onValueChange = {
-                                        weight = it
-                                        viewModel.onWeightChanged(it)
-                                    },
-                                    label = "Peso actual",
-                                    suffix = "kg",
-                                )
+                            6 -> WizardStepLayout(title = "Datos físicos básicos") {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable(
+                                                indication = null,
+                                                interactionSource = remember { MutableInteractionSource() },
+                                            ) { showDatePicker = true },
+                                    ) {
+                                        AiFitTextField(
+                                            value = birthDate,
+                                            onValueChange = {},
+                                            label = "Fecha de nacimiento",
+                                            error = birthDateError,
+                                            enabled = false,
+                                            trailingIcon = Icons.Rounded.CalendarMonth,
+                                            modifier = Modifier.fillMaxWidth(),
+                                        )
+                                    }
 
-                                AiFitNumberField(
-                                    value = height,
-                                    onValueChange = {
-                                        height = it
-                                        viewModel.onHeightChanged(it)
-                                    },
-                                    label = "Altura",
-                                    suffix = "cm",
-                                )
+                                    AiFitNumberField(
+                                        value = weight,
+                                        onValueChange = {
+                                            weight = it
+                                            viewModel.onWeightChanged(it)
+                                        },
+                                        label = "Peso actual",
+                                        suffix = "kg",
+                                    )
 
-                                AiFitDropdown(
-                                    selectedValue = selectedGender,
-                                    options = Gender.entries
-                                        .filter { it != Gender.UNKNOWN }
-                                        .map { it.name },
-                                    onOptionSelected = {
-                                        selectedGender = it
-                                        viewModel.onGenderChanged(it)
+                                    AiFitNumberField(
+                                        value = height,
+                                        onValueChange = {
+                                            height = it
+                                            viewModel.onHeightChanged(it)
+                                        },
+                                        label = "Altura",
+                                        suffix = "cm",
+                                    )
+
+                                    AiFitDropdown(
+                                        selectedValue = selectedGender,
+                                        options = Gender.entries
+                                            .filter { it != Gender.UNKNOWN }
+                                            .map { it.name },
+                                        onOptionSelected = {
+                                            selectedGender = it
+                                            viewModel.onGenderChanged(it)
+                                        },
+                                        label = "Género",
+                                        displayMapper = { it.toGenderDisplay() },
+                                    )
+                                }
+                            }
+
+                            7 -> WizardStepLayout(title = "¿Tienes alguna preferencia alimentaria?") {
+                                OptionCards(
+                                    options = dietOptions,
+                                    selectedValue = selectedDietPreference,
+                                    onSelected = { option ->
+                                        selectedDietPreference = option.value
+                                        viewModel.onDietPreferenceChanged(option.value)
                                     },
-                                    label = "Género",
-                                    displayMapper = { it.toGenderDisplay() },
                                 )
                             }
                         }
-
-                        7 -> WizardStepLayout(title = "¿Tienes alguna preferencia alimentaria?") {
-                            OptionCards(
-                                options = dietOptions,
-                                selectedValue = selectedDietPreference,
-                                onSelected = { option ->
-                                    selectedDietPreference = option.value
-                                    viewModel.onDietPreferenceChanged(option.value)
-                                },
-                            )
-                        }
                     }
-                }
 
-                if (currentStep > 0) {
-                    SecondaryButton(
-                        text = "Atrás",
-                        onClick = { currentStep -= 1 },
+                    if (currentStep > 0) {
+                        SecondaryButton(
+                            text = "Atrás",
+                            onClick = { currentStep -= 1 },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+
+                        Spacer(Modifier.height(AiFitSpacing.sm))
+                    }
+
+                    PrimaryButton(
+                        text = if (currentStep == TOTAL_STEPS - 1) "COMPLETAR PERFIL" else "Continuar",
+                        onClick = ::handleContinue,
+                        enabled = continueEnabled,
+                        isLoading = currentStep == TOTAL_STEPS - 1 && uiState is UserUiState.Saving,
                         modifier = Modifier.fillMaxWidth(),
                     )
-
-                    Spacer(Modifier.height(AiFitSpacing.sm))
                 }
-
-                PrimaryButton(
-                    text = if (currentStep == TOTAL_STEPS - 1) "COMPLETAR PERFIL" else "Continuar",
-                    onClick = ::handleContinue,
-                    enabled = continueEnabled,
-                    isLoading = currentStep == TOTAL_STEPS - 1 && uiState is UserUiState.Saving,
-                    modifier = Modifier.fillMaxWidth(),
-                )
             }
         }
     }
@@ -615,4 +629,3 @@ private fun CreateProfileScreenPreview() {
         }
     }
 }
-

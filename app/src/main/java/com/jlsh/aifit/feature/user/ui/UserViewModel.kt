@@ -127,6 +127,8 @@ class UserViewModel @Inject constructor(
     init {
         if (isEditMode) {
             loadProfile()
+        } else {
+            checkIfProfileAlreadyExists()
         }
     }
 
@@ -319,6 +321,24 @@ class UserViewModel @Inject constructor(
                     emitEvent(UserUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
                 is Result.Loading -> Unit
+            }
+        }
+    }
+
+    private fun checkIfProfileAlreadyExists() {
+        viewModelScope.launch {
+            _uiState.value = UserUiState.Loading
+            when (val result = getUserProfileUseCase().first { it !is Result.Loading }) {
+                is Result.Success -> {
+                    if (result.data.birthDate != null) {
+                        emitEvent(UserUiEvent.ProfileSaved)
+                    } else {
+                        _uiState.value = UserUiState.Idle
+                    }
+                }
+                else -> {
+                    _uiState.value = UserUiState.Idle
+                }
             }
         }
     }
