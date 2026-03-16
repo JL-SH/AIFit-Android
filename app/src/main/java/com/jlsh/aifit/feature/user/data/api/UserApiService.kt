@@ -2,6 +2,8 @@ package com.jlsh.aifit.feature.user.data.api
 
 import com.jlsh.aifit.core.network.ApiResponse
 import com.jlsh.aifit.feature.user.data.dto.CreateUserProfileRequestDto
+import com.jlsh.aifit.feature.user.data.dto.OnboardingFeedbackRequestDto
+import com.jlsh.aifit.feature.user.data.dto.OnboardingResultDto
 import com.jlsh.aifit.feature.user.data.dto.UpdateUserProfileRequestDto
 import com.jlsh.aifit.feature.user.data.dto.UserProfileResponseDto
 import retrofit2.http.Body
@@ -23,5 +25,10 @@ interface UserApiService {
     suspend fun updateProfile(
         @Body request: UpdateUserProfileRequestDto,
     ): ApiResponse<UserProfileResponseDto>
+
+    @POST("onboarding/complete")
+    suspend fun completeOnboarding(
+        @Body request: OnboardingFeedbackRequestDto? = null,
+    ): ApiResponse<OnboardingResultDto>
 }
 

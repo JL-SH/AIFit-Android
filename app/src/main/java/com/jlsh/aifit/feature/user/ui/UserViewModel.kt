@@ -311,7 +311,6 @@ class UserViewModel @Inject constructor(
             _uiState.value = UserUiState.Saving
             when (val result = createUserProfileUseCase(buildCreateRequest())) {
                 is Result.Success -> {
-                    userPreferencesDataStore.setOnboardingCompleted(true)
                     _uiState.value = UserUiState.Success(result.data)
                     emitEvent(UserUiEvent.ProfileSaved)
                 }

@@ -1,6 +1,10 @@
 package com.jlsh.aifit.feature.user.data.mapper
 
+import com.jlsh.aifit.feature.diet.data.mapper.DietMapper.toDomain
+import com.jlsh.aifit.feature.nutrition.data.mapper.NutritionMapper.toDomain
+import com.jlsh.aifit.feature.training.data.mapper.TrainingMapper.toDomain
 import com.jlsh.aifit.feature.user.data.dto.CreateUserProfileRequestDto
+import com.jlsh.aifit.feature.user.data.dto.OnboardingResultDto
 import com.jlsh.aifit.feature.user.data.dto.UpdateUserProfileRequestDto
 import com.jlsh.aifit.feature.user.data.dto.UserProfileResponseDto
 import com.jlsh.aifit.feature.user.data.local.UserProfileEntity
@@ -10,6 +14,7 @@ import com.jlsh.aifit.feature.user.domain.model.DietPreference
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.Gender
 import com.jlsh.aifit.feature.user.domain.model.GoalType
+import com.jlsh.aifit.feature.user.domain.model.OnboardingResult
 import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 import com.jlsh.aifit.feature.user.domain.model.UpdateUserProfileRequest
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
@@ -104,6 +109,12 @@ object UserMapper {
         availableMinutesPerSession = availableMinutesPerSession,
         injuries = injuries,
         calorieTarget = calorieTarget,
+    )
+
+    fun OnboardingResultDto.toDomain(): OnboardingResult = OnboardingResult(
+        trainingPlan = trainingPlan.toDomain(),
+        dietPlan = dietPlan.toDomain(),
+        nutritionTarget = nutritionTarget.toDomain(),
     )
 }
 

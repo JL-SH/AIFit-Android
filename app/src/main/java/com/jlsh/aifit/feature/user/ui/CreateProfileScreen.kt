@@ -51,7 +51,7 @@ import com.jlsh.aifit.feature.user.ui.state.UserUiState
 
 @Composable
 fun CreateProfileScreen(
-    onNavigateToMain: () -> Unit,
+    onNavigateToOnboarding: () -> Unit,
     viewModel: UserViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -77,7 +77,7 @@ fun CreateProfileScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is UserUiEvent.ProfileSaved -> onNavigateToMain()
+                is UserUiEvent.ProfileSaved -> onNavigateToOnboarding()
                 is UserUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
                 else -> Unit
             }

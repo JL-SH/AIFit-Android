@@ -23,16 +23,11 @@ class UserPreferencesDataStore @Inject constructor(
 ) {
     companion object {
         private val KEY_IS_DARK_THEME = booleanPreferencesKey("is_dark_theme")
-        private val KEY_HAS_COMPLETED_ONBOARDING = booleanPreferencesKey("has_completed_onboarding")
         private val KEY_KNOWLEDGE_LEVEL = stringPreferencesKey("knowledge_level")
     }
 
     val isDarkTheme: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[KEY_IS_DARK_THEME] ?: true
-    }
-
-    val hasCompletedOnboarding: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[KEY_HAS_COMPLETED_ONBOARDING] ?: false
     }
 
     val knowledgeLevel: Flow<String> = context.dataStore.data.map { preferences ->
@@ -45,22 +40,9 @@ class UserPreferencesDataStore @Inject constructor(
         }
     }
 
-    suspend fun setOnboardingCompleted(completed: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_HAS_COMPLETED_ONBOARDING] = completed
-        }
-    }
-
     suspend fun setKnowledgeLevel(level: String) {
         context.dataStore.edit { preferences ->
             preferences[KEY_KNOWLEDGE_LEVEL] = level
-        }
-    }
-
-    suspend fun clearUserData() {
-        context.dataStore.edit { preferences ->
-            preferences.remove(KEY_HAS_COMPLETED_ONBOARDING)
-            preferences.remove(KEY_KNOWLEDGE_LEVEL)
         }
     }
 }

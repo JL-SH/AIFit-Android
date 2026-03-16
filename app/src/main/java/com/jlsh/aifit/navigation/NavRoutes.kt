@@ -5,6 +5,8 @@ object AuthRoutes {
     const val LOGIN = "auth/login"
     const val REGISTER = "auth/register"
     const val CREATE_PROFILE = "auth/create_profile"
+    const val ONBOARDING_GENERATING = "auth/onboarding_generating"
+    const val ONBOARDING_APPROVAL = "auth/onboarding_approval"
 }
 
 object HomeRoutes {

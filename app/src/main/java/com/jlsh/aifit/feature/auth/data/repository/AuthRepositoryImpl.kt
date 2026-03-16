@@ -35,7 +35,13 @@ class AuthRepositoryImpl @Inject constructor(
         return when (result) {
             is Result.Success -> {
                 val dto = result.data
-                sessionManager.onLoginSuccess(dto.token, dto.userId, dto.email, dto.name)
+                sessionManager.onLoginSuccess(
+                    token = dto.token,
+                    userId = dto.userId,
+                    email = dto.email,
+                    name = dto.name,
+                    profileComplete = dto.profileComplete,
+                )
                 Result.Success(
                     AuthToken(
                         token = dto.token,
@@ -43,6 +49,7 @@ class AuthRepositoryImpl @Inject constructor(
                         email = dto.email,
                         name = dto.name,
                         expiresIn = dto.expiresIn,
+                        profileComplete = dto.profileComplete,
                     )
                 )
             }

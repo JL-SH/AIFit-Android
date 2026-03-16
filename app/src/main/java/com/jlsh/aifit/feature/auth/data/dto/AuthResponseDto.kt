@@ -9,5 +9,6 @@ data class AuthResponseDto(
     val email: String,
     val name: String,
     val expiresIn: Long,
+    val profileComplete: Boolean,
 )
 

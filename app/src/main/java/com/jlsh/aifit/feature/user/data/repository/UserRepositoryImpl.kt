@@ -3,11 +3,13 @@ package com.jlsh.aifit.feature.user.data.repository
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.feature.user.data.api.UserApiService
+import com.jlsh.aifit.feature.user.data.dto.OnboardingFeedbackRequestDto
 import com.jlsh.aifit.feature.user.data.local.UserProfileDao
 import com.jlsh.aifit.feature.user.data.mapper.UserMapper.toDomain
 import com.jlsh.aifit.feature.user.data.mapper.UserMapper.toDto
 import com.jlsh.aifit.feature.user.data.mapper.UserMapper.toEntity
 import com.jlsh.aifit.feature.user.domain.model.CreateUserProfileRequest
+import com.jlsh.aifit.feature.user.domain.model.OnboardingResult
 import com.jlsh.aifit.feature.user.domain.model.UpdateUserProfileRequest
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import com.jlsh.aifit.feature.user.domain.repository.UserRepository
@@ -61,6 +63,15 @@ class UserRepositoryImpl @Inject constructor(
                 dao.upsert(profile.toEntity())
                 Result.Success(profile)
             }
+            is Result.Error -> result
+            is Result.Loading -> Result.Loading
+        }
+    }
+
+    override suspend fun completeOnboarding(feedback: String?): Result<OnboardingResult> {
+        val request = OnboardingFeedbackRequestDto(feedback)
+        return when (val result = safeApiCall { apiService.completeOnboarding(request) }) {
+            is Result.Success -> Result.Success(result.data.toDomain())
             is Result.Error -> result
             is Result.Loading -> Result.Loading
         }

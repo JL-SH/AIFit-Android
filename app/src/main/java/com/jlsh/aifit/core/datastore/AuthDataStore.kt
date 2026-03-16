@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Singleton
 class AuthDataStore @Inject constructor(
-    @ApplicationContext context: Context
+    @ApplicationContext private val context: Context
 ) {
     companion object {
         private const val PREFS_NAME = "aifit_secure_prefs"
@@ -18,15 +18,31 @@ class AuthDataStore @Inject constructor(
         private const val KEY_USER_ID = "user_id"
         private const val KEY_EMAIL = "email"
         private const val KEY_NAME = "name"
+        private const val KEY_PROFILE_COMPLETE = "profile_complete"
     }
 
-    private val prefs: SharedPreferences = EncryptedSharedPreferences.create(
-        PREFS_NAME,
-        MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
-        context,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private val prefs: SharedPreferences = createPrefs()
+
+    private fun createPrefs(): SharedPreferences {
+        return try {
+            EncryptedSharedPreferences.create(
+                PREFS_NAME,
+                MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+                context,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (e: Exception) {
+            context.deleteSharedPreferences(PREFS_NAME)
+            EncryptedSharedPreferences.create(
+                PREFS_NAME,
+                MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+                context,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        }
+    }
 
     fun saveToken(token: String) {
         prefs.edit().putString(KEY_TOKEN, token).apply()
@@ -48,10 +64,15 @@ class AuthDataStore @Inject constructor(
 
     fun getName(): String? = prefs.getString(KEY_NAME, null)
 
+    fun saveProfileComplete(complete: Boolean) {
+        prefs.edit().putBoolean(KEY_PROFILE_COMPLETE, complete).apply()
+    }
+
+    fun isProfileComplete(): Boolean = prefs.getBoolean(KEY_PROFILE_COMPLETE, false)
+
     fun hasToken(): Boolean = getToken() != null
 
     fun clear() {
         prefs.edit().clear().apply()
     }
 }
-

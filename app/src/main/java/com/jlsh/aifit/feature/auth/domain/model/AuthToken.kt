@@ -6,5 +6,6 @@ data class AuthToken(
     val email: String,
     val name: String,
     val expiresIn: Long,
+    val profileComplete: Boolean,
 )
 

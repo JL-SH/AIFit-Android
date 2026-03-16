@@ -3,10 +3,8 @@ package com.jlsh.aifit.feature.auth.ui
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
-import com.jlsh.aifit.core.datastore.UserPreferencesDataStore
 import com.jlsh.aifit.feature.auth.domain.usecase.GoogleLoginUseCase
 import com.jlsh.aifit.feature.auth.domain.usecase.LoginUseCase
 import com.jlsh.aifit.feature.auth.domain.usecase.RegisterUseCase
@@ -17,7 +15,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,7 +24,6 @@ class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val registerUseCase: RegisterUseCase,
     private val googleLoginUseCase: GoogleLoginUseCase,
-    private val userPreferencesDataStore: UserPreferencesDataStore,
 ) : ViewModel() {
 
     // 1. UI STATE
@@ -135,7 +131,11 @@ class AuthViewModel @Inject constructor(
             when (val result = loginUseCase(_email.value.trim(), _password.value)) {
                 is Result.Success -> {
                     _uiState.value = AuthUiState.Success(result.data)
-                    navigateAfterAuth()
+                    if (result.data.profileComplete) {
+                        emitEvent(AuthUiEvent.NavigateToMain)
+                    } else {
+                        emitEvent(AuthUiEvent.NavigateToCreateProfile)
+                    }
                 }
                 is Result.Error -> {
                     _uiState.value = AuthUiState.Idle
@@ -169,7 +169,11 @@ class AuthViewModel @Inject constructor(
             when (val result = googleLoginUseCase(idToken)) {
                 is Result.Success -> {
                     _uiState.value = AuthUiState.Success(result.data)
-                    navigateAfterAuth()
+                    if (result.data.profileComplete) {
+                        emitEvent(AuthUiEvent.NavigateToMain)
+                    } else {
+                        emitEvent(AuthUiEvent.NavigateToCreateProfile)
+                    }
                 }
                 is Result.Error -> {
                     _uiState.value = AuthUiState.Idle
@@ -177,15 +181,6 @@ class AuthViewModel @Inject constructor(
                 }
                 is Result.Loading -> Unit
             }
-        }
-    }
-
-    private suspend fun navigateAfterAuth() {
-        val hasOnboarding = userPreferencesDataStore.hasCompletedOnboarding.first()
-        if (hasOnboarding) {
-            emitEvent(AuthUiEvent.NavigateToMain)
-        } else {
-            emitEvent(AuthUiEvent.NavigateToCreateProfile)
         }
     }
 
