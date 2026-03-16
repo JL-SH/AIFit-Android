@@ -1,4 +1,4 @@
-package com.jlsh.aifit
+package com.jlsh.aifit.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

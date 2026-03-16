@@ -6,8 +6,10 @@ import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.core.session.SessionManager
 import com.jlsh.aifit.feature.diet.data.dto.GenerateDietPlanRequestDto
+import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GenerateDietPlanUseCase
 import com.jlsh.aifit.feature.training.data.dto.GenerateTrainingPlanRequestDto
+import com.jlsh.aifit.feature.training.domain.usecase.DeleteTrainingPlanUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GenerateTrainingPlanUseCase
 import com.jlsh.aifit.feature.user.domain.model.OnboardingResult
 import com.jlsh.aifit.feature.user.domain.usecase.CompleteOnboardingUseCase
@@ -25,6 +27,8 @@ class OnboardingViewModel @Inject constructor(
     private val completeOnboardingUseCase: CompleteOnboardingUseCase,
     private val generateTrainingPlanUseCase: GenerateTrainingPlanUseCase,
     private val generateDietPlanUseCase: GenerateDietPlanUseCase,
+    private val deleteTrainingPlanUseCase: DeleteTrainingPlanUseCase,
+    private val deleteDietPlanUseCase: DeleteDietPlanUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
@@ -48,6 +52,11 @@ class OnboardingViewModel @Inject constructor(
         val previous = _state.value as? OnboardingState.Ready
         viewModelScope.launch {
             _state.value = OnboardingState.RegeneratingTraining
+
+            previous?.result?.trainingPlan?.id?.let { oldId ->
+                deleteTrainingPlanUseCase(oldId)
+            }
+
             when (val profileResult = getUserProfileUseCase().first { it !is Result.Loading }) {
                 is Result.Success -> {
                     val profile = profileResult.data
@@ -88,6 +97,11 @@ class OnboardingViewModel @Inject constructor(
         val previous = _state.value as? OnboardingState.Ready
         viewModelScope.launch {
             _state.value = OnboardingState.RegeneratingDiet
+
+            previous?.result?.dietPlan?.id?.let { oldId ->
+                deleteDietPlanUseCase(oldId)
+            }
+
             when (val profileResult = getUserProfileUseCase().first { it !is Result.Loading }) {
                 is Result.Success -> {
                     val profile = profileResult.data

@@ -122,6 +122,7 @@ fun OnboardingGeneratingScreen(
     var visibleFacts by rememberSaveable { mutableStateOf(fitnessFacts.take(MESSAGE_SLOTS)) }
     var nextFactIndex by rememberSaveable { mutableIntStateOf(MESSAGE_SLOTS) }
     var shouldHandleGeneratingState by remember { mutableStateOf(false) }
+    var cameFromFullGeneration by remember { mutableStateOf(false) }
 
     var progressJob by remember { mutableStateOf<Job?>(null) }
     var timerJob by remember { mutableStateOf<Job?>(null) }
@@ -208,15 +209,24 @@ fun OnboardingGeneratingScreen(
     // Observe state for success/error
     LaunchedEffect(state) {
         when (val currentState = state) {
+            is OnboardingState.Generating -> {
+                cameFromFullGeneration = true
+            }
+            is OnboardingState.RegeneratingTraining,
+            is OnboardingState.RegeneratingDiet -> {
+                cameFromFullGeneration = false
+            }
             is OnboardingState.Ready -> {
-                progressJob?.cancel()
-                timerJob?.cancel()
-                factsJob?.cancel()
-                progress.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing),
-                )
-                onSuccess()
+                if (cameFromFullGeneration) {
+                    progressJob?.cancel()
+                    timerJob?.cancel()
+                    factsJob?.cancel()
+                    progress.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing),
+                    )
+                    onSuccess()
+                }
             }
             is OnboardingState.Error -> {
                 progressJob?.cancel()
