@@ -1,11 +1,13 @@
 package com.jlsh.aifit.feature.user.ui
 
+import com.jlsh.aifit.feature.diet.domain.model.MealType
 import com.jlsh.aifit.feature.user.domain.model.ActivityLevel
 import com.jlsh.aifit.feature.user.domain.model.DietPreference
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.Gender
 import com.jlsh.aifit.feature.user.domain.model.GoalType
 import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
+import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
 
 fun GoalType.displayName(): String = when (this) {
     GoalType.LOSE_WEIGHT -> "Perder peso"
@@ -75,4 +77,30 @@ fun String.toPreferredLocationDisplay(): String =
 
 fun String.toDietPreferenceDisplay(): String =
     runCatching { DietPreference.valueOf(this).displayName() }.getOrDefault(this)
+
+fun MuscleGroup.displayName(): String = when (this) {
+    MuscleGroup.CHEST -> "Pecho"
+    MuscleGroup.BACK -> "Espalda"
+    MuscleGroup.SHOULDERS -> "Hombros"
+    MuscleGroup.BICEPS -> "Bíceps"
+    MuscleGroup.TRICEPS -> "Tríceps"
+    MuscleGroup.FOREARMS -> "Antebrazos"
+    MuscleGroup.LEGS -> "Piernas"
+    MuscleGroup.GLUTES -> "Glúteos"
+    MuscleGroup.CORE -> "Core"
+    MuscleGroup.FULL_BODY -> "Cuerpo completo"
+    MuscleGroup.CARDIO -> "Cardio"
+    MuscleGroup.UNKNOWN -> "—"
+}
+
+fun MealType.displayName(): String = when (this) {
+    MealType.BREAKFAST -> "Desayuno"
+    MealType.MID_MORNING -> "Media mañana"
+    MealType.LUNCH -> "Comida"
+    MealType.AFTERNOON_SNACK -> "Merienda"
+    MealType.DINNER -> "Cena"
+    MealType.PRE_WORKOUT -> "Pre-entrenamiento"
+    MealType.POST_WORKOUT -> "Post-entrenamiento"
+    MealType.UNKNOWN -> "—"
+}
 

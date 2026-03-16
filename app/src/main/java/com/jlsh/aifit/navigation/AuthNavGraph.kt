@@ -9,8 +9,9 @@ import androidx.navigation.navigation
 import com.jlsh.aifit.feature.auth.ui.LoginScreen
 import com.jlsh.aifit.feature.auth.ui.RegisterScreen
 import com.jlsh.aifit.feature.user.ui.CreateProfileScreen
-import com.jlsh.aifit.feature.user.ui.OnboardingApprovalScreen
 import com.jlsh.aifit.feature.user.ui.OnboardingGeneratingScreen
+import com.jlsh.aifit.feature.user.ui.OnboardingNutritionApprovalScreen
+import com.jlsh.aifit.feature.user.ui.OnboardingTrainingApprovalScreen
 import com.jlsh.aifit.feature.user.ui.OnboardingViewModel
 
 fun NavGraphBuilder.authNavGraph(
@@ -72,7 +73,7 @@ fun NavGraphBuilder.authNavGraph(
             val onboardingViewModel: OnboardingViewModel = hiltViewModel(parentEntry)
             OnboardingGeneratingScreen(
                 onSuccess = {
-                    navController.navigate(AuthRoutes.ONBOARDING_APPROVAL) {
+                    navController.navigate(AuthRoutes.ONBOARDING_TRAINING_APPROVAL) {
                         popUpTo(AuthRoutes.ONBOARDING_GENERATING) { inclusive = true }
                     }
                 },
@@ -80,25 +81,36 @@ fun NavGraphBuilder.authNavGraph(
             )
         }
 
-        composable(AuthRoutes.ONBOARDING_APPROVAL) { backStackEntry ->
+        composable(AuthRoutes.ONBOARDING_TRAINING_APPROVAL) { backStackEntry ->
             val parentEntry = remember(backStackEntry) {
                 navController.getBackStackEntry(AuthRoutes.GRAPH)
             }
             val onboardingViewModel: OnboardingViewModel = hiltViewModel(parentEntry)
-            OnboardingApprovalScreen(
+            OnboardingTrainingApprovalScreen(
+                onApprove = {
+                    navController.navigate(AuthRoutes.ONBOARDING_NUTRITION_APPROVAL) {
+                        popUpTo(AuthRoutes.ONBOARDING_TRAINING_APPROVAL) { inclusive = false }
+                    }
+                },
+                onRegenerate = {},
+                viewModel = onboardingViewModel,
+            )
+        }
+
+        composable(AuthRoutes.ONBOARDING_NUTRITION_APPROVAL) { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(AuthRoutes.GRAPH)
+            }
+            val onboardingViewModel: OnboardingViewModel = hiltViewModel(parentEntry)
+            OnboardingNutritionApprovalScreen(
                 onApprove = {
                     navController.navigate(MainRoutes.GRAPH) {
                         popUpTo(AuthRoutes.GRAPH) { inclusive = true }
                     }
                 },
-                onRegenerate = {
-                    navController.navigate(AuthRoutes.ONBOARDING_GENERATING) {
-                        popUpTo(AuthRoutes.ONBOARDING_APPROVAL) { inclusive = true }
-                    }
-                },
+                onRegenerate = {},
                 viewModel = onboardingViewModel,
             )
         }
     }
 }
-
