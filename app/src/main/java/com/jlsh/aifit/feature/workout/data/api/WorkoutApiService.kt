@@ -23,6 +23,7 @@ interface WorkoutApiService {
     @GET("workout-logs")
     suspend fun getWorkoutLogs(
         @Query("planId") planId: String? = null,
+        @Query("dayId") dayId: String? = null,
         @Query("from") from: String? = null,
         @Query("to") to: String? = null,
     ): ApiResponse<List<WorkoutLogSummaryResponseDto>>

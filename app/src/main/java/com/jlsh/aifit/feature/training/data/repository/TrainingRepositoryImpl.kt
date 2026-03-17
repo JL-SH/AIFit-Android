@@ -9,6 +9,7 @@ import com.jlsh.aifit.feature.training.data.local.TrainingPlanDao
 import com.jlsh.aifit.feature.training.data.mapper.TrainingMapper.toDomain
 import com.jlsh.aifit.feature.training.data.mapper.TrainingMapper.toEntity
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
+import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
 import com.jlsh.aifit.feature.training.domain.repository.TrainingRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -82,6 +83,14 @@ class TrainingRepositoryImpl @Inject constructor(
                 dao.deleteById(planId)
                 Result.Success(Unit)
             }
+            is Result.Error -> remote
+            else -> Result.Loading
+        }
+    }
+
+    override suspend fun getWarmUpProtocol(planId: String, dayId: String): Result<WarmUpProtocol> {
+        return when (val remote = safeApiCall { apiService.getWarmUpProtocol(planId, dayId) }) {
+            is Result.Success -> Result.Success(remote.data.toDomain())
             is Result.Error -> remote
             else -> Result.Loading
         }

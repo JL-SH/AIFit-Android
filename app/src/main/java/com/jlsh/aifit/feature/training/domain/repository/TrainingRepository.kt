@@ -4,6 +4,7 @@ import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.training.data.dto.GenerateAdaptiveTrainingPlanRequestDto
 import com.jlsh.aifit.feature.training.data.dto.GenerateTrainingPlanRequestDto
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
+import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
 import kotlinx.coroutines.flow.Flow
 
 interface TrainingRepository {
@@ -12,5 +13,6 @@ interface TrainingRepository {
     suspend fun generateTrainingPlan(request: GenerateTrainingPlanRequestDto): Result<TrainingPlan>
     suspend fun generateAdaptiveTrainingPlan(request: GenerateAdaptiveTrainingPlanRequestDto): Result<TrainingPlan>
     suspend fun deleteTrainingPlan(planId: String): Result<Unit>
+    suspend fun getWarmUpProtocol(planId: String, dayId: String): Result<WarmUpProtocol>
 }
 

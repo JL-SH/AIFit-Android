@@ -3,10 +3,13 @@ package com.jlsh.aifit.feature.workout.data.repository
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.feature.workout.data.api.WorkoutApiService
+import com.jlsh.aifit.feature.workout.data.dto.FinalizeWorkoutSessionRequestDto
 import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSessionRequestDto
 import com.jlsh.aifit.feature.workout.data.local.WorkoutLogDao
 import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toDomain
+import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toDto
 import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toEntity
+import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 import com.jlsh.aifit.feature.workout.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
@@ -69,6 +72,33 @@ class WorkoutRepositoryImpl @Inject constructor(
                 dao.deleteById(id)
                 Result.Success(Unit)
             }
+            is Result.Error -> remote
+            else -> Result.Loading
+        }
+    }
+
+    override suspend fun finalizeWorkoutSession(
+        logId: String,
+        systemicFatigue: Int,
+        jointPainReport: List<JointPainEntry>,
+    ): Result<WorkoutLog> {
+        val request = FinalizeWorkoutSessionRequestDto(
+            systemicFatigue = systemicFatigue,
+            jointPainReport = jointPainReport.map { it.toDto() },
+        )
+        return when (val remote = safeApiCall { apiService.finalizeWorkoutSession(logId, request) }) {
+            is Result.Success -> Result.Success(remote.data.toDomain())
+            is Result.Error -> remote
+            else -> Result.Loading
+        }
+    }
+
+    override suspend fun getPreviousSessionForDay(
+        planId: String,
+        dayId: String,
+    ): Result<WorkoutLog?> {
+        return when (val remote = safeApiCall { apiService.getWorkoutLogs(planId = planId, dayId = dayId) }) {
+            is Result.Success -> Result.Success(remote.data.firstOrNull()?.toDomain())
             is Result.Error -> remote
             else -> Result.Loading
         }
