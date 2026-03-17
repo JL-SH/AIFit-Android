@@ -13,6 +13,7 @@ import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.GoalType
 import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -58,6 +59,13 @@ object TrainingMapper {
         name = name,
         estimatedDurationMinutes = estimatedDurationMinutes,
         exercises = exercises.map { it.toDomain() },
+        dayOfWeek = dayOfWeek?.let {
+            try {
+                DayOfWeek.valueOf(it.uppercase())
+            } catch (_: IllegalArgumentException) {
+                null
+            }
+        },
     )
 
     fun TrainingExerciseResponseDto.toDomain(): TrainingExercise = TrainingExercise(

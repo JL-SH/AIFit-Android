@@ -9,5 +9,6 @@ data class TrainingDayResponseDto(
     val name: String,
     val estimatedDurationMinutes: Int,
     val exercises: List<TrainingExerciseResponseDto> = emptyList(),
+    val dayOfWeek: String? = null,
 )
 
