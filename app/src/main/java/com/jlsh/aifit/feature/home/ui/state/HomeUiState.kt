@@ -12,6 +12,7 @@ sealed class HomeUiState {
         val avatarUrl: String?,
         val todayTraining: TodayTrainingState?,
         val todayNutrition: TodayNutritionState?,
+        val nextMeal: NextMealState,
         val streaks: List<Streak>,
         val weeklySummary: WeeklyProgressSummary?,
         val weightEntries: List<BodyWeightLog>,
@@ -23,7 +24,9 @@ data class TodayTrainingState(
     val planName: String,
     val dayName: String,
     val exerciseCount: Int,
+    val exerciseNames: List<String>,
     val adherencePercentage: Float,
+    val isCompleted: Boolean,
 )
 
 data class TodayNutritionState(
@@ -37,3 +40,15 @@ data class TodayNutritionState(
     val fatTarget: Double,
 )
 
+sealed class NextMealState {
+    data object NoPlan : NextMealState()
+    data object AllDone : NextMealState()
+    data class Upcoming(
+        val mealName: String,
+        val estimatedTime: String,
+        val calories: Int,
+        val proteinG: Double,
+        val carbsG: Double,
+        val fatG: Double,
+    ) : NextMealState()
+}

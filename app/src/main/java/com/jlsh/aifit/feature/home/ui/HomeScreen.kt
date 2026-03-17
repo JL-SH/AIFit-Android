@@ -14,21 +14,40 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.TrendingDown
+import androidx.compose.material.icons.automirrored.rounded.TrendingFlat
+import androidx.compose.material.icons.automirrored.rounded.TrendingUp
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.FitnessCenter
+import androidx.compose.material.icons.rounded.MonitorWeight
+import androidx.compose.material.icons.rounded.Restaurant
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
@@ -41,7 +60,6 @@ import com.jlsh.aifit.core.ui.components.display.LineChartView
 import com.jlsh.aifit.core.ui.components.display.MacroProgressBar
 import com.jlsh.aifit.core.ui.components.display.MacroRingChart
 import com.jlsh.aifit.core.ui.components.display.MacroRingData
-import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.display.StreakBadge
 import com.jlsh.aifit.core.ui.components.display.UserAvatar
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
@@ -50,16 +68,20 @@ import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.gamification.domain.model.Streak
 import com.jlsh.aifit.feature.gamification.domain.model.StreakStatus
 import com.jlsh.aifit.feature.gamification.domain.model.StreakType
+import com.jlsh.aifit.feature.home.ui.components.LogWeightSheet
 import com.jlsh.aifit.feature.home.ui.state.HomeUiEvent
 import com.jlsh.aifit.feature.home.ui.state.HomeUiState
+import com.jlsh.aifit.feature.home.ui.state.NextMealState
 import com.jlsh.aifit.feature.home.ui.state.TodayNutritionState
 import com.jlsh.aifit.feature.home.ui.state.TodayTrainingState
 import com.jlsh.aifit.feature.progress.domain.model.BodyWeightLog
 import com.jlsh.aifit.feature.progress.domain.model.WeeklyProgressSummary
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import com.jlsh.aifit.core.ui.components.display.StreakStatus as BadgeStreakStatus
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToWorkoutLog: (planId: String) -> Unit,
@@ -69,21 +91,27 @@ fun HomeScreen(
     onNavigateToGamification: (tab: String) -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToGeneratePlan: () -> Unit,
+    onNavigateToTrainingDetail: (planId: String) -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    var showWeightSheet by rememberSaveable { mutableStateOf(false) }
+    val weightSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is HomeUiEvent.NavigateToWorkoutLog -> onNavigateToWorkoutLog(event.planId)
+                is HomeUiEvent.NavigateToTrainingDetail -> onNavigateToTrainingDetail(event.planId)
                 is HomeUiEvent.NavigateToTrackMeal -> onNavigateToTrackMeal()
                 is HomeUiEvent.NavigateToProgressDashboard -> onNavigateToProgressDashboard()
                 is HomeUiEvent.NavigateToBodyWeight -> onNavigateToBodyWeight()
                 is HomeUiEvent.NavigateToGamification -> onNavigateToGamification(event.tab)
                 is HomeUiEvent.NavigateToProfile -> onNavigateToProfile()
                 is HomeUiEvent.NavigateToGeneratePlan -> onNavigateToGeneratePlan()
+                is HomeUiEvent.ShowLogWeightSheet -> showWeightSheet = true
                 is HomeUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
             }
         }
@@ -119,7 +147,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.height(AiFitSpacing.md))
                     SecondaryButton(
-                        text = "Reintentar",
+                        text = "REINTENTAR",
                         onClick = { viewModel.loadAll() },
                     )
                 }
@@ -129,7 +157,9 @@ fun HomeScreen(
                 HomeContent(
                     state = state,
                     onStartSession = viewModel::onStartSession,
+                    onViewDetail = viewModel::onViewTrainingDetail,
                     onLogMeal = viewModel::onLogMeal,
+                    onLogWeight = viewModel::onLogWeight,
                     onProgressDashboard = viewModel::onProgressDashboard,
                     onBodyWeight = viewModel::onBodyWeight,
                     onStreakTap = { viewModel.onGamification("ACHIEVEMENTS") },
@@ -139,6 +169,17 @@ fun HomeScreen(
             }
         }
     }
+
+    if (showWeightSheet) {
+        LogWeightSheet(
+            sheetState = weightSheetState,
+            onDismiss = { showWeightSheet = false },
+            onConfirm = { weight ->
+                showWeightSheet = false
+                viewModel.onSaveWeight(weight)
+            },
+        )
+    }
 }
 
 // ── Content ──────────────────────────────────────────────────────────────────
@@ -147,7 +188,9 @@ fun HomeScreen(
 private fun HomeContent(
     state: HomeUiState.Success,
     onStartSession: (String) -> Unit,
+    onViewDetail: (String) -> Unit,
     onLogMeal: () -> Unit,
+    onLogWeight: () -> Unit,
     onProgressDashboard: () -> Unit,
     onBodyWeight: () -> Unit,
     onStreakTap: () -> Unit,
@@ -158,12 +201,11 @@ private fun HomeContent(
         contentPadding = PaddingValues(
             start = AiFitSpacing.md,
             end = AiFitSpacing.md,
-            top = AiFitSpacing.md,
+            top = AiFitSpacing.sm,
             bottom = 88.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
     ) {
-        // 1. Greeting header
         item(key = "greeting") {
             GreetingHeader(
                 userName = state.userName,
@@ -172,16 +214,15 @@ private fun HomeContent(
             )
         }
 
-        // 2. Today's Training card
         item(key = "training") {
             TodayTrainingCard(
                 training = state.todayTraining,
                 onStartSession = onStartSession,
+                onViewDetail = onViewDetail,
                 onCreatePlan = onCreatePlan,
             )
         }
 
-        // 3. Today's Nutrition card
         item(key = "nutrition") {
             TodayNutritionCard(
                 nutrition = state.todayNutrition,
@@ -189,27 +230,36 @@ private fun HomeContent(
             )
         }
 
-        // 4. Streak row
+        item(key = "next_meal") {
+            val upcoming = state.nextMeal
+            if (upcoming is NextMealState.Upcoming) {
+                NextMealCard(
+                    nextMeal = upcoming,
+                    onLogMeal = onLogMeal,
+                )
+            }
+        }
+
         if (state.streaks.isNotEmpty()) {
             item(key = "streaks") {
-                StreakRow(
+                StreaksCard(
                     streaks = state.streaks,
                     onTap = onStreakTap,
                 )
             }
         }
 
-        // 5. Weekly Progress card
         if (state.weeklySummary != null) {
             item(key = "weekly") {
                 WeeklyProgressCard(
                     summary = state.weeklySummary,
+                    weightEntries = state.weightEntries,
                     onTap = onProgressDashboard,
+                    onLogWeight = onLogWeight,
                 )
             }
         }
 
-        // 6. Weight trend mini-chart
         if (state.weightEntries.size >= 2) {
             item(key = "weight") {
                 WeightTrendCard(
@@ -223,6 +273,9 @@ private fun HomeContent(
 
 // ── 1. Greeting ──────────────────────────────────────────────────────────────
 
+private val dateFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", Locale("es"))
+
 @Composable
 private fun GreetingHeader(
     userName: String,
@@ -235,18 +288,23 @@ private fun GreetingHeader(
             .padding(vertical = AiFitSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+        ) {
             Text(
-                text = "${HomeViewModel.greetingForTime()},",
+                text = "${HomeViewModel.greetingForTime()}, $userName",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = LocalDate.now().format(dateFormatter)
+                    .replaceFirstChar { it.uppercase() },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text = userName,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
         }
+        Spacer(modifier = Modifier.width(AiFitSpacing.md))
         UserAvatar(
             name = userName,
             imageUrl = avatarUrl,
@@ -262,6 +320,7 @@ private fun GreetingHeader(
 private fun TodayTrainingCard(
     training: TodayTrainingState?,
     onStartSession: (String) -> Unit,
+    onViewDetail: (String) -> Unit,
     onCreatePlan: () -> Unit,
 ) {
     AiFitCard(
@@ -271,35 +330,125 @@ private fun TodayTrainingCard(
             modifier = Modifier.padding(AiFitSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
+            // Section header
+            SectionTitle(
+                icon = Icons.Rounded.FitnessCenter,
+                title = "ENTRENAMIENTO DE HOY",
+            )
+
             if (training != null) {
-                PlanStatusBadge(status = "ACTIVE")
+                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+
                 Text(
                     text = training.planName,
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = "${training.dayName}  ·  ${training.exerciseCount} ejercicios",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+
+                // Exercise list
+                if (training.exerciseNames.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                    Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs)) {
+                        training.exerciseNames.forEach { name ->
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(4.dp)
+                                        .background(
+                                            color = MaterialTheme.colorScheme.primaryContainer,
+                                            shape = RoundedCornerShape(2.dp),
+                                        ),
+                                )
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                 AdherenceBar(percentage = training.adherencePercentage)
-                PrimaryButton(
-                    text = "INICIAR SESIÓN",
-                    onClick = { onStartSession(training.planId) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+
+                if (training.isCompleted) {
+                    // ── Completed banner ──
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = AiFitSpacing.md,
+                                    vertical = AiFitSpacing.sm,
+                                ),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(24.dp),
+                            )
+                            Column {
+                                Text(
+                                    text = "Completado",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                )
+                                Text(
+                                    text = "${training.exerciseCount} ejercicios",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                    SecondaryButton(
+                        text = "VER DETALLE",
+                        onClick = { onViewDetail(training.planId) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    // ── Active: two symmetric buttons ──
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                    ) {
+                        PrimaryButton(
+                            text = "COMENZAR SESIÓN",
+                            onClick = { onStartSession(training.planId) },
+                            modifier = Modifier.weight(1f),
+                        )
+                        SecondaryButton(
+                            text = "VER DETALLE",
+                            onClick = { onViewDetail(training.planId) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
             } else {
-                Text(
-                    text = "Entrenamiento de hoy",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                )
+                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                 Text(
                     text = "No tienes un plan de entrenamiento activo",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                 SecondaryButton(
                     text = "CREAR PLAN",
                     onClick = onCreatePlan,
@@ -317,58 +466,63 @@ private fun TodayNutritionCard(
     nutrition: TodayNutritionState?,
     onLogMeal: () -> Unit,
 ) {
-    AiFitCard {
+    AiFitCard (
+        containerColor = MaterialTheme.colorScheme.secondaryContainer
+    ){
         Column(
             modifier = Modifier.padding(AiFitSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
-            Text(
-                text = "Nutrición de hoy",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+            SectionTitle(
+                icon = Icons.Rounded.Restaurant,
+                title = "NUTRICIÓN DE HOY",
             )
 
             if (nutrition != null && (nutrition.caloriesConsumed > 0 || nutrition.calorieTarget > 0)) {
-                MacroRingChart(
-                    data = MacroRingData(
-                        currentCalories = nutrition.caloriesConsumed.toFloat(),
-                        targetCalories = nutrition.calorieTarget.toFloat().coerceAtLeast(1f),
-                        currentProtein = nutrition.proteinConsumed.toFloat(),
-                        targetProtein = nutrition.proteinTarget.toFloat().coerceAtLeast(1f),
-                        currentCarbs = nutrition.carbsConsumed.toFloat(),
-                        targetCarbs = nutrition.carbsTarget.toFloat().coerceAtLeast(1f),
-                        currentFat = nutrition.fatConsumed.toFloat(),
-                        targetFat = nutrition.fatTarget.toFloat().coerceAtLeast(1f),
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    size = 100.dp,
-                    strokeWidth = 10.dp,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    MacroRingChart(
+                        data = MacroRingData(
+                            currentCalories = nutrition.caloriesConsumed.toFloat(),
+                            targetCalories = nutrition.calorieTarget.toFloat().coerceAtLeast(1f),
+                            currentProtein = nutrition.proteinConsumed.toFloat(),
+                            targetProtein = nutrition.proteinTarget.toFloat().coerceAtLeast(1f),
+                            currentCarbs = nutrition.carbsConsumed.toFloat(),
+                            targetCarbs = nutrition.carbsTarget.toFloat().coerceAtLeast(1f),
+                            currentFat = nutrition.fatConsumed.toFloat(),
+                            targetFat = nutrition.fatTarget.toFloat().coerceAtLeast(1f),
+                        ),
+                        size = 120.dp,
+                        strokeWidth = 10.dp,
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs)) {
+                    MacroProgressBar(
+                        name = "Proteína",
+                        current = nutrition.proteinConsumed.toFloat(),
+                        target = nutrition.proteinTarget.toFloat(),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    )
+                    MacroProgressBar(
+                        name = "Carbos",
+                        current = nutrition.carbsConsumed.toFloat(),
+                        target = nutrition.carbsTarget.toFloat(),
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                    MacroProgressBar(
+                        name = "Grasa",
+                        current = nutrition.fatConsumed.toFloat(),
+                        target = nutrition.fatTarget.toFloat(),
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(AiFitSpacing.xs))
 
-                MacroProgressBar(
-                    name = "Proteína",
-                    current = nutrition.proteinConsumed.toFloat(),
-                    target = nutrition.proteinTarget.toFloat(),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                )
-                MacroProgressBar(
-                    name = "Carbos",
-                    current = nutrition.carbsConsumed.toFloat(),
-                    target = nutrition.carbsTarget.toFloat(),
-                    color = MaterialTheme.colorScheme.tertiary,
-                )
-                MacroProgressBar(
-                    name = "Grasa",
-                    current = nutrition.fatConsumed.toFloat(),
-                    target = nutrition.fatTarget.toFloat(),
-                    color = MaterialTheme.colorScheme.secondary,
-                )
-
-                SecondaryButton(
+                PrimaryButton(
                     text = "REGISTRAR COMIDA",
                     onClick = onLogMeal,
                     modifier = Modifier.fillMaxWidth(),
@@ -379,8 +533,9 @@ private fun TodayNutritionCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                SecondaryButton(
-                    text = "AÑADIR COMIDA",
+                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                PrimaryButton(
+                    text = "REGISTRAR COMIDA",
                     onClick = onLogMeal,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -389,40 +544,121 @@ private fun TodayNutritionCard(
     }
 }
 
-// ── 4. Streak Row ────────────────────────────────────────────────────────────
+// ── 4. Next Meal ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun StreakRow(
-    streaks: List<Streak>,
-    onTap: () -> Unit,
+private fun NextMealCard(
+    nextMeal: NextMealState.Upcoming,
+    onLogMeal: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onTap)
-            .padding(vertical = AiFitSpacing.xs),
-        horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.lg),
-    ) {
-        streaks.forEach { streak ->
-            StreakBadge(
-                count = streak.currentCount,
-                label = streakLabel(streak.type),
-                status = streak.status.toBadgeStatus(),
+    AiFitCard(onClick = onLogMeal, containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+        Column(
+            modifier = Modifier.padding(AiFitSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Schedule,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Text(
+                        text = "Próxima comida",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+                Text(
+                    text = nextMeal.estimatedTime,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Text(
+                text = nextMeal.mealName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "${nextMeal.calories} kcal",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                )
+                Text(
+                    text = "${nextMeal.proteinG.toInt()}g P  ·  ${nextMeal.carbsG.toInt()}g C  ·  ${nextMeal.fatG.toInt()}g G",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
 
-// ── 5. Weekly Progress ───────────────────────────────────────────────────────
+// ── 5. Streaks ───────────────────────────────────────────────────────────────
+
+@Composable
+private fun StreaksCard(
+    streaks: List<Streak>,
+    onTap: () -> Unit,
+) {
+    AiFitCard(onClick = onTap, containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+        Column(
+            modifier = Modifier.padding(AiFitSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+        ) {
+            Text(
+                text = "RACHAS",
+                style = MaterialTheme.typography.labelSmall,
+                letterSpacing = 1.5.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.xl),
+            ) {
+                streaks.forEach { streak ->
+                    StreakBadge(
+                        count = streak.currentCount,
+                        label = streakLabel(streak.type),
+                        status = streak.status.toBadgeStatus(),
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── 6. Weekly Progress ───────────────────────────────────────────────────────
 
 @Composable
 private fun WeeklyProgressCard(
     summary: WeeklyProgressSummary,
+    weightEntries: List<BodyWeightLog>,
     onTap: () -> Unit,
+    onLogWeight: () -> Unit,
 ) {
-    AiFitCard(
-        modifier = Modifier.clickable(onClick = onTap),
-    ) {
+    val currentWeight = weightEntries.lastOrNull()?.weight
+    val previousWeight = weightEntries.dropLast(1).lastOrNull()?.weight
+    val weightDelta = if (currentWeight != null && previousWeight != null) {
+        currentWeight - previousWeight
+    } else null
+
+    AiFitCard(onClick = onTap, containerColor = MaterialTheme.colorScheme.secondaryContainer) {
         Column(
             modifier = Modifier.padding(AiFitSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
@@ -433,9 +669,10 @@ private fun WeeklyProgressCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Progreso semanal",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    text = "PROGRESO SEMANAL",
+                    style = MaterialTheme.typography.labelSmall,
+                    letterSpacing = 1.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Icon(
                     imageVector = Icons.Rounded.ChevronRight,
@@ -445,6 +682,7 @@ private fun WeeklyProgressCard(
                 )
             }
 
+            // Training adherence
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -461,12 +699,18 @@ private fun WeeklyProgressCard(
                 )
             }
 
-            val adherence = if (summary.workoutsTarget > 0) {
+            val trainingAdherence = if (summary.workoutsTarget > 0) {
                 (summary.workoutsThisWeek.toFloat() / summary.workoutsTarget * 100f)
                     .coerceIn(0f, 100f)
             } else 0f
-            AdherenceBar(percentage = adherence)
+            AdherenceBar(percentage = trainingAdherence)
 
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 0.5.dp,
+            )
+
+            // Nutrition adherence
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -479,6 +723,102 @@ private fun WeeklyProgressCard(
                 Text(
                     text = "${"%.0f".format(summary.averageCaloriesToday)} / ${summary.calorieTarget}",
                     style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+
+            val nutritionAdherence = if (summary.calorieTarget > 0) {
+                (summary.averageCaloriesToday.toFloat() / summary.calorieTarget * 100f)
+                    .coerceIn(0f, 100f)
+            } else 0f
+            AdherenceBar(percentage = nutritionAdherence)
+
+            // Weight row
+            if (currentWeight != null) {
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    thickness = 0.5.dp,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.MonitorWeight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Text(
+                            text = "${"%.1f".format(currentWeight)} kg",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                    if (weightDelta != null) {
+                        val deltaText = if (weightDelta >= 0) {
+                            "+${"%.1f".format(weightDelta)} kg"
+                        } else {
+                            "${"%.1f".format(weightDelta)} kg"
+                        }
+                        val trendIcon = when {
+                            weightDelta < -0.05 -> Icons.AutoMirrored.Rounded.TrendingDown
+                            weightDelta > 0.05 -> Icons.AutoMirrored.Rounded.TrendingUp
+                            else -> Icons.AutoMirrored.Rounded.TrendingFlat
+                        }
+                        val trendColor = when {
+                            weightDelta < -0.05 -> MaterialTheme.colorScheme.primaryContainer
+                            weightDelta > 0.05 -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+                        ) {
+                            Icon(
+                                imageVector = trendIcon,
+                                contentDescription = null,
+                                tint = trendColor,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Text(
+                                text = deltaText,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = trendColor,
+                            )
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 0.5.dp,
+            )
+
+            // Log weight row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onLogWeight)
+                    .padding(vertical = AiFitSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = "Registrar peso",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primaryContainer,
                 )
             }
@@ -486,16 +826,14 @@ private fun WeeklyProgressCard(
     }
 }
 
-// ── 6. Weight Trend ──────────────────────────────────────────────────────────
+// ── 7. Weight Trend ──────────────────────────────────────────────────────────
 
 @Composable
 private fun WeightTrendCard(
     entries: List<BodyWeightLog>,
     onTap: () -> Unit,
 ) {
-    AiFitCard(
-        modifier = Modifier.clickable(onClick = onTap),
-    ) {
+    AiFitCard(onClick = onTap, containerColor = MaterialTheme.colorScheme.secondaryContainer) {
         Column(
             modifier = Modifier.padding(AiFitSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
@@ -506,9 +844,10 @@ private fun WeightTrendCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Tendencia de peso",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    text = "TENDENCIA DE PESO",
+                    style = MaterialTheme.typography.labelSmall,
+                    letterSpacing = 1.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Icon(
                     imageVector = Icons.Rounded.ChevronRight,
@@ -530,6 +869,32 @@ private fun WeightTrendCard(
                     .height(120.dp),
             )
         }
+    }
+}
+
+// ── Shared ───────────────────────────────────────────────────────────────────
+
+@Composable
+private fun SectionTitle(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(16.dp),
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelSmall,
+            letterSpacing = 1.5.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -573,7 +938,14 @@ private fun HomeScreenPreview() {
                         planName = "Full Body Strength",
                         dayName = "Día 1 — Pecho & Espalda",
                         exerciseCount = 6,
+                        exerciseNames = listOf(
+                            "Press banca",
+                            "Remo con barra",
+                            "Sentadilla",
+                            "Press militar",
+                        ),
                         adherencePercentage = 75f,
+                        isCompleted = false,
                     ),
                     todayNutrition = TodayNutritionState(
                         caloriesConsumed = 1450,
@@ -584,6 +956,14 @@ private fun HomeScreenPreview() {
                         carbsTarget = 250.0,
                         fatConsumed = 45.0,
                         fatTarget = 80.0,
+                    ),
+                    nextMeal = NextMealState.Upcoming(
+                        mealName = "Pollo a la plancha con arroz",
+                        estimatedTime = "13:00",
+                        calories = 650,
+                        proteinG = 45.0,
+                        carbsG = 70.0,
+                        fatG = 15.0,
                     ),
                     streaks = listOf(
                         Streak(
@@ -622,7 +1002,9 @@ private fun HomeScreenPreview() {
                     ),
                 ),
                 onStartSession = {},
+                onViewDetail = {},
                 onLogMeal = {},
+                onLogWeight = {},
                 onProgressDashboard = {},
                 onBodyWeight = {},
                 onStreakTap = {},

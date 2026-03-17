@@ -38,7 +38,6 @@ fun MacroRingChart(
     size: Dp = 160.dp,
     strokeWidth: Dp = 12.dp,
 ) {
-    val caloriesColor = MaterialTheme.colorScheme.primaryContainer
     val proteinColor = MaterialTheme.colorScheme.tertiary
     val carbsColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f)
     val fatColor = MaterialTheme.colorScheme.outline
@@ -85,31 +84,18 @@ fun MacroRingChart(
 
                 var startAngle = -90f
 
-                // Calories (protein segment)
+                // Protein segment
                 val proteinSweep = totalSweep * proteinFraction
                 drawArc(
-                    color = caloriesColor,
+                    color = proteinColor,
                     startAngle = startAngle,
-                    sweepAngle = proteinSweep,
+                    sweepAngle = proteinSweep.coerceAtLeast(0f),
                     useCenter = false,
                     topLeft = topLeft,
                     size = arcSize,
                     style = Stroke(width = strokePx, cap = StrokeCap.Butt),
                 )
                 startAngle += proteinSweep
-
-                // Protein segment
-                val proteinSweep2 = totalSweep * proteinFraction
-                drawArc(
-                    color = proteinColor,
-                    startAngle = startAngle,
-                    sweepAngle = proteinSweep2.coerceAtLeast(0f),
-                    useCenter = false,
-                    topLeft = topLeft,
-                    size = arcSize,
-                    style = Stroke(width = strokePx, cap = StrokeCap.Butt),
-                )
-                startAngle += proteinSweep2
 
                 // Carbs segment
                 val carbsSweep = totalSweep * carbsFraction
