@@ -8,6 +8,7 @@ import com.jlsh.aifit.feature.training.data.dto.GenerateTrainingPlanRequestDto
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanDao
 import com.jlsh.aifit.feature.training.data.mapper.TrainingMapper.toDomain
 import com.jlsh.aifit.feature.training.data.mapper.TrainingMapper.toEntity
+import com.jlsh.aifit.feature.training.domain.model.ExerciseSubstitution
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
 import com.jlsh.aifit.feature.training.domain.repository.TrainingRepository
@@ -91,6 +92,14 @@ class TrainingRepositoryImpl @Inject constructor(
     override suspend fun getWarmUpProtocol(planId: String, dayId: String): Result<WarmUpProtocol> {
         return when (val remote = safeApiCall { apiService.getWarmUpProtocol(planId, dayId) }) {
             is Result.Success -> Result.Success(remote.data.toDomain())
+            is Result.Error -> remote
+            else -> Result.Loading
+        }
+    }
+
+    override suspend fun getExerciseSubstitutions(exerciseId: String): Result<List<ExerciseSubstitution>> {
+        return when (val remote = safeApiCall { apiService.getExerciseSubstitutions(exerciseId) }) {
+            is Result.Success -> Result.Success(remote.data.map { it.toDomain() })
             is Result.Error -> remote
             else -> Result.Loading
         }
