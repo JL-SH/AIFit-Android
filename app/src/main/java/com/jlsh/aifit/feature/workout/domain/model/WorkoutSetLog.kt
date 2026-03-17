@@ -9,5 +9,9 @@ data class WorkoutSetLog(
     val weightUsed: Double?,
     val durationSeconds: Int?,
     val completed: Boolean,
+    val estimatedOneRepMax: Double? = null,
+    val wasAutoregulated: Boolean = false,
+    val technicalNote: String? = null,
+    val rpe: Int? = null,
 )
 

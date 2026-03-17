@@ -9,5 +9,6 @@ data class TrainingDay(
     val estimatedDurationMinutes: Int,
     val exercises: List<TrainingExercise>,
     val dayOfWeek: DayOfWeek? = null,
+    val dayType: TrainingDayType = TrainingDayType.TRAINING,
 )
 

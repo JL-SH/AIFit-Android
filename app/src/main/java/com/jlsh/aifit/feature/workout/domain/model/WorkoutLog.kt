@@ -15,5 +15,8 @@ data class WorkoutLog(
     val completedAt: LocalDateTime,
     val sets: List<WorkoutSetLog> = emptyList(),
     val gamificationResult: GamificationResult? = null,
+    val isLocked: Boolean = false,
+    val perceivedSystemicFatigue: Int? = null,
+    val jointPainReport: List<JointPainEntry> = emptyList(),
 )
 
