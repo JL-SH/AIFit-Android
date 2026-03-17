@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
+import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
+import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlansUseCase
 import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSessionRequestDto
 import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSetRequestDto
 import com.jlsh.aifit.feature.workout.domain.usecase.DeleteWorkoutLogUseCase
@@ -38,6 +40,7 @@ class WorkoutViewModel @Inject constructor(
     private val getWorkoutLogDetailUseCase: GetWorkoutLogDetailUseCase,
     private val deleteWorkoutLogUseCase: DeleteWorkoutLogUseCase,
     private val getTrainingPlanDetailUseCase: GetTrainingPlanDetailUseCase,
+    private val getTrainingPlansUseCase: GetTrainingPlansUseCase,
 ) : ViewModel() {
 
     // --- States ---
@@ -62,6 +65,19 @@ class WorkoutViewModel @Inject constructor(
     // --- Plan context ---
     private var currentPlanId: String? = null
     private var currentDayId: String? = null
+
+    // --- History filters ---
+    private val _availablePlans = MutableStateFlow<List<TrainingPlan>>(emptyList())
+    val availablePlans: StateFlow<List<TrainingPlan>> = _availablePlans.asStateFlow()
+
+    private val _selectedPlanFilter = MutableStateFlow<String?>(null)
+    val selectedPlanFilter: StateFlow<String?> = _selectedPlanFilter.asStateFlow()
+
+    private val _dateFromFilter = MutableStateFlow<String?>(null)
+    val dateFromFilter: StateFlow<String?> = _dateFromFilter.asStateFlow()
+
+    private val _dateToFilter = MutableStateFlow<String?>(null)
+    val dateToFilter: StateFlow<String?> = _dateToFilter.asStateFlow()
 
     // ===== LOGGING =====
 
@@ -183,7 +199,11 @@ class WorkoutViewModel @Inject constructor(
 
     fun loadHistory() {
         viewModelScope.launch {
-            getWorkoutHistoryUseCase().collect { result ->
+            getWorkoutHistoryUseCase(
+                planId = _selectedPlanFilter.value,
+                from = _dateFromFilter.value,
+                to = _dateToFilter.value,
+            ).collect { result ->
                 _historyState.value = when (result) {
                     is Result.Success -> WorkoutHistoryUiState.Success(logs = result.data)
                     is Result.Error -> WorkoutHistoryUiState.Error(result.exception.toMessage())
@@ -191,6 +211,27 @@ class WorkoutViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun loadAvailablePlans() {
+        viewModelScope.launch {
+            getTrainingPlansUseCase().collect { result ->
+                if (result is Result.Success) {
+                    _availablePlans.value = result.data
+                }
+            }
+        }
+    }
+
+    fun onPlanFilterChanged(planId: String?) {
+        _selectedPlanFilter.value = planId
+        loadHistory()
+    }
+
+    fun onDateRangeFilterChanged(from: String?, to: String?) {
+        _dateFromFilter.value = from
+        _dateToFilter.value = to
+        loadHistory()
     }
 
     fun onLogClicked(logId: String) {

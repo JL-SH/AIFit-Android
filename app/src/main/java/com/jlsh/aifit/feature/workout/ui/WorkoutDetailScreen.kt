@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
@@ -50,6 +52,8 @@ import com.jlsh.aifit.feature.education.ui.EducationViewModel
 import com.jlsh.aifit.feature.education.ui.components.ExerciseExplanationSheet
 import com.jlsh.aifit.feature.progression.ui.ProgressionViewModel
 import com.jlsh.aifit.feature.progression.ui.components.ProgressionRecommendationSheet
+import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
+import com.jlsh.aifit.feature.workout.domain.model.JointZone
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutSetLog
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutDetailUiState
@@ -126,6 +130,7 @@ fun WorkoutDetailScreen(
     ) { paddingValues, successState ->
         WorkoutDetailContent(
             log = successState.log,
+            totalVolume = successState.totalVolume,
             onExerciseInfoClick = { exerciseId ->
                 showExplanationForExerciseId = exerciseId
                 educationViewModel.loadExerciseExplanation(exerciseId)
@@ -142,6 +147,7 @@ fun WorkoutDetailScreen(
 @Composable
 private fun WorkoutDetailContent(
     log: WorkoutLog,
+    totalVolume: Double = 0.0,
     onExerciseInfoClick: (exerciseId: String) -> Unit = {},
     onExerciseProgressionClick: (exerciseId: String) -> Unit = {},
     modifier: Modifier = Modifier,
@@ -156,6 +162,28 @@ private fun WorkoutDetailContent(
             .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(bottom = 88.dp),
     ) {
+
+        // ── Locked badge ─────────────────────────────────────────────
+        if (log.isLocked) {
+            item(key = "locked_badge") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AiFitSpacing.md)
+                        .padding(top = AiFitSpacing.md),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiaryContainer,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    PlanStatusBadge(status = "COMPLETED")
+                }
+            }
+        }
 
         // ── Hero section ─────────────────────────────────────────────
         item(key = "hero") {
@@ -231,6 +259,73 @@ private fun WorkoutDetailContent(
             Spacer(Modifier.height(AiFitSpacing.md))
         }
 
+        // ── Locked summary section ───────────────────────────────────
+        if (log.isLocked) {
+            item(key = "locked_summary") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AiFitSpacing.md)
+                        .padding(bottom = AiFitSpacing.md),
+                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                ) {
+                    Text(
+                        text = "RESUMEN",
+                        style = MaterialTheme.typography.labelSmall,
+                        letterSpacing = 1.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    // Total volume
+                    SummaryRow(
+                        label = "Volumen total",
+                        value = "${totalVolume.toLong()} kg",
+                    )
+
+                    // Exercises count
+                    SummaryRow(
+                        label = "Ejercicios completados",
+                        value = "${log.totalExercises}",
+                    )
+
+                    // Duration
+                    log.durationMinutes?.let { dur ->
+                        SummaryRow(
+                            label = "Duración",
+                            value = "$dur min",
+                        )
+                    }
+
+                    // Fatigue
+                    log.perceivedSystemicFatigue?.let { fatigue ->
+                        SummaryRow(
+                            label = "Fatiga",
+                            value = "$fatigue/10",
+                        )
+                    }
+
+                    // Joint pain zones
+                    val painText = if (log.jointPainReport.isEmpty()) {
+                        "Ninguno"
+                    } else {
+                        log.jointPainReport.joinToString(", ") { entry ->
+                            jointZoneLabel(entry.zone)
+                        }
+                    }
+                    SummaryRow(
+                        label = "Dolor articular",
+                        value = painText,
+                    )
+                }
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    thickness = 0.5.dp,
+                )
+                Spacer(Modifier.height(AiFitSpacing.md))
+            }
+        }
+
         // Section header
         item(key = "exercises_header") {
             Text(
@@ -291,55 +386,109 @@ private fun WorkoutDetailContent(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 )
                             }
-                            IconButton(
-                                onClick = { onExerciseInfoClick(exerciseId) },
-                                modifier = Modifier.size(28.dp),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Info,
-                                    contentDescription = "Info",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(16.dp),
-                                )
+                            if (!log.isLocked) {
+                                IconButton(
+                                    onClick = { onExerciseInfoClick(exerciseId) },
+                                    modifier = Modifier.size(28.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Info,
+                                        contentDescription = "Info",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
                             }
                         }
                     }
 
                     Spacer(Modifier.height(AiFitSpacing.xs))
 
-                    // Cabecera de columnas
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "SERIE",
-                            style = MaterialTheme.typography.labelSmall,
-                            letterSpacing = 1.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.weight(0.15f),
-                        )
-                        Text(
-                            text = "PESO",
-                            style = MaterialTheme.typography.labelSmall,
-                            letterSpacing = 1.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.weight(0.3f),
-                        )
-                        Text(
-                            text = "REPS",
-                            style = MaterialTheme.typography.labelSmall,
-                            letterSpacing = 1.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.weight(0.3f),
-                        )
-                        Text(
-                            text = "OK",
-                            style = MaterialTheme.typography.labelSmall,
-                            letterSpacing = 1.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.End,
-                            modifier = Modifier.weight(0.25f),
-                        )
+                    // Cabecera de columnas — adaptada para locked
+                    if (log.isLocked) {
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "SERIE",
+                                style = MaterialTheme.typography.labelSmall,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(0.12f),
+                            )
+                            Text(
+                                text = "PESO",
+                                style = MaterialTheme.typography.labelSmall,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.weight(0.22f),
+                            )
+                            Text(
+                                text = "REPS",
+                                style = MaterialTheme.typography.labelSmall,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.weight(0.18f),
+                            )
+                            Text(
+                                text = "RPE",
+                                style = MaterialTheme.typography.labelSmall,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.weight(0.18f),
+                            )
+                            Text(
+                                text = "1RM",
+                                style = MaterialTheme.typography.labelSmall,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.weight(0.18f),
+                            )
+                            Text(
+                                text = "OK",
+                                style = MaterialTheme.typography.labelSmall,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.End,
+                                modifier = Modifier.weight(0.12f),
+                            )
+                        }
+                    } else {
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "SERIE",
+                                style = MaterialTheme.typography.labelSmall,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(0.15f),
+                            )
+                            Text(
+                                text = "PESO",
+                                style = MaterialTheme.typography.labelSmall,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.weight(0.3f),
+                            )
+                            Text(
+                                text = "REPS",
+                                style = MaterialTheme.typography.labelSmall,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.weight(0.3f),
+                            )
+                            Text(
+                                text = "OK",
+                                style = MaterialTheme.typography.labelSmall,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.End,
+                                modifier = Modifier.weight(0.25f),
+                            )
+                        }
                     }
 
                     Spacer(Modifier.height(4.dp))
@@ -351,10 +500,17 @@ private fun WorkoutDetailContent(
             }
 
             items(sets, key = { it.id }) { set ->
-                SetDetailRow(
-                    set = set,
-                    modifier = Modifier.padding(horizontal = AiFitSpacing.md),
-                )
+                if (log.isLocked) {
+                    LockedSetDetailRow(
+                        set = set,
+                        modifier = Modifier.padding(horizontal = AiFitSpacing.md),
+                    )
+                } else {
+                    SetDetailRow(
+                        set = set,
+                        modifier = Modifier.padding(horizontal = AiFitSpacing.md),
+                    )
+                }
             }
 
             item(key = "divider_$exerciseId") {
@@ -367,6 +523,47 @@ private fun WorkoutDetailContent(
                 Spacer(Modifier.height(AiFitSpacing.xs))
             }
         }
+    }
+}
+
+// ── Helper composables ───────────────────────────────────────────────────
+
+@Composable
+private fun SummaryRow(
+    label: String,
+    value: String,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+private fun jointZoneLabel(zone: JointZone): String {
+    return when (zone) {
+        JointZone.SHOULDER_LEFT -> "Hombro izq."
+        JointZone.SHOULDER_RIGHT -> "Hombro der."
+        JointZone.KNEE_LEFT -> "Rodilla izq."
+        JointZone.KNEE_RIGHT -> "Rodilla der."
+        JointZone.HIP_LEFT -> "Cadera izq."
+        JointZone.HIP_RIGHT -> "Cadera der."
+        JointZone.LOWER_BACK -> "Lumbar"
+        JointZone.ELBOW_LEFT -> "Codo izq."
+        JointZone.ELBOW_RIGHT -> "Codo der."
+        JointZone.WRIST_LEFT -> "Muñeca izq."
+        JointZone.WRIST_RIGHT -> "Muñeca der."
+        JointZone.NECK -> "Cuello"
     }
 }
 
@@ -463,6 +660,70 @@ private fun SetDetailRow(
     }
 }
 
+@Composable
+private fun LockedSetDetailRow(
+    set: WorkoutSetLog,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "${set.exerciseSetNumber}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.12f),
+        )
+        Text(
+            text = set.weightUsed?.let { "${it}kg" } ?: "—",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(0.22f),
+        )
+        Text(
+            text = set.repsCompleted?.let { "$it" } ?: "—",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(0.18f),
+        )
+        Text(
+            text = set.rpe?.let { "$it" } ?: "—",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(0.18f),
+        )
+        Text(
+            text = set.estimatedOneRepMax?.let { "${it.toLong()}kg" } ?: "—",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(0.18f),
+        )
+        Box(
+            modifier = Modifier.weight(0.12f),
+            contentAlignment = Alignment.CenterEnd,
+        ) {
+            Icon(
+                imageVector = if (set.completed) Icons.Rounded.Check else Icons.Rounded.Close,
+                contentDescription = if (set.completed) "Completada" else "No completada",
+                tint = if (set.completed)
+                    MaterialTheme.colorScheme.primaryContainer
+                else
+                    MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+    }
+}
+
+// ── Previews ─────────────────────────────────────────────────────────────
+
 @Preview(
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES,
@@ -493,3 +754,43 @@ private fun WorkoutDetailScreenPreview() {
         }
     }
 }
+
+@Preview(
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    name = "WorkoutDetailScreen Locked Dark",
+)
+@Composable
+private fun WorkoutDetailScreenLockedPreview() {
+    AIFitTheme(darkTheme = true) {
+        val fakeLog = WorkoutLog(
+            id = "2", trainingPlanId = "p1", trainingDayId = "d1",
+            date = LocalDate.now(), durationMinutes = 48,
+            perceivedExertion = 8, notes = "Sesión finalizada.",
+            totalExercises = 2, completedAt = LocalDateTime.now(),
+            isLocked = true,
+            perceivedSystemicFatigue = 7,
+            jointPainReport = listOf(
+                JointPainEntry(zone = JointZone.KNEE_LEFT, note = "Leve molestia"),
+                JointPainEntry(zone = JointZone.LOWER_BACK, note = null),
+            ),
+            sets = listOf(
+                WorkoutSetLog("s1", "e1", "Bench Press", 1, 10, 80.0, null, true, estimatedOneRepMax = 106.7, rpe = 7),
+                WorkoutSetLog("s2", "e1", "Bench Press", 2, 8, 85.0, null, true, estimatedOneRepMax = 107.5, rpe = 8),
+                WorkoutSetLog("s3", "e1", "Bench Press", 3, 6, 85.0, null, true, estimatedOneRepMax = 101.2, rpe = 9),
+                WorkoutSetLog("s4", "e2", "Overhead Press", 1, 12, 40.0, null, true, estimatedOneRepMax = 56.0, rpe = 6),
+                WorkoutSetLog("s5", "e2", "Overhead Press", 2, 10, 40.0, null, true, estimatedOneRepMax = 53.3, rpe = 7),
+            ),
+        )
+        val totalVolume = fakeLog.sets.filter { it.completed }.sumOf { (it.weightUsed ?: 0.0) * (it.repsCompleted ?: 0) }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        ) {
+            WorkoutDetailContent(log = fakeLog, totalVolume = totalVolume)
+        }
+    }
+}
+
+

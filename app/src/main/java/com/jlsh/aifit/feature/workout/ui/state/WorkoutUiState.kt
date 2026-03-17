@@ -45,6 +45,15 @@ sealed class WorkoutDetailUiState {
     data class Error(override val message: String) : WorkoutDetailUiState(), UiStateHost.Error
     data class Success(
         val log: WorkoutLog,
-    ) : WorkoutDetailUiState(), UiStateHost.Success
+    ) : WorkoutDetailUiState(), UiStateHost.Success {
+        val totalVolume: Double
+            get() = log.sets
+                .filter { it.completed }
+                .sumOf { set ->
+                    val w = set.weightUsed ?: 0.0
+                    val r = set.repsCompleted ?: 0
+                    w * r
+                }
+    }
 }
 

@@ -3,20 +3,30 @@ package com.jlsh.aifit.feature.workout.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.FitnessCenter
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,26 +34,38 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
+import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
+import com.jlsh.aifit.core.ui.components.inputs.AiFitDatePickerBottomSheet
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutHistoryUiState
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WorkoutHistoryScreen(
     onNavigateToDetail: (logId: String) -> Unit,
     viewModel: WorkoutViewModel = hiltViewModel(),
 ) {
     val historyState by viewModel.historyState.collectAsStateWithLifecycle()
+    val availablePlans by viewModel.availablePlans.collectAsStateWithLifecycle()
+    val selectedPlanFilter by viewModel.selectedPlanFilter.collectAsStateWithLifecycle()
+    val dateFrom by viewModel.dateFromFilter.collectAsStateWithLifecycle()
+    val dateTo by viewModel.dateToFilter.collectAsStateWithLifecycle()
+
+    var showDateFromPicker by remember { mutableStateOf(false) }
+    var showDateToPicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadHistory()
+        viewModel.loadAvailablePlans()
     }
 
     LaunchedEffect(Unit) {
@@ -56,6 +78,27 @@ fun WorkoutHistoryScreen(
         }
     }
 
+    // ── Date picker sheets ──
+    AiFitDatePickerBottomSheet(
+        isVisible = showDateFromPicker,
+        initialDate = dateFrom,
+        onDateSelected = { isoDate ->
+            showDateFromPicker = false
+            viewModel.onDateRangeFilterChanged(from = isoDate, to = dateTo)
+        },
+        onDismiss = { showDateFromPicker = false },
+    )
+
+    AiFitDatePickerBottomSheet(
+        isVisible = showDateToPicker,
+        initialDate = dateTo,
+        onDateSelected = { isoDate ->
+            showDateToPicker = false
+            viewModel.onDateRangeFilterChanged(from = dateFrom, to = isoDate)
+        },
+        onDismiss = { showDateToPicker = false },
+    )
+
     when (val state = historyState) {
         is WorkoutHistoryUiState.Loading -> LoadingScreen()
         is WorkoutHistoryUiState.Error -> ErrorScreen(
@@ -63,36 +106,177 @@ fun WorkoutHistoryScreen(
             onRetry = { viewModel.loadHistory() },
         )
         is WorkoutHistoryUiState.Success -> {
-            if (state.logs.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = AiFitSpacing.xxl),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    EmptyStateView(
-                        icon = Icons.Rounded.FitnessCenter,
-                        title = "No has registrado sesiones aún",
-                        subtitle = "Completa tu primer entrenamiento para ver el historial",
-                    )
-                }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(
-                        start = AiFitSpacing.md,
-                        top = AiFitSpacing.sm,
-                        end = AiFitSpacing.md,
-                        bottom = 88.dp,
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-                ) {
-                    items(state.logs, key = { it.id }) { log ->
-                        WorkoutLogCard(
-                            log = log,
-                            onClick = { viewModel.onLogClicked(log.id) },
+            Column(modifier = Modifier.fillMaxSize()) {
+                // ── Filters bar ──
+                HistoryFiltersBar(
+                    plans = availablePlans,
+                    selectedPlanId = selectedPlanFilter,
+                    dateFrom = dateFrom,
+                    dateTo = dateTo,
+                    onPlanSelected = { viewModel.onPlanFilterChanged(it) },
+                    onDateFromClick = { showDateFromPicker = true },
+                    onDateToClick = { showDateToPicker = true },
+                    onClearDateFilter = {
+                        viewModel.onDateRangeFilterChanged(from = null, to = null)
+                    },
+                )
+
+                if (state.logs.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = AiFitSpacing.xxl),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        EmptyStateView(
+                            icon = Icons.Rounded.FitnessCenter,
+                            title = "No has registrado sesiones aún",
+                            subtitle = "Completa tu primer entrenamiento para ver el historial",
                         )
                     }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(
+                            start = AiFitSpacing.md,
+                            top = AiFitSpacing.sm,
+                            end = AiFitSpacing.md,
+                            bottom = 88.dp,
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                    ) {
+                        items(state.logs, key = { it.id }) { log ->
+                            WorkoutLogCard(
+                                log = log,
+                                onClick = { viewModel.onLogClicked(log.id) },
+                            )
+                        }
+                    }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HistoryFiltersBar(
+    plans: List<TrainingPlan>,
+    selectedPlanId: String?,
+    dateFrom: String?,
+    dateTo: String?,
+    onPlanSelected: (String?) -> Unit,
+    onDateFromClick: () -> Unit,
+    onDateToClick: () -> Unit,
+    onClearDateFilter: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = AiFitSpacing.md)
+            .padding(top = AiFitSpacing.sm, bottom = AiFitSpacing.xs),
+        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+    ) {
+        // ── Plan chips ──
+        if (plans.isNotEmpty()) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+            ) {
+                // "All" chip
+                FilterChip(
+                    selected = selectedPlanId == null,
+                    onClick = { onPlanSelected(null) },
+                    label = {
+                        Text(
+                            text = "Todos",
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+                )
+
+                plans.forEach { plan ->
+                    FilterChip(
+                        selected = selectedPlanId == plan.id,
+                        onClick = { onPlanSelected(plan.id) },
+                        label = {
+                            Text(
+                                text = plan.name,
+                                style = MaterialTheme.typography.labelMedium,
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
+                    )
+                }
+            }
+        }
+
+        // ── Date filter chips ──
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            FilterChip(
+                selected = dateFrom != null,
+                onClick = onDateFromClick,
+                label = {
+                    Text(
+                        text = dateFrom ?: "Desde",
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.CalendarMonth,
+                        contentDescription = null,
+                        modifier = Modifier.height(16.dp),
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+            )
+
+            FilterChip(
+                selected = dateTo != null,
+                onClick = onDateToClick,
+                label = {
+                    Text(
+                        text = dateTo ?: "Hasta",
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.CalendarMonth,
+                        contentDescription = null,
+                        modifier = Modifier.height(16.dp),
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+            )
+
+            if (dateFrom != null || dateTo != null) {
+                FilterChip(
+                    selected = false,
+                    onClick = onClearDateFilter,
+                    label = {
+                        Text(
+                            text = "✕",
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    },
+                )
             }
         }
     }
@@ -118,6 +302,34 @@ private fun WorkoutLogCard(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
+                // Status badge
+                if (log.isLocked) {
+                    PlanStatusBadge(status = "COMPLETED")
+                } else {
+                    PlanStatusBadge(status = "DRAFT")
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
+                ) {
+                    log.durationMinutes?.let { dur ->
+                        Text(
+                            text = "${dur}min",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Text(
+                        text = "${log.totalExercises} ejercicios",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 log.perceivedExertion?.let { rpe ->
                     Text(
                         text = "RPE $rpe",
@@ -125,22 +337,6 @@ private fun WorkoutLogCard(
                         color = MaterialTheme.colorScheme.primaryContainer,
                     )
                 }
-            }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
-            ) {
-                log.durationMinutes?.let { dur ->
-                    Text(
-                        text = "${dur}min",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Text(
-                    text = "${log.totalExercises} exercises",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }
@@ -160,20 +356,34 @@ private fun WorkoutHistoryScreenPreview() {
                 date = LocalDate.now(), durationMinutes = 55,
                 perceivedExertion = 7, notes = null, totalExercises = 5,
                 completedAt = LocalDateTime.now(),
+                isLocked = true,
             ),
             WorkoutLog(
                 id = "2", trainingPlanId = "p1", trainingDayId = "d2",
                 date = LocalDate.now().minusDays(2), durationMinutes = 42,
                 perceivedExertion = 6, notes = null, totalExercises = 4,
                 completedAt = LocalDateTime.now().minusDays(2),
+                isLocked = false,
             ),
         )
-        LazyColumn(
-            contentPadding = PaddingValues(AiFitSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-        ) {
-            items(fakeLogs, key = { it.id }) { log ->
-                WorkoutLogCard(log = log, onClick = {})
+        Column(modifier = Modifier.fillMaxSize()) {
+            HistoryFiltersBar(
+                plans = emptyList(),
+                selectedPlanId = null,
+                dateFrom = null,
+                dateTo = null,
+                onPlanSelected = {},
+                onDateFromClick = {},
+                onDateToClick = {},
+                onClearDateFilter = {},
+            )
+            LazyColumn(
+                contentPadding = PaddingValues(AiFitSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+            ) {
+                items(fakeLogs, key = { it.id }) { log ->
+                    WorkoutLogCard(log = log, onClick = {})
+                }
             }
         }
     }
