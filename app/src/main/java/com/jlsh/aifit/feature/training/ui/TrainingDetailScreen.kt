@@ -68,7 +68,7 @@ fun TrainingDetailScreen(
     onNavigateBack: () -> Unit,
     onNavigateToGenerate: (adaptive: Boolean, basePlanId: String?) -> Unit,
     onNavigateToWorkoutLog: (planId: String) -> Unit,
-    onStartSession: (planId: String, dayId: String, exercises: List<TrainingExercise>) -> Unit = { _, _, _ -> },
+    onNavigateToSession: (planId: String, dayId: String) -> Unit = { _, _ -> },
     viewModel: TrainingViewModel = hiltViewModel(),
     educationViewModel: EducationViewModel = hiltViewModel(),
     progressionViewModel: ProgressionViewModel = hiltViewModel(),
@@ -159,7 +159,7 @@ fun TrainingDetailScreen(
                 showProgressionForExerciseId = exerciseId
                 progressionViewModel.loadExerciseRecommendation(exerciseId)
             },
-            onStartSession = onStartSession,
+            onNavigateToSession = onNavigateToSession,
             modifier = Modifier.padding(paddingValues),
         )
     }
@@ -172,7 +172,7 @@ private fun TrainingDetailContent(
     days: List<TrainingDayItem>,
     onExerciseInfoClick: (exerciseId: String) -> Unit,
     onExerciseProgressionClick: (exerciseId: String) -> Unit,
-    onStartSession: (planId: String, dayId: String, exercises: List<TrainingExercise>) -> Unit,
+    onNavigateToSession: (planId: String, dayId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -199,7 +199,7 @@ private fun TrainingDetailContent(
                     day = item.day,
                     onExerciseInfoClick = onExerciseInfoClick,
                     onExerciseProgressionClick = onExerciseProgressionClick,
-                    onStartSession = { onStartSession(planId, item.day.id, item.day.exercises) },
+                    onStartSession = { onNavigateToSession(planId, item.day.id) },
                 )
             }
         }
@@ -472,7 +472,51 @@ private fun TrainingDetailScreenPreview() {
                 days = fakeDays,
                 onExerciseInfoClick = {},
                 onExerciseProgressionClick = {},
-                onStartSession = { _, _, _ -> },
+                onNavigateToSession = { _, _ -> },
+            )
+        }
+    }
+}
+
+// U-12/U-13 compliance fix — light mode preview
+@Preview(
+    showBackground = true,
+    name = "TrainingDetailScreen Light",
+)
+@Composable
+private fun TrainingDetailScreenLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        ) {
+            val fakeDays = listOf(
+                TrainingDayItem.Training(
+                    day = TrainingDay(
+                        id = "d1",
+                        dayNumber = 1,
+                        name = "Push Day",
+                        estimatedDurationMinutes = 60,
+                        exercises = listOf(
+                            TrainingExercise(
+                                id = "e1", name = "Bench Press", description = null,
+                                primaryMuscle = MuscleGroup.CHEST,
+                                secondaryMuscle = MuscleGroup.TRICEPS,
+                                sets = 5, repsMin = 5, repsMax = 5, restSeconds = 180,
+                                notes = null, order = 1, targetRpe = 8,
+                            ),
+                        ),
+                    ),
+                ),
+            )
+
+            TrainingDetailContent(
+                planId = "plan-1",
+                days = fakeDays,
+                onExerciseInfoClick = {},
+                onExerciseProgressionClick = {},
+                onNavigateToSession = { _, _ -> },
             )
         }
     }

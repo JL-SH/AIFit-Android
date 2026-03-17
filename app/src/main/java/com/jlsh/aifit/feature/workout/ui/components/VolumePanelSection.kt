@@ -76,3 +76,20 @@ private fun VolumePanelSectionPreview() {
     }
 }
 
+// U-12/U-13 compliance fix — light mode preview
+@Preview(
+    showBackground = true,
+    name = "VolumePanelSection Light",
+)
+@Composable
+private fun VolumePanelSectionLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        VolumePanelSection(
+            volumeByMuscleGroup = mapOf(
+                MuscleGroup.CHEST to 4500.0,
+                MuscleGroup.SHOULDERS to 2100.0,
+            ),
+        )
+    }
+}
+

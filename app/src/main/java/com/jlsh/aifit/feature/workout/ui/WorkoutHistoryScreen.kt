@@ -140,7 +140,7 @@ fun WorkoutHistoryScreen(
                             start = AiFitSpacing.md,
                             top = AiFitSpacing.sm,
                             end = AiFitSpacing.md,
-                            bottom = 88.dp,
+                            bottom = AiFitSpacing.xxl + AiFitSpacing.xxl, // U-12/U-13 compliance fix
                         ),
                         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                     ) {
@@ -364,6 +364,46 @@ private fun WorkoutHistoryScreenPreview() {
                 perceivedExertion = 6, notes = null, totalExercises = 4,
                 completedAt = LocalDateTime.now().minusDays(2),
                 isLocked = false,
+            ),
+        )
+        Column(modifier = Modifier.fillMaxSize()) {
+            HistoryFiltersBar(
+                plans = emptyList(),
+                selectedPlanId = null,
+                dateFrom = null,
+                dateTo = null,
+                onPlanSelected = {},
+                onDateFromClick = {},
+                onDateToClick = {},
+                onClearDateFilter = {},
+            )
+            LazyColumn(
+                contentPadding = PaddingValues(AiFitSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+            ) {
+                items(fakeLogs, key = { it.id }) { log ->
+                    WorkoutLogCard(log = log, onClick = {})
+                }
+            }
+        }
+    }
+}
+
+// U-12/U-13 compliance fix — light mode preview
+@Preview(
+    showBackground = true,
+    name = "WorkoutHistoryScreen Light",
+)
+@Composable
+private fun WorkoutHistoryScreenLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        val fakeLogs = listOf(
+            WorkoutLog(
+                id = "1", trainingPlanId = "p1", trainingDayId = "d1",
+                date = LocalDate.now(), durationMinutes = 55,
+                perceivedExertion = 7, notes = null, totalExercises = 5,
+                completedAt = LocalDateTime.now(),
+                isLocked = true,
             ),
         )
         Column(modifier = Modifier.fillMaxSize()) {

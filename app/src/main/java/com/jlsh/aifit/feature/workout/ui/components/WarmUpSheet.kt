@@ -179,3 +179,40 @@ private fun WarmUpSheetPreview() {
     }
 }
 
+// U-12/U-13 compliance fix — light mode preview
+@Preview(
+    showBackground = true,
+    name = "WarmUpSheet Light",
+)
+@Composable
+private fun WarmUpSheetLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        val fakeProtocol = WarmUpProtocol(
+            trainingDayId = "d1",
+            estimatedTotalLoad = 500.0,
+            exercises = listOf(
+                WarmUpExercise(
+                    name = "Jumping Jacks",
+                    description = "Full body warm-up to raise heart rate",
+                    sets = 2,
+                    reps = 20,
+                    durationSeconds = null,
+                ),
+                WarmUpExercise(
+                    name = "Plank Hold",
+                    description = "Core activation",
+                    sets = 2,
+                    reps = 0,
+                    durationSeconds = 30,
+                ),
+            ),
+        )
+
+        WarmUpSheetContent(
+            protocol = fakeProtocol,
+            onSkip = {},
+            onReady = {},
+        )
+    }
+}
+

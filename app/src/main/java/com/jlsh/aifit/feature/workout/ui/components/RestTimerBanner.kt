@@ -112,3 +112,33 @@ private fun RestTimerBannerCompletePreview() {
     }
 }
 
+// U-12/U-13 compliance fix — light mode preview
+@Preview(
+    showBackground = true,
+    name = "RestTimerBanner Counting Light",
+)
+@Composable
+private fun RestTimerBannerCountingLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        RestTimerBanner(
+            seconds = 92,
+            onDismiss = {},
+        )
+    }
+}
+
+// U-12/U-13 compliance fix — light mode preview
+@Preview(
+    showBackground = true,
+    name = "RestTimerBanner Complete Light",
+)
+@Composable
+private fun RestTimerBannerCompleteLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        RestTimerBanner(
+            seconds = 0,
+            onDismiss = {},
+        )
+    }
+}
+

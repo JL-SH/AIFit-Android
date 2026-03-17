@@ -1,6 +1,7 @@
 package com.jlsh.aifit.feature.workout.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,22 +42,131 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
+import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutSetLog
+import com.jlsh.aifit.feature.workout.ui.components.FinalizeSessionSheet
 import com.jlsh.aifit.feature.workout.ui.components.RestTimerBanner
+import com.jlsh.aifit.feature.workout.ui.components.SubstitutionSheet
 import com.jlsh.aifit.feature.workout.ui.components.VolumePanelSection
+import com.jlsh.aifit.feature.workout.ui.components.WarmUpSheet
 import com.jlsh.aifit.feature.workout.ui.state.SessionExercise
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionData
+import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionUiEvent
+import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutSessionScreen(
+    onNavigateBack: () -> Unit,
+    onSessionFinalized: (workoutLogId: String) -> Unit,
+    viewModel: WorkoutSessionViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val restTimerSeconds by viewModel.restTimerSeconds.collectAsStateWithLifecycle()
+    val substitutionsState by viewModel.substitutionsState.collectAsStateWithLifecycle()
+
+    var showFinalizeSheet by remember { mutableStateOf(false) }
+    var showSubstitutionExerciseId by remember { mutableStateOf<String?>(null) }
+
+    // Navigate when session is finalized
+    LaunchedEffect(uiState) {
+        val state = uiState
+        if (state is WorkoutSessionUiState.SessionFinalized) {
+            onSessionFinalized(state.summary.id)
+        }
+    }
+
+    // Collect one-shot events
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is WorkoutSessionUiEvent.NavigateBack -> onNavigateBack()
+                is WorkoutSessionUiEvent.ShowSubstitutionSheet -> {
+                    showSubstitutionExerciseId = event.exerciseId
+                    viewModel.loadSubstitutions(event.exerciseId)
+                }
+                is WorkoutSessionUiEvent.ShowSnackbar -> { /* handled by snackbar */ }
+                is WorkoutSessionUiEvent.SessionAlreadyLocked -> onNavigateBack()
+            }
+        }
+    }
+
+    when (val state = uiState) {
+        is WorkoutSessionUiState.Idle,
+        is WorkoutSessionUiState.LoadingWarmUp -> LoadingScreen()
+
+        is WorkoutSessionUiState.WarmUpReady -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+            )
+            WarmUpSheet(
+                protocol = state.protocol,
+                onSkip = { viewModel.startWorkout() },
+                onReady = { viewModel.startWorkout() },
+            )
+        }
+
+        is WorkoutSessionUiState.SessionActive -> {
+            WorkoutSessionContent(
+                sessionData = state.sessionData,
+                onRegisterSet = viewModel::registerSet,
+                onFinalize = { showFinalizeSheet = true },
+                restTimerSeconds = restTimerSeconds,
+                onDismissTimer = viewModel::cancelRestTimer,
+                onRequestSubstitution = { exerciseId ->
+                    showSubstitutionExerciseId = exerciseId
+                    viewModel.loadSubstitutions(exerciseId)
+                },
+            )
+
+            // Substitution sheet overlay
+            if (showSubstitutionExerciseId != null) {
+                SubstitutionSheet(
+                    state = substitutionsState,
+                    onSelect = { sub ->
+                        viewModel.applySubstitution(showSubstitutionExerciseId!!, sub)
+                        showSubstitutionExerciseId = null
+                    },
+                    onDismiss = { showSubstitutionExerciseId = null },
+                )
+            }
+
+            // Finalize session sheet overlay
+            if (showFinalizeSheet) {
+                FinalizeSessionSheet(
+                    onConfirm = { fatigue, jointPain ->
+                        viewModel.finalizeSession(fatigue, jointPain)
+                        showFinalizeSheet = false
+                    },
+                    onDismiss = { showFinalizeSheet = false },
+                )
+            }
+        }
+
+        is WorkoutSessionUiState.Finalizing -> LoadingScreen()
+        is WorkoutSessionUiState.SessionFinalized -> { /* handled by LaunchedEffect */ }
+        is WorkoutSessionUiState.Error -> ErrorScreen(
+            message = state.message,
+            onRetry = onNavigateBack,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WorkoutSessionContent(
     sessionData: WorkoutSessionData,
     onRegisterSet: (exerciseId: String, weightKg: Double, reps: Int, rpe: Int) -> Unit,
     onFinalize: () -> Unit,
@@ -531,13 +642,53 @@ private fun WorkoutSessionScreenPreview() {
             substitutions = null,
         )
 
-        WorkoutSessionScreen(
+        WorkoutSessionContent(
             sessionData = fakeSessionData,
             onRegisterSet = { _, _, _, _ -> },
             onFinalize = {},
             restTimerSeconds = 92,
             onDismissTimer = {},
             onRequestSubstitution = {},
+        )
+    }
+}
+
+// U-12/U-13 compliance fix — light mode preview
+@Preview(
+    showBackground = true,
+    name = "WorkoutSessionScreen Light",
+)
+@Composable
+private fun WorkoutSessionScreenLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        val fakeExercises = listOf(
+            SessionExercise(
+                exerciseId = "e1",
+                name = "Bench Press",
+                primaryMuscle = MuscleGroup.CHEST,
+                targetSets = 5,
+                targetReps = 5,
+                targetRpe = 8,
+                restSeconds = 180,
+                completedSets = 1,
+            ),
+        )
+
+        val fakeSessionData = WorkoutSessionData(
+            exercises = fakeExercises,
+            currentExerciseIndex = 0,
+            registeredSets = emptyList(),
+            autoregulationSuggestion = null,
+            restTimerSeconds = null,
+            volumeByMuscleGroup = mapOf(MuscleGroup.CHEST to 400.0),
+            ghostSets = emptyList(),
+            substitutions = null,
+        )
+
+        WorkoutSessionContent(
+            sessionData = fakeSessionData,
+            onRegisterSet = { _, _, _, _ -> },
+            onFinalize = {},
         )
     }
 }

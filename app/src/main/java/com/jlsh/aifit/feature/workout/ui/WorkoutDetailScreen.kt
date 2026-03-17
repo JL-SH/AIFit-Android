@@ -160,7 +160,7 @@ private fun WorkoutDetailContent(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(bottom = 88.dp),
+        contentPadding = PaddingValues(bottom = AiFitSpacing.xxl + AiFitSpacing.xxl), // U-12/U-13 compliance fix
     ) {
 
         // ── Locked badge ─────────────────────────────────────────────
@@ -383,7 +383,7 @@ private fun WorkoutDetailContent(
                                         MaterialTheme.colorScheme.primaryContainer
                                     else
                                         MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    modifier = Modifier.padding(horizontal = AiFitSpacing.sm, vertical = AiFitSpacing.xs), // U-12/U-13 compliance fix
                                 )
                             }
                             if (!log.isLocked) {
@@ -491,7 +491,7 @@ private fun WorkoutDetailContent(
                         }
                     }
 
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(AiFitSpacing.xs)) // U-12/U-13 compliance fix
                     HorizontalDivider(
                         color = MaterialTheme.colorScheme.outlineVariant,
                         thickness = 0.5.dp,
@@ -576,7 +576,7 @@ private fun StatCell(
     Column(
         modifier = modifier.padding(vertical = AiFitSpacing.sm),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs), // U-12/U-13 compliance fix
     ) {
         Text(
             text = value,
@@ -597,11 +597,11 @@ private fun StatCell(
 @Composable
 private fun StatDivider() {
     Box(
-        modifier = Modifier.height(32.dp),
+        modifier = Modifier.height(AiFitSpacing.xl), // U-12/U-13 compliance fix
         contentAlignment = Alignment.Center,
     ) {
         HorizontalDivider(
-            modifier = Modifier.size(width = 0.5.dp, height = 32.dp),
+            modifier = Modifier.size(width = 0.5.dp, height = AiFitSpacing.xl), // U-12/U-13 compliance fix
             color = MaterialTheme.colorScheme.outlineVariant,
             thickness = 0.5.dp,
         )
@@ -616,7 +616,7 @@ private fun SetDetailRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = AiFitSpacing.xs), // U-12/U-13 compliance fix
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Número de serie
@@ -668,7 +668,7 @@ private fun LockedSetDetailRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = AiFitSpacing.xs), // U-12/U-13 compliance fix
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -789,6 +789,34 @@ private fun WorkoutDetailScreenLockedPreview() {
                 .background(MaterialTheme.colorScheme.background),
         ) {
             WorkoutDetailContent(log = fakeLog, totalVolume = totalVolume)
+        }
+    }
+}
+
+// U-12/U-13 compliance fix — light mode preview
+@Preview(
+    showBackground = true,
+    name = "WorkoutDetailScreen Light",
+)
+@Composable
+private fun WorkoutDetailScreenLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        val fakeLog = WorkoutLog(
+            id = "3", trainingPlanId = "p1", trainingDayId = "d1",
+            date = LocalDate.now(), durationMinutes = 45,
+            perceivedExertion = 6, notes = null,
+            totalExercises = 1, completedAt = LocalDateTime.now(),
+            sets = listOf(
+                WorkoutSetLog("s1", "e1", "Bench Press", 1, 10, 80.0, null, true),
+                WorkoutSetLog("s2", "e1", "Bench Press", 2, 8, 80.0, null, true),
+            ),
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        ) {
+            WorkoutDetailContent(log = fakeLog)
         }
     }
 }

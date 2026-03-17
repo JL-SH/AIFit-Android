@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.training.domain.model.ExerciseSubstitution
-import com.jlsh.aifit.feature.training.domain.model.TrainingExercise
 import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
 import com.jlsh.aifit.feature.training.domain.usecase.GetExerciseSubstitutionsUseCase
+import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetWarmUpProtocolUseCase
 import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutSetLog
@@ -42,6 +42,7 @@ class WorkoutSessionViewModel @Inject constructor(
     private val finalizeWorkoutSessionUseCase: FinalizeWorkoutSessionUseCase,
     private val getPreviousSessionForDayUseCase: GetPreviousSessionForDayUseCase,
     private val getExerciseSubstitutionsUseCase: GetExerciseSubstitutionsUseCase,
+    private val getTrainingPlanDetailUseCase: GetTrainingPlanDetailUseCase,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -66,29 +67,51 @@ class WorkoutSessionViewModel @Inject constructor(
     private var ghostSets: List<WorkoutSetLog> = emptyList()
     private var warmUpProtocol: WarmUpProtocol? = null
 
-    fun loadSession(planId: String, dayId: String, exercises: List<TrainingExercise>) {
+    init {
+        val planId = savedStateHandle.get<String>("planId") ?: ""
+        val dayId = savedStateHandle.get<String>("dayId") ?: ""
+        if (planId.isNotBlank() && dayId.isNotBlank()) {
+            loadSession(planId, dayId)
+        }
+    }
+
+    fun loadSession(planId: String, dayId: String) {
         if (_uiState.value !is WorkoutSessionUiState.Idle) return
 
         currentPlanId = planId
         currentDayId = dayId
         currentSessionId = UUID.randomUUID().toString()
 
-        sessionExercises = exercises.map { exercise ->
-            SessionExercise(
-                exerciseId = exercise.id,
-                name = exercise.name,
-                primaryMuscle = exercise.primaryMuscle,
-                targetSets = exercise.sets,
-                targetReps = exercise.repsMin,
-                targetRpe = exercise.targetRpe,
-                restSeconds = exercise.restSeconds,
-                completedSets = 0,
-            )
-        }
-
         _uiState.value = WorkoutSessionUiState.LoadingWarmUp
 
         viewModelScope.launch {
+            // Load exercises from the training plan
+            val planResult = getTrainingPlanDetailUseCase(planId)
+            if (planResult is Result.Error) {
+                _uiState.value = WorkoutSessionUiState.Error(planResult.exception.toMessage())
+                return@launch
+            }
+
+            val plan = (planResult as Result.Success).data
+            val day = plan.days.find { it.id == dayId }
+            if (day == null) {
+                _uiState.value = WorkoutSessionUiState.Error("Training day not found")
+                return@launch
+            }
+
+            sessionExercises = day.exercises.map { exercise ->
+                SessionExercise(
+                    exerciseId = exercise.id,
+                    name = exercise.name,
+                    primaryMuscle = exercise.primaryMuscle,
+                    targetSets = exercise.sets,
+                    targetReps = exercise.repsMin,
+                    targetRpe = exercise.targetRpe,
+                    restSeconds = exercise.restSeconds,
+                    completedSets = 0,
+                )
+            }
+
             val ghostResult = getPreviousSessionForDayUseCase(planId, dayId)
             if (ghostResult is Result.Success) {
                 ghostSets = ghostResult.data?.sets ?: emptyList()

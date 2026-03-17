@@ -374,3 +374,53 @@ private fun TrainingHubScreenEmptyPreview() {
     }
 }
 
+// U-12/U-13 compliance fix — light mode preview
+@Preview(
+    showBackground = true,
+    name = "TrainingHubScreen Active Light",
+)
+@Composable
+private fun TrainingHubScreenActiveLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        val fakePlans = listOf(
+            TrainingPlan(
+                id = "1",
+                name = "Plan de Fuerza 5x5",
+                description = "Plan de fuerza básico",
+                frequencyDaysPerWeek = 3,
+                durationWeeks = 8,
+                goalType = GoalType.GAIN_MUSCLE,
+                fitnessLevel = FitnessLevel.INTERMEDIATE,
+                location = WorkoutLocation.GYM,
+                status = PlanStatus.ACTIVE,
+                totalDays = 24,
+                createdAt = LocalDateTime.now().minusWeeks(2),
+                days = listOf(
+                    TrainingDay(
+                        id = "d1",
+                        dayNumber = 1,
+                        name = "Push Day",
+                        estimatedDurationMinutes = 60,
+                        exercises = emptyList(),
+                    ),
+                ),
+            ),
+        )
+
+        val fakeState = TrainingHubUiState.ActivePlan(
+            plan = fakePlans.first(),
+            currentWeek = 3,
+            nextDay = fakePlans.first().days.firstOrNull(),
+            allPlans = fakePlans,
+            selectedFilter = null,
+        )
+
+        ActivePlanContent(
+            state = fakeState,
+            onActivePlanClicked = {},
+            onPlanClicked = {},
+            onFilterChanged = {},
+        )
+    }
+}
+

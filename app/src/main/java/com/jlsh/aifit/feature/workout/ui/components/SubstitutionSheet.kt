@@ -220,3 +220,28 @@ private fun SubstitutionSheetLoadingPreview() {
     }
 }
 
+// U-12/U-13 compliance fix — light mode preview
+@Preview(
+    showBackground = true,
+    name = "SubstitutionSheet Light",
+)
+@Composable
+private fun SubstitutionSheetLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        SubstitutionSheetContent(
+            state = SubstitutionLoadState.Success(
+                substitutions = listOf(
+                    ExerciseSubstitution(
+                        name = "Dumbbell Bench Press",
+                        primaryMuscle = MuscleGroup.CHEST,
+                        movementPattern = "Horizontal Push",
+                        description = "Similar pressing motion with greater range of motion.",
+                    ),
+                ),
+            ),
+            onSelect = {},
+            onDismiss = {},
+        )
+    }
+}
+

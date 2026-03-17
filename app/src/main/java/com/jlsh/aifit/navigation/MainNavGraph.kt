@@ -46,6 +46,7 @@ import com.jlsh.aifit.feature.user.ui.UserProfileScreen
 import com.jlsh.aifit.feature.vision.ui.FoodVisionScreen
 import com.jlsh.aifit.feature.workout.ui.WorkoutDetailScreen
 import com.jlsh.aifit.feature.workout.ui.WorkoutLogScreen
+import com.jlsh.aifit.feature.workout.ui.WorkoutSessionScreen
 
 private val tabRouteToGraphRoute = mapOf(
     "home" to HomeRoutes.GRAPH,
@@ -74,6 +75,7 @@ private fun MainNavScreen() {
     // Routes where bottom bar should be hidden (focus mode)
     val hideBottomBarRoutes = listOf(
         "training/workout_log",
+        "training/session/",
         "coach/chat/",
         "nutrition/food_vision",
     )
@@ -232,6 +234,25 @@ private fun MainNavScreen() {
                             },
                             onNavigateToWorkoutLog = { pId ->
                                 tabNavController.navigate(TrainingRoutes.workoutLogRoute(pId))
+                            },
+                            onNavigateToSession = { pId, dId ->
+                                tabNavController.navigate(TrainingRoutes.workoutSessionRoute(pId, dId))
+                            },
+                        )
+                    }
+                    composable(
+                        route = TrainingRoutes.WORKOUT_SESSION,
+                        arguments = listOf(
+                            navArgument("planId") { type = NavType.StringType },
+                            navArgument("dayId") { type = NavType.StringType },
+                        ),
+                    ) {
+                        WorkoutSessionScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
+                            onSessionFinalized = { logId ->
+                                tabNavController.navigate(TrainingRoutes.workoutDetailRoute(logId)) {
+                                    popUpTo(TrainingRoutes.WORKOUT_SESSION) { inclusive = true }
+                                }
                             },
                         )
                     }

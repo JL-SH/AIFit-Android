@@ -269,3 +269,17 @@ private fun FinalizeSessionSheetPreview() {
     }
 }
 
+// U-12/U-13 compliance fix — light mode preview
+@Preview(
+    showBackground = true,
+    name = "FinalizeSessionSheet Light",
+)
+@Composable
+private fun FinalizeSessionSheetLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        FinalizeSessionSheetContent(
+            onConfirm = { _, _ -> },
+        )
+    }
+}
+

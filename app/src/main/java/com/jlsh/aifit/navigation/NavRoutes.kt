@@ -24,12 +24,15 @@ object TrainingRoutes {
     const val HUB = "training"
     const val DETAIL = "training/detail/{planId}"
     const val GENERATE = "training/generate?adaptive={adaptive}&basePlanId={basePlanId}"
+    const val WORKOUT_SESSION = "training/session/{planId}/{dayId}"
     const val WORKOUT_LOG = "training/workout_log?planId={planId}"
     const val WORKOUT_DETAIL = "training/workout_detail/{logId}"
 
     fun detailRoute(planId: String) = "training/detail/$planId"
     fun generateRoute(adaptive: Boolean = false, basePlanId: String? = null) =
         "training/generate?adaptive=$adaptive&basePlanId=${basePlanId ?: ""}"
+    fun workoutSessionRoute(planId: String, dayId: String) =
+        "training/session/$planId/$dayId"
     fun workoutLogRoute(planId: String? = null) =
         "training/workout_log?planId=${planId ?: ""}"
     fun workoutDetailRoute(logId: String) = "training/workout_detail/$logId"
