@@ -7,6 +7,7 @@ import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.training.data.dto.GenerateAdaptiveTrainingPlanRequestDto
 import com.jlsh.aifit.feature.training.data.dto.GenerateTrainingPlanRequestDto
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
+import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.training.domain.usecase.DeleteTrainingPlanUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GenerateTrainingPlanUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
@@ -15,6 +16,7 @@ import com.jlsh.aifit.feature.training.ui.state.GeneratePlanUiState
 import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
 import com.jlsh.aifit.feature.training.ui.state.TrainingDayItem
 import com.jlsh.aifit.feature.training.ui.state.TrainingDetailUiState
+import com.jlsh.aifit.feature.training.ui.state.TrainingHubUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,6 +27,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -38,6 +42,9 @@ class TrainingViewModel @Inject constructor(
     // 1. UI STATE
     private val _uiState = MutableStateFlow<TrainingUiState>(TrainingUiState.Loading)
     val uiState: StateFlow<TrainingUiState> = _uiState.asStateFlow()
+
+    private val _hubUiState = MutableStateFlow<TrainingHubUiState>(TrainingHubUiState.Loading)
+    val hubUiState: StateFlow<TrainingHubUiState> = _hubUiState.asStateFlow()
 
     private val _detailUiState = MutableStateFlow<TrainingDetailUiState>(TrainingDetailUiState.Loading)
     val detailUiState: StateFlow<TrainingDetailUiState> = _detailUiState.asStateFlow()
@@ -116,25 +123,59 @@ class TrainingViewModel @Inject constructor(
         }
     }
 
+    fun filterPlans(status: PlanStatus?) {
+        val currentState = _hubUiState.value
+        if (currentState is TrainingHubUiState.ActivePlan) {
+            _hubUiState.value = currentState.copy(selectedFilter = status)
+        }
+    }
+
     // 6. PRIVATE HELPERS
     private fun fetchPlans() {
         viewModelScope.launch {
             _uiState.value = TrainingUiState.Loading
+            _hubUiState.value = TrainingHubUiState.Loading
             getTrainingPlansUseCase().collect { result ->
                 _uiState.value = when (result) {
                     is Result.Success -> {
                         val plans = result.data
                         val active = plans.firstOrNull { it.status == PlanStatus.ACTIVE }
+                        _hubUiState.value = computeHubState(plans)
                         TrainingUiState.Success(
                             plans = plans,
                             activePlan = active,
                         )
                     }
-                    is Result.Error -> TrainingUiState.Error(result.exception.toMessage())
-                    is Result.Loading -> TrainingUiState.Loading
+                    is Result.Error -> {
+                        _hubUiState.value = TrainingHubUiState.Error(result.exception.toMessage())
+                        TrainingUiState.Error(result.exception.toMessage())
+                    }
+                    is Result.Loading -> {
+                        _hubUiState.value = TrainingHubUiState.Loading
+                        TrainingUiState.Loading
+                    }
                 }
             }
         }
+    }
+
+    private fun computeHubState(plans: List<TrainingPlan>): TrainingHubUiState {
+        val activePlan = plans.firstOrNull { it.status == PlanStatus.ACTIVE }
+            ?: return TrainingHubUiState.NoActivePlan
+
+        val today = LocalDate.now()
+        val startDate = activePlan.createdAt.toLocalDate()
+        val weeksElapsed = ChronoUnit.WEEKS.between(startDate, today).toInt() + 1
+        val currentWeek = weeksElapsed.coerceIn(1, activePlan.durationWeeks)
+        val nextDay = activePlan.days.firstOrNull()
+
+        return TrainingHubUiState.ActivePlan(
+            plan = activePlan,
+            currentWeek = currentWeek,
+            nextDay = nextDay,
+            allPlans = plans,
+            selectedFilter = null,
+        )
     }
 
     private fun deletePlan(planId: String) {
@@ -217,4 +258,3 @@ class TrainingViewModel @Inject constructor(
         private const val MIN_ANIMATION_DURATION = 2000L
     }
 }
-

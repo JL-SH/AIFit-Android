@@ -1,11 +1,6 @@
 package com.jlsh.aifit.feature.training.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,53 +10,63 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
-import com.jlsh.aifit.core.ui.components.display.AdherenceBar
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
-import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
-import com.jlsh.aifit.core.ui.components.layout.AiFitTabRow
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
+import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
+import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
-import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
+import com.jlsh.aifit.feature.training.domain.model.TrainingDay
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
+import com.jlsh.aifit.feature.training.ui.state.TrainingHubUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
-import com.jlsh.aifit.feature.training.ui.state.TrainingUiState
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.GoalType
 import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
-import com.jlsh.aifit.feature.workout.ui.WorkoutHistoryScreen
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
-private val HUB_TABS = listOf("MY PLANS", "WORKOUT LOG")
+private val FILTER_CHIPS = listOf("All", "Active", "Completed", "Paused")
+
+private fun chipToStatus(chip: String): PlanStatus? = when (chip) {
+    "Active" -> PlanStatus.ACTIVE
+    "Completed" -> PlanStatus.COMPLETED
+    "Paused" -> PlanStatus.PAUSED
+    else -> null
+}
+
+private fun statusToChip(status: PlanStatus?): String = when (status) {
+    PlanStatus.ACTIVE -> "Active"
+    PlanStatus.COMPLETED -> "Completed"
+    PlanStatus.PAUSED -> "Paused"
+    else -> "All"
+}
 
 @Composable
 fun TrainingHubScreen(
@@ -71,11 +76,7 @@ fun TrainingHubScreen(
     onNavigateToWorkoutDetail: (logId: String) -> Unit,
     viewModel: TrainingViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val selectedTabIndex by viewModel.selectedTabIndex.collectAsStateWithLifecycle()
-
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var planToDeleteId by remember { mutableStateOf<String?>(null) }
+    val hubState by viewModel.hubUiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -91,21 +92,16 @@ fun TrainingHubScreen(
         }
     }
 
-    ScreenScaffold<TrainingUiState.Success>(
-        uiState = uiState,
-        snackbarHostState = snackbarHostState,
+    Scaffold(
         topBar = {
             AiFitTopBar(
                 title = "Training",
                 background = MaterialTheme.colorScheme.secondaryContainer,
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            AnimatedVisibility(
-                visible = selectedTabIndex == 0,
-                enter = scaleIn() + fadeIn(),
-                exit = scaleOut() + fadeOut(),
-            ) {
+            if (hubState is TrainingHubUiState.ActivePlan || hubState is TrainingHubUiState.NoActivePlan) {
                 FloatingActionButton(
                     onClick = { viewModel.onNavigateToGenerate() },
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -118,106 +114,132 @@ fun TrainingHubScreen(
                 }
             }
         },
-        onRetry = viewModel::onRefresh,
-    ) { _, successState ->
-        Column(modifier = Modifier.fillMaxSize()) {
-            AiFitTabRow(
-                tabs = HUB_TABS,
-                selectedIndex = selectedTabIndex,
-                onTabSelected = viewModel::onTabSelected,
+        containerColor = MaterialTheme.colorScheme.background,
+    ) { paddingValues ->
+        when (val state = hubState) {
+            is TrainingHubUiState.Loading -> LoadingScreen(
+                modifier = Modifier.padding(paddingValues),
             )
 
-            when (selectedTabIndex) {
-                0 -> MyPlansTab(
-                    state = successState,
-                    onPlanClicked = viewModel::onPlanClicked,
-                    onStartSession = viewModel::onStartSession,
-                    onDeletePlan = { planId ->
-                        planToDeleteId = planId
-                        showDeleteDialog = true
-                    },
-                    onCreatePlan = { viewModel.onNavigateToGenerate() },
-                )
-                1 -> WorkoutHistoryScreen(
-                        onNavigateToDetail = onNavigateToWorkoutDetail,
+            is TrainingHubUiState.Error -> ErrorScreen(
+                message = state.message,
+                onRetry = viewModel::onRefresh,
+                modifier = Modifier.padding(paddingValues),
+            )
+
+            is TrainingHubUiState.NoActivePlan -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(top = AiFitSpacing.xxl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    EmptyStateView(
+                        icon = Icons.Rounded.FitnessCenter,
+                        title = "Sin planes activos",
+                        subtitle = "Genera tu primer plan de entrenamiento con IA",
+                        action = {
+                            PrimaryButton(
+                                text = "CREAR PLAN",
+                                onClick = { viewModel.onNavigateToGenerate() },
+                                modifier = Modifier.padding(horizontal = AiFitSpacing.xl),
+                            )
+                        },
                     )
+                }
+            }
+
+            is TrainingHubUiState.ActivePlan -> {
+                ActivePlanContent(
+                    state = state,
+                    onActivePlanClicked = { viewModel.onPlanClicked(state.plan.id) },
+                    onPlanClicked = viewModel::onPlanClicked,
+                    onFilterChanged = viewModel::filterPlans,
+                    modifier = Modifier.padding(paddingValues),
+                )
             }
         }
-    }
-
-    if (showDeleteDialog && planToDeleteId != null) {
-        ConfirmationDialog(
-            title = "Eliminar plan",
-            message = "Esta acción no se puede deshacer.",
-            onConfirm = {
-                planToDeleteId?.let { viewModel.onDeletePlan(it) }
-                showDeleteDialog = false
-                planToDeleteId = null
-            },
-            onDismiss = {
-                showDeleteDialog = false
-                planToDeleteId = null
-            },
-        )
     }
 }
 
 @Composable
-private fun MyPlansTab(
-    state: TrainingUiState.Success,
+private fun ActivePlanContent(
+    state: TrainingHubUiState.ActivePlan,
+    onActivePlanClicked: () -> Unit,
     onPlanClicked: (String) -> Unit,
-    onStartSession: (String) -> Unit,
-    onDeletePlan: (String) -> Unit,
-    onCreatePlan: () -> Unit,
+    onFilterChanged: (PlanStatus?) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    if (state.plans.isEmpty()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = AiFitSpacing.xxl),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            EmptyStateView(
-                icon = Icons.Rounded.FitnessCenter,
-                title = "Sin planes",
-                subtitle = "Genera tu primer plan de entrenamiento con IA",
-                action = {
-                    PrimaryButton(
-                        text = "CREAR PLAN",
-                        onClick = onCreatePlan,
-                        modifier = Modifier.padding(horizontal = AiFitSpacing.xl),
-                    )
-                },
-            )
-        }
-        return
+    val filteredPlans = if (state.selectedFilter == null) {
+        state.allPlans
+    } else {
+        state.allPlans.filter { it.status == state.selectedFilter }
     }
 
+    val selectedChip = statusToChip(state.selectedFilter)
+
     LazyColumn(
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             start = AiFitSpacing.md,
             top = AiFitSpacing.sm,
             end = AiFitSpacing.md,
-            bottom = 88.dp,
+            bottom = AiFitSpacing.xxl + AiFitSpacing.xxl,
         ),
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
     ) {
-        // Active plan card — prominent
-        state.activePlan?.let { activePlan ->
-            item(key = "active_${activePlan.id}") {
-                ActivePlanCard(
-                    plan = activePlan,
-                    onStartSession = { onStartSession(activePlan.id) },
-                    onDeletePlan = { onDeletePlan(activePlan.id) },
-                    onClick = { onPlanClicked(activePlan.id) },
-                )
+        // ── Top section: Active plan card ──
+        item(key = "active_plan_card") {
+            AiFitCard(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                onClick = onActivePlanClicked,
+            ) {
+                Column(
+                    modifier = Modifier.padding(AiFitSpacing.md),
+                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                ) {
+                    Text(
+                        text = state.plan.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+
+                    Text(
+                        text = "Week ${state.currentWeek} of ${state.plan.durationWeeks}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    if (state.nextDay != null) {
+                        Text(
+                            text = "Next: ${state.nextDay.name}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                        )
+                    }
+                }
             }
         }
 
-        // Other plans
-        val otherPlans = state.plans.filter { it.id != state.activePlan?.id }
-        items(otherPlans, key = { it.id }) { plan ->
-            PlanCard(
+        // ── Bottom section: Filter chips ──
+        item(key = "filter_chips") {
+            Spacer(modifier = Modifier.height(AiFitSpacing.sm))
+            AiFitChipGroup(
+                options = FILTER_CHIPS,
+                selected = setOf(selectedChip),
+                onSelectionChanged = { selection ->
+                    val chip = selection.firstOrNull() ?: "All"
+                    onFilterChanged(chipToStatus(chip))
+                },
+                multiSelect = false,
+            )
+            Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+        }
+
+        // ── Bottom section: Plan list ──
+        items(filteredPlans, key = { it.id }) { plan ->
+            PlanSummaryItem(
                 plan = plan,
                 onClick = { onPlanClicked(plan.id) },
             )
@@ -226,62 +248,7 @@ private fun MyPlansTab(
 }
 
 @Composable
-private fun ActivePlanCard(
-    plan: TrainingPlan,
-    onStartSession: () -> Unit,
-    onDeletePlan: () -> Unit,
-    onClick: () -> Unit,
-) {
-    AiFitCard(
-        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-        onClick = onClick,
-    ) {
-        Column(
-            modifier = Modifier.padding(AiFitSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                PlanStatusBadge(status = plan.status.name)
-                IconButton(onClick = onDeletePlan, modifier = Modifier.size(32.dp)) {
-                    Icon(
-                        imageVector = Icons.Rounded.MoreVert,
-                        contentDescription = "Options",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-            }
-
-            Text(
-                text = plan.name,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-
-            Text(
-                text = "${plan.frequencyDaysPerWeek} days/week • ${plan.durationWeeks} weeks",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            AdherenceBar(percentage = 0f)
-
-            Spacer(modifier = Modifier.height(AiFitSpacing.xs))
-
-            PrimaryButton(
-                text = "CONTINUE SESSION",
-                onClick = onStartSession,
-            )
-        }
-    }
-}
-
-@Composable
-private fun PlanCard(
+private fun PlanSummaryItem(
     plan: TrainingPlan,
     onClick: () -> Unit,
 ) {
@@ -305,7 +272,7 @@ private fun PlanCard(
             }
 
             Text(
-                text = "${plan.frequencyDaysPerWeek} days/week • ${plan.goalType.name.replace("_", " ")} • ${plan.fitnessLevel.name}",
+                text = plan.createdAt.format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -317,10 +284,10 @@ private fun PlanCard(
 @Preview(
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "TrainingHubScreen Dark",
+    name = "TrainingHubScreen Active Dark",
 )
 @Composable
-private fun TrainingHubScreenPreview() {
+private fun TrainingHubScreenActivePreview() {
     AIFitTheme(darkTheme = true) {
         val fakePlans = listOf(
             TrainingPlan(
@@ -334,7 +301,16 @@ private fun TrainingHubScreenPreview() {
                 location = WorkoutLocation.GYM,
                 status = PlanStatus.ACTIVE,
                 totalDays = 24,
-                createdAt = LocalDateTime.now(),
+                createdAt = LocalDateTime.now().minusWeeks(2),
+                days = listOf(
+                    TrainingDay(
+                        id = "d1",
+                        dayNumber = 1,
+                        name = "Push Day",
+                        estimatedDurationMinutes = 60,
+                        exercises = emptyList(),
+                    ),
+                ),
             ),
             TrainingPlan(
                 id = "2",
@@ -347,29 +323,24 @@ private fun TrainingHubScreenPreview() {
                 location = WorkoutLocation.HOME,
                 status = PlanStatus.COMPLETED,
                 totalDays = 24,
-                createdAt = LocalDateTime.now(),
+                createdAt = LocalDateTime.now().minusMonths(2),
             ),
         )
 
-        val fakeState = TrainingUiState.Success(
-            plans = fakePlans,
-            activePlan = fakePlans.first(),
+        val fakeState = TrainingHubUiState.ActivePlan(
+            plan = fakePlans.first(),
+            currentWeek = 3,
+            nextDay = fakePlans.first().days.firstOrNull(),
+            allPlans = fakePlans,
+            selectedFilter = null,
         )
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            AiFitTabRow(
-                tabs = HUB_TABS,
-                selectedIndex = 0,
-                onTabSelected = {},
-            )
-            MyPlansTab(
-                state = fakeState,
-                onPlanClicked = {},
-                onStartSession = {},
-                onDeletePlan = {},
-                onCreatePlan = {},
-            )
-        }
+        ActivePlanContent(
+            state = fakeState,
+            onActivePlanClicked = {},
+            onPlanClicked = {},
+            onFilterChanged = {},
+        )
     }
 }
 
@@ -381,24 +352,25 @@ private fun TrainingHubScreenPreview() {
 @Composable
 private fun TrainingHubScreenEmptyPreview() {
     AIFitTheme(darkTheme = true) {
-        val fakeState = TrainingUiState.Success(plans = emptyList())
-        Column(modifier = Modifier.fillMaxSize()) {
-            AiFitTabRow(
-                tabs = HUB_TABS,
-                selectedIndex = 0,
-                onTabSelected = {},
-            )
-            MyPlansTab(
-                state = fakeState,
-                onPlanClicked = {},
-                onStartSession = {},
-                onDeletePlan = {},
-                onCreatePlan = {},
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = AiFitSpacing.xxl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            EmptyStateView(
+                icon = Icons.Rounded.FitnessCenter,
+                title = "Sin planes activos",
+                subtitle = "Genera tu primer plan de entrenamiento con IA",
+                action = {
+                    PrimaryButton(
+                        text = "CREAR PLAN",
+                        onClick = {},
+                        modifier = Modifier.padding(horizontal = AiFitSpacing.xl),
+                    )
+                },
             )
         }
     }
 }
-
-
-
 
