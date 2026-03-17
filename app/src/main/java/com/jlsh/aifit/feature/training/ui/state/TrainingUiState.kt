@@ -14,13 +14,6 @@ sealed class TrainingUiState {
     ) : TrainingUiState(), UiStateHost.Success
 }
 
-sealed class TrainingDetailUiState {
-    data object Loading : TrainingDetailUiState(), UiStateHost.Loading
-    data class Error(override val message: String) : TrainingDetailUiState(), UiStateHost.Error
-    data class Success(
-        val plan: TrainingPlan,
-    ) : TrainingDetailUiState(), UiStateHost.Success
-}
 
 sealed class GeneratePlanUiState {
     data object Idle : GeneratePlanUiState()

@@ -12,6 +12,8 @@ import com.jlsh.aifit.feature.training.domain.usecase.GenerateTrainingPlanUseCas
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlansUseCase
 import com.jlsh.aifit.feature.training.ui.state.GeneratePlanUiState
+import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
+import com.jlsh.aifit.feature.training.ui.state.TrainingDayItem
 import com.jlsh.aifit.feature.training.ui.state.TrainingDetailUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiState
@@ -94,7 +96,17 @@ class TrainingViewModel @Inject constructor(
             _detailUiState.value = TrainingDetailUiState.Loading
             when (val result = getTrainingPlanDetailUseCase(planId)) {
                 is Result.Success -> {
-                    _detailUiState.value = TrainingDetailUiState.Success(plan = result.data)
+                    val plan = result.data
+                    val days = plan.days.map { day ->
+                        when (day.dayType) {
+                            TrainingDayType.REST -> TrainingDayItem.Rest(day)
+                            TrainingDayType.TRAINING -> TrainingDayItem.Training(day)
+                        }
+                    }
+                    _detailUiState.value = TrainingDetailUiState.Ready(
+                        planName = plan.name,
+                        days = days,
+                    )
                 }
                 is Result.Error -> {
                     _detailUiState.value = TrainingDetailUiState.Error(result.exception.toMessage())

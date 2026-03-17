@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
-import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.ExpandableSection
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
@@ -54,16 +53,12 @@ import com.jlsh.aifit.feature.education.ui.components.ExerciseExplanationSheet
 import com.jlsh.aifit.feature.progression.ui.ProgressionViewModel
 import com.jlsh.aifit.feature.progression.ui.components.ProgressionRecommendationSheet
 import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
-import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.training.domain.model.TrainingDay
+import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
 import com.jlsh.aifit.feature.training.domain.model.TrainingExercise
-import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
+import com.jlsh.aifit.feature.training.ui.state.TrainingDayItem
 import com.jlsh.aifit.feature.training.ui.state.TrainingDetailUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
-import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
-import com.jlsh.aifit.feature.user.domain.model.GoalType
-import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
-import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,11 +120,11 @@ fun TrainingDetailScreen(
     }
 
     val topBarTitle = when (val state = detailState) {
-        is TrainingDetailUiState.Success -> state.plan.name
+        is TrainingDetailUiState.Ready -> state.planName
         else -> "Plan de entrenamiento"
     }
 
-    ScreenScaffold<TrainingDetailUiState.Success>(
+    ScreenScaffold<TrainingDetailUiState.Ready>(
         uiState = detailState,
         snackbarHostState = snackbarHostState,
         topBar = {
@@ -153,7 +148,7 @@ fun TrainingDetailScreen(
         onRetry = { viewModel.loadPlanDetail(planId) },
         bottomBar = {
             val state = detailState
-            if (state is TrainingDetailUiState.Success && state.plan.status == PlanStatus.ACTIVE) {
+            if (state is TrainingDetailUiState.Ready) {
                 Surface(
                     color = MaterialTheme.colorScheme.background,
                     modifier = Modifier.fillMaxWidth(),
@@ -168,9 +163,10 @@ fun TrainingDetailScreen(
                 }
             }
         },
-    ) { paddingValues, successState ->
+    ) { paddingValues, readyState ->
         TrainingDetailContent(
-            plan = successState.plan,
+            planName = readyState.planName,
+            days = readyState.days,
             onExerciseInfoClick = { exerciseId ->
                 showExplanationForExerciseId = exerciseId
                 educationViewModel.loadExerciseExplanation(exerciseId)
@@ -186,7 +182,8 @@ fun TrainingDetailScreen(
 
 @Composable
 private fun TrainingDetailContent(
-    plan: TrainingPlan,
+    planName: String,
+    days: List<TrainingDayItem>,
     onExerciseInfoClick: (exerciseId: String) -> Unit,
     onExerciseProgressionClick: (exerciseId: String) -> Unit,
     modifier: Modifier = Modifier,
@@ -209,63 +206,12 @@ private fun TrainingDetailContent(
                     .padding(top = AiFitSpacing.md, bottom = AiFitSpacing.lg),
                 verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
             ) {
-                // Badge
-                PlanStatusBadge(status = plan.status.name)
-
-                Spacer(Modifier.height(AiFitSpacing.xs))
-
                 // Título dominante
                 Text(
-                    text = plan.name,
+                    text = planName,
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-
-                // Metadata subordinada
-                Text(
-                    text = buildString {
-                        append("${plan.frequencyDaysPerWeek} días/semana")
-                        append("  ·  ${plan.durationWeeks} semanas")
-                        append("  ·  ${plan.fitnessLevel.name.lowercase().replaceFirstChar { it.uppercase() }}")
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-
-                if (!plan.description.isNullOrBlank()) {
-                    Spacer(Modifier.height(AiFitSpacing.xs))
-                    Text(
-                        text = plan.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                Spacer(Modifier.height(AiFitSpacing.sm))
-
-                // Stats row — 3 números destacados
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(0.dp),
-                ) {
-                    StatCell(
-                        value = "${plan.frequencyDaysPerWeek}",
-                        label = "DÍAS/SEM",
-                        modifier = Modifier.weight(1f),
-                    )
-                    StatDivider()
-                    StatCell(
-                        value = "${plan.durationWeeks}",
-                        label = "SEMANAS",
-                        modifier = Modifier.weight(1f),
-                    )
-                    StatDivider()
-                    StatCell(
-                        value = "${plan.totalDays}",
-                        label = "SESIONES",
-                        modifier = Modifier.weight(1f),
-                    )
-                }
             }
         }
 
@@ -293,7 +239,16 @@ private fun TrainingDetailContent(
         }
 
         // ── Días expandibles ─────────────────────────────────────────
-        items(plan.days, key = { it.id }) { day ->
+        items(days, key = { item ->
+            when (item) {
+                is TrainingDayItem.Training -> item.day.id
+                is TrainingDayItem.Rest -> item.day.id
+            }
+        }) { item ->
+            val day = when (item) {
+                is TrainingDayItem.Training -> item.day
+                is TrainingDayItem.Rest -> item.day
+            }
             Column(
                 modifier = Modifier.padding(horizontal = AiFitSpacing.md),
             ) {
@@ -474,20 +429,9 @@ private fun TrainingDetailScreenPreview() {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            val fakePlan = TrainingPlan(
-                id = "1",
-                name = "Plan de Fuerza 5x5",
-                description = "Un plan de fuerza clásico para desarrollar fuerza máxima y masa muscular.",
-                frequencyDaysPerWeek = 3,
-                durationWeeks = 8,
-                goalType = GoalType.GAIN_MUSCLE,
-                fitnessLevel = FitnessLevel.INTERMEDIATE,
-                location = WorkoutLocation.GYM,
-                status = PlanStatus.ACTIVE,
-                totalDays = 24,
-                createdAt = LocalDateTime.now(),
-                days = listOf(
-                    TrainingDay(
+            val fakeDays = listOf(
+                TrainingDayItem.Training(
+                    day = TrainingDay(
                         id = "d1",
                         dayNumber = 1,
                         name = "Push Day",
@@ -516,7 +460,9 @@ private fun TrainingDetailScreenPreview() {
                             ),
                         ),
                     ),
-                    TrainingDay(
+                ),
+                TrainingDayItem.Training(
+                    day = TrainingDay(
                         id = "d2",
                         dayNumber = 2,
                         name = "Pull Day",
@@ -538,26 +484,22 @@ private fun TrainingDetailScreenPreview() {
                             ),
                         ),
                     ),
-                    TrainingDay(
+                ),
+                TrainingDayItem.Rest(
+                    day = TrainingDay(
                         id = "d3",
                         dayNumber = 3,
-                        name = "Leg Day",
-                        estimatedDurationMinutes = 65,
-                        exercises = listOf(
-                            TrainingExercise(
-                                id = "e6", name = "Back Squat", description = null,
-                                primaryMuscle = MuscleGroup.LEGS,
-                                secondaryMuscle = MuscleGroup.GLUTES,
-                                sets = 5, repsMin = 5, repsMax = 5, restSeconds = 240,
-                                notes = null, order = 1,
-                            ),
-                        ),
+                        name = "Descanso",
+                        estimatedDurationMinutes = 0,
+                        exercises = emptyList(),
+                        dayType = TrainingDayType.REST,
                     ),
                 ),
             )
 
             TrainingDetailContent(
-                plan = fakePlan,
+                planName = "Plan de Fuerza 5x5",
+                days = fakeDays,
                 onExerciseInfoClick = {},
                 onExerciseProgressionClick = {},
             )
