@@ -1,3 +1,26 @@
 <resources>
     <string name="app_name">AIFit</string>
+
+    <!-- FinalizeSessionSheet -->
+    <string name="finalize_session_title">Finalize Session</string>
+    <string name="finalize_session_fatigue_label">Systemic Fatigue</string>
+    <string name="finalize_session_fatigue_fresh">Fresh</string>
+    <string name="finalize_session_fatigue_exhausted">Exhausted</string>
+    <string name="finalize_session_joint_pain_label">Joint Pain</string>
+    <string name="finalize_session_note_hint">Note (optional)</string>
+    <string name="finalize_session_confirm">Finalize Session</string>
+
+    <!-- Joint Zone display names -->
+    <string name="joint_zone_shoulder_left">Left Shoulder</string>
+    <string name="joint_zone_shoulder_right">Right Shoulder</string>
+    <string name="joint_zone_knee_left">Left Knee</string>
+    <string name="joint_zone_knee_right">Right Knee</string>
+    <string name="joint_zone_hip_left">Left Hip</string>
+    <string name="joint_zone_hip_right">Right Hip</string>
+    <string name="joint_zone_lower_back">Lower Back</string>
+    <string name="joint_zone_elbow_left">Left Elbow</string>
+    <string name="joint_zone_elbow_right">Right Elbow</string>
+    <string name="joint_zone_wrist_left">Left Wrist</string>
+    <string name="joint_zone_wrist_right">Right Wrist</string>
+    <string name="joint_zone_neck">Neck</string>
 </resources>

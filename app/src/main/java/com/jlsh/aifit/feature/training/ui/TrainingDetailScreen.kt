@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.TrendingUp
+import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,15 +39,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
+import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
-import com.jlsh.aifit.core.ui.components.layout.ExpandableSection
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
@@ -67,6 +68,7 @@ fun TrainingDetailScreen(
     onNavigateBack: () -> Unit,
     onNavigateToGenerate: (adaptive: Boolean, basePlanId: String?) -> Unit,
     onNavigateToWorkoutLog: (planId: String) -> Unit,
+    onStartSession: (planId: String, dayId: String, exercises: List<TrainingExercise>) -> Unit = { _, _, _ -> },
     viewModel: TrainingViewModel = hiltViewModel(),
     educationViewModel: EducationViewModel = hiltViewModel(),
     progressionViewModel: ProgressionViewModel = hiltViewModel(),
@@ -76,7 +78,6 @@ fun TrainingDetailScreen(
     val explanationState by educationViewModel.explanationState.collectAsStateWithLifecycle()
     val recommendationState by progressionViewModel.recommendationState.collectAsStateWithLifecycle()
 
-    // Sheet state: which exercise id is currently showing a sheet
     var showExplanationForExerciseId by remember { mutableStateOf<String?>(null) }
     var showProgressionForExerciseId by remember { mutableStateOf<String?>(null) }
 
@@ -146,26 +147,9 @@ fun TrainingDetailScreen(
             )
         },
         onRetry = { viewModel.loadPlanDetail(planId) },
-        bottomBar = {
-            val state = detailState
-            if (state is TrainingDetailUiState.Ready) {
-                Surface(
-                    color = MaterialTheme.colorScheme.background,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    PrimaryButton(
-                        text = "INICIAR SESIÓN",
-                        onClick = { viewModel.onStartSession(planId) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = AiFitSpacing.md, vertical = AiFitSpacing.sm),
-                    )
-                }
-            }
-        },
     ) { paddingValues, readyState ->
         TrainingDetailContent(
-            planName = readyState.planName,
+            planId = planId,
             days = readyState.days,
             onExerciseInfoClick = { exerciseId ->
                 showExplanationForExerciseId = exerciseId
@@ -175,17 +159,20 @@ fun TrainingDetailScreen(
                 showProgressionForExerciseId = exerciseId
                 progressionViewModel.loadExerciseRecommendation(exerciseId)
             },
+            onStartSession = onStartSession,
             modifier = Modifier.padding(paddingValues),
         )
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TrainingDetailContent(
-    planName: String,
+    planId: String,
     days: List<TrainingDayItem>,
     onExerciseInfoClick: (exerciseId: String) -> Unit,
     onExerciseProgressionClick: (exerciseId: String) -> Unit,
+    onStartSession: (planId: String, dayId: String, exercises: List<TrainingExercise>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -193,102 +180,26 @@ private fun TrainingDetailContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(
-            bottom = 88.dp,
+            start = AiFitSpacing.md,
+            top = AiFitSpacing.md,
+            end = AiFitSpacing.md,
+            bottom = AiFitSpacing.xxl,
         ),
-        verticalArrangement = Arrangement.spacedBy(0.dp),
+        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
     ) {
-        // ── Hero section ─────────────────────────────────────────────
-        item(key = "hero") {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = AiFitSpacing.md)
-                    .padding(top = AiFitSpacing.md, bottom = AiFitSpacing.lg),
-                verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
-            ) {
-                // Título dominante
-                Text(
-                    text = planName,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-        }
-
-        // Divisor entre hero y lista de días
-        item(key = "divider_top") {
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 0.5.dp,
-            )
-            Spacer(Modifier.height(AiFitSpacing.md))
-        }
-
-        // Section header
-        item(key = "days_header") {
-            Text(
-                text = "PROGRAMA",
-                style = MaterialTheme.typography.labelSmall,
-                letterSpacing = 1.5.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = AiFitSpacing.md)
-                    .padding(bottom = AiFitSpacing.sm),
-            )
-        }
-
-        // ── Días expandibles ─────────────────────────────────────────
         items(days, key = { item ->
             when (item) {
                 is TrainingDayItem.Training -> item.day.id
                 is TrainingDayItem.Rest -> item.day.id
             }
         }) { item ->
-            val day = when (item) {
-                is TrainingDayItem.Training -> item.day
-                is TrainingDayItem.Rest -> item.day
-            }
-            Column(
-                modifier = Modifier.padding(horizontal = AiFitSpacing.md),
-            ) {
-                ExpandableSection(
-                    title = "Día ${day.dayNumber} — ${day.name}",
-                    initiallyExpanded = false,
-                ) {
-                    Column(
-                        modifier = Modifier.padding(
-                            start = AiFitSpacing.sm,
-                            end = AiFitSpacing.sm,
-                            bottom = AiFitSpacing.sm,
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(0.dp),
-                    ) {
-                        Text(
-                            text = "~${day.estimatedDurationMinutes} min",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = AiFitSpacing.sm),
-                        )
-                        day.exercises.forEachIndexed { index, exercise ->
-                            ExerciseRow(
-                                exercise = exercise,
-                                onInfoClick = { onExerciseInfoClick(exercise.id) },
-                                onProgressionClick = { onExerciseProgressionClick(exercise.id) },
-                            )
-                            if (index < day.exercises.lastIndex) {
-                                HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                    thickness = 0.5.dp,
-                                    modifier = Modifier.padding(vertical = AiFitSpacing.xs),
-                                )
-                            }
-                        }
-                    }
-                }
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    thickness = 0.5.dp,
+            when (item) {
+                is TrainingDayItem.Rest -> RestDayCard(day = item.day)
+                is TrainingDayItem.Training -> TrainingDayCard(
+                    day = item.day,
+                    onExerciseInfoClick = onExerciseInfoClick,
+                    onExerciseProgressionClick = onExerciseProgressionClick,
+                    onStartSession = { onStartSession(planId, item.day.id, item.day.exercises) },
                 )
             }
         }
@@ -296,46 +207,109 @@ private fun TrainingDetailContent(
 }
 
 @Composable
-private fun StatCell(
-    value: String,
-    label: String,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier.padding(vertical = AiFitSpacing.sm),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primaryContainer, // lime — números destacados
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            letterSpacing = 1.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
+private fun RestDayCard(day: TrainingDay) {
+    AiFitCard {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(AiFitSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.SelfImprovement,
+                contentDescription = "Recovery",
+                tint = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(32.dp),
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs)) {
+                Text(
+                    text = "Day ${day.dayNumber} — ${day.name}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = "Rest day — recovery",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun StatDivider() {
-    Box(
-        modifier = Modifier
-            .height(32.dp)
-            .padding(horizontal = 0.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        HorizontalDivider(
+private fun TrainingDayCard(
+    day: TrainingDay,
+    onExerciseInfoClick: (exerciseId: String) -> Unit,
+    onExerciseProgressionClick: (exerciseId: String) -> Unit,
+    onStartSession: () -> Unit,
+) {
+    val muscleGroups = day.exercises
+        .map { it.primaryMuscle }
+        .distinct()
+
+    AiFitCard {
+        Column(
             modifier = Modifier
-                .size(width = 0.5.dp, height = 32.dp),
-            color = MaterialTheme.colorScheme.outlineVariant,
-            thickness = 0.5.dp,
-        )
+                .fillMaxWidth()
+                .padding(AiFitSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+        ) {
+            // Day name
+            Text(
+                text = "Day ${day.dayNumber} — ${day.name}",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            // Muscle group badges
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+                verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+            ) {
+                muscleGroups.forEach { muscle ->
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = RoundedCornerShape(6.dp),
+                    ) {
+                        Text(
+                            text = muscle.name
+                                .replace("_", " ")
+                                .lowercase()
+                                .replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = AiFitSpacing.sm, vertical = AiFitSpacing.xs),
+                        )
+                    }
+                }
+            }
+
+            // Exercise list
+            day.exercises.forEachIndexed { index, exercise ->
+                ExerciseRow(
+                    exercise = exercise,
+                    onInfoClick = { onExerciseInfoClick(exercise.id) },
+                    onProgressionClick = { onExerciseProgressionClick(exercise.id) },
+                )
+                if (index < day.exercises.lastIndex) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        thickness = 0.5.dp,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+
+            // Start Session button
+            PrimaryButton(
+                text = "START SESSION",
+                onClick = onStartSession,
+            )
+        }
     }
 }
 
@@ -354,7 +328,7 @@ private fun ExerciseRow(
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
         ) {
             Text(
                 text = exercise.name,
@@ -365,27 +339,23 @@ private fun ExerciseRow(
                 horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Series × Reps — en lime para destacar
                 Text(
                     text = "${exercise.sets}×${exercise.repsMin}–${exercise.repsMax}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primaryContainer,
                 )
-                // Músculo — badge discreto
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = RoundedCornerShape(6.dp),
-                ) {
+                if (exercise.targetRpe != null) {
                     Text(
-                        text = exercise.primaryMuscle.name
-                            .replace("_", " ")
-                            .lowercase()
-                            .replaceFirstChar { it.uppercase() },
+                        text = "RPE ${exercise.targetRpe}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                     )
                 }
+                Text(
+                    text = "${exercise.restSeconds}s rest",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
 
@@ -442,14 +412,14 @@ private fun TrainingDetailScreenPreview() {
                                 primaryMuscle = MuscleGroup.CHEST,
                                 secondaryMuscle = MuscleGroup.TRICEPS,
                                 sets = 5, repsMin = 5, repsMax = 5, restSeconds = 180,
-                                notes = null, order = 1,
+                                notes = null, order = 1, targetRpe = 8,
                             ),
                             TrainingExercise(
                                 id = "e2", name = "Overhead Press", description = null,
                                 primaryMuscle = MuscleGroup.SHOULDERS,
                                 secondaryMuscle = MuscleGroup.TRICEPS,
                                 sets = 3, repsMin = 8, repsMax = 12, restSeconds = 120,
-                                notes = null, order = 2,
+                                notes = null, order = 2, targetRpe = 7,
                             ),
                             TrainingExercise(
                                 id = "e3", name = "Incline Dumbbell Press", description = null,
@@ -461,10 +431,20 @@ private fun TrainingDetailScreenPreview() {
                         ),
                     ),
                 ),
-                TrainingDayItem.Training(
+                TrainingDayItem.Rest(
                     day = TrainingDay(
                         id = "d2",
                         dayNumber = 2,
+                        name = "Descanso",
+                        estimatedDurationMinutes = 0,
+                        exercises = emptyList(),
+                        dayType = TrainingDayType.REST,
+                    ),
+                ),
+                TrainingDayItem.Training(
+                    day = TrainingDay(
+                        id = "d3",
+                        dayNumber = 3,
                         name = "Pull Day",
                         estimatedDurationMinutes = 55,
                         exercises = listOf(
@@ -473,7 +453,7 @@ private fun TrainingDetailScreenPreview() {
                                 primaryMuscle = MuscleGroup.BACK,
                                 secondaryMuscle = MuscleGroup.BICEPS,
                                 sets = 5, repsMin = 5, repsMax = 5, restSeconds = 180,
-                                notes = null, order = 1,
+                                notes = null, order = 1, targetRpe = 8,
                             ),
                             TrainingExercise(
                                 id = "e5", name = "Pull-ups", description = null,
@@ -485,23 +465,14 @@ private fun TrainingDetailScreenPreview() {
                         ),
                     ),
                 ),
-                TrainingDayItem.Rest(
-                    day = TrainingDay(
-                        id = "d3",
-                        dayNumber = 3,
-                        name = "Descanso",
-                        estimatedDurationMinutes = 0,
-                        exercises = emptyList(),
-                        dayType = TrainingDayType.REST,
-                    ),
-                ),
             )
 
             TrainingDetailContent(
-                planName = "Plan de Fuerza 5x5",
+                planId = "plan-1",
                 days = fakeDays,
                 onExerciseInfoClick = {},
                 onExerciseProgressionClick = {},
+                onStartSession = { _, _, _ -> },
             )
         }
     }
