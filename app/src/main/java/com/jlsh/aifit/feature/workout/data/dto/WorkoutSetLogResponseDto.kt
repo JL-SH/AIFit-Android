@@ -12,5 +12,9 @@ data class WorkoutSetLogResponseDto(
     val weightUsed: Double? = null,
     val durationSeconds: Int? = null,
     val completed: Boolean,
+    val estimatedOneRepMax: Double? = null,
+    val wasAutoregulated: Boolean = false,
+    val technicalNote: String? = null,
+    val rpe: Int? = null,
 )
 

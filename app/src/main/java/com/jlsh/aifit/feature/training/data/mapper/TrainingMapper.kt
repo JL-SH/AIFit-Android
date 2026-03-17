@@ -8,6 +8,7 @@ import com.jlsh.aifit.feature.training.data.local.TrainingPlanEntity
 import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.training.domain.model.TrainingDay
+import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
 import com.jlsh.aifit.feature.training.domain.model.TrainingExercise
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
@@ -66,6 +67,13 @@ object TrainingMapper {
                 null
             }
         },
+        dayType = dayType?.let {
+            try {
+                TrainingDayType.valueOf(it.uppercase())
+            } catch (_: IllegalArgumentException) {
+                TrainingDayType.TRAINING
+            }
+        } ?: TrainingDayType.TRAINING,
     )
 
     fun TrainingExerciseResponseDto.toDomain(): TrainingExercise = TrainingExercise(
@@ -80,6 +88,7 @@ object TrainingMapper {
         restSeconds = restSeconds,
         notes = notes,
         order = order,
+        targetRpe = targetRpe,
     )
 
     fun TrainingPlan.toEntity(): TrainingPlanEntity = TrainingPlanEntity(

@@ -1,6 +1,7 @@
 package com.jlsh.aifit.feature.workout.data.mapper
 
 import com.jlsh.aifit.feature.workout.data.dto.GamificationResultResponseDto
+import com.jlsh.aifit.feature.workout.data.dto.JointPainEntryDto
 import com.jlsh.aifit.feature.workout.data.dto.PersonalRecordResponseDto
 import com.jlsh.aifit.feature.workout.data.dto.UserAchievementResponseDto
 import com.jlsh.aifit.feature.workout.data.dto.WorkoutLogResponseDto
@@ -9,6 +10,8 @@ import com.jlsh.aifit.feature.workout.data.dto.WorkoutSetLogResponseDto
 import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
 import com.jlsh.aifit.feature.workout.domain.model.Achievement
 import com.jlsh.aifit.feature.workout.domain.model.GamificationResult
+import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
+import com.jlsh.aifit.feature.workout.domain.model.JointZone
 import com.jlsh.aifit.feature.workout.domain.model.PersonalRecord
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutSetLog
@@ -35,6 +38,9 @@ object WorkoutMapper {
         completedAt = parseDateTime(completedAt),
         sets = exercises.map { it.toDomain() },
         gamificationResult = gamificationResult?.toDomain(),
+        isLocked = isLocked,
+        perceivedSystemicFatigue = perceivedSystemicFatigue,
+        jointPainReport = jointPainReport?.mapNotNull { it.toDomain() } ?: emptyList(),
     )
 
     fun WorkoutLogSummaryResponseDto.toDomain(): WorkoutLog = WorkoutLog(
@@ -58,6 +64,10 @@ object WorkoutMapper {
         weightUsed = weightUsed,
         durationSeconds = durationSeconds,
         completed = completed,
+        estimatedOneRepMax = estimatedOneRepMax,
+        wasAutoregulated = wasAutoregulated,
+        technicalNote = technicalNote,
+        rpe = rpe,
     )
 
     fun GamificationResultResponseDto.toDomain(): GamificationResult = GamificationResult(
@@ -65,6 +75,15 @@ object WorkoutMapper {
         unlockedAchievements = unlockedAchievements.map { it.toDomain() },
         updatedStreakCount = updatedStreak?.currentCount,
     )
+
+    fun JointPainEntryDto.toDomain(): JointPainEntry? = try {
+        JointPainEntry(
+            zone = JointZone.valueOf(zone.uppercase()),
+            note = note,
+        )
+    } catch (_: IllegalArgumentException) {
+        null
+    }
 
     fun PersonalRecordResponseDto.toDomain(): PersonalRecord = PersonalRecord(
         id = id,

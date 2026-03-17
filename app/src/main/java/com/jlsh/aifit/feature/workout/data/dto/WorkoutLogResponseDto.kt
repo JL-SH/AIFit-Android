@@ -14,5 +14,8 @@ data class WorkoutLogResponseDto(
     val exercises: List<WorkoutSetLogResponseDto> = emptyList(),
     val completedAt: String,
     val gamificationResult: GamificationResultResponseDto? = null,
+    val isLocked: Boolean = false,
+    val perceivedSystemicFatigue: Int? = null,
+    val jointPainReport: List<JointPainEntryDto>? = null,
 )
 

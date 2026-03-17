@@ -12,5 +12,6 @@ data class TrainingExercise(
     val restSeconds: Int,
     val notes: String?,
     val order: Int,
+    val targetRpe: Int? = null,
 )
 
