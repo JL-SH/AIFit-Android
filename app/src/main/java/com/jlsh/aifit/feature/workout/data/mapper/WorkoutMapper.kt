@@ -106,6 +106,11 @@ object WorkoutMapper {
         triggerDescription = triggerDescription,
     )
 
+    fun JointPainEntry.toDto(): JointPainEntryDto = JointPainEntryDto(
+        zone = zone.name,
+        note = note,
+    )
+
     fun WorkoutLog.toEntity(): WorkoutLogEntity = WorkoutLogEntity(
         id = id,
         trainingPlanId = trainingPlanId,

@@ -2,6 +2,7 @@ package com.jlsh.aifit.feature.workout.data.api
 
 import com.jlsh.aifit.core.network.ApiResponse
 import com.jlsh.aifit.feature.workout.data.dto.ExerciseProgressionResponseDto
+import com.jlsh.aifit.feature.workout.data.dto.FinalizeWorkoutSessionRequestDto
 import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSessionRequestDto
 import com.jlsh.aifit.feature.workout.data.dto.WorkoutLogResponseDto
 import com.jlsh.aifit.feature.workout.data.dto.WorkoutLogSummaryResponseDto
@@ -36,5 +37,11 @@ interface WorkoutApiService {
     suspend fun getExerciseProgression(
         @Path("exerciseId") exerciseId: String,
     ): ApiResponse<ExerciseProgressionResponseDto>
+
+    @POST("workout-logs/{logId}/finalize")
+    suspend fun finalizeWorkoutSession(
+        @Path("logId") logId: String,
+        @Body request: FinalizeWorkoutSessionRequestDto,
+    ): ApiResponse<WorkoutLogResponseDto>
 }
 

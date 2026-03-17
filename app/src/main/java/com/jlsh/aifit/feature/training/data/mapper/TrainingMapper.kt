@@ -1,16 +1,22 @@
 package com.jlsh.aifit.feature.training.data.mapper
 
+import com.jlsh.aifit.feature.training.data.dto.ExerciseSubstitutionResponseDto
 import com.jlsh.aifit.feature.training.data.dto.TrainingDayResponseDto
 import com.jlsh.aifit.feature.training.data.dto.TrainingExerciseResponseDto
 import com.jlsh.aifit.feature.training.data.dto.TrainingPlanResponseDto
 import com.jlsh.aifit.feature.training.data.dto.TrainingPlanSummaryResponseDto
+import com.jlsh.aifit.feature.training.data.dto.WarmUpExerciseResponseDto
+import com.jlsh.aifit.feature.training.data.dto.WarmUpProtocolResponseDto
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanEntity
+import com.jlsh.aifit.feature.training.domain.model.ExerciseSubstitution
 import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.training.domain.model.TrainingDay
 import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
 import com.jlsh.aifit.feature.training.domain.model.TrainingExercise
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
+import com.jlsh.aifit.feature.training.domain.model.WarmUpExercise
+import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.GoalType
 import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
@@ -118,6 +124,27 @@ object TrainingMapper {
         totalDays = totalDays,
         createdAt = Instant.ofEpochMilli(createdAt).atZone(ZoneOffset.UTC).toLocalDateTime(),
         days = emptyList(),
+    )
+
+    fun WarmUpProtocolResponseDto.toDomain(): WarmUpProtocol = WarmUpProtocol(
+        trainingDayId = trainingDayId,
+        estimatedTotalLoad = estimatedTotalLoad,
+        exercises = exercises.map { it.toDomain() },
+    )
+
+    fun WarmUpExerciseResponseDto.toDomain(): WarmUpExercise = WarmUpExercise(
+        name = name,
+        description = description,
+        sets = sets,
+        reps = reps,
+        durationSeconds = durationSeconds,
+    )
+
+    fun ExerciseSubstitutionResponseDto.toDomain(): ExerciseSubstitution = ExerciseSubstitution(
+        name = name,
+        primaryMuscle = MuscleGroup.fromString(primaryMuscle),
+        movementPattern = movementPattern,
+        description = description,
     )
 
     private fun parseDateTime(raw: String): LocalDateTime =
