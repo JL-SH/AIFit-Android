@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
+import com.jlsh.aifit.feature.training.domain.model.ExerciseSubstitution
 import com.jlsh.aifit.feature.training.domain.model.TrainingExercise
 import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
 import com.jlsh.aifit.feature.training.domain.usecase.GetExerciseSubstitutionsUseCase
@@ -18,10 +19,13 @@ import com.jlsh.aifit.feature.workout.domain.util.calculateAutoregulatedWeight
 import com.jlsh.aifit.feature.workout.domain.util.calculateOneRepMax
 import com.jlsh.aifit.feature.workout.domain.util.calculateRestSeconds
 import com.jlsh.aifit.feature.workout.ui.state.SessionExercise
+import com.jlsh.aifit.feature.workout.ui.state.SubstitutionLoadState
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionData
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionUiEvent
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -46,6 +50,14 @@ class WorkoutSessionViewModel @Inject constructor(
 
     private val _events = MutableSharedFlow<WorkoutSessionUiEvent>()
     val events: SharedFlow<WorkoutSessionUiEvent> = _events.asSharedFlow()
+
+    private val _restTimerSeconds = MutableStateFlow<Int?>(null)
+    val restTimerSeconds: StateFlow<Int?> = _restTimerSeconds.asStateFlow()
+
+    private val _substitutionsState = MutableStateFlow<SubstitutionLoadState>(SubstitutionLoadState.Idle)
+    val substitutionsState: StateFlow<SubstitutionLoadState> = _substitutionsState.asStateFlow()
+
+    private var restTimerJob: Job? = null
 
     private var currentPlanId: String = ""
     private var currentDayId: String = ""
@@ -174,6 +186,8 @@ class WorkoutSessionViewModel @Inject constructor(
                 volumeByMuscleGroup = updatedVolume,
             )
         )
+
+        startRestTimer(restSeconds)
     }
 
     fun finalizeSession(systemicFatigue: Int, jointPainReport: List<JointPainEntry>) {
@@ -196,5 +210,60 @@ class WorkoutSessionViewModel @Inject constructor(
             }
         }
     }
-}
 
+    // ===== REST TIMER =====
+
+    private fun startRestTimer(seconds: Int) {
+        restTimerJob?.cancel()
+        restTimerJob = viewModelScope.launch {
+            for (remaining in seconds downTo 0) {
+                _restTimerSeconds.value = remaining
+                if (remaining > 0) delay(1000L)
+            }
+            _events.emit(WorkoutSessionUiEvent.ShowSnackbar("Rest complete"))
+            _restTimerSeconds.value = null
+        }
+    }
+
+    fun cancelRestTimer() {
+        restTimerJob?.cancel()
+        restTimerJob = null
+        _restTimerSeconds.value = null
+    }
+
+    // ===== SUBSTITUTIONS =====
+
+    fun loadSubstitutions(exerciseId: String) {
+        _substitutionsState.value = SubstitutionLoadState.Loading
+        viewModelScope.launch {
+            when (val result = getExerciseSubstitutionsUseCase(exerciseId)) {
+                is Result.Success -> {
+                    _substitutionsState.value = SubstitutionLoadState.Success(result.data)
+                }
+                is Result.Error -> {
+                    _substitutionsState.value = SubstitutionLoadState.Error(result.exception.toMessage())
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    fun applySubstitution(originalExerciseId: String, substitution: ExerciseSubstitution) {
+        val currentState = _uiState.value
+        if (currentState !is WorkoutSessionUiState.SessionActive) return
+
+        val sessionData = currentState.sessionData
+        val updatedExercises = sessionData.exercises.map { exercise ->
+            if (exercise.exerciseId == originalExerciseId) {
+                exercise.copy(
+                    name = substitution.name,
+                    primaryMuscle = substitution.primaryMuscle,
+                )
+            } else exercise
+        }
+
+        _uiState.value = WorkoutSessionUiState.SessionActive(
+            sessionData.copy(exercises = updatedExercises)
+        )
+    }
+}

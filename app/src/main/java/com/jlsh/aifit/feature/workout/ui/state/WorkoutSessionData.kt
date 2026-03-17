@@ -14,4 +14,3 @@ data class WorkoutSessionData(
     val ghostSets: List<WorkoutSetLog>,
     val substitutions: List<ExerciseSubstitution>?,
 )
-
