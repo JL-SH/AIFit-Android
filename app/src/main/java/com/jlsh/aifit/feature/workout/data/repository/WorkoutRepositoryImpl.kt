@@ -5,6 +5,7 @@ import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.feature.workout.data.api.WorkoutApiService
 import com.jlsh.aifit.feature.workout.data.dto.FinalizeWorkoutSessionRequestDto
 import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSessionRequestDto
+import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSetRequestDto
 import com.jlsh.aifit.feature.workout.data.local.WorkoutLogDao
 import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toDomain
 import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toDto
@@ -28,6 +29,14 @@ class WorkoutRepositoryImpl @Inject constructor(
                 dao.upsertAll(listOf(log.toEntity()))
                 Result.Success(log)
             }
+            is Result.Error -> remote
+            else -> Result.Loading
+        }
+    }
+
+    override suspend fun addSetToLog(logId: String, set: LogWorkoutSetRequestDto): Result<Unit> {
+        return when (val remote = safeApiCall { apiService.addSetToLog(logId, set) }) {
+            is Result.Success -> Result.Success(Unit)
             is Result.Error -> remote
             else -> Result.Loading
         }

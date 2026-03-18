@@ -4,6 +4,7 @@ import com.jlsh.aifit.core.network.ApiResponse
 import com.jlsh.aifit.feature.workout.data.dto.ExerciseProgressionResponseDto
 import com.jlsh.aifit.feature.workout.data.dto.FinalizeWorkoutSessionRequestDto
 import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSessionRequestDto
+import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSetRequestDto
 import com.jlsh.aifit.feature.workout.data.dto.WorkoutLogResponseDto
 import com.jlsh.aifit.feature.workout.data.dto.WorkoutLogSummaryResponseDto
 import retrofit2.http.Body
@@ -38,6 +39,12 @@ interface WorkoutApiService {
     suspend fun getExerciseProgression(
         @Path("exerciseId") exerciseId: String,
     ): ApiResponse<ExerciseProgressionResponseDto>
+
+    @POST("workout-logs/{logId}/sets")
+    suspend fun addSetToLog(
+        @Path("logId") logId: String,
+        @Body set: LogWorkoutSetRequestDto,
+    ): ApiResponse<Unit>
 
     @POST("workout-logs/{logId}/finalize")
     suspend fun finalizeWorkoutSession(
