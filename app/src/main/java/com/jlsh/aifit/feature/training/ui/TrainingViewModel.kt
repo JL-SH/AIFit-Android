@@ -12,6 +12,7 @@ import com.jlsh.aifit.feature.training.domain.usecase.DeleteTrainingPlanUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GenerateTrainingPlanUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlansUseCase
+import com.jlsh.aifit.feature.training.domain.usecase.SetActivePlanUseCase
 import com.jlsh.aifit.feature.training.ui.state.GeneratePlanUiState
 import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
 import com.jlsh.aifit.feature.training.ui.state.TrainingDayItem
@@ -39,6 +40,7 @@ class TrainingViewModel @Inject constructor(
     private val getTrainingPlanDetailUseCase: GetTrainingPlanDetailUseCase,
     private val generateTrainingPlanUseCase: GenerateTrainingPlanUseCase,
     private val deleteTrainingPlanUseCase: DeleteTrainingPlanUseCase,
+    private val setActivePlanUseCase: SetActivePlanUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
 ) : ViewModel() {
 
@@ -95,6 +97,20 @@ class TrainingViewModel @Inject constructor(
 
     fun onDeletePlan(planId: String) {
         deletePlan(planId)
+    }
+
+    fun onActivatePlan(planId: String) {
+        viewModelScope.launch {
+            when (val result = setActivePlanUseCase(planId)) {
+                is Result.Success -> {
+                    fetchPlans()
+                }
+                is Result.Error -> {
+                    emitEvent(TrainingUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                else -> Unit
+            }
+        }
     }
 
     fun onStartSession(planId: String) {

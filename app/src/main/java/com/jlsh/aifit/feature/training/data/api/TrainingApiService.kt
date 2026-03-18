@@ -10,6 +10,7 @@ import com.jlsh.aifit.feature.training.data.dto.WarmUpProtocolResponseDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -33,6 +34,9 @@ interface TrainingApiService {
 
     @DELETE("training-plans/{id}")
     suspend fun deleteTrainingPlan(@Path("id") id: String): ApiResponse<Unit>
+
+    @PATCH("training-plans/{id}/activate")
+    suspend fun activatePlan(@Path("id") planId: String): ApiResponse<TrainingPlanResponseDto>
 
     @GET("training-plans/{planId}/days/{dayId}/warmup")
     suspend fun getWarmUpProtocol(

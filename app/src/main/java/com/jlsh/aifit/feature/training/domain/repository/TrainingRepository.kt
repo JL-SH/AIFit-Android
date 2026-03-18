@@ -14,6 +14,7 @@ interface TrainingRepository {
     suspend fun generateTrainingPlan(request: GenerateTrainingPlanRequestDto): Result<TrainingPlan>
     suspend fun generateAdaptiveTrainingPlan(request: GenerateAdaptiveTrainingPlanRequestDto): Result<TrainingPlan>
     suspend fun deleteTrainingPlan(planId: String): Result<Unit>
+    suspend fun activatePlan(planId: String): Result<TrainingPlan>
     suspend fun getWarmUpProtocol(planId: String, dayId: String): Result<WarmUpProtocol>
     suspend fun getExerciseSubstitutions(exerciseId: String): Result<List<ExerciseSubstitution>>
 }

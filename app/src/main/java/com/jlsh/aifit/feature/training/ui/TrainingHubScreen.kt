@@ -22,6 +22,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -166,6 +167,7 @@ fun TrainingHubScreen(
                     onActivePlanClicked = { viewModel.onPlanClicked(state.plan.id) },
                     onPlanClicked = viewModel::onPlanClicked,
                     onFilterChanged = viewModel::filterPlans,
+                    onActivatePlan = viewModel::onActivatePlan,
                     modifier = Modifier.padding(paddingValues),
                 )
             }
@@ -179,6 +181,7 @@ private fun ActivePlanContent(
     onActivePlanClicked: () -> Unit,
     onPlanClicked: (String) -> Unit,
     onFilterChanged: (PlanStatus?) -> Unit,
+    onActivatePlan: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val filteredPlans = if (state.selectedFilter == null) {
@@ -252,6 +255,7 @@ private fun ActivePlanContent(
             PlanSummaryItem(
                 plan = plan,
                 onClick = { onPlanClicked(plan.id) },
+                onActivate = { onActivatePlan(plan.id) },
             )
         }
     }
@@ -261,6 +265,7 @@ private fun ActivePlanContent(
 private fun PlanSummaryItem(
     plan: TrainingPlan,
     onClick: () -> Unit,
+    onActivate: () -> Unit,
 ) {
     AiFitCard(onClick = onClick) {
         Column(
@@ -286,6 +291,16 @@ private fun PlanSummaryItem(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            if (plan.status != PlanStatus.ACTIVE && plan.status != PlanStatus.COMPLETED) {
+                TextButton(onClick = onActivate) {
+                    Text(
+                        text = "Activar",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    )
+                }
+            }
         }
     }
 }
@@ -350,6 +365,7 @@ private fun TrainingHubScreenActivePreview() {
             onActivePlanClicked = {},
             onPlanClicked = {},
             onFilterChanged = {},
+            onActivatePlan = {},
         )
     }
 }
@@ -430,6 +446,7 @@ private fun TrainingHubScreenActiveLightPreview() {
             onActivePlanClicked = {},
             onPlanClicked = {},
             onFilterChanged = {},
+            onActivatePlan = {},
         )
     }
 }

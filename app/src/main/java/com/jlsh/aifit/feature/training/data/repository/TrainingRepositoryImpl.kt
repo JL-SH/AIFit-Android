@@ -89,6 +89,18 @@ class TrainingRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun activatePlan(planId: String): Result<TrainingPlan> {
+        return when (val remote = safeApiCall { apiService.activatePlan(planId) }) {
+            is Result.Success -> {
+                val plan = remote.data.toDomain()
+                dao.upsertAll(listOf(plan.toEntity()))
+                Result.Success(plan)
+            }
+            is Result.Error -> remote
+            else -> Result.Loading
+        }
+    }
+
     override suspend fun getWarmUpProtocol(planId: String, dayId: String): Result<WarmUpProtocol> {
         return when (val remote = safeApiCall { apiService.getWarmUpProtocol(planId, dayId) }) {
             is Result.Success -> Result.Success(remote.data.toDomain())
