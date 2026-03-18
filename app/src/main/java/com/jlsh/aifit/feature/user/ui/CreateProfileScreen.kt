@@ -90,11 +90,11 @@ private val locationOptions = listOf(
 )
 
 private val sessionOptions = listOf(
-    WizardOption("15-30 min", "30"),
-    WizardOption("30-45 min", "45"),
-    WizardOption("45-60 min", "60"),
-    WizardOption("60-90 min", "90"),
-    WizardOption("+90 min", "120"),
+    WizardOption("30 min", "30"),
+    WizardOption("45 min", "45"),
+    WizardOption("60 min", "60"),
+    WizardOption("75 min", "75"),
+    WizardOption("90 min", "90"),
 )
 
 private val dietOptions = listOf(
@@ -296,7 +296,7 @@ fun CreateProfileScreen(
                                         .horizontalScroll(rememberScrollState()),
                                     horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                                 ) {
-                                    (1..7).forEach { day ->
+                                    (listOf(3, 4, 5, 6)).forEach { day ->
                                         val value = day.toString()
                                         FilterChip(
                                             selected = selectedWorkoutDays == value,
@@ -304,7 +304,7 @@ fun CreateProfileScreen(
                                                 selectedWorkoutDays = value
                                                 viewModel.onWeeklyWorkoutDaysChanged(value)
                                             },
-                                            label = { Text(text = value) },
+                                            label = { Text(text = "$value días") },
                                         )
                                     }
                                 }
