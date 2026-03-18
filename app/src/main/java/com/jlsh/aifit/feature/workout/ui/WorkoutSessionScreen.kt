@@ -1,6 +1,9 @@
 package com.jlsh.aifit.feature.workout.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,11 +43,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
+import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
@@ -55,7 +61,6 @@ import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutSetLog
 import com.jlsh.aifit.feature.workout.ui.components.FinalizeSessionSheet
-import com.jlsh.aifit.feature.workout.ui.components.RestTimerBanner
 import com.jlsh.aifit.feature.workout.ui.components.SubstitutionSheet
 import com.jlsh.aifit.feature.workout.ui.components.VolumePanelSection
 import com.jlsh.aifit.feature.workout.ui.components.WarmUpSheet
@@ -182,33 +187,30 @@ private fun WorkoutSessionContent(
     )
     val hasRegisteredSets = sessionData.registeredSets.isNotEmpty()
 
-    Scaffold(
-        topBar = {
-            AiFitTopBar(
-                title = "Exercise ${pagerState.currentPage + 1} of ${exercises.size}",
-                actions = {
-                    if (hasRegisteredSets) {
-                        TextButton(onClick = onFinalize) {
-                            Text(
-                                text = "Finalize",
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                            )
+    Box(modifier = modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                AiFitTopBar(
+                    title = "Exercise ${pagerState.currentPage + 1} of ${exercises.size}",
+                    actions = {
+                        if (hasRegisteredSets) {
+                            TextButton(onClick = onFinalize) {
+                                Text(
+                                    text = "Finalize",
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                )
+                            }
                         }
-                    }
-                },
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-        modifier = modifier,
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-        ) {
+                    },
+                )
+            },
+            containerColor = MaterialTheme.colorScheme.background,
+        ) { paddingValues ->
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
             ) { page ->
                 val exercise = exercises[page]
                 val exerciseGhostSets = sessionData.ghostSets
@@ -228,12 +230,83 @@ private fun WorkoutSessionContent(
                     onRequestSubstitution = { onRequestSubstitution(exercise.exerciseId) },
                 )
             }
+        }
 
-            // Rest timer overlay at the bottom
-            RestTimerBanner(
-                seconds = restTimerSeconds,
-                onDismiss = onDismissTimer,
-                modifier = Modifier.align(Alignment.BottomCenter),
+        // Full-screen rest timer overlay on top of Scaffold
+        RestTimerOverlay(
+            seconds = restTimerSeconds,
+            exerciseName = exercises.getOrNull(pagerState.currentPage)?.name ?: "",
+            onDismiss = onDismissTimer,
+        )
+    }
+}
+
+@Composable
+private fun RestTimerOverlay(
+    seconds: Int?,
+    exerciseName: String,
+    onDismiss: () -> Unit,
+) {
+    val haptic = LocalHapticFeedback.current
+
+    LaunchedEffect(seconds) {
+        if (seconds == 0) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
+
+    AnimatedVisibility(
+        visible = seconds != null,
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        ) {
+            // Top third — exercise name + label
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = AiFitSpacing.xxl * 2),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = exerciseName,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                Text(
+                    text = "Descanso",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            // Center — countdown
+            val displaySeconds = seconds ?: 0
+            val minutes = displaySeconds / 60
+            val secs = displaySeconds % 60
+            Text(
+                text = "$minutes:${"%02d".format(secs)}",
+                style = MaterialTheme.typography.displayLarge,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.align(Alignment.Center),
+            )
+
+            // Bottom quarter — skip button
+            SecondaryButton(
+                text = "Saltar descanso",
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(
+                        start = AiFitSpacing.md,
+                        end = AiFitSpacing.md,
+                        bottom = AiFitSpacing.xxl,
+                    ),
             )
         }
     }
