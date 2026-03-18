@@ -105,9 +105,10 @@ class TrainingViewModel @Inject constructor(
                 is Result.Success -> {
                     val plan = result.data
                     val days = plan.days.map { day ->
-                        when (day.dayType) {
-                            TrainingDayType.REST -> TrainingDayItem.Rest(day)
-                            TrainingDayType.TRAINING -> TrainingDayItem.Training(day)
+                        if (day.dayType == TrainingDayType.REST || day.exercises.isEmpty()) {
+                            TrainingDayItem.Rest(day)
+                        } else {
+                            TrainingDayItem.Training(day)
                         }
                     }
                     _detailUiState.value = TrainingDetailUiState.Ready(

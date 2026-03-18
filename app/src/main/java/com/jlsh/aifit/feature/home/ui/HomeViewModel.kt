@@ -26,6 +26,7 @@ import com.jlsh.aifit.feature.progress.domain.usecase.GetBodyWeightHistoryUseCas
 import com.jlsh.aifit.feature.progress.domain.usecase.GetWeeklyProgressSummaryUseCase
 import com.jlsh.aifit.feature.progress.domain.usecase.LogBodyWeightUseCase
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
+import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlansUseCase
@@ -271,6 +272,8 @@ class HomeViewModel @Inject constructor(
 
         val today = java.time.DayOfWeek.from(LocalDate.now())
         val todayTrainingDay = activePlan.days.find { it.dayOfWeek == today } ?: return null
+
+        if (todayTrainingDay.dayType == TrainingDayType.REST) return null
 
         val isCompleted = todayWorkoutLogs.any { it.trainingPlanId == activePlan.id }
 
