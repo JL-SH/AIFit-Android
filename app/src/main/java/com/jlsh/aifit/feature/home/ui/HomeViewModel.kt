@@ -136,7 +136,9 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onStartSession(planId: String) {
-        emitEvent(HomeUiEvent.NavigateToWorkoutLog(planId))
+        val state = _uiState.value as? HomeUiState.Success ?: return
+        val dayId = state.todayTraining?.dayId ?: return
+        emitEvent(HomeUiEvent.NavigateToWorkoutSession(planId, dayId))
     }
 
     fun onViewTrainingDetail(planId: String) {
@@ -284,6 +286,7 @@ class HomeViewModel @Inject constructor(
 
         return TodayTrainingState(
             planId = activePlan.id,
+            dayId = todayTrainingDay.id,
             planName = activePlan.name,
             dayName = todayTrainingDay.name,
             exerciseCount = todayTrainingDay.exercises.size,

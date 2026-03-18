@@ -2,6 +2,7 @@ package com.jlsh.aifit.feature.home.ui.state
 
 sealed class HomeUiEvent {
     data class NavigateToWorkoutLog(val planId: String) : HomeUiEvent()
+    data class NavigateToWorkoutSession(val planId: String, val dayId: String) : HomeUiEvent()
     data class NavigateToTrainingDetail(val planId: String) : HomeUiEvent()
     data object NavigateToTrackMeal : HomeUiEvent()
     data object NavigateToProgressDashboard : HomeUiEvent()

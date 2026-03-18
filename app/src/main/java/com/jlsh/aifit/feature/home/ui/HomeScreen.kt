@@ -84,7 +84,7 @@ import com.jlsh.aifit.core.ui.components.display.StreakStatus as BadgeStreakStat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onNavigateToWorkoutLog: (planId: String) -> Unit,
+    onNavigateToWorkoutSession: (planId: String, dayId: String) -> Unit,
     onNavigateToTrackMeal: () -> Unit,
     onNavigateToProgressDashboard: () -> Unit,
     onNavigateToBodyWeight: () -> Unit,
@@ -103,7 +103,9 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is HomeUiEvent.NavigateToWorkoutLog -> onNavigateToWorkoutLog(event.planId)
+                is HomeUiEvent.NavigateToWorkoutSession ->
+                    onNavigateToWorkoutSession(event.planId, event.dayId)
+                is HomeUiEvent.NavigateToWorkoutLog -> Unit
                 is HomeUiEvent.NavigateToTrainingDetail -> onNavigateToTrainingDetail(event.planId)
                 is HomeUiEvent.NavigateToTrackMeal -> onNavigateToTrackMeal()
                 is HomeUiEvent.NavigateToProgressDashboard -> onNavigateToProgressDashboard()
@@ -935,6 +937,7 @@ private fun HomeScreenPreview() {
                     avatarUrl = null,
                     todayTraining = TodayTrainingState(
                         planId = "1",
+                        dayId = "d1",
                         planName = "Full Body Strength",
                         dayName = "Día 1 — Pecho & Espalda",
                         exerciseCount = 6,

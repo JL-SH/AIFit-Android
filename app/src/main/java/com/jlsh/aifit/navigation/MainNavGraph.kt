@@ -120,8 +120,8 @@ private fun MainNavScreen() {
                 ) {
                     composable(HomeRoutes.HOME) {
                         HomeScreen(
-                            onNavigateToWorkoutLog = { planId ->
-                                tabNavController.navigate(TrainingRoutes.workoutLogRoute(planId)) {
+                            onNavigateToWorkoutSession = { planId, dayId ->
+                                tabNavController.navigate(TrainingRoutes.workoutSessionRoute(planId, dayId)) {
                                     popUpTo(HomeRoutes.GRAPH) { inclusive = false }
                                     launchSingleTop = true
                                 }

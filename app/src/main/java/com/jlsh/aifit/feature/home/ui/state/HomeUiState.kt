@@ -21,6 +21,7 @@ sealed class HomeUiState {
 
 data class TodayTrainingState(
     val planId: String,
+    val dayId: String,
     val planName: String,
     val dayName: String,
     val exerciseCount: Int,
