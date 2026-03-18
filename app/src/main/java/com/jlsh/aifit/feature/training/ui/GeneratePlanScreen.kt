@@ -28,7 +28,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.AiGenerateButton
 import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
 import com.jlsh.aifit.core.ui.components.inputs.AiFitDropdown
-import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
@@ -38,9 +37,12 @@ import com.jlsh.aifit.feature.training.data.dto.GenerateTrainingPlanRequestDto
 import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
 import com.jlsh.aifit.feature.training.ui.state.GeneratePlanUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
-import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.GoalType
 import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
+
+private val FREQUENCY_OPTIONS = listOf(3, 4, 5, 6)
+private val DURATION_OPTIONS = listOf(30, 45, 60, 75, 90)
+private val WEEKS_OPTIONS = listOf(4, 6, 8, 10, 12)
 
 @Composable
 fun GeneratePlanScreen(
@@ -51,14 +53,14 @@ fun GeneratePlanScreen(
     viewModel: TrainingViewModel = hiltViewModel(),
 ) {
     val generateState by viewModel.generateUiState.collectAsStateWithLifecycle()
+    val userFitnessLevel by viewModel.userFitnessLevel.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Form state
-    var frequency by remember { mutableStateOf("3") }
-    var sessionDuration by remember { mutableStateOf("60") }
-    var durationWeeks by remember { mutableStateOf("8") }
+    var frequency by remember { mutableStateOf(4) }
+    var sessionDuration by remember { mutableStateOf(60) }
+    var durationWeeks by remember { mutableStateOf(8) }
     var goalType by remember { mutableStateOf(GoalType.GAIN_MUSCLE.name) }
-    var fitnessLevel by remember { mutableStateOf(FitnessLevel.INTERMEDIATE.name) }
     var location by remember { mutableStateOf(WorkoutLocation.GYM.name) }
     var injuries by remember { mutableStateOf("") }
     var additionalNotes by remember { mutableStateOf("") }
@@ -84,7 +86,7 @@ fun GeneratePlanScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             AiFitTopBar(
-                title = if (adaptive) "Adaptive Plan" else "Generate Plan",
+                title = if (adaptive) "Plan adaptativo" else "Generar plan",
                 onBack = onNavigateBack,
             )
         },
@@ -100,27 +102,30 @@ fun GeneratePlanScreen(
         ) {
             Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
-            AiFitNumberField(
-                value = frequency,
-                onValueChange = { frequency = it },
-                label = "Frequency (days/week)",
-                suffix = "days",
+            AiFitDropdown(
+                selectedValue = frequency.toString(),
+                options = FREQUENCY_OPTIONS.map { it.toString() },
+                onOptionSelected = { frequency = it.toInt() },
+                label = "Frecuencia",
+                displayMapper = { "$it días/semana" },
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            AiFitNumberField(
-                value = sessionDuration,
-                onValueChange = { sessionDuration = it },
-                label = "Session duration",
-                suffix = "min",
+            AiFitDropdown(
+                selectedValue = sessionDuration.toString(),
+                options = DURATION_OPTIONS.map { it.toString() },
+                onOptionSelected = { sessionDuration = it.toInt() },
+                label = "Duración por sesión",
+                displayMapper = { "$it min" },
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            AiFitNumberField(
-                value = durationWeeks,
-                onValueChange = { durationWeeks = it },
-                label = "Duration (weeks)",
-                suffix = "weeks",
+            AiFitDropdown(
+                selectedValue = durationWeeks.toString(),
+                options = WEEKS_OPTIONS.map { it.toString() },
+                onOptionSelected = { durationWeeks = it.toInt() },
+                label = "Duración del plan",
+                displayMapper = { "$it semanas" },
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -128,17 +133,18 @@ fun GeneratePlanScreen(
                 selectedValue = goalType,
                 options = GoalType.entries.filter { it != GoalType.UNKNOWN }.map { it.name },
                 onOptionSelected = { goalType = it },
-                label = "Goal",
-                displayMapper = { it.replace("_", " ") },
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            AiFitDropdown(
-                selectedValue = fitnessLevel,
-                options = FitnessLevel.entries.filter { it != FitnessLevel.UNKNOWN }.map { it.name },
-                onOptionSelected = { fitnessLevel = it },
-                label = "Fitness level",
-                displayMapper = { it.replace("_", " ") },
+                label = "Objetivo",
+                displayMapper = { value ->
+                    when (value) {
+                        "GAIN_MUSCLE" -> "Ganar músculo"
+                        "LOSE_WEIGHT" -> "Perder peso"
+                        "IMPROVE_ENDURANCE" -> "Mejorar resistencia"
+                        "MAINTAIN" -> "Mantenimiento"
+                        "STRENGTH" -> "Fuerza"
+                        "ATHLETIC_PERFORMANCE" -> "Rendimiento atlético"
+                        else -> value.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -146,15 +152,23 @@ fun GeneratePlanScreen(
                 selectedValue = location,
                 options = WorkoutLocation.entries.filter { it != WorkoutLocation.UNKNOWN }.map { it.name },
                 onOptionSelected = { location = it },
-                label = "Location",
-                displayMapper = { it.replace("_", " ") },
+                label = "Lugar de entrenamiento",
+                displayMapper = { value ->
+                    when (value) {
+                        "GYM" -> "Gimnasio"
+                        "HOME" -> "Casa"
+                        "OUTDOOR" -> "Exterior"
+                        "HOME_GYM" -> "Gimnasio en casa"
+                        else -> value.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
             )
 
             AiFitTextField(
                 value = injuries,
                 onValueChange = { injuries = it },
-                label = "Injuries (optional)",
+                label = "Lesiones (opcional)",
                 singleLine = false,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -162,14 +176,14 @@ fun GeneratePlanScreen(
             AiFitTextField(
                 value = additionalNotes,
                 onValueChange = { additionalNotes = it },
-                label = "Additional notes (optional)",
+                label = "Notas adicionales (opcional)",
                 singleLine = false,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             if (adaptive) {
                 Text(
-                    text = "FOCUS AREAS",
+                    text = "ÁREAS DE ENFOQUE",
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -181,14 +195,14 @@ fun GeneratePlanScreen(
                         .map { it.name },
                     selected = focusAreas,
                     onSelectionChanged = { focusAreas = it },
-                    displayMapper = { it.replace("_", " ") },
+                    displayMapper = { it.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() } },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 AiFitTextField(
                     value = avoidExercises,
                     onValueChange = { avoidExercises = it },
-                    label = "Exercises to avoid (optional)",
+                    label = "Ejercicios a evitar (opcional)",
                     singleLine = false,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -197,24 +211,21 @@ fun GeneratePlanScreen(
             Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
             AiGenerateButton(
-                text = "GENERATE PLAN",
+                text = "GENERAR PLAN",
                 loadingText = "Generando tu plan...",
                 isLoading = isLoading,
                 onClick = {
-                    val freq = frequency.toIntOrNull() ?: 3
-                    val dur = sessionDuration.toIntOrNull() ?: 60
-                    val weeks = durationWeeks.toIntOrNull() ?: 8
                     val injuriesVal = injuries.ifBlank { null }
                     val notesVal = additionalNotes.ifBlank { null }
 
                     if (adaptive) {
                         viewModel.onGenerateAdaptivePlan(
                             GenerateAdaptiveTrainingPlanRequestDto(
-                                frequencyDaysPerWeek = freq,
-                                sessionDurationMinutes = dur,
-                                durationWeeks = weeks,
+                                frequencyDaysPerWeek = frequency,
+                                sessionDurationMinutes = sessionDuration,
+                                durationWeeks = durationWeeks,
                                 goalType = goalType,
-                                fitnessLevel = fitnessLevel,
+                                fitnessLevel = userFitnessLevel,
                                 location = location,
                                 injuries = injuriesVal,
                                 additionalNotes = notesVal,
@@ -229,11 +240,11 @@ fun GeneratePlanScreen(
                     } else {
                         viewModel.onGeneratePlan(
                             GenerateTrainingPlanRequestDto(
-                                frequencyDaysPerWeek = freq,
-                                sessionDurationMinutes = dur,
-                                durationWeeks = weeks,
+                                frequencyDaysPerWeek = frequency,
+                                sessionDurationMinutes = sessionDuration,
+                                durationWeeks = durationWeeks,
                                 goalType = goalType,
-                                fitnessLevel = fitnessLevel,
+                                fitnessLevel = userFitnessLevel,
                                 location = location,
                                 injuries = injuriesVal,
                                 additionalNotes = notesVal,
@@ -260,7 +271,7 @@ private fun GeneratePlanScreenPreview() {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
-                AiFitTopBar(title = "Generate Plan", onBack = {})
+                AiFitTopBar(title = "Generar plan", onBack = {})
             },
         ) { paddingValues ->
             Column(
@@ -272,18 +283,42 @@ private fun GeneratePlanScreenPreview() {
                 verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
             ) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.sm))
-                AiFitNumberField(value = "3", onValueChange = {}, label = "Frequency (days/week)")
-                AiFitNumberField(value = "60", onValueChange = {}, label = "Session duration", suffix = "min")
-                AiFitNumberField(value = "8", onValueChange = {}, label = "Duration (weeks)")
+                AiFitDropdown(
+                    selectedValue = "4",
+                    options = FREQUENCY_OPTIONS.map { it.toString() },
+                    onOptionSelected = {},
+                    label = "Frecuencia",
+                    displayMapper = { "$it días/semana" },
+                )
+                AiFitDropdown(
+                    selectedValue = "60",
+                    options = DURATION_OPTIONS.map { it.toString() },
+                    onOptionSelected = {},
+                    label = "Duración por sesión",
+                    displayMapper = { "$it min" },
+                )
+                AiFitDropdown(
+                    selectedValue = "8",
+                    options = WEEKS_OPTIONS.map { it.toString() },
+                    onOptionSelected = {},
+                    label = "Duración del plan",
+                    displayMapper = { "$it semanas" },
+                )
                 AiFitDropdown(
                     selectedValue = "GAIN_MUSCLE",
                     options = listOf("GAIN_MUSCLE", "LOSE_WEIGHT"),
                     onOptionSelected = {},
-                    label = "Goal",
-                    displayMapper = { it.replace("_", " ") },
+                    label = "Objetivo",
+                    displayMapper = { value ->
+                        when (value) {
+                            "GAIN_MUSCLE" -> "Ganar músculo"
+                            "LOSE_WEIGHT" -> "Perder peso"
+                            else -> value
+                        }
+                    },
                 )
                 AiGenerateButton(
-                    text = "GENERATE PLAN",
+                    text = "GENERAR PLAN",
                     onClick = {},
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -304,7 +339,7 @@ private fun GeneratePlanScreenAdaptivePreview() {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
-                AiFitTopBar(title = "Adaptive Plan", onBack = {})
+                AiFitTopBar(title = "Plan adaptativo", onBack = {})
             },
         ) { paddingValues ->
             Column(
@@ -316,9 +351,15 @@ private fun GeneratePlanScreenAdaptivePreview() {
                 verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
             ) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.sm))
-                AiFitNumberField(value = "4", onValueChange = {}, label = "Frequency (days/week)")
+                AiFitDropdown(
+                    selectedValue = "4",
+                    options = FREQUENCY_OPTIONS.map { it.toString() },
+                    onOptionSelected = {},
+                    label = "Frecuencia",
+                    displayMapper = { "$it días/semana" },
+                )
                 Text(
-                    text = "FOCUS AREAS",
+                    text = "ÁREAS DE ENFOQUE",
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -327,10 +368,10 @@ private fun GeneratePlanScreenAdaptivePreview() {
                     options = listOf("CHEST", "BACK", "SHOULDERS", "BICEPS"),
                     selected = setOf("CHEST", "BACK"),
                     onSelectionChanged = {},
-                    displayMapper = { it.replace("_", " ") },
+                    displayMapper = { it.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() } },
                 )
                 AiGenerateButton(
-                    text = "GENERATE PLAN",
+                    text = "GENERAR PLAN",
                     onClick = {},
                     isLoading = true,
                     loadingText = "Generando tu plan...",
@@ -341,5 +382,4 @@ private fun GeneratePlanScreenAdaptivePreview() {
         }
     }
 }
-
 

@@ -19,12 +19,14 @@ import com.jlsh.aifit.feature.training.ui.state.TrainingDetailUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingHubUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiState
+import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -37,6 +39,7 @@ class TrainingViewModel @Inject constructor(
     private val getTrainingPlanDetailUseCase: GetTrainingPlanDetailUseCase,
     private val generateTrainingPlanUseCase: GenerateTrainingPlanUseCase,
     private val deleteTrainingPlanUseCase: DeleteTrainingPlanUseCase,
+    private val getUserProfileUseCase: GetUserProfileUseCase,
 ) : ViewModel() {
 
     // 1. UI STATE
@@ -52,6 +55,9 @@ class TrainingViewModel @Inject constructor(
     private val _generateUiState = MutableStateFlow<GeneratePlanUiState>(GeneratePlanUiState.Idle)
     val generateUiState: StateFlow<GeneratePlanUiState> = _generateUiState.asStateFlow()
 
+    private val _userFitnessLevel = MutableStateFlow("INTERMEDIATE")
+    val userFitnessLevel: StateFlow<String> = _userFitnessLevel.asStateFlow()
+
     // 2. EVENTS CHANNEL
     private val _events = Channel<TrainingUiEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
@@ -63,6 +69,15 @@ class TrainingViewModel @Inject constructor(
     // 4. INIT
     init {
         fetchPlans()
+        viewModelScope.launch {
+            getUserProfileUseCase()
+                .first { it !is Result.Loading }
+                .let { result ->
+                    if (result is Result.Success) {
+                        _userFitnessLevel.value = result.data.fitnessLevel?.name ?: "INTERMEDIATE"
+                    }
+                }
+        }
     }
 
     // 5. PUBLIC FUNCTIONS
