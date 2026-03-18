@@ -1,26 +1,421 @@
 <resources>
     <string name="app_name">AIFit</string>
 
+    <!-- Common -->
+    <string name="common_retry">Reintentar</string>
+    <string name="common_confirm">Confirmar</string>
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_delete">Eliminar</string>
+    <string name="common_edit">Editar</string>
+    <string name="common_close">Cerrar</string>
+    <string name="common_error">Error</string>
+    <string name="common_continue">Continuar</string>
+    <string name="common_accept">Aceptar</string>
+    <string name="common_loading">Cargando…</string>
+    <string name="common_or">o</string>
+    <string name="common_back">Atrás</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_training">Entrenamiento</string>
+    <string name="nav_nutrition">Nutrición</string>
+    <string name="nav_coach">Coach</string>
+    <string name="nav_profile">Yo</string>
+
+    <!-- Auth -->
+    <string name="auth_tagline">Tu entrenador de IA personal</string>
+    <string name="auth_email_label">Email</string>
+    <string name="auth_password_label">Contraseña</string>
+    <string name="auth_login_button">INICIAR SESIÓN</string>
+    <string name="auth_google_button">CONTINUAR CON GOOGLE</string>
+    <string name="auth_google_error">Error al iniciar sesión con Google</string>
+    <string name="auth_no_account">¿No tienes cuenta?\u0020\u0020</string>
+    <string name="auth_create_one">Crear una</string>
+    <string name="auth_create_account_title">Crea tu cuenta</string>
+    <string name="auth_name_label">Nombre completo</string>
+    <string name="auth_create_account_button">CREAR CUENTA</string>
+    <string name="auth_have_account">¿Ya tienes cuenta?\u0020\u0020</string>
+    <string name="auth_sign_in">Inicia sesión</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_phase_profile_title">Analizando tu perfil</string>
+    <string name="onboarding_phase_profile_subtitle">Procesando tus datos físicos y objetivos</string>
+    <string name="onboarding_phase_training_title">Creando tu plan de entrenamiento</string>
+    <string name="onboarding_phase_training_subtitle">Seleccionando ejercicios para tu nivel y objetivo</string>
+    <string name="onboarding_phase_nutrition_title">Diseñando tu plan de nutrición</string>
+    <string name="onboarding_phase_nutrition_subtitle">Calculando macros y calorías personalizadas</string>
+    <string name="onboarding_generating_status">Generando tu plan… %1$ds</string>
+    <string name="onboarding_regenerating_training">Regenerando plan de entrenamiento…</string>
+    <string name="onboarding_regenerating_nutrition">Regenerando plan de nutrición…</string>
+    <string name="onboarding_review_training">Revisa tu plan de entrenamiento</string>
+    <string name="onboarding_review_nutrition">Revisa tu plan de nutrición</string>
+    <string name="onboarding_training_days_header">DÍAS DE ENTRENAMIENTO</string>
+    <string name="onboarding_approve_training">APROBAR PLAN DE ENTRENAMIENTO</string>
+    <string name="onboarding_start_nutrition_plan">EMPEZAR CON ESTE PLAN</string>
+    <string name="onboarding_adjust_something">Ajustar algo</string>
+    <string name="onboarding_adjust_training">Ajustar plan de entrenamiento</string>
+    <string name="onboarding_adjust_nutrition">Ajustar plan de nutrición</string>
+    <string name="onboarding_regenerate">REGENERAR</string>
+    <string name="onboarding_what_to_change">¿Qué quieres cambiar?</string>
+    <string name="onboarding_weekly_plan">PLAN SEMANAL</string>
+    <string name="onboarding_show_exercises">Ver ejercicios</string>
+    <string name="onboarding_hide_exercises">Ocultar ejercicios</string>
+    <string name="onboarding_show_meals">Ver comidas</string>
+    <string name="onboarding_hide_meals">Ocultar comidas</string>
+    <string name="onboarding_exercises_count">%1$d ejercicios</string>
+    <string name="onboarding_days_per_week">%1$d días/semana</string>
+    <string name="onboarding_weeks_duration">%1$d semanas</string>
+    <string name="onboarding_duration_min">%1$d min</string>
+    <string name="onboarding_kcal_per_day">%1$d kcal/día</string>
+    <string name="onboarding_kcal_short">%1$d kcal</string>
+    <string name="onboarding_macros_summary">%1$dg proteína · %2$dg carbos · %3$dg grasa</string>
+    <string name="onboarding_duration_preference">%1$d semanas · %2$s</string>
+    <string name="onboarding_exercise_detail">%1$d series × %2$d-%3$d reps · Descanso: %4$ds</string>
+    <string name="onboarding_meal_macros">%1$d kcal · %2$dg P · %3$dg C · %4$dg G</string>
+    <string name="onboarding_goal_question">¿Cuál es tu objetivo principal?</string>
+
+    <!-- Onboarding fitness facts -->
+    <string-array name="onboarding_fitness_facts">
+        <item>💡 La consistencia supera a la intensidad. 3 días a la semana durante un año > 7 días durante un mes.</item>
+        <item>🥩 La proteína es el macronutriente más saciante. Ayuda a mantener la masa muscular mientras pierdes grasa.</item>
+        <item>😴 El 80% del crecimiento muscular ocurre durante el sueño. Dormir bien es parte del entrenamiento.</item>
+        <item>💧 Una deshidratación del 2% reduce el rendimiento físico hasta un 20%.</item>
+        <item>🔥 El músculo quema más calorías en reposo que la grasa. Ganar músculo acelera tu metabolismo.</item>
+        <item>⏱️ Los primeros 21 días son los más difíciles. Después, el hábito se forma solo.</item>
+        <item>🧠 El ejercicio libera endorfinas que reducen el estrés y mejoran el estado de ánimo.</item>
+        <item>📈 La progresión gradual previene lesiones y garantiza mejoras sostenidas a largo plazo.</item>
+        <item>🚶 Caminar 8.000-10.000 pasos al día mejora la salud metabólica incluso sin entrenamientos intensos.</item>
+        <item>🥗 La fibra ayuda a controlar el apetito y mejora la digestión. Inclúyela en cada comida principal.</item>
+        <item>🏋️ Entrenar fuerza 2-3 veces por semana protege músculo y hueso a cualquier edad.</item>
+        <item>📉 Un déficit calórico moderado y constante suele ser más sostenible que uno agresivo.</item>
+    </string-array>
+
+    <!-- Home -->
+    <string name="home_error_profile">No se pudo cargar el perfil</string>
+    <string name="home_weight_saved">Peso registrado ✓</string>
+    <string name="home_today_training">ENTRENAMIENTO DE HOY</string>
+    <string name="home_completed">Completado</string>
+    <string name="home_view_detail">VER DETALLE</string>
+    <string name="home_start_session">COMENZAR SESIÓN</string>
+    <string name="home_no_active_plan">No tienes un plan de entrenamiento activo</string>
+    <string name="home_create_plan">CREAR PLAN</string>
+    <string name="home_today_nutrition">NUTRICIÓN DE HOY</string>
+    <string name="home_track_meal">REGISTRAR COMIDA</string>
+    <string name="home_track_first_meal">Registra tu primera comida del día</string>
+    <string name="home_next_meal">Próxima comida</string>
+    <string name="home_streaks">RACHAS</string>
+    <string name="home_weekly_progress">PROGRESO SEMANAL</string>
+    <string name="home_workouts">Entrenamientos</string>
+    <string name="home_avg_calories">Calorías promedio</string>
+    <string name="home_log_weight">Registrar peso</string>
+    <string name="home_weight_trend">TENDENCIA DE PESO</string>
+    <string name="home_log_weight_sheet_title">Registrar peso</string>
+    <string name="home_log_weight_save">GUARDAR</string>
+
+    <!-- Training -->
+    <string name="training_title">Entrenamiento</string>
+    <string name="training_no_active_plans">Sin planes activos</string>
+    <string name="training_no_active_plans_subtitle">Genera tu primer plan de entrenamiento con IA</string>
+    <string name="training_create_plan">CREAR PLAN</string>
+    <string name="training_week_of">Semana %1$d de %2$d</string>
+    <string name="training_next_day">Siguiente: %1$s</string>
+    <string name="training_activate">Activar</string>
+    <string name="training_plan_deleted">Plan eliminado</string>
+    <string name="training_day_label">Día %1$d — %2$s</string>
+    <string name="training_rest_day">Día de descanso — recuperación</string>
+    <string name="training_start_session">COMENZAR SESIÓN</string>
+    <string name="training_rest_suffix">%1$ds descanso</string>
+    <string name="training_sets_reps">%1$d series × %2$d reps</string>
+    <string name="training_generate_plan">Generar plan</string>
+    <string name="training_adaptive_plan">Plan adaptativo</string>
+    <string name="training_focus_areas">ÁREAS DE ENFOQUE</string>
+    <string name="training_generate_button">GENERAR PLAN</string>
+    <string name="training_generating">Generando tu plan…</string>
+
+    <!-- Workout Session -->
+    <string name="workout_session_exercise_of">Ejercicio %1$d de %2$d</string>
+    <string name="workout_session_finalize">Finalizar</string>
+    <string name="workout_session_previous">Sesión anterior</string>
+    <string name="workout_session_current">Esta sesión</string>
+    <string name="workout_session_suggestion">Sugerencia: %1$s kg para la siguiente serie</string>
+    <string name="workout_session_add_set">Añadir serie</string>
+    <string name="workout_session_weight_label">Peso</string>
+    <string name="workout_session_weight_suffix">kg</string>
+    <string name="workout_session_reps_label">Reps</string>
+    <string name="workout_session_rpe_label">RPE (opcional)</string>
+    <string name="workout_session_substitute">Sustituir ejercicio</string>
+    <string name="workout_session_rest">Descanso</string>
+    <string name="workout_session_skip_rest">Saltar descanso</string>
+    <string name="workout_session_rest_complete">Descanso completado</string>
+    <string name="workout_session_day_not_found">Día de entrenamiento no encontrado</string>
+    <string name="workout_session_set_number">Serie %1$d</string>
+    <string name="workout_session_1rm">1RM: %1$s</string>
+    <string name="workout_session_volume">Volumen de sesión</string>
+    <string name="workout_session_dismiss">Cerrar</string>
+
+    <!-- Warm-up -->
+    <string name="warmup_title">Protocolo de calentamiento</string>
+    <string name="warmup_skip">Saltar</string>
+    <string name="warmup_ready">Listo, empezamos</string>
+
     <!-- FinalizeSessionSheet -->
-    <string name="finalize_session_title">Finalize Session</string>
-    <string name="finalize_session_fatigue_label">Systemic Fatigue</string>
-    <string name="finalize_session_fatigue_fresh">Fresh</string>
-    <string name="finalize_session_fatigue_exhausted">Exhausted</string>
-    <string name="finalize_session_joint_pain_label">Joint Pain</string>
-    <string name="finalize_session_note_hint">Note (optional)</string>
-    <string name="finalize_session_confirm">Finalize Session</string>
+    <string name="finalize_session_title">Finalizar sesión</string>
+    <string name="finalize_session_fatigue_label">Fatiga sistémica</string>
+    <string name="finalize_session_fatigue_fresh">Fresco</string>
+    <string name="finalize_session_fatigue_exhausted">Agotado</string>
+    <string name="finalize_session_joint_pain_label">Dolor articular</string>
+    <string name="finalize_session_note_hint">Nota (opcional)</string>
+    <string name="finalize_session_confirm">Finalizar sesión</string>
 
     <!-- Joint Zone display names -->
-    <string name="joint_zone_shoulder_left">Left Shoulder</string>
-    <string name="joint_zone_shoulder_right">Right Shoulder</string>
-    <string name="joint_zone_knee_left">Left Knee</string>
-    <string name="joint_zone_knee_right">Right Knee</string>
-    <string name="joint_zone_hip_left">Left Hip</string>
-    <string name="joint_zone_hip_right">Right Hip</string>
-    <string name="joint_zone_lower_back">Lower Back</string>
-    <string name="joint_zone_elbow_left">Left Elbow</string>
-    <string name="joint_zone_elbow_right">Right Elbow</string>
-    <string name="joint_zone_wrist_left">Left Wrist</string>
-    <string name="joint_zone_wrist_right">Right Wrist</string>
-    <string name="joint_zone_neck">Neck</string>
+    <string name="joint_zone_shoulder_left">Hombro izquierdo</string>
+    <string name="joint_zone_shoulder_right">Hombro derecho</string>
+    <string name="joint_zone_knee_left">Rodilla izquierda</string>
+    <string name="joint_zone_knee_right">Rodilla derecha</string>
+    <string name="joint_zone_hip_left">Cadera izquierda</string>
+    <string name="joint_zone_hip_right">Cadera derecha</string>
+    <string name="joint_zone_lower_back">Lumbar</string>
+    <string name="joint_zone_elbow_left">Codo izquierdo</string>
+    <string name="joint_zone_elbow_right">Codo derecho</string>
+    <string name="joint_zone_wrist_left">Muñeca izquierda</string>
+    <string name="joint_zone_wrist_right">Muñeca derecha</string>
+    <string name="joint_zone_neck">Cuello</string>
+
+    <!-- Substitution -->
+    <string name="substitution_title">Alternativas de ejercicio</string>
+    <string name="substitution_loading">Buscando alternativas…</string>
+    <string name="substitution_empty">No se encontraron alternativas</string>
+
+    <!-- Workout Detail -->
+    <string name="workout_detail_title">Sesión de entrenamiento</string>
+    <string name="workout_detail_summary">RESUMEN</string>
+    <string name="workout_detail_exercises">EJERCICIOS</string>
+    <string name="workout_detail_set_header">SERIE</string>
+    <string name="workout_detail_weight_header">PESO</string>
+    <string name="workout_detail_reps_header">REPS</string>
+    <string name="workout_detail_rpe_header">RPE</string>
+    <string name="workout_detail_1rm_header">1RM</string>
+    <string name="workout_detail_ok">OK</string>
+    <string name="workout_detail_min_label">MIN</string>
+    <string name="workout_detail_rpe_label">RPE</string>
+    <string name="workout_detail_exercises_label">EJERCICIOS</string>
+    <string name="workout_detail_sets_label">SERIES</string>
+    <string name="workout_detail_total_volume">Volumen total</string>
+    <string name="workout_detail_exercises_completed">Ejercicios completados</string>
+    <string name="workout_detail_duration">Duración</string>
+    <string name="workout_detail_fatigue">Fatiga</string>
+    <string name="workout_detail_joint_pain">Dolor articular</string>
+
+    <!-- Workout History -->
+    <string name="workout_history_title">Historial de sesiones</string>
+    <string name="workout_history_all">Todos</string>
+    <string name="workout_history_empty">No has registrado sesiones aún</string>
+    <string name="workout_history_empty_subtitle">Completa tu primer entrenamiento para ver el historial</string>
+
+    <!-- Workout Log (old screen) -->
+    <string name="workout_log_finish">FINALIZAR SESIÓN</string>
+    <string name="workout_log_discard_title">¿Descartar sesión?</string>
+    <string name="workout_log_discard_message">Perderás los datos registrados</string>
+    <string name="workout_log_set">SERIE</string>
+    <string name="workout_log_kg">KG</string>
+    <string name="workout_log_reps">REPS</string>
+
+    <!-- Nutrition -->
+    <string name="nutrition_title">Nutrición</string>
+    <string name="nutrition_configure">CONFIGURAR</string>
+    <string name="nutrition_add_meal">AÑADIR COMIDA</string>
+    <string name="nutrition_no_data_today">Sin datos de hoy</string>
+    <string name="nutrition_configure_subtitle">Configura tu objetivo calórico para empezar</string>
+    <string name="nutrition_meals_header">COMIDAS</string>
+    <string name="nutrition_no_meals_today">No has registrado comidas hoy</string>
+    <string name="nutrition_no_meals_subtitle">Añade tu primera comida del día</string>
+    <string name="nutrition_create_plan">CREAR PLAN</string>
+    <string name="nutrition_no_diet_plans">Sin planes de dieta</string>
+    <string name="nutrition_no_diet_plans_subtitle">Genera tu primer plan de dieta con IA</string>
+    <string name="nutrition_generate_list">Generar lista</string>
+    <string name="nutrition_no_shopping_lists">Genera tu primera lista de compras</string>
+    <string name="nutrition_no_shopping_lists_subtitle">Basada en tu plan de dieta activo</string>
+    <string name="nutrition_error_loading_lists">Error al cargar listas</string>
+    <string name="nutrition_delete_meal_title">Eliminar comida</string>
+    <string name="nutrition_delete_meal_message">Esta acción no se puede deshacer.</string>
+    <string name="nutrition_delete_list_title">Eliminar lista</string>
+    <string name="nutrition_delete_list_message">¿Seguro que quieres eliminar esta lista de compras?</string>
+    <string name="nutrition_target_title">Objetivos nutricionales</string>
+    <string name="nutrition_target_calories">Objetivo calórico</string>
+    <string name="nutrition_target_calories_suffix">kcal</string>
+    <string name="nutrition_target_protein">Proteína</string>
+    <string name="nutrition_target_protein_suffix">g</string>
+    <string name="nutrition_target_carbs">Carbohidratos</string>
+    <string name="nutrition_target_carbs_suffix">g</string>
+    <string name="nutrition_target_fat">Grasa</string>
+    <string name="nutrition_target_fat_suffix">g</string>
+    <string name="nutrition_target_save">GUARDAR</string>
+
+    <!-- Track Meal -->
+    <string name="track_meal_add">Añadir comida</string>
+    <string name="track_meal_time_label">Hora (HH:mm)</string>
+    <string name="track_meal_describe">Describe tu comida</string>
+    <string name="track_meal_analyze">ANALIZAR</string>
+    <string name="track_meal_analyzing">Analizando comida…</string>
+    <string name="track_meal_name_label">Nombre de comida (opcional)</string>
+    <string name="track_meal_items_header">ITEMS</string>
+    <string name="track_meal_add_item">Añadir item</string>
+    <string name="track_meal_save">GUARDAR</string>
+    <string name="track_meal_item_label">Item %1$d</string>
+    <string name="track_meal_item_name">Nombre</string>
+    <string name="track_meal_item_qty">Cantidad</string>
+    <string name="track_meal_item_unit">Unidad</string>
+    <string name="track_meal_item_kcal">kcal</string>
+    <string name="track_meal_item_protein">Prot(g)</string>
+    <string name="track_meal_item_carbs">Carbs(g)</string>
+    <string name="track_meal_item_fat">Grasa(g)</string>
+
+    <!-- Diet -->
+    <string name="diet_macros_header">DISTRIBUCIÓN DE MACROS</string>
+    <string name="diet_weekly_plan">PLAN SEMANAL</string>
+    <string name="diet_kcal_label">KCAL</string>
+    <string name="diet_protein_label">PROTEÍNA</string>
+    <string name="diet_carbs_label">CARBOS</string>
+    <string name="diet_fat_label">GRASA</string>
+    <string name="diet_generate_title">Generar dieta</string>
+    <string name="diet_duration_label">Duración (semanas)</string>
+    <string name="diet_duration_suffix">semanas</string>
+    <string name="diet_meals_per_day">Comidas por día</string>
+    <string name="diet_preference_label">Preferencia de dieta</string>
+    <string name="diet_goal_label">Objetivo (opcional)</string>
+    <string name="diet_budget_label">Presupuesto (opcional)</string>
+    <string name="diet_allergies_label">Alergias (opcional)</string>
+    <string name="diet_notes_label">Notas adicionales (opcional)</string>
+    <string name="diet_include_history">Incluir historial nutricional</string>
+    <string name="diet_generate_button">GENERAR PLAN</string>
+    <string name="diet_generating">Generando tu plan…</string>
+
+    <!-- Progress Dashboard -->
+    <string name="progress_dashboard_title">Panel de progreso</string>
+    <string name="progress_workout_adherence">ADHERENCIA DE ENTRENAMIENTO</string>
+    <string name="progress_sessions">SESIONES</string>
+    <string name="progress_streak">RACHA</string>
+    <string name="progress_best">MEJOR</string>
+    <string name="progress_weight_trend">TENDENCIA DE PESO</string>
+    <string name="progress_start">INICIO</string>
+    <string name="progress_current">ACTUAL</string>
+    <string name="progress_change">CAMBIO</string>
+    <string name="progress_nutrition_adherence">ADHERENCIA NUTRICIONAL</string>
+    <string name="progress_avg_kcal">PROM KCAL</string>
+    <string name="progress_target">OBJETIVO</string>
+    <string name="progress_strength">PROGRESO DE FUERZA</string>
+    <string name="progress_log_weight">REGISTRAR PESO</string>
+    <string name="progress_weekly_detail">DETALLE SEMANAL</string>
+    <string name="progress_metabolic_analysis">ANÁLISIS METABÓLICO</string>
+
+    <!-- Body Weight -->
+    <string name="body_weight_title">Peso corporal</string>
+    <string name="body_weight_need_entries">Se necesitan al menos 2 registros de peso</string>
+    <string name="body_weight_need_entries_subtitle">Registra tu peso para ver tendencias</string>
+    <string name="body_weight_log_header">REGISTRAR PESO</string>
+    <string name="body_weight_label">Peso</string>
+    <string name="body_weight_suffix">kg</string>
+    <string name="body_weight_notes_label">Notas (opcional)</string>
+    <string name="body_weight_log_button">REGISTRAR PESO</string>
+    <string name="body_weight_recent">ENTRADAS RECIENTES</string>
+    <string name="body_weight_date_format">Fecha: %1$s</string>
+
+    <!-- Weekly Summary -->
+    <string name="weekly_summary_title">Resumen semanal</string>
+    <string name="weekly_summary_workouts">ENTRENAMIENTOS</string>
+    <string name="weekly_summary_sessions">sesiones</string>
+    <string name="weekly_summary_nutrition">NUTRICIÓN</string>
+    <string name="weekly_summary_avg_kcal">promedio kcal hoy</string>
+    <string name="weekly_summary_target">objetivo</string>
+    <string name="weekly_summary_streak_header">RACHA</string>
+    <string name="weekly_summary_current_streak">racha actual</string>
+    <string name="weekly_summary_current_weight">Peso actual</string>
+    <string name="weekly_summary_body_weight">PESO CORPORAL</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Yo</string>
+    <string name="profile_logout_title">Cerrar sesión</string>
+    <string name="profile_logout_message">¿Seguro que quieres cerrar sesión?</string>
+    <string name="profile_streak_stat">Racha</string>
+    <string name="profile_achievements_stat">Logros</string>
+    <string name="profile_records_stat">Récords</string>
+    <string name="profile_section_account">Mi cuenta</string>
+    <string name="profile_edit">Editar perfil</string>
+    <string name="profile_section_progress">Progreso</string>
+    <string name="profile_section_achievements">Logros</string>
+    <string name="profile_section_tools">Herramientas</string>
+    <string name="profile_section_app">App</string>
+    <string name="profile_dark_theme">Tema oscuro</string>
+    <string name="profile_logout">Cerrar sesión</string>
+
+    <!-- Edit Profile -->
+    <string name="edit_profile_title">Editar perfil</string>
+    <string name="edit_profile_name">Nombre completo</string>
+    <string name="edit_profile_birthday">Fecha de nacimiento</string>
+    <string name="edit_profile_gender">Género</string>
+    <string name="edit_profile_height">Altura</string>
+    <string name="edit_profile_height_suffix">cm</string>
+    <string name="edit_profile_current_weight">Peso actual</string>
+    <string name="edit_profile_weight_suffix">kg</string>
+    <string name="edit_profile_target_weight">Peso objetivo</string>
+    <string name="edit_profile_goal">Objetivo</string>
+    <string name="edit_profile_activity_level">Nivel de actividad</string>
+    <string name="edit_profile_fitness_level">Nivel de fitness</string>
+    <string name="edit_profile_location">Ubicación preferida</string>
+    <string name="edit_profile_diet_preference">Preferencia dietética</string>
+    <string name="edit_profile_training_days">Días de entrenamiento/semana</string>
+    <string name="edit_profile_session_minutes">Minutos disponibles/sesión</string>
+    <string name="edit_profile_injuries">Lesiones o limitaciones</string>
+    <string name="edit_profile_calorie_target">Objetivo calórico</string>
+    <string name="edit_profile_calorie_suffix">kcal</string>
+    <string name="edit_profile_save">GUARDAR</string>
+
+    <!-- Gamification -->
+    <string name="gamification_title">Gamificación</string>
+    <string name="gamification_no_streaks">Sin rachas activas</string>
+    <string name="gamification_no_streaks_subtitle">Empieza a entrenar para iniciar tus rachas</string>
+    <string name="gamification_current_streak">Racha actual</string>
+    <string name="gamification_best_streak">Mejor racha</string>
+    <string name="gamification_no_achievements">Sin logros disponibles</string>
+    <string name="gamification_no_achievements_subtitle">Los logros aparecerán a medida que progreses</string>
+    <string name="gamification_locked">Bloqueado</string>
+    <string name="gamification_no_records">Sin récords personales</string>
+    <string name="gamification_no_records_subtitle">Completa sesiones para registrar récords</string>
+    <string name="gamification_1rm_est">1RM est.</string>
+
+    <!-- Chat / Coach -->
+    <string name="coach_title">AI Coach</string>
+    <string name="coach_archive_title">Archivar sesión</string>
+    <string name="coach_archive_message">¿Seguro que quieres archivar esta conversación?</string>
+    <string name="coach_archive_button">Archivar</string>
+    <string name="coach_typing">AI Coach está escribiendo…</string>
+    <string name="coach_no_sessions">Sin conversaciones</string>
+    <string name="coach_no_sessions_subtitle">Inicia una conversación con tu AI Coach</string>
+    <string name="coach_delete_title">Eliminar sesión</string>
+    <string name="coach_delete_message">¿Seguro que quieres eliminar esta conversación?</string>
+
+    <!-- Shopping -->
+    <string name="shopping_title">Lista de compras</string>
+    <string name="shopping_delete_title">Eliminar lista</string>
+    <string name="shopping_delete_message">¿Seguro que quieres eliminar esta lista de compras?</string>
+
+    <!-- Metabolic -->
+    <string name="metabolic_title">Análisis metabólico</string>
+    <string name="metabolic_no_adjustments">Sin ajustes recomendados</string>
+    <string name="metabolic_no_adjustments_subtitle">No se necesita un ajuste en este momento. Sigue así.</string>
+    <string name="metabolic_apply_title">¿Aplicar este ajuste?</string>
+    <string name="metabolic_apply_button">Aplicar</string>
+    <string name="metabolic_weight_trend">Tendencia de peso</string>
+    <string name="metabolic_caloric_adherence">Adherencia calórica</string>
+    <string name="metabolic_analysis">Análisis</string>
+    <string name="metabolic_recommendation">Recomendación</string>
+    <string name="metabolic_adjustments_history">Historial de ajustes</string>
+
+    <!-- Plan Status -->
+    <string name="plan_status_active">Activo</string>
+    <string name="plan_status_completed">Completado</string>
+    <string name="plan_status_paused">Pausado</string>
+    <string name="plan_status_draft">Sin empezar</string>
+    <string name="plan_status_all">Todos</string>
 </resources>

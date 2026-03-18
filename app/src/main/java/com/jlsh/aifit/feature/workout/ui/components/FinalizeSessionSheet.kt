@@ -27,7 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
@@ -69,7 +68,6 @@ private fun FinalizeSessionSheetContent(
     onConfirm: (systemicFatigue: Int, jointPainReport: List<JointPainEntry>) -> Unit,
 ) {
     var fatigueValue by remember { mutableFloatStateOf(5f) }
-    var hasInteractedWithSlider by remember { mutableStateOf(false) }
     val selectedZones = remember { mutableStateMapOf<JointZone, Boolean>() }
     val zoneNotes: SnapshotStateMap<JointZone, String> = remember { mutableStateMapOf() }
 
@@ -112,7 +110,6 @@ private fun FinalizeSessionSheetContent(
             value = fatigueValue,
             onValueChange = {
                 fatigueValue = it
-                hasInteractedWithSlider = true
             },
             valueRange = 1f..10f,
             steps = 8,
@@ -227,7 +224,6 @@ private fun FinalizeSessionSheetContent(
                 }
                 onConfirm(fatigue, jointPainReport)
             },
-            enabled = hasInteractedWithSlider,
             modifier = Modifier.fillMaxWidth(),
         )
 

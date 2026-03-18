@@ -29,11 +29,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
@@ -69,7 +71,7 @@ fun OnboardingTrainingApprovalScreen(
                         color = MaterialTheme.colorScheme.primaryContainer,
                     )
                     Text(
-                        text = "Regenerando plan de entrenamiento...",
+                        text = stringResource(R.string.onboarding_regenerating_training),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -115,7 +117,7 @@ fun OnboardingTrainingApprovalScreen(
             // Cabecera
             item {
                 Text(
-                    text = "Revisa tu plan de entrenamiento",
+                    text = stringResource(R.string.onboarding_review_training),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -135,11 +137,11 @@ fun OnboardingTrainingApprovalScreen(
                     horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                 ) {
                     SummaryChip(
-                        text = "${plan.frequencyDaysPerWeek} días/semana",
+                        text = stringResource(R.string.onboarding_days_per_week, plan.frequencyDaysPerWeek),
                         modifier = Modifier.weight(1f),
                     )
                     SummaryChip(
-                        text = "${plan.durationWeeks} semanas",
+                        text = stringResource(R.string.onboarding_weeks_duration, plan.durationWeeks),
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -174,7 +176,7 @@ fun OnboardingTrainingApprovalScreen(
             // Sección días de entrenamiento
             item {
                 Text(
-                    text = "DÍAS DE ENTRENAMIENTO",
+                    text = stringResource(R.string.onboarding_training_days_header),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     letterSpacing = 1.5.sp,
@@ -191,14 +193,14 @@ fun OnboardingTrainingApprovalScreen(
             item { Spacer(Modifier.height(AiFitSpacing.sm)) }
             item {
                 PrimaryButton(
-                    text = "APROBAR PLAN DE ENTRENAMIENTO",
+                    text = stringResource(R.string.onboarding_approve_training),
                     onClick = onApprove,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
             item {
                 SecondaryButton(
-                    text = "Ajustar algo",
+                    text = stringResource(R.string.onboarding_adjust_something),
                     onClick = { showFeedbackSheet = true },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -220,19 +222,19 @@ fun OnboardingTrainingApprovalScreen(
                 verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
             ) {
                 Text(
-                    text = "Ajustar plan de entrenamiento",
+                    text = stringResource(R.string.onboarding_adjust_training),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 AiFitTextField(
                     value = feedbackText,
                     onValueChange = { feedbackText = it },
-                    label = "¿Qué quieres cambiar?",
+                    label = stringResource(R.string.onboarding_what_to_change),
                     singleLine = false,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 PrimaryButton(
-                    text = "REGENERAR",
+                    text = stringResource(R.string.onboarding_regenerate),
                     onClick = {
                         scope.launch {
                             sheetState.hide()
@@ -291,25 +293,29 @@ private fun TrainingDayCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Día ${day.dayNumber} — ${day.name}",
+                    text = stringResource(R.string.training_day_label, day.dayNumber, day.name),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    text = "${day.estimatedDurationMinutes} min",
+                    text = stringResource(R.string.onboarding_duration_min, day.estimatedDurationMinutes),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Text(
-                text = "${day.exercises.size} ejercicios",
+                text = stringResource(R.string.onboarding_exercises_count, day.exercises.size),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(AiFitSpacing.sm))
             SecondaryButton(
-                text = if (expanded) "Ocultar ejercicios" else "Ver ejercicios",
+                text = if (expanded) {
+                    stringResource(R.string.onboarding_hide_exercises)
+                } else {
+                    stringResource(R.string.onboarding_show_exercises)
+                },
                 onClick = { expanded = !expanded },
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -345,7 +351,13 @@ private fun ExerciseRow(
             color = MaterialTheme.colorScheme.primaryContainer,
         )
         Text(
-            text = "${exercise.sets} series × ${exercise.repsMin}-${exercise.repsMax} reps · Descanso: ${exercise.restSeconds}s",
+            text = stringResource(
+                R.string.onboarding_exercise_detail,
+                exercise.sets,
+                exercise.repsMin,
+                exercise.repsMax,
+                exercise.restSeconds,
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface,
         )

@@ -31,11 +31,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitLogoSplit
 import com.jlsh.aifit.core.ui.components.inputs.AiFitPasswordField
@@ -97,7 +99,7 @@ fun RegisterScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.Rounded.ArrowBackIosNew,
-                            contentDescription = "Volver",
+                            contentDescription = stringResource(R.string.common_back),
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(20.dp),
                         )
@@ -111,7 +113,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Crea tu cuenta",
+                    text = stringResource(R.string.auth_create_account_title),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
@@ -123,7 +125,7 @@ fun RegisterScreen(
                 AiFitTextField(
                     value = name,
                     onValueChange = viewModel::onNameChanged,
-                    label = "Nombre completo",
+                    label = stringResource(R.string.auth_name_label),
                     error = nameError,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -133,7 +135,7 @@ fun RegisterScreen(
                 AiFitTextField(
                     value = email,
                     onValueChange = viewModel::onEmailChanged,
-                    label = "Email",
+                    label = stringResource(R.string.auth_email_label),
                     error = emailError,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -143,7 +145,7 @@ fun RegisterScreen(
                 AiFitPasswordField(
                     value = password,
                     onValueChange = viewModel::onPasswordChanged,
-                    label = "Contraseña",
+                    label = stringResource(R.string.auth_password_label),
                     error = passwordError,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -151,7 +153,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 PrimaryButton(
-                    text = "CREAR CUENTA",
+                    text = stringResource(R.string.auth_create_account_button),
                     onClick = viewModel::onRegisterClicked,
                     isLoading = uiState is AuthUiState.Loading,
                     modifier = Modifier.fillMaxWidth(),
@@ -164,12 +166,12 @@ fun RegisterScreen(
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     Text(
-                        text = "¿Ya tienes cuenta?  ",
+                        text = stringResource(R.string.auth_have_account),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "Inicia sesión",
+                        text = stringResource(R.string.auth_sign_in),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier.clickable { viewModel.onNavigateBack() },
@@ -209,7 +211,7 @@ private fun RegisterScreenPreview() {
                     IconButton(onClick = {}) {
                         Icon(
                             imageVector = Icons.Rounded.ArrowBackIosNew,
-                            contentDescription = "Volver",
+                            contentDescription = stringResource(R.string.common_back),
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(20.dp),
                         )
@@ -223,7 +225,7 @@ private fun RegisterScreenPreview() {
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Crea tu cuenta",
+                    text = stringResource(R.string.auth_create_account_title),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
@@ -235,7 +237,7 @@ private fun RegisterScreenPreview() {
                 AiFitTextField(
                     value = "Carlos García",
                     onValueChange = {},
-                    label = "Nombre completo",
+                    label = stringResource(R.string.auth_name_label),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -244,7 +246,7 @@ private fun RegisterScreenPreview() {
                 AiFitTextField(
                     value = "usuario@ejemplo.com",
                     onValueChange = {},
-                    label = "Email",
+                    label = stringResource(R.string.auth_email_label),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -253,14 +255,14 @@ private fun RegisterScreenPreview() {
                 AiFitPasswordField(
                     value = "••••••••",
                     onValueChange = {},
-                    label = "Contraseña",
+                    label = stringResource(R.string.auth_password_label),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 PrimaryButton(
-                    text = "CREAR CUENTA",
+                    text = stringResource(R.string.auth_create_account_button),
                     onClick = {},
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -272,12 +274,12 @@ private fun RegisterScreenPreview() {
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     Text(
-                        text = "¿Ya tienes cuenta?  ",
+                        text = stringResource(R.string.auth_have_account),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "Inicia sesión",
+                        text = stringResource(R.string.auth_sign_in),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primaryContainer,
                     )

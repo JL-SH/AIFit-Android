@@ -3,7 +3,6 @@ package com.jlsh.aifit.feature.workout.ui.components
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,10 +16,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
-import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.training.domain.model.WarmUpExercise
@@ -30,20 +30,18 @@ import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
 @Composable
 fun WarmUpSheet(
     protocol: WarmUpProtocol,
-    onSkip: () -> Unit,
-    onReady: () -> Unit,
+    onStart: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
-        onDismissRequest = onSkip,
+        onDismissRequest = onStart,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         WarmUpSheetContent(
             protocol = protocol,
-            onSkip = onSkip,
-            onReady = onReady,
+            onStart = onStart,
         )
     }
 }
@@ -51,8 +49,7 @@ fun WarmUpSheet(
 @Composable
 private fun WarmUpSheetContent(
     protocol: WarmUpProtocol,
-    onSkip: () -> Unit,
-    onReady: () -> Unit,
+    onStart: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -61,7 +58,7 @@ private fun WarmUpSheetContent(
             .navigationBarsPadding(),
     ) {
         Text(
-            text = "Warm-Up Protocol",
+            text = stringResource(R.string.warmup_title),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -81,21 +78,11 @@ private fun WarmUpSheetContent(
 
         Spacer(modifier = Modifier.height(AiFitSpacing.lg))
 
-        Row(
+        PrimaryButton(
+            text = stringResource(R.string.warmup_ready),
+            onClick = onStart,
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-        ) {
-            SecondaryButton(
-                text = "Skip",
-                onClick = onSkip,
-                modifier = Modifier.weight(1f),
-            )
-            PrimaryButton(
-                text = "Ready, let's go",
-                onClick = onReady,
-                modifier = Modifier.weight(1f),
-            )
-        }
+        )
 
         Spacer(modifier = Modifier.height(AiFitSpacing.md))
     }
@@ -173,8 +160,7 @@ private fun WarmUpSheetPreview() {
 
         WarmUpSheetContent(
             protocol = fakeProtocol,
-            onSkip = {},
-            onReady = {},
+            onStart = {},
         )
     }
 }
@@ -210,9 +196,7 @@ private fun WarmUpSheetLightPreview() {
 
         WarmUpSheetContent(
             protocol = fakeProtocol,
-            onSkip = {},
-            onReady = {},
+            onStart = {},
         )
     }
 }
-

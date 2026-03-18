@@ -10,10 +10,13 @@ import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
 import com.jlsh.aifit.feature.training.domain.usecase.GetExerciseSubstitutionsUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetWarmUpProtocolUseCase
+import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSessionRequestDto
+import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSetRequestDto
 import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutSetLog
 import com.jlsh.aifit.feature.workout.domain.usecase.FinalizeWorkoutSessionUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.GetPreviousSessionForDayUseCase
+import com.jlsh.aifit.feature.workout.domain.usecase.LogWorkoutSessionUseCase
 import com.jlsh.aifit.feature.workout.domain.util.calculateAccumulatedVolume
 import com.jlsh.aifit.feature.workout.domain.util.calculateAutoregulatedWeight
 import com.jlsh.aifit.feature.workout.domain.util.calculateOneRepMax
@@ -33,12 +36,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class WorkoutSessionViewModel @Inject constructor(
     private val getWarmUpProtocolUseCase: GetWarmUpProtocolUseCase,
+    private val logWorkoutSessionUseCase: LogWorkoutSessionUseCase,
     private val finalizeWorkoutSessionUseCase: FinalizeWorkoutSessionUseCase,
     private val getPreviousSessionForDayUseCase: GetPreviousSessionForDayUseCase,
     private val getExerciseSubstitutionsUseCase: GetExerciseSubstitutionsUseCase,
@@ -225,12 +230,42 @@ class WorkoutSessionViewModel @Inject constructor(
         _uiState.value = WorkoutSessionUiState.Finalizing
 
         viewModelScope.launch {
-            when (val result = finalizeWorkoutSessionUseCase(currentSessionId, systemicFatigue, jointPainReport)) {
+            // Step 1: Log the workout session to the backend
+            val logRequest = LogWorkoutSessionRequestDto(
+                trainingPlanId = currentPlanId,
+                trainingDayId = currentDayId,
+                date = LocalDate.now().toString(),
+                exercises = sessionData.registeredSets.map { set ->
+                    LogWorkoutSetRequestDto(
+                        trainingExerciseId = set.trainingExerciseId,
+                        exerciseName = set.exerciseName,
+                        exerciseSetNumber = set.exerciseSetNumber,
+                        repsCompleted = set.repsCompleted,
+                        weightUsed = set.weightUsed,
+                        durationSeconds = set.durationSeconds,
+                        completed = set.completed,
+                    )
+                },
+            )
+
+            when (val logResult = logWorkoutSessionUseCase(logRequest)) {
                 is Result.Success -> {
-                    _uiState.value = WorkoutSessionUiState.SessionFinalized(result.data)
+                    val realLogId = logResult.data.id
+
+                    // Step 2: Finalize with fatigue + joint pain using real log ID
+                    when (val finalizeResult = finalizeWorkoutSessionUseCase(realLogId, systemicFatigue, jointPainReport)) {
+                        is Result.Success -> {
+                            _uiState.value = WorkoutSessionUiState.SessionFinalized(finalizeResult.data)
+                        }
+                        is Result.Error -> {
+                            _events.emit(WorkoutSessionUiEvent.ShowSnackbar(finalizeResult.exception.toMessage()))
+                            _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
+                        }
+                        else -> Unit
+                    }
                 }
                 is Result.Error -> {
-                    _events.emit(WorkoutSessionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    _events.emit(WorkoutSessionUiEvent.ShowSnackbar(logResult.exception.toMessage()))
                     _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
                 }
                 else -> Unit

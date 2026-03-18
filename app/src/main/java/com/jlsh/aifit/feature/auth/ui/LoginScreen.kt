@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.jlsh.aifit.BuildConfig
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.GoogleSignInButton
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
@@ -104,7 +106,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Tu entrenador de IA personal",
+                    text = stringResource(R.string.auth_tagline),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -116,7 +118,7 @@ fun LoginScreen(
                 AiFitTextField(
                     value = email,
                     onValueChange = viewModel::onEmailChanged,
-                    label = "Email",
+                    label = stringResource(R.string.auth_email_label),
                     error = emailError,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -126,7 +128,7 @@ fun LoginScreen(
                 AiFitPasswordField(
                     value = password,
                     onValueChange = viewModel::onPasswordChanged,
-                    label = "Contraseña",
+                    label = stringResource(R.string.auth_password_label),
                     error = passwordError,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -134,7 +136,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 PrimaryButton(
-                    text = "INICIAR SESIÓN",
+                    text = stringResource(R.string.auth_login_button),
                     onClick = viewModel::onLoginClicked,
                     isLoading = uiState is AuthUiState.Loading,
                     modifier = Modifier.fillMaxWidth(),
@@ -152,7 +154,7 @@ fun LoginScreen(
                         color = MaterialTheme.colorScheme.outlineVariant,
                     )
                     Text(
-                        text = " o ",
+                        text = " ${stringResource(R.string.common_or)} ",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -165,7 +167,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 GoogleSignInButton(
-                    text = "CONTINUAR CON GOOGLE",
+                    text = stringResource(R.string.auth_google_button),
                     onClick = {
                         scope.launch {
                             try {
@@ -187,7 +189,7 @@ fun LoginScreen(
                             } catch (e: Exception) {
                                 snackbarHostState.showSnackbar(
                                     e.localizedMessage
-                                        ?: "Error al iniciar sesión con Google"
+                                        ?: context.getString(R.string.auth_google_error)
                                 )
                             }
                         }
@@ -202,12 +204,12 @@ fun LoginScreen(
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     Text(
-                        text = "¿No tienes cuenta?  ",
+                        text = stringResource(R.string.auth_no_account),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "Crear una",
+                        text = stringResource(R.string.auth_create_one),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier.clickable { viewModel.onNavigateToRegister() },

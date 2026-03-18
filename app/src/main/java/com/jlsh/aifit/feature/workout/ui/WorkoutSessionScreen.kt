@@ -116,8 +116,7 @@ fun WorkoutSessionScreen(
             )
             WarmUpSheet(
                 protocol = state.protocol,
-                onSkip = { viewModel.startWorkout() },
-                onReady = { viewModel.startWorkout() },
+                onStart = { viewModel.startWorkout() },
             )
         }
 

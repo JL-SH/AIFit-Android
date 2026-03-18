@@ -29,11 +29,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
@@ -72,7 +74,7 @@ fun OnboardingNutritionApprovalScreen(
                         color = MaterialTheme.colorScheme.primaryContainer,
                     )
                     Text(
-                        text = "Regenerando plan de nutrición...",
+                        text = stringResource(R.string.onboarding_regenerating_nutrition),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -119,7 +121,7 @@ fun OnboardingNutritionApprovalScreen(
             // Cabecera
             item {
                 Text(
-                    text = "Revisa tu plan de nutrición",
+                    text = stringResource(R.string.onboarding_review_nutrition),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -146,19 +148,29 @@ fun OnboardingNutritionApprovalScreen(
                         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
                     ) {
                         Text(
-                            text = "${nutritionTarget.calorieTarget} kcal/día",
+                            text = stringResource(
+                                R.string.onboarding_kcal_per_day,
+                                nutritionTarget.calorieTarget,
+                            ),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "${nutritionTarget.proteinTarget.toInt()}g proteína · " +
-                                "${nutritionTarget.carbsTarget.toInt()}g carbos · " +
-                                "${nutritionTarget.fatTarget.toInt()}g grasa",
+                            text = stringResource(
+                                R.string.onboarding_macros_summary,
+                                nutritionTarget.proteinTarget.toInt(),
+                                nutritionTarget.carbsTarget.toInt(),
+                                nutritionTarget.fatTarget.toInt(),
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "${dietPlan.durationWeeks} semanas · ${dietPlan.preference.displayName()}",
+                            text = stringResource(
+                                R.string.onboarding_duration_preference,
+                                dietPlan.durationWeeks,
+                                dietPlan.preference.displayName(),
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -169,7 +181,7 @@ fun OnboardingNutritionApprovalScreen(
             // Sección plan semanal
             item {
                 Text(
-                    text = "PLAN SEMANAL",
+                    text = stringResource(R.string.onboarding_weekly_plan),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     letterSpacing = 1.5.sp,
@@ -185,7 +197,7 @@ fun OnboardingNutritionApprovalScreen(
             item { Spacer(Modifier.height(AiFitSpacing.sm)) }
             item {
                 PrimaryButton(
-                    text = "EMPEZAR CON ESTE PLAN",
+                    text = stringResource(R.string.onboarding_start_nutrition_plan),
                     onClick = {
                         viewModel.confirmOnboarding()
                         onApprove()
@@ -195,7 +207,7 @@ fun OnboardingNutritionApprovalScreen(
             }
             item {
                 SecondaryButton(
-                    text = "Ajustar algo",
+                    text = stringResource(R.string.onboarding_adjust_something),
                     onClick = { showFeedbackSheet = true },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -217,19 +229,19 @@ fun OnboardingNutritionApprovalScreen(
                 verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
             ) {
                 Text(
-                    text = "Ajustar plan de nutrición",
+                    text = stringResource(R.string.onboarding_adjust_nutrition),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 AiFitTextField(
                     value = feedbackText,
                     onValueChange = { feedbackText = it },
-                    label = "¿Qué quieres cambiar?",
+                    label = stringResource(R.string.onboarding_what_to_change),
                     singleLine = false,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 PrimaryButton(
-                    text = "REGENERAR",
+                    text = stringResource(R.string.onboarding_regenerate),
                     onClick = {
                         scope.launch {
                             sheetState.hide()
@@ -271,14 +283,18 @@ private fun DietDayCard(day: DietDay) {
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    text = "${day.totalCalories} kcal",
+                    text = stringResource(R.string.onboarding_kcal_short, day.totalCalories),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primaryContainer,
                 )
             }
             Spacer(Modifier.height(AiFitSpacing.sm))
             SecondaryButton(
-                text = if (expanded) "Ocultar comidas" else "Ver comidas",
+                text = if (expanded) {
+                    stringResource(R.string.onboarding_hide_meals)
+                } else {
+                    stringResource(R.string.onboarding_show_meals)
+                },
                 onClick = { expanded = !expanded },
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -322,7 +338,13 @@ private fun MealCard(meal: Meal) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "${meal.calories} kcal · ${meal.proteinGrams}g P · ${meal.carbsGrams}g C · ${meal.fatGrams}g G",
+                text = stringResource(
+                    R.string.onboarding_meal_macros,
+                    meal.calories,
+                    meal.proteinGrams,
+                    meal.carbsGrams,
+                    meal.fatGrams,
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -350,4 +372,3 @@ private fun MealItemRow(item: MealItem) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
-

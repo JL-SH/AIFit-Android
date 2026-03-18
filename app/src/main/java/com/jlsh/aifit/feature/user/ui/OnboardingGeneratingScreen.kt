@@ -54,12 +54,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.core.ui.theme.FullShape
@@ -73,38 +76,7 @@ private data class OnboardingPhaseUi(
     val icon: ImageVector,
 )
 
-private val onboardingPhases = listOf(
-    OnboardingPhaseUi(
-        title = "Analizando tu perfil",
-        subtitle = "Procesando tus datos físicos y objetivos",
-        icon = Icons.Rounded.Person,
-    ),
-    OnboardingPhaseUi(
-        title = "Creando tu plan de entrenamiento",
-        subtitle = "Seleccionando ejercicios para tu nivel y objetivo",
-        icon = Icons.Rounded.FitnessCenter,
-    ),
-    OnboardingPhaseUi(
-        title = "Diseñando tu plan de nutrición",
-        subtitle = "Calculando macros y calorías personalizadas",
-        icon = Icons.Rounded.Restaurant,
-    ),
-)
-
-private val fitnessFacts = listOf(
-    "💡 La consistencia supera a la intensidad. 3 días a la semana durante un año > 7 días durante un mes.",
-    "🥩 La proteína es el macronutriente más saciante. Ayuda a mantener la masa muscular mientras pierdes grasa.",
-    "😴 El 80% del crecimiento muscular ocurre durante el sueño. Dormir bien es parte del entrenamiento.",
-    "💧 Una deshidratación del 2% reduce el rendimiento físico hasta un 20%.",
-    "🔥 El músculo quema más calorías en reposo que la grasa. Ganar músculo acelera tu metabolismo.",
-    "⏱️ Los primeros 21 días son los más difíciles. Después, el hábito se forma solo.",
-    "🧠 El ejercicio libera endorfinas que reducen el estrés y mejoran el estado de ánimo.",
-    "📈 La progresión gradual previene lesiones y garantiza mejoras sostenidas a largo plazo.",
-    "🚶 Caminar 8.000-10.000 pasos al día mejora la salud metabólica incluso sin entrenamientos intensos.",
-    "🥗 La fibra ayuda a controlar el apetito y mejora la digestión. Inclúyela en cada comida principal.",
-    "🏋️ Entrenar fuerza 2-3 veces por semana protege músculo y hueso a cualquier edad.",
-    "📉 Un déficit calórico moderado y constante suele ser más sostenible que uno agresivo.",
-)
+// onboardingPhases will be built at compose time via @Composable
 
 private const val MESSAGE_SLOTS = 6
 private const val ADAPTIVE_PROGRESS_K = 0.018f
@@ -117,6 +89,26 @@ fun OnboardingGeneratingScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val progress = remember { Animatable(0f) }
+    val retryLabel = stringResource(R.string.common_retry)
+
+    val fitnessFacts = stringArrayResource(R.array.onboarding_fitness_facts).toList()
+    val onboardingPhases = listOf(
+        OnboardingPhaseUi(
+            title = stringResource(R.string.onboarding_phase_profile_title),
+            subtitle = stringResource(R.string.onboarding_phase_profile_subtitle),
+            icon = Icons.Rounded.Person,
+        ),
+        OnboardingPhaseUi(
+            title = stringResource(R.string.onboarding_phase_training_title),
+            subtitle = stringResource(R.string.onboarding_phase_training_subtitle),
+            icon = Icons.Rounded.FitnessCenter,
+        ),
+        OnboardingPhaseUi(
+            title = stringResource(R.string.onboarding_phase_nutrition_title),
+            subtitle = stringResource(R.string.onboarding_phase_nutrition_subtitle),
+            icon = Icons.Rounded.Restaurant,
+        ),
+    )
 
     var elapsedSeconds by rememberSaveable { mutableIntStateOf(0) }
     var visibleFacts by rememberSaveable { mutableStateOf(fitnessFacts.take(MESSAGE_SLOTS)) }
@@ -234,7 +226,7 @@ fun OnboardingGeneratingScreen(
                 factsJob?.cancel()
                 val result = snackbarHostState.showSnackbar(
                     message = currentState.message,
-                    actionLabel = "Reintentar",
+                    actionLabel = retryLabel,
                 )
                 if (result == SnackbarResult.ActionPerformed) {
                     resetVisualState()
@@ -292,7 +284,7 @@ fun OnboardingGeneratingScreen(
                 )
 
                 Text(
-                    text = "Generando tu plan... ${elapsedSeconds}s",
+                    text = stringResource(R.string.onboarding_generating_status, elapsedSeconds),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -504,6 +496,24 @@ private fun FactCard(
 @Composable
 private fun OnboardingGeneratingScreenPreview() {
     AIFitTheme(darkTheme = true) {
+        val facts = stringArrayResource(R.array.onboarding_fitness_facts).toList()
+        val phases = listOf(
+            OnboardingPhaseUi(
+                title = stringResource(R.string.onboarding_phase_profile_title),
+                subtitle = stringResource(R.string.onboarding_phase_profile_subtitle),
+                icon = Icons.Rounded.Person,
+            ),
+            OnboardingPhaseUi(
+                title = stringResource(R.string.onboarding_phase_training_title),
+                subtitle = stringResource(R.string.onboarding_phase_training_subtitle),
+                icon = Icons.Rounded.FitnessCenter,
+            ),
+            OnboardingPhaseUi(
+                title = stringResource(R.string.onboarding_phase_nutrition_title),
+                subtitle = stringResource(R.string.onboarding_phase_nutrition_subtitle),
+                icon = Icons.Rounded.Restaurant,
+            ),
+        )
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -516,25 +526,18 @@ private fun OnboardingGeneratingScreenPreview() {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.xxl))
-                PhaseHero(phase = onboardingPhases[1])
+                PhaseHero(phase = phases[1])
                 Spacer(modifier = Modifier.height(AiFitSpacing.xl))
                 ProgressSection(progress = 0.67f)
                 Spacer(modifier = Modifier.height(AiFitSpacing.lg))
                 FactsStack(
-                    facts = listOf(
-                        fitnessFacts[0],
-                        fitnessFacts[1],
-                        fitnessFacts[2],
-                        fitnessFacts[3],
-                        fitnessFacts[4],
-                        fitnessFacts[5],
-                    ),
+                    facts = facts.take(6),
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
                 )
                 Text(
-                    text = "Generando tu plan... 27s",
+                    text = stringResource(R.string.onboarding_generating_status, 27),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -9,9 +9,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.DestructiveButton
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
@@ -22,8 +24,8 @@ fun ConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    confirmText: String = "Confirmar",
-    dismissText: String = "Cancelar",
+    confirmText: String = stringResource(R.string.common_confirm),
+    dismissText: String = stringResource(R.string.common_cancel),
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
