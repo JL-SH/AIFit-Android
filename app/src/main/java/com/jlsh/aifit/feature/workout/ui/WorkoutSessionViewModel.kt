@@ -157,7 +157,7 @@ class WorkoutSessionViewModel @Inject constructor(
         )
     }
 
-    fun registerSet(exerciseId: String, weightKg: Double, reps: Int, rpe: Int) {
+    fun registerSet(exerciseId: String, weightKg: Double, reps: Int, rpe: Int? = null) {
         val currentState = _uiState.value
         if (currentState !is WorkoutSessionUiState.SessionActive) return
 
@@ -167,7 +167,7 @@ class WorkoutSessionViewModel @Inject constructor(
         val estimatedOneRepMax = calculateOneRepMax(weightKg, reps)
 
         val autoregulatedWeight = exercise.targetRpe?.let { targetRpe ->
-            calculateAutoregulatedWeight(weightKg, rpe, targetRpe)
+            rpe?.let { calculateAutoregulatedWeight(weightKg, it, targetRpe) }
         }
 
         val setLog = WorkoutSetLog(
@@ -198,7 +198,11 @@ class WorkoutSessionViewModel @Inject constructor(
             calculateAccumulatedVolume(updatedSets, muscleGroup, exerciseMuscleMap)
         }.filter { it.value > 0.0 }
 
-        val restSeconds = calculateRestSeconds(rpe, exercise.restSeconds)
+        val restSeconds = if (rpe != null) {
+            calculateRestSeconds(rpe, exercise.restSeconds)
+        } else {
+            exercise.restSeconds
+        }
 
         _uiState.value = WorkoutSessionUiState.SessionActive(
             sessionData.copy(

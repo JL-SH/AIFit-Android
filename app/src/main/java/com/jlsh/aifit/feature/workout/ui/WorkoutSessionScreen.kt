@@ -83,7 +83,6 @@ fun WorkoutSessionScreen(
     var showFinalizeSheet by remember { mutableStateOf(false) }
     var showSubstitutionExerciseId by remember { mutableStateOf<String?>(null) }
 
-    // Navigate when session is finalized
     LaunchedEffect(uiState) {
         val state = uiState
         if (state is WorkoutSessionUiState.SessionFinalized) {
@@ -91,7 +90,6 @@ fun WorkoutSessionScreen(
         }
     }
 
-    // Collect one-shot events
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
@@ -136,7 +134,6 @@ fun WorkoutSessionScreen(
                 },
             )
 
-            // Substitution sheet overlay
             if (showSubstitutionExerciseId != null) {
                 SubstitutionSheet(
                     state = substitutionsState,
@@ -148,7 +145,6 @@ fun WorkoutSessionScreen(
                 )
             }
 
-            // Finalize session sheet overlay
             if (showFinalizeSheet) {
                 FinalizeSessionSheet(
                     onConfirm = { fatigue, jointPain ->
@@ -173,7 +169,7 @@ fun WorkoutSessionScreen(
 @Composable
 private fun WorkoutSessionContent(
     sessionData: WorkoutSessionData,
-    onRegisterSet: (exerciseId: String, weightKg: Double, reps: Int, rpe: Int) -> Unit,
+    onRegisterSet: (exerciseId: String, weightKg: Double, reps: Int, rpe: Int?) -> Unit,
     onFinalize: () -> Unit,
     restTimerSeconds: Int? = null,
     onDismissTimer: () -> Unit = {},
@@ -191,12 +187,12 @@ private fun WorkoutSessionContent(
         Scaffold(
             topBar = {
                 AiFitTopBar(
-                    title = "Exercise ${pagerState.currentPage + 1} of ${exercises.size}",
+                    title = "Ejercicio ${pagerState.currentPage + 1} de ${exercises.size}",
                     actions = {
                         if (hasRegisteredSets) {
                             TextButton(onClick = onFinalize) {
                                 Text(
-                                    text = "Finalize",
+                                    text = "Finalizar",
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                 )
                             }
@@ -232,7 +228,6 @@ private fun WorkoutSessionContent(
             }
         }
 
-        // Full-screen rest timer overlay on top of Scaffold
         RestTimerOverlay(
             seconds = restTimerSeconds,
             exerciseName = exercises.getOrNull(pagerState.currentPage)?.name ?: "",
@@ -265,11 +260,10 @@ private fun RestTimerOverlay(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            // Top third — exercise name + label
             Column(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = AiFitSpacing.xxl * 2),
+                    .padding(top = AiFitSpacing.xxl),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
@@ -285,7 +279,6 @@ private fun RestTimerOverlay(
                 )
             }
 
-            // Center — countdown
             val displaySeconds = seconds ?: 0
             val minutes = displaySeconds / 60
             val secs = displaySeconds % 60
@@ -296,12 +289,12 @@ private fun RestTimerOverlay(
                 modifier = Modifier.align(Alignment.Center),
             )
 
-            // Bottom quarter — skip button
             SecondaryButton(
                 text = "Saltar descanso",
                 onClick = onDismiss,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
                     .padding(
                         start = AiFitSpacing.md,
                         end = AiFitSpacing.md,
@@ -319,7 +312,7 @@ private fun ExercisePage(
     registeredSets: List<WorkoutSetLog>,
     autoregulationSuggestion: Double?,
     volumeByMuscleGroup: Map<MuscleGroup, Double>,
-    onRegisterSet: (weightKg: Double, reps: Int, rpe: Int) -> Unit,
+    onRegisterSet: (weightKg: Double, reps: Int, rpe: Int?) -> Unit,
     onRequestSubstitution: () -> Unit,
 ) {
     LazyColumn(
@@ -332,7 +325,6 @@ private fun ExercisePage(
         ),
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
     ) {
-        // ── Exercise header ──
         item(key = "header") {
             ExerciseHeader(
                 exercise = exercise,
@@ -340,11 +332,10 @@ private fun ExercisePage(
             )
         }
 
-        // ── Ghost data ──
         if (ghostSets.isNotEmpty()) {
             item(key = "ghost_header") {
                 Text(
-                    text = "Previous session",
+                    text = "Sesión anterior",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     modifier = Modifier.padding(top = AiFitSpacing.xs),
@@ -355,11 +346,10 @@ private fun ExercisePage(
             }
         }
 
-        // ── Registered sets ──
         if (registeredSets.isNotEmpty()) {
             item(key = "registered_header") {
                 Text(
-                    text = "This session",
+                    text = "Esta sesión",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = AiFitSpacing.sm),
@@ -373,7 +363,6 @@ private fun ExercisePage(
             }
         }
 
-        // ── Divider ──
         item(key = "divider") {
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant,
@@ -382,12 +371,10 @@ private fun ExercisePage(
             )
         }
 
-        // ── Set registration form ──
         item(key = "form") {
             SetRegistrationForm(onRegisterSet = onRegisterSet)
         }
 
-        // ── Volume panel ──
         item(key = "volume_panel") {
             VolumePanelSection(
                 volumeByMuscleGroup = volumeByMuscleGroup,
@@ -429,7 +416,7 @@ private fun ExerciseHeader(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.MoreVert,
-                            contentDescription = "Options",
+                            contentDescription = "Opciones",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -438,7 +425,7 @@ private fun ExerciseHeader(
                         onDismissRequest = { menuExpanded = false },
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Substitute exercise") },
+                            text = { Text("Sustituir ejercicio") },
                             onClick = {
                                 menuExpanded = false
                                 onRequestSubstitution()
@@ -456,7 +443,7 @@ private fun ExerciseHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "${exercise.completedSets}/${exercise.targetSets} sets",
+                text = "${exercise.completedSets}/${exercise.targetSets} series",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primaryContainer,
             )
@@ -474,7 +461,7 @@ private fun GhostSetRow(set: WorkoutSetLog) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = "Set ${set.exerciseSetNumber}",
+            text = "Serie ${set.exerciseSetNumber}",
             style = MaterialTheme.typography.bodySmall,
             color = mutedColor,
         )
@@ -484,7 +471,7 @@ private fun GhostSetRow(set: WorkoutSetLog) {
             color = mutedColor,
         )
         Text(
-            text = "RPE ${set.rpe ?: "-"}",
+            text = if (set.rpe != null) "RPE ${set.rpe}" else "RPE -",
             style = MaterialTheme.typography.bodySmall,
             color = mutedColor,
         )
@@ -500,7 +487,7 @@ private fun RegisteredSetRow(set: WorkoutSetLog) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = "Set ${set.exerciseSetNumber}",
+            text = "Serie ${set.exerciseSetNumber}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -510,7 +497,7 @@ private fun RegisteredSetRow(set: WorkoutSetLog) {
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = "RPE ${set.rpe ?: "-"}",
+            text = if (set.rpe != null) "RPE ${set.rpe}" else "RPE -",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -531,7 +518,7 @@ private fun AutoregulationChip(suggestion: Double) {
         onClick = { },
         label = {
             Text(
-                text = "Suggestion: ${"%.1f".format(suggestion)} kg for next set",
+                text = "Sugerencia: ${"%.1f".format(suggestion)} kg para la siguiente serie",
                 style = MaterialTheme.typography.labelMedium,
             )
         },
@@ -542,7 +529,7 @@ private fun AutoregulationChip(suggestion: Double) {
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Close,
-                    contentDescription = "Dismiss",
+                    contentDescription = "Descartar",
                     modifier = Modifier.size(14.dp),
                 )
             }
@@ -557,7 +544,7 @@ private fun AutoregulationChip(suggestion: Double) {
 
 @Composable
 private fun SetRegistrationForm(
-    onRegisterSet: (weightKg: Double, reps: Int, rpe: Int) -> Unit,
+    onRegisterSet: (weightKg: Double, reps: Int, rpe: Int?) -> Unit,
 ) {
     var weight by remember { mutableStateOf("") }
     var reps by remember { mutableStateOf("") }
@@ -580,7 +567,7 @@ private fun SetRegistrationForm(
                     weight = it
                     weightError = null
                 },
-                label = "Weight",
+                label = "Peso",
                 suffix = "kg",
                 error = weightError,
                 modifier = Modifier.weight(1f),
@@ -601,7 +588,7 @@ private fun SetRegistrationForm(
                     rpe = it
                     rpeError = null
                 },
-                label = "RPE",
+                label = "RPE (opcional)",
                 error = rpeError,
                 modifier = Modifier.weight(1f),
             )
@@ -610,29 +597,29 @@ private fun SetRegistrationForm(
         Spacer(modifier = Modifier.height(AiFitSpacing.xs))
 
         PrimaryButton(
-            text = "Add Set",
+            text = "Añadir serie",
             onClick = {
                 val weightVal = weight.toDoubleOrNull()
                 val repsVal = reps.toIntOrNull()
-                val rpeVal = rpe.toIntOrNull()
+                val rpeVal: Int? = rpe.toIntOrNull()
 
                 var hasError = false
 
                 if (weightVal == null || weightVal <= 0) {
-                    weightError = "Weight > 0"
+                    weightError = "Peso > 0"
                     hasError = true
                 }
                 if (repsVal == null || repsVal <= 0) {
                     repsError = "Reps > 0"
                     hasError = true
                 }
-                if (rpeVal == null || rpeVal < 1 || rpeVal > 10) {
-                    rpeError = "1–10"
+                if (rpeVal != null && (rpeVal < 1 || rpeVal > 10)) {
+                    rpeError = "RPE entre 1 y 10"
                     hasError = true
                 }
 
                 if (!hasError) {
-                    onRegisterSet(weightVal!!, repsVal!!, rpeVal!!)
+                    onRegisterSet(weightVal!!, repsVal!!, rpeVal)
                     weight = ""
                     reps = ""
                     rpe = ""
@@ -641,8 +628,6 @@ private fun SetRegistrationForm(
         )
     }
 }
-
-// ── Preview ──────────────────────────────────────────────────────────────
 
 @Preview(
     showBackground = true,
@@ -655,7 +640,7 @@ private fun WorkoutSessionScreenPreview() {
         val fakeExercises = listOf(
             SessionExercise(
                 exerciseId = "e1",
-                name = "Bench Press",
+                name = "Press de banca",
                 primaryMuscle = MuscleGroup.CHEST,
                 targetSets = 5,
                 targetReps = 5,
@@ -665,7 +650,7 @@ private fun WorkoutSessionScreenPreview() {
             ),
             SessionExercise(
                 exerciseId = "e2",
-                name = "Overhead Press",
+                name = "Press militar",
                 primaryMuscle = MuscleGroup.SHOULDERS,
                 targetSets = 3,
                 targetReps = 10,
@@ -677,12 +662,12 @@ private fun WorkoutSessionScreenPreview() {
 
         val fakeGhostSets = listOf(
             WorkoutSetLog(
-                id = "g1", trainingExerciseId = "e1", exerciseName = "Bench Press",
+                id = "g1", trainingExerciseId = "e1", exerciseName = "Press de banca",
                 exerciseSetNumber = 1, repsCompleted = 5, weightUsed = 80.0,
                 durationSeconds = null, completed = true, rpe = 7,
             ),
             WorkoutSetLog(
-                id = "g2", trainingExerciseId = "e1", exerciseName = "Bench Press",
+                id = "g2", trainingExerciseId = "e1", exerciseName = "Press de banca",
                 exerciseSetNumber = 2, repsCompleted = 5, weightUsed = 82.5,
                 durationSeconds = null, completed = true, rpe = 8,
             ),
@@ -690,12 +675,12 @@ private fun WorkoutSessionScreenPreview() {
 
         val fakeRegisteredSets = listOf(
             WorkoutSetLog(
-                id = "r1", trainingExerciseId = "e1", exerciseName = "Bench Press",
+                id = "r1", trainingExerciseId = "e1", exerciseName = "Press de banca",
                 exerciseSetNumber = 1, repsCompleted = 5, weightUsed = 82.5,
                 durationSeconds = null, completed = true, estimatedOneRepMax = 96.3, rpe = 8,
             ),
             WorkoutSetLog(
-                id = "r2", trainingExerciseId = "e1", exerciseName = "Bench Press",
+                id = "r2", trainingExerciseId = "e1", exerciseName = "Press de banca",
                 exerciseSetNumber = 2, repsCompleted = 5, weightUsed = 85.0,
                 durationSeconds = null, completed = true, estimatedOneRepMax = 99.2, rpe = 9,
             ),
@@ -726,7 +711,6 @@ private fun WorkoutSessionScreenPreview() {
     }
 }
 
-// U-12/U-13 compliance fix — light mode preview
 @Preview(
     showBackground = true,
     name = "WorkoutSessionScreen Light",
@@ -737,7 +721,7 @@ private fun WorkoutSessionScreenLightPreview() {
         val fakeExercises = listOf(
             SessionExercise(
                 exerciseId = "e1",
-                name = "Bench Press",
+                name = "Press de banca",
                 primaryMuscle = MuscleGroup.CHEST,
                 targetSets = 5,
                 targetReps = 5,
@@ -765,5 +749,3 @@ private fun WorkoutSessionScreenLightPreview() {
         )
     }
 }
-
-
