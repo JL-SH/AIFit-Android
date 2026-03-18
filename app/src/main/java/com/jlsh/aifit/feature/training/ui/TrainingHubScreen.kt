@@ -51,6 +51,9 @@ import com.jlsh.aifit.feature.user.domain.model.GoalType
 import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 
 private val FILTER_CHIPS = listOf("All", "Active", "Completed", "Paused")
 
@@ -78,6 +81,13 @@ fun TrainingHubScreen(
 ) {
     val hubState by viewModel.hubUiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.onRefresh()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -86,8 +96,8 @@ fun TrainingHubScreen(
                 is TrainingUiEvent.NavigateToGenerate -> onNavigateToGenerate(event.adaptive, event.basePlanId)
                 is TrainingUiEvent.NavigateToWorkoutLog -> onNavigateToWorkoutLog(event.planId)
                 is TrainingUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
-                is TrainingUiEvent.PlanDeleted -> { /* refresh handled in VM */ }
-                is TrainingUiEvent.NavigateBack -> { /* not used in hub */ }
+                is TrainingUiEvent.PlanDeleted -> { }
+                is TrainingUiEvent.NavigateBack -> { }
             }
         }
     }
