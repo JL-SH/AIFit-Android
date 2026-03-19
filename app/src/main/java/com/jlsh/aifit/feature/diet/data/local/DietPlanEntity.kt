@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "diet_plans")
 data class DietPlanEntity(
     @PrimaryKey val id: String,
+    val userId: String,
     val name: String,
     val description: String?,
     val dailyCalories: Int,

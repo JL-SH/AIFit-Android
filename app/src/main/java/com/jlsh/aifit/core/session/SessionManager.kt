@@ -7,12 +7,14 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class SessionManager @Inject constructor(
     private val authDataStore: AuthDataStore,
+    private val localDataCleaner: LocalDataCleaner,
 ) {
     private val _isLoggedIn = MutableStateFlow(authDataStore.hasToken())
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
@@ -40,6 +42,10 @@ class SessionManager @Inject constructor(
     fun isProfileComplete(): Boolean = authDataStore.isProfileComplete()
 
     fun logout() {
+        val userId = authDataStore.getUserId()
+        if (userId != null) {
+            runBlocking { localDataCleaner.clearDataForUser(userId) }
+        }
         authDataStore.clear()
         _isLoggedIn.value = false
         _logoutEvent.tryEmit(Unit)

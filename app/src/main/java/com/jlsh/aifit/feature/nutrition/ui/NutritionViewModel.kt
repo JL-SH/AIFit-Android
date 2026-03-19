@@ -21,12 +21,14 @@ import com.jlsh.aifit.feature.nutrition.ui.state.TodayState
 import com.jlsh.aifit.feature.nutrition.ui.state.TrackMealUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -69,27 +71,44 @@ class NutritionViewModel @Inject constructor(
     private fun loadHubData() {
         hubLoadJob?.cancel()
         hubLoadJob = viewModelScope.launch {
-            combine(
-                getNutritionLogUseCase(LocalDate.now()),
-                getCurrentNutritionTargetUseCase(),
-                getDietPlansUseCase(),
-            ) { logResult, targetResult, plansResult ->
-                Triple(logResult, targetResult, plansResult)
-            }.collect { (logResult, targetResult, plansResult) ->
-                if (logResult is Result.Loading || targetResult is Result.Loading) {
-                    _hubState.value = NutritionHubUiState.Loading
-                    return@collect
+            // Step 1: Load log and target as one-shot values in parallel
+            val logDeferred = async {
+                getNutritionLogUseCase(LocalDate.now())
+                    .first { it !is Result.Loading }
+                    .let { r -> if (r is Result.Success) r.data else null }
+            }
+            val targetDeferred = async {
+                getCurrentNutritionTargetUseCase()
+                    .first { it !is Result.Loading }
+                    .let { r -> if (r is Result.Success) r.data else null }
+            }
+            // Get the first non-Loading diet plans emission in parallel
+            val dietPlansDeferred = async {
+                getDietPlansUseCase()
+                    .first { it !is Result.Loading }
+                    .let { r -> if (r is Result.Success) r.data else emptyList() }
+            }
+
+            val log = logDeferred.await()
+            val target = targetDeferred.await()
+            val initialDietPlans = dietPlansDeferred.await()
+
+            // Step 2: Emit initial Success state with all data available
+            _hubState.value = NutritionHubUiState.Success(
+                todayState = TodayState(nutritionLog = log, target = target),
+                dietPlans = initialDietPlans,
+                selectedTabIndex = _selectedTabIndex.value,
+            )
+
+            // Step 3: Reactively update dietPlans from subsequent emissions
+            launch {
+                getDietPlansUseCase().drop(1).collect { result ->
+                    if (result !is Result.Success) return@collect
+                    val current = _hubState.value
+                    if (current is NutritionHubUiState.Success) {
+                        _hubState.value = current.copy(dietPlans = result.data)
+                    }
                 }
-
-                val log = (logResult as? Result.Success)?.data
-                val target = (targetResult as? Result.Success)?.data
-                val plans = (plansResult as? Result.Success)?.data ?: emptyList()
-
-                _hubState.value = NutritionHubUiState.Success(
-                    todayState = TodayState(nutritionLog = log, target = target),
-                    dietPlans = plans,
-                    selectedTabIndex = _selectedTabIndex.value,
-                )
             }
         }
     }

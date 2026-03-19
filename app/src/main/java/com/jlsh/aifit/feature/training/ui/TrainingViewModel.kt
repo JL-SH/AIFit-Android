@@ -165,8 +165,13 @@ class TrainingViewModel @Inject constructor(
     // 6. PRIVATE HELPERS
     private fun fetchPlans() {
         viewModelScope.launch {
-            _uiState.value = TrainingUiState.Loading
-            _hubUiState.value = TrainingHubUiState.Loading
+            // Only show Loading spinner on true first load; silent refresh otherwise
+            if (_hubUiState.value is TrainingHubUiState.Loading) {
+                _hubUiState.value = TrainingHubUiState.Loading
+            }
+            if (_uiState.value is TrainingUiState.Loading) {
+                _uiState.value = TrainingUiState.Loading
+            }
             getTrainingPlansUseCase().collect { result ->
                 _uiState.value = when (result) {
                     is Result.Success -> {
@@ -183,8 +188,14 @@ class TrainingViewModel @Inject constructor(
                         TrainingUiState.Error(result.exception.toMessage())
                     }
                     is Result.Loading -> {
-                        _hubUiState.value = TrainingHubUiState.Loading
-                        TrainingUiState.Loading
+                        // Keep current state if data is already visible
+                        if (_hubUiState.value is TrainingHubUiState.ActivePlan ||
+                            _hubUiState.value is TrainingHubUiState.NoActivePlan) {
+                            _uiState.value
+                        } else {
+                            _hubUiState.value = TrainingHubUiState.Loading
+                            TrainingUiState.Loading
+                        }
                     }
                 }
             }

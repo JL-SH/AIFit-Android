@@ -7,8 +7,8 @@ import androidx.room.Upsert
 @Dao
 interface DietPlanDao {
 
-    @Query("SELECT * FROM diet_plans")
-    suspend fun getAll(): List<DietPlanEntity>
+    @Query("SELECT * FROM diet_plans WHERE userId = :userId")
+    suspend fun getAllByUserId(userId: String): List<DietPlanEntity>
 
     @Query("SELECT * FROM diet_plans WHERE id = :id")
     suspend fun getById(id: String): DietPlanEntity?
@@ -18,5 +18,8 @@ interface DietPlanDao {
 
     @Query("DELETE FROM diet_plans WHERE id = :id")
     suspend fun deleteById(id: String)
+
+    @Query("DELETE FROM diet_plans WHERE userId = :userId")
+    suspend fun deleteAllByUserId(userId: String)
 }
 

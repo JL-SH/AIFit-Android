@@ -97,8 +97,9 @@ object TrainingMapper {
         targetRpe = targetRpe,
     )
 
-    fun TrainingPlan.toEntity(): TrainingPlanEntity = TrainingPlanEntity(
+    fun TrainingPlan.toEntity(userId: String): TrainingPlanEntity = TrainingPlanEntity(
         id = id,
+        userId = userId,
         name = name,
         description = description,
         status = status.name,

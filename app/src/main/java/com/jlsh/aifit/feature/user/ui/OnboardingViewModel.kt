@@ -6,9 +6,15 @@ import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.core.session.SessionManager
 import com.jlsh.aifit.feature.diet.data.dto.GenerateDietPlanRequestDto
+import com.jlsh.aifit.feature.diet.data.local.DietPlanDao
+import com.jlsh.aifit.feature.diet.data.mapper.DietMapper.toEntity
+import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GenerateDietPlanUseCase
 import com.jlsh.aifit.feature.training.data.dto.GenerateTrainingPlanRequestDto
+import com.jlsh.aifit.feature.training.data.local.TrainingPlanDao
+import com.jlsh.aifit.feature.training.data.mapper.TrainingMapper.toEntity
+import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.training.domain.usecase.DeleteTrainingPlanUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GenerateTrainingPlanUseCase
 import com.jlsh.aifit.feature.user.domain.model.OnboardingResult
@@ -31,6 +37,8 @@ class OnboardingViewModel @Inject constructor(
     private val deleteDietPlanUseCase: DeleteDietPlanUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val sessionManager: SessionManager,
+    private val trainingPlanDao: TrainingPlanDao,
+    private val dietPlanDao: DietPlanDao,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<OnboardingState>(OnboardingState.Idle)
@@ -40,7 +48,10 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = OnboardingState.Generating
             when (val result = completeOnboardingUseCase(feedback)) {
-                is Result.Success -> _state.value = OnboardingState.Ready(result.data)
+                is Result.Success -> {
+                    persistPlansToCache(result.data.trainingPlan, result.data.dietPlan)
+                    _state.value = OnboardingState.Ready(result.data)
+                }
                 is Result.Error -> _state.value =
                     OnboardingState.Error(result.exception.toMessage())
                 else -> Unit
@@ -74,6 +85,7 @@ class OnboardingViewModel @Inject constructor(
                         is Result.Success -> {
                             val current = previous ?: (_state.value as? OnboardingState.Ready)
                             if (current != null) {
+                                persistTrainingPlanToCache(planResult.data)
                                 _state.value = OnboardingState.Ready(
                                     current.result.copy(trainingPlan = planResult.data)
                                 )
@@ -116,6 +128,7 @@ class OnboardingViewModel @Inject constructor(
                         is Result.Success -> {
                             val current = previous ?: (_state.value as? OnboardingState.Ready)
                             if (current != null) {
+                                persistDietPlanToCache(planResult.data)
                                 _state.value = OnboardingState.Ready(
                                     current.result.copy(dietPlan = planResult.data)
                                 )
@@ -141,6 +154,27 @@ class OnboardingViewModel @Inject constructor(
 
     fun reset() {
         _state.value = OnboardingState.Idle
+    }
+
+    // ── Cache persistence helpers ──
+
+    private suspend fun persistPlansToCache(
+        trainingPlan: TrainingPlan,
+        dietPlan: DietPlan,
+    ) {
+        val userId = sessionManager.getUserId() ?: return
+        trainingPlanDao.upsertAll(listOf(trainingPlan.toEntity(userId)))
+        dietPlanDao.upsertAll(listOf(dietPlan.toEntity(userId)))
+    }
+
+    private suspend fun persistTrainingPlanToCache(plan: TrainingPlan) {
+        val userId = sessionManager.getUserId() ?: return
+        trainingPlanDao.upsertAll(listOf(plan.toEntity(userId)))
+    }
+
+    private suspend fun persistDietPlanToCache(plan: DietPlan) {
+        val userId = sessionManager.getUserId() ?: return
+        dietPlanDao.upsertAll(listOf(plan.toEntity(userId)))
     }
 }
 

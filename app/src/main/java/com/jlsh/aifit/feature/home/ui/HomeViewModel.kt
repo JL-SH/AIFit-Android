@@ -41,6 +41,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -81,13 +82,19 @@ class HomeViewModel @Inject constructor(
         loadJob = viewModelScope.launch {
             _uiState.value = HomeUiState.Loading
 
-            // ── Phase 1: Load non-plan data in parallel ──
+            // ── Phase 1: Load ALL data in parallel (including first plan emissions) ──
             val profileDeferred = async { loadProfile() }
             val nutritionDeferred = async { loadNutrition() }
             val weeklyDeferred = async { loadWeeklySummary() }
             val streaksDeferred = async { loadStreaks() }
             val weightDeferred = async { loadWeightHistory() }
             val workoutHistoryDeferred = async { loadTodayWorkoutHistory() }
+            val trainingPlansDeferred = async {
+                getTrainingPlansUseCase().first { it !is Result.Loading }
+            }
+            val dietPlansDeferred = async {
+                getDietPlansUseCase().first { it !is Result.Loading }
+            }
 
             val profile = profileDeferred.await()
             val nutritionPair = nutritionDeferred.await()
@@ -95,6 +102,8 @@ class HomeViewModel @Inject constructor(
             val streaks = streaksDeferred.await()
             val weightEntries = weightDeferred.await()
             val todayWorkoutLogs = workoutHistoryDeferred.await()
+            val trainingPlansResult = trainingPlansDeferred.await()
+            val dietPlansResult = dietPlansDeferred.await()
 
             if (profile == null) {
                 _uiState.value = HomeUiState.Error("No se pudo cargar el perfil")
@@ -103,24 +112,35 @@ class HomeViewModel @Inject constructor(
 
             val todayNutrition = deriveNutrition(nutritionPair.first, nutritionPair.second)
 
-            // ── Phase 2: Set initial state immediately (plans will update reactively) ──
+            // Derive initial training state from the first plan emission
+            val initialTrainingPlans = (trainingPlansResult as? Result.Success)?.data ?: emptyList()
+            val initialActivePlan = initialTrainingPlans.find { it.status == PlanStatus.ACTIVE }
+            val initialActivePlanDetail = initialActivePlan?.let { loadPlanDetail(it.id) }
+            val initialTodayTraining = deriveTodayTraining(
+                initialActivePlanDetail, weeklySummary, todayWorkoutLogs,
+            )
+
+            // Derive initial diet/meal state from the first plan emission
+            val initialDietPlans = (dietPlansResult as? Result.Success)?.data ?: emptyList()
+            val initialActiveDiet = initialDietPlans.find { it.status == PlanStatus.ACTIVE }
+            val initialActiveDietDetail = initialActiveDiet?.let { loadDietPlanDetail(it.id) }
+            val initialNextMeal = deriveNextMeal(initialActiveDietDetail, nutritionPair.first)
+
+            // ── Phase 2: Emit initial state with real plan data ──
             _uiState.value = HomeUiState.Success(
                 userName = profile.name,
                 avatarUrl = profile.profilePictureUrl,
-                todayTraining = null,
+                todayTraining = initialTodayTraining,
                 todayNutrition = todayNutrition,
-                nextMeal = NextMealState.NoPlan,
+                nextMeal = initialNextMeal,
                 streaks = streaks,
                 weeklySummary = weeklySummary,
                 weightEntries = weightEntries,
             )
 
-            // ── Phase 3: Collect plan flows reactively ──
-            // Each flow emits cached data first (possibly empty), then network data.
-            // Both emissions update the Success state so the screen always shows
-            // the latest data without blocking.
+            // ── Phase 3: Reactively update from subsequent emissions (skip the first already consumed) ──
             launch {
-                getTrainingPlansUseCase().collect { result ->
+                getTrainingPlansUseCase().drop(1).collect { result ->
                     if (result !is Result.Success) return@collect
                     val plans = result.data
                     val activePlan = plans.find { it.status == PlanStatus.ACTIVE }
@@ -136,7 +156,7 @@ class HomeViewModel @Inject constructor(
             }
 
             launch {
-                getDietPlansUseCase().collect { result ->
+                getDietPlansUseCase().drop(1).collect { result ->
                     if (result !is Result.Success) return@collect
                     val plans = result.data
                     val activeDietPlan = plans.find { it.status == PlanStatus.ACTIVE }

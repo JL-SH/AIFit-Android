@@ -85,8 +85,9 @@ object DietMapper {
         fatGrams = fatGrams,
     )
 
-    fun DietPlan.toEntity(): DietPlanEntity = DietPlanEntity(
+    fun DietPlan.toEntity(userId: String): DietPlanEntity = DietPlanEntity(
         id = id,
+        userId = userId,
         name = name,
         description = description,
         dailyCalories = dailyCalories,
