@@ -99,6 +99,7 @@ fun OnboardingTrainingApprovalScreen(
 
     val result = (state as OnboardingState.Ready).result
     val plan = result.trainingPlan
+    val sortedDays = remember(plan.days) { plan.days.sortedBy { it.dayNumber } }
 
     Box(
         modifier = Modifier
@@ -184,8 +185,8 @@ fun OnboardingTrainingApprovalScreen(
                 )
             }
 
-            items(plan.days.size) { index ->
-                val day = plan.days[index]
+            items(sortedDays.size) { index ->
+                val day = sortedDays[index]
                 TrainingDayCard(day = day)
             }
 

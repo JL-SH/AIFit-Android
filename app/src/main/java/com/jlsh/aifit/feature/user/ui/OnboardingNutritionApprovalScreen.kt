@@ -103,6 +103,7 @@ fun OnboardingNutritionApprovalScreen(
     val result = (state as OnboardingState.Ready).result
     val dietPlan = result.dietPlan
     val nutritionTarget = result.nutritionTarget
+    val sortedDays = remember(dietPlan.days) { dietPlan.days.sortedBy { it.dayNumber } }
 
     Box(
         modifier = Modifier
@@ -189,8 +190,8 @@ fun OnboardingNutritionApprovalScreen(
                 )
             }
 
-            items(dietPlan.days.size) { index ->
-                DietDayCard(day = dietPlan.days[index])
+            items(sortedDays.size) { index ->
+                DietDayCard(day = sortedDays[index])
             }
 
             // Botones
@@ -262,6 +263,7 @@ fun OnboardingNutritionApprovalScreen(
 @Composable
 private fun DietDayCard(day: DietDay) {
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val displayName = dayOfWeekName(day.dayNumber)
 
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -277,7 +279,7 @@ private fun DietDayCard(day: DietDay) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = day.name,
+                    text = displayName,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
@@ -372,3 +374,16 @@ private fun MealItemRow(item: MealItem) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
+
+@Composable
+private fun dayOfWeekName(dayNumber: Int): String = when (dayNumber) {
+    1 -> stringResource(R.string.day_of_week_1)
+    2 -> stringResource(R.string.day_of_week_2)
+    3 -> stringResource(R.string.day_of_week_3)
+    4 -> stringResource(R.string.day_of_week_4)
+    5 -> stringResource(R.string.day_of_week_5)
+    6 -> stringResource(R.string.day_of_week_6)
+    7 -> stringResource(R.string.day_of_week_7)
+    else -> stringResource(R.string.day_of_week_1)
+}
+

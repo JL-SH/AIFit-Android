@@ -124,6 +124,16 @@
     <string name="training_plan_deleted">Plan eliminado</string>
     <string name="training_day_label">Día %1$d — %2$s</string>
     <string name="training_rest_day">Día de descanso — recuperación</string>
+
+    <!-- Day of week names -->
+    <string name="day_of_week_1">Lunes</string>
+    <string name="day_of_week_2">Martes</string>
+    <string name="day_of_week_3">Miércoles</string>
+    <string name="day_of_week_4">Jueves</string>
+    <string name="day_of_week_5">Viernes</string>
+    <string name="day_of_week_6">Sábado</string>
+    <string name="day_of_week_7">Domingo</string>
+
     <string name="training_start_session">COMENZAR SESIÓN</string>
     <string name="training_rest_suffix">%1$ds descanso</string>
     <string name="training_sets_reps">%1$d series × %2$d reps</string>
