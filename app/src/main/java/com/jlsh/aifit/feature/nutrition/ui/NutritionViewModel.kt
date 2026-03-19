@@ -4,14 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
-import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.nutrition.data.dto.AnalyzeMealFromTextRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.TrackMealRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.UpdateNutritionTargetRequestDto
-import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
-import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
-import com.jlsh.aifit.feature.nutrition.domain.model.TargetSource
 import com.jlsh.aifit.feature.nutrition.domain.usecase.AnalyzeMealFromTextUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.DeleteMealLogUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTargetUseCase
@@ -24,6 +20,7 @@ import com.jlsh.aifit.feature.nutrition.ui.state.NutritionUiEvent
 import com.jlsh.aifit.feature.nutrition.ui.state.TodayState
 import com.jlsh.aifit.feature.nutrition.ui.state.TrackMealUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,6 +58,8 @@ class NutritionViewModel @Inject constructor(
     private val _events = Channel<NutritionUiEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
+    private var hubLoadJob: Job? = null
+
     init {
         loadHubData()
     }
@@ -68,7 +67,8 @@ class NutritionViewModel @Inject constructor(
     // ===== HUB =====
 
     private fun loadHubData() {
-        viewModelScope.launch {
+        hubLoadJob?.cancel()
+        hubLoadJob = viewModelScope.launch {
             combine(
                 getNutritionLogUseCase(LocalDate.now()),
                 getCurrentNutritionTargetUseCase(),

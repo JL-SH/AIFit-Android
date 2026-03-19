@@ -23,9 +23,7 @@ class DietRepositoryImpl @Inject constructor(
         emit(Result.Loading)
 
         val cached = dao.getAll().map { it.toDomain() }
-        if (cached.isNotEmpty()) {
-            emit(Result.Success(cached))
-        }
+        emit(Result.Success(cached))
 
         when (val remote = safeApiCall { apiService.getDietPlans() }) {
             is Result.Success -> {
