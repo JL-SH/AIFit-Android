@@ -15,6 +15,7 @@ import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSetRequestDto
 import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutSetLog
 import com.jlsh.aifit.feature.workout.domain.usecase.AddSetToLogUseCase
+import com.jlsh.aifit.feature.workout.domain.usecase.DeleteWorkoutLogUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.FinalizeWorkoutSessionUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.GetPreviousSessionForDayUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.LogWorkoutSessionUseCase
@@ -46,6 +47,7 @@ class WorkoutSessionViewModel @Inject constructor(
     private val getWarmUpProtocolUseCase: GetWarmUpProtocolUseCase,
     private val logWorkoutSessionUseCase: LogWorkoutSessionUseCase,
     private val addSetToLogUseCase: AddSetToLogUseCase,
+    private val deleteWorkoutLogUseCase: DeleteWorkoutLogUseCase,
     private val finalizeWorkoutSessionUseCase: FinalizeWorkoutSessionUseCase,
     private val getPreviousSessionForDayUseCase: GetPreviousSessionForDayUseCase,
     private val getExerciseSubstitutionsUseCase: GetExerciseSubstitutionsUseCase,
@@ -316,6 +318,24 @@ class WorkoutSessionViewModel @Inject constructor(
                 }
                 else -> Unit
             }
+        }
+    }
+
+    // ===== ABANDON SESSION =====
+
+    fun abandonSession() {
+        viewModelScope.launch {
+            // Delete incomplete backend log if one was created
+            backendLogId?.let { logId ->
+                deleteWorkoutLogUseCase(logId)
+                // Fire-and-forget: best-effort cleanup; if it fails the backend
+                // will have an incomplete log that can be cleaned up later.
+            }
+
+            cancelRestTimer()
+            backendLogId = null
+            _uiState.value = WorkoutSessionUiState.Idle
+            _events.emit(WorkoutSessionUiEvent.NavigateBack)
         }
     }
 

@@ -45,13 +45,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
+import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
@@ -81,6 +84,7 @@ fun WorkoutSessionScreen(
     val substitutionsState by viewModel.substitutionsState.collectAsStateWithLifecycle()
 
     var showFinalizeSheet by remember { mutableStateOf(false) }
+    var showAbandonDialog by remember { mutableStateOf(false) }
     var showSubstitutionExerciseId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(uiState) {
@@ -125,6 +129,7 @@ fun WorkoutSessionScreen(
                 sessionData = state.sessionData,
                 onRegisterSet = viewModel::registerSet,
                 onFinalize = { showFinalizeSheet = true },
+                onAbandon = { showAbandonDialog = true },
                 restTimerSeconds = restTimerSeconds,
                 onDismissTimer = viewModel::cancelRestTimer,
                 onRequestSubstitution = { exerciseId ->
@@ -132,6 +137,20 @@ fun WorkoutSessionScreen(
                     viewModel.loadSubstitutions(exerciseId)
                 },
             )
+
+            if (showAbandonDialog) {
+                ConfirmationDialog(
+                    title = stringResource(R.string.abandon_session_title),
+                    message = stringResource(R.string.abandon_session_message),
+                    confirmText = stringResource(R.string.abandon_session_confirm),
+                    dismissText = stringResource(R.string.abandon_session_dismiss),
+                    onConfirm = {
+                        showAbandonDialog = false
+                        viewModel.abandonSession()
+                    },
+                    onDismiss = { showAbandonDialog = false },
+                )
+            }
 
             if (showSubstitutionExerciseId != null) {
                 SubstitutionSheet(
@@ -170,6 +189,7 @@ private fun WorkoutSessionContent(
     sessionData: WorkoutSessionData,
     onRegisterSet: (exerciseId: String, weightKg: Double, reps: Int, rpe: Int?) -> Unit,
     onFinalize: () -> Unit,
+    onAbandon: () -> Unit,
     restTimerSeconds: Int? = null,
     onDismissTimer: () -> Unit = {},
     onRequestSubstitution: (exerciseId: String) -> Unit = {},
@@ -187,6 +207,7 @@ private fun WorkoutSessionContent(
             topBar = {
                 AiFitTopBar(
                     title = "Ejercicio ${pagerState.currentPage + 1} de ${exercises.size}",
+                    onBack = onAbandon,
                     actions = {
                         if (hasRegisteredSets) {
                             TextButton(onClick = onFinalize) {
@@ -703,6 +724,7 @@ private fun WorkoutSessionScreenPreview() {
             sessionData = fakeSessionData,
             onRegisterSet = { _, _, _, _ -> },
             onFinalize = {},
+            onAbandon = {},
             restTimerSeconds = 92,
             onDismissTimer = {},
             onRequestSubstitution = {},
@@ -745,6 +767,7 @@ private fun WorkoutSessionScreenLightPreview() {
             sessionData = fakeSessionData,
             onRegisterSet = { _, _, _, _ -> },
             onFinalize = {},
+            onAbandon = {},
         )
     }
 }

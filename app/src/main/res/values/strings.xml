@@ -418,4 +418,10 @@
     <string name="plan_status_paused">Pausado</string>
     <string name="plan_status_draft">Sin empezar</string>
     <string name="plan_status_all">Todos</string>
+
+    <!-- Workout Session -->
+    <string name="abandon_session_title">¿Abandonar sesión?</string>
+    <string name="abandon_session_message">Se perderá todo el progreso registrado en esta sesión. Esta acción no se puede deshacer.</string>
+    <string name="abandon_session_confirm">Abandonar sesión</string>
+    <string name="abandon_session_dismiss">Continuar sesión</string>
 </resources>
