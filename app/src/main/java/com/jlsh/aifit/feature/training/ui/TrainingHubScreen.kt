@@ -14,9 +14,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -26,15 +28,20 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
+import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
@@ -168,6 +175,7 @@ fun TrainingHubScreen(
                     onPlanClicked = viewModel::onPlanClicked,
                     onFilterChanged = viewModel::filterPlans,
                     onActivatePlan = viewModel::onActivatePlan,
+                    onDeletePlan = viewModel::onDeletePlan,
                     modifier = Modifier.padding(paddingValues),
                 )
             }
@@ -182,8 +190,22 @@ private fun ActivePlanContent(
     onPlanClicked: (String) -> Unit,
     onFilterChanged: (PlanStatus?) -> Unit,
     onActivatePlan: (String) -> Unit,
+    onDeletePlan: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var planToDelete by remember { mutableStateOf<String?>(null) }
+
+    if (planToDelete != null) {
+        ConfirmationDialog(
+            title = stringResource(R.string.training_delete_plan_title),
+            message = stringResource(R.string.training_delete_plan_message),
+            onConfirm = {
+                planToDelete?.let { onDeletePlan(it) }
+            },
+            onDismiss = { planToDelete = null },
+        )
+    }
+
     val filteredPlans = if (state.selectedFilter == null) {
         state.allPlans
     } else {
@@ -256,6 +278,7 @@ private fun ActivePlanContent(
                 plan = plan,
                 onClick = { onPlanClicked(plan.id) },
                 onActivate = { onActivatePlan(plan.id) },
+                onDelete = { planToDelete = plan.id },
             )
         }
     }
@@ -266,6 +289,7 @@ private fun PlanSummaryItem(
     plan: TrainingPlan,
     onClick: () -> Unit,
     onActivate: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     AiFitCard(onClick = onClick) {
         Column(
@@ -283,6 +307,15 @@ private fun PlanSummaryItem(
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
                 )
+                if (plan.status != PlanStatus.ACTIVE) {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Rounded.DeleteOutline,
+                            contentDescription = stringResource(R.string.common_delete),
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
                 PlanStatusBadge(status = plan.status.name)
             }
 
@@ -366,6 +399,7 @@ private fun TrainingHubScreenActivePreview() {
             onPlanClicked = {},
             onFilterChanged = {},
             onActivatePlan = {},
+            onDeletePlan = {},
         )
     }
 }
@@ -447,7 +481,10 @@ private fun TrainingHubScreenActiveLightPreview() {
             onPlanClicked = {},
             onFilterChanged = {},
             onActivatePlan = {},
+            onDeletePlan = {},
         )
     }
 }
+
+
 

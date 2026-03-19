@@ -18,7 +18,7 @@
 
     <!-- Bottom Navigation -->
     <string name="nav_home">Inicio</string>
-    <string name="nav_training">Entrenamiento</string>
+    <string name="nav_training">Entrena</string>
     <string name="nav_nutrition">Nutrición</string>
     <string name="nav_coach">Coach</string>
     <string name="nav_profile">Yo</string>
@@ -122,6 +122,9 @@
     <string name="training_next_day">Siguiente: %1$s</string>
     <string name="training_activate">Activar</string>
     <string name="training_plan_deleted">Plan eliminado</string>
+    <string name="training_delete_plan_title">Eliminar plan</string>
+    <string name="training_delete_plan_message">¿Seguro que quieres eliminar este plan? Esta acción no se puede deshacer.</string>
+    <string name="training_generating_message">Generando tu plan personalizado…</string>
     <string name="training_day_label">Día %1$d — %2$s</string>
     <string name="training_rest_day">Día de descanso — recuperación</string>
 
