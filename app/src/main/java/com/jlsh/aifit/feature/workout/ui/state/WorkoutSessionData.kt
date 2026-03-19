@@ -13,4 +13,5 @@ data class WorkoutSessionData(
     val volumeByMuscleGroup: Map<MuscleGroup, Double>,
     val ghostSets: List<WorkoutSetLog>,
     val substitutions: List<ExerciseSubstitution>?,
+    val warmupCompleted: Boolean = false,
 )

@@ -148,7 +148,7 @@ class WorkoutSessionViewModel @Inject constructor(
         }
     }
 
-    fun startWorkout() {
+    fun startWorkout(warmupCompleted: Boolean = false) {
         if (_uiState.value !is WorkoutSessionUiState.WarmUpReady) return
 
         _uiState.value = WorkoutSessionUiState.SessionActive(
@@ -161,6 +161,7 @@ class WorkoutSessionViewModel @Inject constructor(
                 volumeByMuscleGroup = emptyMap(),
                 ghostSets = ghostSets,
                 substitutions = null,
+                warmupCompleted = warmupCompleted,
             )
         )
 

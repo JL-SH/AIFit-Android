@@ -13,6 +13,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -30,18 +31,20 @@ import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
 @Composable
 fun WarmUpSheet(
     protocol: WarmUpProtocol,
-    onStart: () -> Unit,
+    onSkip: () -> Unit,
+    onReady: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
-        onDismissRequest = onStart,
+        onDismissRequest = onSkip,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         WarmUpSheetContent(
             protocol = protocol,
-            onStart = onStart,
+            onSkip = onSkip,
+            onReady = onReady,
         )
     }
 }
@@ -49,7 +52,8 @@ fun WarmUpSheet(
 @Composable
 private fun WarmUpSheetContent(
     protocol: WarmUpProtocol,
-    onStart: () -> Unit,
+    onSkip: () -> Unit,
+    onReady: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -80,9 +84,22 @@ private fun WarmUpSheetContent(
 
         PrimaryButton(
             text = stringResource(R.string.warmup_ready),
-            onClick = onStart,
+            onClick = onReady,
             modifier = Modifier.fillMaxWidth(),
         )
+
+        Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+
+        TextButton(
+            onClick = onSkip,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                text = stringResource(R.string.warmup_skip),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
 
         Spacer(modifier = Modifier.height(AiFitSpacing.md))
     }
@@ -160,7 +177,8 @@ private fun WarmUpSheetPreview() {
 
         WarmUpSheetContent(
             protocol = fakeProtocol,
-            onStart = {},
+            onSkip = {},
+            onReady = {},
         )
     }
 }
@@ -196,7 +214,8 @@ private fun WarmUpSheetLightPreview() {
 
         WarmUpSheetContent(
             protocol = fakeProtocol,
-            onStart = {},
+            onSkip = {},
+            onReady = {},
         )
     }
 }
