@@ -2,6 +2,7 @@ package com.jlsh.aifit.feature.training.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.training.data.dto.GenerateAdaptiveTrainingPlanRequestDto
@@ -22,6 +23,7 @@ import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiState
 import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,6 +70,8 @@ class TrainingViewModel @Inject constructor(
     private val _selectedTabIndex = MutableStateFlow(0)
     val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
 
+    private var fetchPlansJob: Job? = null
+
     // 4. INIT
     init {
         fetchPlans()
@@ -106,7 +110,12 @@ class TrainingViewModel @Inject constructor(
                     fetchPlans()
                 }
                 is Result.Error -> {
-                    emitEvent(TrainingUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    if (result.exception is AppException.NotFoundException) {
+                        emitEvent(TrainingUiEvent.ShowSnackbar("Este plan ya no existe. Actualizando lista..."))
+                        fetchPlans()
+                    } else {
+                        emitEvent(TrainingUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    }
                 }
                 else -> Unit
             }
@@ -164,7 +173,8 @@ class TrainingViewModel @Inject constructor(
 
     // 6. PRIVATE HELPERS
     private fun fetchPlans() {
-        viewModelScope.launch {
+        fetchPlansJob?.cancel()
+        fetchPlansJob = viewModelScope.launch {
             // Only show Loading spinner on true first load; silent refresh otherwise
             if (_hubUiState.value is TrainingHubUiState.Loading) {
                 _hubUiState.value = TrainingHubUiState.Loading

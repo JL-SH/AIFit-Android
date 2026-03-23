@@ -12,5 +12,6 @@ data class WorkoutLogSummaryResponseDto(
     val perceivedExertion: Int? = null,
     val totalExercises: Int,
     val completedAt: String,
+    val isLocked: Boolean = false,
 )
 

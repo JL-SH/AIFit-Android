@@ -53,6 +53,7 @@ object WorkoutMapper {
         notes = null,
         totalExercises = totalExercises,
         completedAt = parseDateTime(completedAt),
+        isLocked = isLocked,
     )
 
     fun WorkoutSetLogResponseDto.toDomain(): WorkoutSetLog = WorkoutSetLog(
@@ -120,6 +121,7 @@ object WorkoutMapper {
         perceivedExertion = perceivedExertion,
         totalExercises = totalExercises,
         completedAt = completedAt.toInstant(ZoneOffset.UTC).toEpochMilli(),
+        isLocked = isLocked,
     )
 
     fun WorkoutLogEntity.toDomain(): WorkoutLog = WorkoutLog(
@@ -132,6 +134,7 @@ object WorkoutMapper {
         notes = null,
         totalExercises = totalExercises,
         completedAt = Instant.ofEpochMilli(completedAt).atZone(ZoneOffset.UTC).toLocalDateTime(),
+        isLocked = isLocked,
     )
 
     private fun parseDateTime(raw: String): LocalDateTime =

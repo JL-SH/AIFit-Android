@@ -106,7 +106,7 @@ fun HomeScreen(
 
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            viewModel.loadAll()
+            viewModel.onResumed()
         }
     }
 

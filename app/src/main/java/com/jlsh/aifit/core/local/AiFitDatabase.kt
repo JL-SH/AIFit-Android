@@ -35,7 +35,7 @@ import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
         ShoppingListEntity::class,
         ShoppingItemCheckEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

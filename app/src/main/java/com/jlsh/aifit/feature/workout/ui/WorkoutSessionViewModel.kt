@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.workout.ui
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,6 +32,7 @@ import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -68,6 +70,7 @@ class WorkoutSessionViewModel @Inject constructor(
     val substitutionsState: StateFlow<SubstitutionLoadState> = _substitutionsState.asStateFlow()
 
     private var restTimerJob: Job? = null
+    private val pendingSetJobs = mutableListOf<Job>()
 
     private var currentPlanId: String = ""
     private var currentDayId: String = ""
@@ -247,9 +250,10 @@ class WorkoutSessionViewModel @Inject constructor(
 
         startRestTimer(restSeconds)
 
-        // Fire-and-forget: persist the set to the backend if the session was already created.
+        // Persist the set to the backend if the session was already created.
+        // Track the job so finalizeSession() can await completion.
         backendLogId?.let { logId ->
-            viewModelScope.launch {
+            val job = viewModelScope.launch {
                 addSetToLogUseCase(
                     logId,
                     LogWorkoutSetRequestDto(
@@ -263,6 +267,8 @@ class WorkoutSessionViewModel @Inject constructor(
                     ),
                 )
             }
+            pendingSetJobs.add(job)
+            job.invokeOnCompletion { pendingSetJobs.remove(job) }
         }
     }
 
@@ -273,6 +279,8 @@ class WorkoutSessionViewModel @Inject constructor(
         val sessionData = currentState.sessionData
 
         viewModelScope.launch {
+            _uiState.value = WorkoutSessionUiState.Finalizing
+
             // If the backend log was never created (startWorkout() call failed), retry now.
             if (backendLogId == null) {
                 val logRequest = LogWorkoutSessionRequestDto(
@@ -296,24 +304,34 @@ class WorkoutSessionViewModel @Inject constructor(
                         backendLogId = retryResult.data.id
                     }
                     is Result.Error -> {
+                        Log.e("AIFIT_FINALIZE", "Failed to create backend log: ${retryResult.exception.message}")
                         _events.emit(
                             WorkoutSessionUiEvent.ShowSnackbar(retryResult.exception.toMessage())
                         )
+                        _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
                         return@launch
                     }
-                    else -> return@launch
+                    else -> {
+                        _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
+                        return@launch
+                    }
                 }
             }
 
-            val logId = backendLogId ?: return@launch
+            val logId = backendLogId ?: run {
+                _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
+                return@launch
+            }
 
-            _uiState.value = WorkoutSessionUiState.Finalizing
+            // Await all pending set upload jobs before finalizing
+            pendingSetJobs.toList().joinAll()
 
             when (val finalizeResult = finalizeWorkoutSessionUseCase(logId, systemicFatigue, jointPainReport)) {
                 is Result.Success -> {
                     _uiState.value = WorkoutSessionUiState.SessionFinalized(finalizeResult.data)
                 }
                 is Result.Error -> {
+                    Log.e("AIFIT_FINALIZE", "Finalize failed for logId=$logId: ${finalizeResult.exception.message}")
                     _events.emit(WorkoutSessionUiEvent.ShowSnackbar(finalizeResult.exception.toMessage()))
                     _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
                 }
@@ -326,16 +344,14 @@ class WorkoutSessionViewModel @Inject constructor(
 
     fun abandonSession() {
         viewModelScope.launch {
-            // Delete incomplete backend log if one was created
-            backendLogId?.let { logId ->
-                deleteWorkoutLogUseCase(logId)
-                // Fire-and-forget: best-effort cleanup; if it fails the backend
-                // will have an incomplete log that can be cleaned up later.
-            }
-
             cancelRestTimer()
+
+            // Delete incomplete backend log if one was created (fire-and-forget)
+            backendLogId?.let { logId ->
+                viewModelScope.launch { deleteWorkoutLogUseCase(logId) }
+            }
             backendLogId = null
-            _uiState.value = WorkoutSessionUiState.Idle
+
             _events.emit(WorkoutSessionUiEvent.NavigateBack)
         }
     }

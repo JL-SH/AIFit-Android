@@ -13,5 +13,6 @@ data class WorkoutLogEntity(
     val perceivedExertion: Int?,
     val totalExercises: Int,
     val completedAt: Long,
+    val isLocked: Boolean = false,
 )
 

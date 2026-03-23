@@ -72,6 +72,8 @@ class HomeViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     private var loadJob: Job? = null
+    private var cachedActivePlanDetail: TrainingPlan? = null
+    private var cachedWeeklySummary: WeeklyProgressSummary? = null
 
     init {
         loadAll()
@@ -116,6 +118,8 @@ class HomeViewModel @Inject constructor(
             val initialTrainingPlans = (trainingPlansResult as? Result.Success)?.data ?: emptyList()
             val initialActivePlan = initialTrainingPlans.find { it.status == PlanStatus.ACTIVE }
             val initialActivePlanDetail = initialActivePlan?.let { loadPlanDetail(it.id) }
+            cachedActivePlanDetail = initialActivePlanDetail
+            cachedWeeklySummary = weeklySummary
             val initialTodayTraining = deriveTodayTraining(
                 initialActivePlanDetail, weeklySummary, todayWorkoutLogs,
             )
@@ -145,6 +149,7 @@ class HomeViewModel @Inject constructor(
                     val plans = result.data
                     val activePlan = plans.find { it.status == PlanStatus.ACTIVE }
                     val activePlanDetail = activePlan?.let { loadPlanDetail(it.id) }
+                    cachedActivePlanDetail = activePlanDetail
                     val todayTraining = deriveTodayTraining(
                         activePlanDetail, weeklySummary, todayWorkoutLogs,
                     )
@@ -232,7 +237,20 @@ class HomeViewModel @Inject constructor(
         emitEvent(HomeUiEvent.NavigateToGeneratePlan)
     }
 
+    fun onResumed() {
+        viewModelScope.launch { refreshWorkoutStatus() }
+    }
+
     // ── Private helpers ──
+
+    private suspend fun refreshWorkoutStatus() {
+        val current = _uiState.value as? HomeUiState.Success ?: return
+        val freshWorkoutLogs = loadTodayWorkoutHistory()
+        val todayTraining = deriveTodayTraining(
+            cachedActivePlanDetail, cachedWeeklySummary, freshWorkoutLogs,
+        )
+        _uiState.value = current.copy(todayTraining = todayTraining)
+    }
 
     private suspend fun loadProfile(): UserProfile? =
         getUserProfileUseCase()
@@ -304,7 +322,7 @@ class HomeViewModel @Inject constructor(
 
         if (todayTrainingDay.dayType == TrainingDayType.REST) return null
 
-        val isCompleted = todayWorkoutLogs.any { it.trainingPlanId == activePlan.id }
+        val isCompleted = todayWorkoutLogs.any { it.trainingPlanId == activePlan.id && it.isLocked }
 
         val adherence = if (weeklySummary != null && weeklySummary.workoutsTarget > 0) {
             (weeklySummary.workoutsThisWeek.toFloat() / weeklySummary.workoutsTarget * 100f)
