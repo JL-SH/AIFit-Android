@@ -2,6 +2,7 @@ package com.jlsh.aifit.feature.home.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.util.Log
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
@@ -238,6 +239,8 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onResumed() {
+        // TODO: remove diagnostic log below
+        Log.d("AIFIT_HOME", "onResumed called")
         viewModelScope.launch { refreshWorkoutStatus() }
     }
 
@@ -246,6 +249,9 @@ class HomeViewModel @Inject constructor(
     private suspend fun refreshWorkoutStatus() {
         val current = _uiState.value as? HomeUiState.Success ?: return
         val freshWorkoutLogs = loadTodayWorkoutHistory()
+        // TODO: remove diagnostic logs below
+        Log.d("AIFIT_HOME", "refreshWorkoutStatus — freshLogs count=${freshWorkoutLogs.size}")
+        Log.d("AIFIT_HOME", "freshLogs detail — ${freshWorkoutLogs.map { "id=${it.id} isLocked=${it.isLocked} planId=${it.trainingPlanId}" }}")
         val todayTraining = deriveTodayTraining(
             cachedActivePlanDetail, cachedWeeklySummary, freshWorkoutLogs,
         )
@@ -308,6 +314,8 @@ class HomeViewModel @Inject constructor(
         var result = emptyList<WorkoutLog>()
         getWorkoutHistoryUseCase(from = today, to = today)
             .collect { r ->
+                // TODO: remove diagnostic log below
+                Log.d("AIFIT_HOME", "loadTodayWorkoutHistory emission — ${r::class.simpleName} data=${if (r is Result.Success) r.data.map { "id=${it.id} isLocked=${it.isLocked}" } else "N/A"}")
                 if (r is Result.Success) result = r.data
             }
         return result
@@ -326,6 +334,9 @@ class HomeViewModel @Inject constructor(
         if (todayTrainingDay.dayType == TrainingDayType.REST) return null
 
         val isCompleted = todayWorkoutLogs.any { it.trainingPlanId == activePlan.id && it.isLocked }
+        // TODO: remove diagnostic logs below
+        Log.d("AIFIT_HOME", "deriveTodayTraining — activePlan=${activePlan.id} todayLogs=${todayWorkoutLogs.size} isCompleted=$isCompleted")
+        Log.d("AIFIT_HOME", "todayLogs detail — ${todayWorkoutLogs.map { "id=${it.id} isLocked=${it.isLocked} planId=${it.trainingPlanId}" }}")
 
         val adherence = if (weeklySummary != null && weeklySummary.workoutsTarget > 0) {
             (weeklySummary.workoutsThisWeek.toFloat() / weeklySummary.workoutsTarget * 100f)

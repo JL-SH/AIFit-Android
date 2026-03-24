@@ -405,11 +405,16 @@ class WorkoutSessionViewModel @Inject constructor(
             // Await all pending set upload jobs before finalizing (with timeout)
             withTimeoutOrNull(5_000L) { pendingSetJobs.toList().joinAll() }
 
+            // TODO: remove diagnostic logs below
+            Log.d("AIFIT_SESSION", "finalizeSession called — logId=$logId, fatigue=$systemicFatigue")
             when (val finalizeResult = finalizeWorkoutSessionUseCase(logId, systemicFatigue, jointPainReport)) {
                 is Result.Success -> {
+                    Log.d("AIFIT_SESSION", "finalize SUCCESS — returned log id=${finalizeResult.data.id} isLocked=${finalizeResult.data.isLocked}")
+                    Log.d("AIFIT_SESSION", "transitioning to SessionFinalized")
                     _uiState.value = WorkoutSessionUiState.SessionFinalized(finalizeResult.data)
                 }
                 is Result.Error -> {
+                    Log.e("AIFIT_SESSION", "finalize ERROR — ${finalizeResult.exception.message}")
                     Log.e("AIFIT_FINALIZE", "Finalize failed for logId=$logId: ${finalizeResult.exception.message}")
                     _events.send(WorkoutSessionUiEvent.ShowSnackbar(finalizeResult.exception.toMessage()))
                     _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)

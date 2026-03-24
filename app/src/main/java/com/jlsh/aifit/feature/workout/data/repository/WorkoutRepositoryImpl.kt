@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.workout.data.repository
 
+import android.util.Log
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.feature.workout.data.api.WorkoutApiService
@@ -59,6 +60,8 @@ class WorkoutRepositoryImpl @Inject constructor(
                     (planId == null || entity.trainingPlanId == planId)
             }
             .map { it.toDomain() }
+        // TODO: remove diagnostic log below
+        Log.d("AIFIT_REPO", "getHistory cache emission — count=${cached.size}, logs=${cached.map { "id=${it.id} isLocked=${it.isLocked} date=${it.date}" }}")
         if (cached.isNotEmpty()) {
             emit(Result.Success(cached))
         }
@@ -66,6 +69,8 @@ class WorkoutRepositoryImpl @Inject constructor(
         when (val remote = safeApiCall { apiService.getWorkoutLogs(planId, from, to) }) {
             is Result.Success -> {
                 val logs = remote.data.map { it.toDomain() }
+                // TODO: remove diagnostic log below
+                Log.d("AIFIT_REPO", "getHistory network emission — count=${logs.size}, logs=${logs.map { "id=${it.id} isLocked=${it.isLocked} date=${it.date}" }}")
                 dao.upsertAll(logs.map { it.toEntity() })
                 emit(Result.Success(logs))
             }
@@ -100,14 +105,18 @@ class WorkoutRepositoryImpl @Inject constructor(
         systemicFatigue: Int,
         jointPainReport: List<JointPainEntry>,
     ): Result<WorkoutLog> {
+        // TODO: remove diagnostic logs below
+        Log.d("AIFIT_REPO", "finalizeWorkoutSession called — logId=$logId")
         val request = FinalizeWorkoutSessionRequestDto(
             systemicFatigue = systemicFatigue,
             jointPainReport = jointPainReport.map { it.toDto() },
         )
         return when (val remote = safeApiCall { apiService.finalizeWorkoutSession(logId, request) }) {
             is Result.Success -> {
+                Log.d("AIFIT_REPO", "finalize API success — raw isLocked=${remote.data.isLocked} (from DTO)")
                 val log = remote.data.toDomain()
                 dao.upsertAll(listOf(log.toEntity()))
+                Log.d("AIFIT_REPO", "dao.upsertAll() called — saved isLocked=${log.isLocked}")
                 Result.Success(log)
             }
             is Result.Error -> remote
