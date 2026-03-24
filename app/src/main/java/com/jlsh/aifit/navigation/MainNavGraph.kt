@@ -248,7 +248,14 @@ private fun MainNavScreen() {
                         ),
                     ) {
                         WorkoutSessionScreen(
-                            onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateBack = {
+                                // Abandon session — clear the entire back stack and return to Home
+                                // so the user never lands on a stale Training screen.
+                                tabNavController.navigate(HomeRoutes.GRAPH) {
+                                    popUpTo(0) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
                             onSessionFinalized = { logId ->
                                 tabNavController.navigate(HomeRoutes.GRAPH) {
                                     popUpTo(0) { inclusive = true }

@@ -13,7 +13,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -43,7 +42,6 @@ fun WarmUpSheet(
     ) {
         WarmUpSheetContent(
             protocol = protocol,
-            onSkip = onSkip,
             onReady = onReady,
         )
     }
@@ -52,7 +50,6 @@ fun WarmUpSheet(
 @Composable
 private fun WarmUpSheetContent(
     protocol: WarmUpProtocol,
-    onSkip: () -> Unit,
     onReady: () -> Unit,
 ) {
     Column(
@@ -87,19 +84,6 @@ private fun WarmUpSheetContent(
             onClick = onReady,
             modifier = Modifier.fillMaxWidth(),
         )
-
-        Spacer(modifier = Modifier.height(AiFitSpacing.xs))
-
-        TextButton(
-            onClick = onSkip,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(
-                text = stringResource(R.string.warmup_skip),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
 
         Spacer(modifier = Modifier.height(AiFitSpacing.md))
     }
@@ -177,7 +161,6 @@ private fun WarmUpSheetPreview() {
 
         WarmUpSheetContent(
             protocol = fakeProtocol,
-            onSkip = {},
             onReady = {},
         )
     }
@@ -214,7 +197,6 @@ private fun WarmUpSheetLightPreview() {
 
         WarmUpSheetContent(
             protocol = fakeProtocol,
-            onSkip = {},
             onReady = {},
         )
     }

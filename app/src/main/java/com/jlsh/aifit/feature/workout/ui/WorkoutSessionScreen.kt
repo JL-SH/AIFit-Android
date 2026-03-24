@@ -100,7 +100,13 @@ fun WorkoutSessionScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is WorkoutSessionUiEvent.NavigateBack -> onNavigateBack()
+                is WorkoutSessionUiEvent.NavigateBack -> {
+                    // onNavigateBack must clear the entire Training sub-graph so the user
+                    // lands on HomeScreen, not on a stale TrainingDetail or TrainingHub.
+                    // The call site in MainNavGraph.kt is expected to popUpTo(0) inclusive
+                    // and navigate to HomeRoutes.GRAPH (same pattern as onSessionFinalized).
+                    onNavigateBack()
+                }
                 is WorkoutSessionUiEvent.ShowSubstitutionSheet -> {
                     showSubstitutionExerciseId = event.exerciseId
                     viewModel.loadSubstitutions(event.exerciseId)
@@ -149,13 +155,15 @@ fun WorkoutSessionScreen(
                     ConfirmationDialog(
                         title = stringResource(R.string.abandon_session_title),
                         message = stringResource(R.string.abandon_session_message),
-                        confirmText = stringResource(R.string.abandon_session_confirm),
-                        dismissText = stringResource(R.string.abandon_session_dismiss),
+                        confirmText = stringResource(R.string.abandon_session_dismiss),
+                        dismissText = stringResource(R.string.abandon_session_confirm),
                         onConfirm = {
+                            showAbandonDialog = false
+                        },
+                        onDismiss = {
                             showAbandonDialog = false
                             viewModel.abandonSession()
                         },
-                        onDismiss = { showAbandonDialog = false },
                     )
                 }
 
