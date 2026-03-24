@@ -60,9 +60,25 @@ class TrainingRepositoryImpl @Inject constructor(
     }.distinctUntilChanged()
 
     override suspend fun getTrainingPlanDetail(planId: String): Result<TrainingPlan> {
+        val cached = dao.getById(planId)
         return when (val remote = safeApiCall { apiService.getTrainingPlanById(planId) }) {
-            is Result.Success -> Result.Success(remote.data.toDomain())
-            is Result.Error -> remote
+            is Result.Success -> {
+                val plan = remote.data.toDomain()
+                // Persist detail so future cache fallbacks include this plan
+                val userId = sessionManager.getUserId()
+                if (userId != null) {
+                    dao.upsertAll(listOf(plan.toEntity(userId)))
+                }
+                Result.Success(plan)
+            }
+            is Result.Error -> {
+                if (cached != null) {
+                    // Network failed but Room has a prior snapshot — return it
+                    Result.Success(cached.toDomain())
+                } else {
+                    remote
+                }
+            }
             else -> Result.Loading
         }
     }

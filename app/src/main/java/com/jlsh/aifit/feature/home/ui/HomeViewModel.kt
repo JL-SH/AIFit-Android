@@ -74,6 +74,7 @@ class HomeViewModel @Inject constructor(
 
     private var loadJob: Job? = null
     private var cachedActivePlanDetail: TrainingPlan? = null
+    private var cachedActivePlanId: String? = null       // Fix 2: survives a null cachedActivePlanDetail
     private var cachedWeeklySummary: WeeklyProgressSummary? = null
 
     init {
@@ -120,6 +121,7 @@ class HomeViewModel @Inject constructor(
             val initialActivePlan = initialTrainingPlans.find { it.status == PlanStatus.ACTIVE }
             val initialActivePlanDetail = initialActivePlan?.let { loadPlanDetail(it.id) }
             cachedActivePlanDetail = initialActivePlanDetail
+            cachedActivePlanId = initialActivePlan?.id  // Fix 2: keep id even if detail load failed
             cachedWeeklySummary = weeklySummary
             val initialTodayTraining = deriveTodayTraining(
                 initialActivePlanDetail, weeklySummary, todayWorkoutLogs,
@@ -151,6 +153,7 @@ class HomeViewModel @Inject constructor(
                     val activePlan = plans.find { it.status == PlanStatus.ACTIVE }
                     val activePlanDetail = activePlan?.let { loadPlanDetail(it.id) }
                     cachedActivePlanDetail = activePlanDetail
+                    cachedActivePlanId = activePlan?.id  // Fix 2: keep id even if detail load failed
                     val todayTraining = deriveTodayTraining(
                         activePlanDetail, weeklySummary, todayWorkoutLogs,
                     )
@@ -241,7 +244,21 @@ class HomeViewModel @Inject constructor(
     fun onResumed() {
         // TODO: remove diagnostic log below
         Log.d("AIFIT_HOME", "onResumed called")
-        viewModelScope.launch { refreshWorkoutStatus() }
+        viewModelScope.launch {
+            refreshWorkoutStatus()
+
+            // Fix 2: recover from a transient null cachedActivePlanDetail (e.g. network error
+            // during loadPlanDetail after a ViewModel recreation) without requiring a full restart.
+            if (cachedActivePlanDetail == null) {
+                val planId = cachedActivePlanId ?: return@launch
+                val recovered = loadPlanDetail(planId)
+                if (recovered != null) {
+                    cachedActivePlanDetail = recovered
+                    // Re-run refreshWorkoutStatus so deriveTodayTraining uses the recovered plan.
+                    refreshWorkoutStatus()
+                }
+            }
+        }
     }
 
     // ── Private helpers ──
