@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.training.data.repository
 
+import android.util.Log
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
@@ -30,12 +31,16 @@ class TrainingRepositoryImpl @Inject constructor(
 
         val userId = sessionManager.getUserId()
         if (userId == null) {
+            // TODO: remove diagnostic log below
+            Log.d("AIFIT_PLANS", "EMIT ERROR — userId is null")
             emit(Result.Error(AppException.UnknownException("No active session")))
             return@flow
         }
 
         val cached = dao.getAllByUserId(userId).map { it.toDomain() }
         if (cached.isNotEmpty()) {
+            // TODO: remove diagnostic log below
+            Log.d("AIFIT_PLANS", "EMIT CACHE — count=${cached.size} ids=${cached.map { it.id }.take(3)}")
             emit(Result.Success(cached))
         }
 
@@ -43,6 +48,8 @@ class TrainingRepositoryImpl @Inject constructor(
             is Result.Success -> {
                 val plans = remote.data.map { it.toDomain() }
                 dao.upsertAll(plans.map { it.toEntity(userId) })
+                // TODO: remove diagnostic log below
+                Log.d("AIFIT_PLANS", "EMIT NETWORK — count=${plans.size} ids=${plans.map { it.id }.take(3)}")
                 emit(Result.Success(plans))
             }
             is Result.Error -> {
@@ -93,12 +100,20 @@ class TrainingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteTrainingPlan(planId: String): Result<Unit> {
-        return when (val remote = safeApiCall { apiService.deleteTrainingPlan(planId) }) {
+        return when (val remote = safeEmptyApiCall { apiService.deleteTrainingPlan(planId) }) {
             is Result.Success -> {
+                // TODO: remove diagnostic logs below
+                Log.d("AIFIT_DELETE", "API delete SUCCESS — planId=$planId")
+                Log.d("AIFIT_DELETE", "dao.deleteById BEFORE — planId=$planId")
                 dao.deleteById(planId)
+                Log.d("AIFIT_DELETE", "dao.deleteById AFTER — planId=$planId")
                 Result.Success(Unit)
             }
-            is Result.Error -> remote
+            is Result.Error -> {
+                // TODO: remove diagnostic log below
+                Log.d("AIFIT_DELETE", "API delete ERROR — $planId — ${remote.exception.message}")
+                remote
+            }
             else -> Result.Loading
         }
     }

@@ -2,6 +2,7 @@ package com.jlsh.aifit.feature.training.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.util.Log
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
@@ -89,6 +90,8 @@ class TrainingViewModel @Inject constructor(
 
     // 5. PUBLIC FUNCTIONS
     fun onRefresh() {
+        // TODO: remove diagnostic log below
+        Log.d("AIFIT_PLANS", "onRefresh triggered — isDeletingPlan=$isDeletingPlan")
         if (isDeletingPlan) return
         fetchPlans()
     }
@@ -106,13 +109,19 @@ class TrainingViewModel @Inject constructor(
     }
 
     fun onActivatePlan(planId: String) {
+        // TODO: remove diagnostic log below
+        Log.d("AIFIT_PLANS", "onActivatePlan START — planId=$planId")
         viewModelScope.launch {
             when (val result = setActivePlanUseCase(planId)) {
                 is Result.Success -> {
+                    // TODO: remove diagnostic log below
+                    Log.d("AIFIT_PLANS", "onActivatePlan SUCCESS — planId=$planId")
                     fetchPlans()
                 }
                 is Result.Error -> {
                     if (result.exception is AppException.NotFoundException) {
+                        // TODO: remove diagnostic log below
+                        Log.d("AIFIT_PLANS", "onActivatePlan ERROR (NotFound) — planId=$planId")
                         emitEvent(TrainingUiEvent.ShowSnackbar("Este plan ya no existe. Actualizando lista..."))
                         fetchPlans()
                     } else {
@@ -141,6 +150,8 @@ class TrainingViewModel @Inject constructor(
     }
 
     fun loadPlanDetail(planId: String) {
+        // TODO: remove diagnostic log below
+        Log.d("AIFIT_DETAIL", "loadPlanDetail START — planId=$planId")
         viewModelScope.launch {
             _detailUiState.value = TrainingDetailUiState.Loading
             when (val result = getTrainingPlanDetailUseCase(planId)) {
@@ -153,12 +164,16 @@ class TrainingViewModel @Inject constructor(
                             TrainingDayItem.Training(day)
                         }
                     }
+                    // TODO: remove diagnostic log below
+                    Log.d("AIFIT_DETAIL", "loadPlanDetail SUCCESS — planName=${plan.name} daysCount=${days.size}")
                     _detailUiState.value = TrainingDetailUiState.Ready(
                         planName = plan.name,
                         days = days,
                     )
                 }
                 is Result.Error -> {
+                    // TODO: remove diagnostic log below
+                    Log.d("AIFIT_DETAIL", "loadPlanDetail ERROR — msg=${result.exception.message}")
                     _detailUiState.value = TrainingDetailUiState.Error(result.exception.toMessage())
                 }
                 else -> Unit
@@ -177,6 +192,8 @@ class TrainingViewModel @Inject constructor(
     private fun fetchPlans() {
         fetchPlansJob?.cancel()
         fetchPlansJob = viewModelScope.launch {
+            // TODO: remove diagnostic log below
+            Log.d("AIFIT_PLANS", "fetchPlans STARTED — jobId=${System.identityHashCode(coroutineContext)}")
             // Only show Loading spinner on true first load; silent refresh otherwise
             if (_hubUiState.value is TrainingHubUiState.Loading) {
                 _hubUiState.value = TrainingHubUiState.Loading
@@ -188,6 +205,8 @@ class TrainingViewModel @Inject constructor(
                 _uiState.value = when (result) {
                     is Result.Success -> {
                         val plans = result.data
+                        // TODO: remove diagnostic log below
+                        Log.d("AIFIT_PLANS", "fetchPlans EMISSION SUCCESS — count=${result.data.size}")
                         val active = plans.firstOrNull { it.status == PlanStatus.ACTIVE }
                         _hubUiState.value = computeHubState(plans)
                         TrainingUiState.Success(
@@ -196,11 +215,15 @@ class TrainingViewModel @Inject constructor(
                         )
                     }
                     is Result.Error -> {
+                        // TODO: remove diagnostic log below
+                        Log.d("AIFIT_PLANS", "fetchPlans EMISSION ERROR — msg=${result.exception.message}")
                         _hubUiState.value = TrainingHubUiState.Error(result.exception.toMessage())
                         TrainingUiState.Error(result.exception.toMessage())
                     }
                     is Result.Loading -> {
                         // Keep current state if data is already visible
+                        // TODO: remove diagnostic log below
+                        Log.d("AIFIT_PLANS", "fetchPlans EMISSION LOADING — keeping current state")
                         if (_hubUiState.value is TrainingHubUiState.ActivePlan ||
                             _hubUiState.value is TrainingHubUiState.NoActivePlan) {
                             _uiState.value
@@ -234,6 +257,8 @@ class TrainingViewModel @Inject constructor(
     }
 
     private fun deletePlan(planId: String) {
+        // TODO: remove diagnostic log below
+        Log.d("AIFIT_DELETE", "deletePlan START — planId=$planId isDeletingPlan=$isDeletingPlan")
         isDeletingPlan = true
         viewModelScope.launch {
             // Optimistic UI update: remove the plan instantly before the network call
@@ -251,13 +276,19 @@ class TrainingViewModel @Inject constructor(
                 }
             }
 
+            // TODO: remove diagnostic log below
+            Log.d("AIFIT_DELETE", "Executing deleteUseCase — planId=$planId")
             when (val result = deleteTrainingPlanUseCase(planId)) {
                 is Result.Success -> {
+                    // TODO: remove diagnostic log below
+                    Log.d("AIFIT_DELETE", "deletePlan SUCCESS — planId=$planId")
                     emitEvent(TrainingUiEvent.ShowSnackbar("Plan eliminado"))
                     emitEvent(TrainingUiEvent.PlanDeleted)
                     fetchPlans()
                 }
                 is Result.Error -> {
+                    // TODO: remove diagnostic log below
+                    Log.d("AIFIT_DELETE", "deletePlan ERROR — planId=$planId msg=${result.exception.message}")
                     // Restore previous state on failure
                     _hubUiState.value = previousHubState
                     _uiState.value = previousUiState
@@ -266,6 +297,8 @@ class TrainingViewModel @Inject constructor(
                 else -> Unit
             }
             isDeletingPlan = false
+            // TODO: remove diagnostic log below
+            Log.d("AIFIT_DELETE", "deletePlan FINISHED — isDeletingPlan reset to false")
         }
     }
 
@@ -280,6 +313,8 @@ class TrainingViewModel @Inject constructor(
                     if (elapsed < MIN_ANIMATION_DURATION) {
                         delay(MIN_ANIMATION_DURATION - elapsed)
                     }
+                    // TODO: remove diagnostic log below
+                    Log.d("AIFIT_GENERATE", "Generation SUCCESS — planId=${result.data.id} elapsed=$elapsed ms")
                     _generateUiState.value = GeneratePlanUiState.Success(result.data)
                     emitEvent(TrainingUiEvent.NavigateToDetail(result.data.id))
                     fetchPlans()
@@ -289,6 +324,8 @@ class TrainingViewModel @Inject constructor(
                     if (elapsed < MIN_ANIMATION_DURATION) {
                         delay(MIN_ANIMATION_DURATION - elapsed)
                     }
+                    // TODO: remove diagnostic log below
+                    Log.d("AIFIT_GENERATE", "Generation ERROR — msg=${result.exception.message} elapsed=$elapsed ms")
                     _generateUiState.value = GeneratePlanUiState.Error(result.exception.toMessage())
                     emitEvent(TrainingUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
@@ -308,6 +345,8 @@ class TrainingViewModel @Inject constructor(
                     if (elapsed < MIN_ANIMATION_DURATION) {
                         delay(MIN_ANIMATION_DURATION - elapsed)
                     }
+                    // TODO: remove diagnostic log below
+                    Log.d("AIFIT_GENERATE", "Generation SUCCESS — planId=${result.data.id} elapsed=$elapsed ms")
                     _generateUiState.value = GeneratePlanUiState.Success(result.data)
                     emitEvent(TrainingUiEvent.NavigateToDetail(result.data.id))
                     fetchPlans()
@@ -317,6 +356,8 @@ class TrainingViewModel @Inject constructor(
                     if (elapsed < MIN_ANIMATION_DURATION) {
                         delay(MIN_ANIMATION_DURATION - elapsed)
                     }
+                    // TODO: remove diagnostic log below
+                    Log.d("AIFIT_GENERATE", "Generation ERROR — msg=${result.exception.message} elapsed=$elapsed ms")
                     _generateUiState.value = GeneratePlanUiState.Error(result.exception.toMessage())
                     emitEvent(TrainingUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }

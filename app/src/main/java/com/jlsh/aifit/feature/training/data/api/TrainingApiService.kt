@@ -7,6 +7,7 @@ import com.jlsh.aifit.feature.training.data.dto.GenerateTrainingPlanRequestDto
 import com.jlsh.aifit.feature.training.data.dto.TrainingPlanResponseDto
 import com.jlsh.aifit.feature.training.data.dto.TrainingPlanSummaryResponseDto
 import com.jlsh.aifit.feature.training.data.dto.WarmUpProtocolResponseDto
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -33,7 +34,7 @@ interface TrainingApiService {
     ): ApiResponse<TrainingPlanResponseDto>
 
     @DELETE("training-plans/{id}")
-    suspend fun deleteTrainingPlan(@Path("id") id: String): ApiResponse<Unit>
+    suspend fun deleteTrainingPlan(@Path("id") id: String): Response<Unit>
 
     @PATCH("training-plans/{id}/activate")
     suspend fun activatePlan(@Path("id") planId: String): ApiResponse<TrainingPlanResponseDto>
