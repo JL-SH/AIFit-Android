@@ -15,6 +15,7 @@ import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 import com.jlsh.aifit.feature.workout.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.time.LocalDate
 import javax.inject.Inject
 
 class WorkoutRepositoryImpl @Inject constructor(
@@ -49,7 +50,15 @@ class WorkoutRepositoryImpl @Inject constructor(
     ): Flow<Result<List<WorkoutLog>>> = flow {
         emit(Result.Loading)
 
-        val cached = dao.getAll().map { it.toDomain() }
+        val fromEpochDay = from?.let { LocalDate.parse(it).toEpochDay() }
+        val toEpochDay = to?.let { LocalDate.parse(it).toEpochDay() }
+        val cached = dao.getAll()
+            .filter { entity ->
+                (fromEpochDay == null || entity.date >= fromEpochDay) &&
+                    (toEpochDay == null || entity.date <= toEpochDay) &&
+                    (planId == null || entity.trainingPlanId == planId)
+            }
+            .map { it.toDomain() }
         if (cached.isNotEmpty()) {
             emit(Result.Success(cached))
         }
@@ -96,7 +105,11 @@ class WorkoutRepositoryImpl @Inject constructor(
             jointPainReport = jointPainReport.map { it.toDto() },
         )
         return when (val remote = safeApiCall { apiService.finalizeWorkoutSession(logId, request) }) {
-            is Result.Success -> Result.Success(remote.data.toDomain())
+            is Result.Success -> {
+                val log = remote.data.toDomain()
+                dao.upsertAll(listOf(log.toEntity()))
+                Result.Success(log)
+            }
             is Result.Error -> remote
             else -> Result.Loading
         }

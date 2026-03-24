@@ -250,9 +250,11 @@ private fun MainNavScreen() {
                         WorkoutSessionScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                             onSessionFinalized = { logId ->
-                                tabNavController.navigate(TrainingRoutes.workoutDetailRoute(logId)) {
-                                    popUpTo(TrainingRoutes.WORKOUT_SESSION) { inclusive = true }
+                                tabNavController.navigate(HomeRoutes.GRAPH) {
+                                    popUpTo(0) { inclusive = true }
+                                    launchSingleTop = true
                                 }
+                                tabNavController.navigate(TrainingRoutes.workoutDetailRoute(logId))
                             },
                         )
                     }
@@ -311,7 +313,13 @@ private fun MainNavScreen() {
                         val logId = backStackEntry.arguments?.getString("logId") ?: ""
                         WorkoutDetailScreen(
                             logId = logId,
-                            onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateBack = {
+                                if (!tabNavController.popBackStack()) {
+                                    tabNavController.navigate(TrainingRoutes.HUB) {
+                                        popUpTo(tabNavController.graph.startDestinationId) { inclusive = true }
+                                    }
+                                }
+                            },
                         )
                     }
                 }

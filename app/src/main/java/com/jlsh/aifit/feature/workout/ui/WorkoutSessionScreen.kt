@@ -33,6 +33,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -86,6 +88,7 @@ fun WorkoutSessionScreen(
     var showFinalizeSheet by remember { mutableStateOf(false) }
     var showAbandonDialog by remember { mutableStateOf(false) }
     var showSubstitutionExerciseId by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState) {
         val state = uiState
@@ -102,84 +105,92 @@ fun WorkoutSessionScreen(
                     showSubstitutionExerciseId = event.exerciseId
                     viewModel.loadSubstitutions(event.exerciseId)
                 }
-                is WorkoutSessionUiEvent.ShowSnackbar -> { /* handled by snackbar */ }
+                is WorkoutSessionUiEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
                 is WorkoutSessionUiEvent.SessionAlreadyLocked -> onNavigateBack()
             }
         }
     }
 
-    when (val state = uiState) {
-        is WorkoutSessionUiState.Idle,
-        is WorkoutSessionUiState.LoadingWarmUp -> LoadingScreen()
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (val state = uiState) {
+            is WorkoutSessionUiState.Idle,
+            is WorkoutSessionUiState.LoadingWarmUp -> LoadingScreen()
 
-        is WorkoutSessionUiState.WarmUpReady -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-            )
-            WarmUpSheet(
-                protocol = state.protocol,
-                onSkip = { viewModel.startWorkout(warmupCompleted = false) },
-                onReady = { viewModel.startWorkout(warmupCompleted = true) },
+            is WorkoutSessionUiState.WarmUpReady -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+                )
+                WarmUpSheet(
+                    protocol = state.protocol,
+                    onSkip = { viewModel.startWorkout(warmupCompleted = false) },
+                    onReady = { viewModel.startWorkout(warmupCompleted = true) },
+                )
+            }
+
+            is WorkoutSessionUiState.SessionActive -> {
+                WorkoutSessionContent(
+                    sessionData = state.sessionData,
+                    onRegisterSet = viewModel::registerSet,
+                    onFinalize = { showFinalizeSheet = true },
+                    onAbandon = { showAbandonDialog = true },
+                    restTimerSeconds = restTimerSeconds,
+                    onDismissTimer = viewModel::cancelRestTimer,
+                    onRequestSubstitution = { exerciseId ->
+                        showSubstitutionExerciseId = exerciseId
+                        viewModel.loadSubstitutions(exerciseId)
+                    },
+                )
+
+                if (showAbandonDialog) {
+                    ConfirmationDialog(
+                        title = stringResource(R.string.abandon_session_title),
+                        message = stringResource(R.string.abandon_session_message),
+                        confirmText = stringResource(R.string.abandon_session_confirm),
+                        dismissText = stringResource(R.string.abandon_session_dismiss),
+                        onConfirm = {
+                            showAbandonDialog = false
+                            viewModel.abandonSession()
+                        },
+                        onDismiss = { showAbandonDialog = false },
+                    )
+                }
+
+                if (showSubstitutionExerciseId != null) {
+                    SubstitutionSheet(
+                        state = substitutionsState,
+                        onSelect = { sub ->
+                            viewModel.applySubstitution(showSubstitutionExerciseId!!, sub)
+                            showSubstitutionExerciseId = null
+                        },
+                        onDismiss = { showSubstitutionExerciseId = null },
+                    )
+                }
+
+                if (showFinalizeSheet) {
+                    FinalizeSessionSheet(
+                        onConfirm = { fatigue, jointPain ->
+                            viewModel.finalizeSession(fatigue, jointPain)
+                            showFinalizeSheet = false
+                        },
+                        onDismiss = { showFinalizeSheet = false },
+                    )
+                }
+            }
+
+            is WorkoutSessionUiState.Finalizing -> LoadingScreen()
+            is WorkoutSessionUiState.SessionFinalized -> { /* handled by LaunchedEffect */ }
+            is WorkoutSessionUiState.Error -> ErrorScreen(
+                message = state.message,
+                onRetry = onNavigateBack,
             )
         }
-
-        is WorkoutSessionUiState.SessionActive -> {
-            WorkoutSessionContent(
-                sessionData = state.sessionData,
-                onRegisterSet = viewModel::registerSet,
-                onFinalize = { showFinalizeSheet = true },
-                onAbandon = { showAbandonDialog = true },
-                restTimerSeconds = restTimerSeconds,
-                onDismissTimer = viewModel::cancelRestTimer,
-                onRequestSubstitution = { exerciseId ->
-                    showSubstitutionExerciseId = exerciseId
-                    viewModel.loadSubstitutions(exerciseId)
-                },
-            )
-
-            if (showAbandonDialog) {
-                ConfirmationDialog(
-                    title = stringResource(R.string.abandon_session_title),
-                    message = stringResource(R.string.abandon_session_message),
-                    confirmText = stringResource(R.string.abandon_session_confirm),
-                    dismissText = stringResource(R.string.abandon_session_dismiss),
-                    onConfirm = {
-                        showAbandonDialog = false
-                        viewModel.abandonSession()
-                    },
-                    onDismiss = { showAbandonDialog = false },
-                )
-            }
-
-            if (showSubstitutionExerciseId != null) {
-                SubstitutionSheet(
-                    state = substitutionsState,
-                    onSelect = { sub ->
-                        viewModel.applySubstitution(showSubstitutionExerciseId!!, sub)
-                        showSubstitutionExerciseId = null
-                    },
-                    onDismiss = { showSubstitutionExerciseId = null },
-                )
-            }
-
-            if (showFinalizeSheet) {
-                FinalizeSessionSheet(
-                    onConfirm = { fatigue, jointPain ->
-                        viewModel.finalizeSession(fatigue, jointPain)
-                        showFinalizeSheet = false
-                    },
-                    onDismiss = { showFinalizeSheet = false },
-                )
-            }
-        }
-
-        is WorkoutSessionUiState.Finalizing -> LoadingScreen()
-        is WorkoutSessionUiState.SessionFinalized -> { /* handled by LaunchedEffect */ }
-        is WorkoutSessionUiState.Error -> ErrorScreen(
-            message = state.message,
-            onRetry = onNavigateBack,
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
 }

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.training.domain.model.ExerciseSubstitution
@@ -19,6 +20,7 @@ import com.jlsh.aifit.feature.workout.domain.usecase.AddSetToLogUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.DeleteWorkoutLogUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.FinalizeWorkoutSessionUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.GetPreviousSessionForDayUseCase
+import com.jlsh.aifit.feature.workout.domain.usecase.GetWorkoutHistoryUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.LogWorkoutSessionUseCase
 import com.jlsh.aifit.feature.workout.domain.util.calculateAccumulatedVolume
 import com.jlsh.aifit.feature.workout.domain.util.calculateAutoregulatedWeight
@@ -31,15 +33,17 @@ import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionUiEvent
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.LocalDate
 import java.util.UUID
 import javax.inject.Inject
@@ -52,6 +56,7 @@ class WorkoutSessionViewModel @Inject constructor(
     private val deleteWorkoutLogUseCase: DeleteWorkoutLogUseCase,
     private val finalizeWorkoutSessionUseCase: FinalizeWorkoutSessionUseCase,
     private val getPreviousSessionForDayUseCase: GetPreviousSessionForDayUseCase,
+    private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
     private val getExerciseSubstitutionsUseCase: GetExerciseSubstitutionsUseCase,
     private val getTrainingPlanDetailUseCase: GetTrainingPlanDetailUseCase,
     private val savedStateHandle: SavedStateHandle,
@@ -60,8 +65,8 @@ class WorkoutSessionViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<WorkoutSessionUiState>(WorkoutSessionUiState.Idle)
     val uiState: StateFlow<WorkoutSessionUiState> = _uiState.asStateFlow()
 
-    private val _events = MutableSharedFlow<WorkoutSessionUiEvent>()
-    val events: SharedFlow<WorkoutSessionUiEvent> = _events.asSharedFlow()
+    private val _events = Channel<WorkoutSessionUiEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
     private val _restTimerSeconds = MutableStateFlow<Int?>(null)
     val restTimerSeconds: StateFlow<Int?> = _restTimerSeconds.asStateFlow()
@@ -78,6 +83,7 @@ class WorkoutSessionViewModel @Inject constructor(
     private var sessionExercises: List<SessionExercise> = emptyList()
     private var ghostSets: List<WorkoutSetLog> = emptyList()
     private var warmUpProtocol: WarmUpProtocol? = null
+    private var existingBackendSets: List<WorkoutSetLog> = emptyList()
 
     init {
         val planId = savedStateHandle.get<String>("planId") ?: ""
@@ -128,17 +134,46 @@ class WorkoutSessionViewModel @Inject constructor(
                 ghostSets = ghostResult.data?.sets ?: emptyList()
             }
 
+            // Check if a session log already exists for today (e.g. app was closed mid-session).
+            val today = LocalDate.now().toString()
+            val historyResult = getWorkoutHistoryUseCase(planId = currentPlanId, from = today, to = today)
+                .filter { it !is Result.Loading }
+                .first()
+            val todaysLog = (historyResult as? Result.Success)?.data
+                ?.find { it.trainingDayId == currentDayId }
+            when {
+                todaysLog != null && todaysLog.isLocked -> {
+                    // Session already finalized — navigate away instead of re-opening.
+                    Log.i("AIFIT_LOAD", "Session for dayId=$currentDayId is already locked, navigating away")
+                    _events.send(WorkoutSessionUiEvent.SessionAlreadyLocked)
+                    return@launch
+                }
+                todaysLog != null -> {
+                    // Session was started but not yet finalized — resume it.
+                    Log.i("AIFIT_LOAD", "Resuming existing session for dayId=$currentDayId, logId=${todaysLog.id}")
+                    backendLogId = todaysLog.id
+                    existingBackendSets = todaysLog.sets
+                }
+                else -> {
+                    existingBackendSets = emptyList()
+                }
+            }
+
             when (val warmUpResult = getWarmUpProtocolUseCase(planId, dayId)) {
                 is Result.Success -> {
                     warmUpProtocol = warmUpResult.data
                     _uiState.value = WorkoutSessionUiState.WarmUpReady(warmUpResult.data)
                 }
                 else -> {
+                    val exercisesWithProgress = sessionExercises.map { exercise ->
+                        val alreadyDone = existingBackendSets.count { it.trainingExerciseId == exercise.exerciseId }
+                        exercise.copy(completedSets = alreadyDone)
+                    }
                     _uiState.value = WorkoutSessionUiState.SessionActive(
                         WorkoutSessionData(
-                            exercises = sessionExercises,
+                            exercises = exercisesWithProgress,
                             currentExerciseIndex = 0,
-                            registeredSets = emptyList(),
+                            registeredSets = existingBackendSets,
                             autoregulationSuggestion = null,
                             restTimerSeconds = null,
                             volumeByMuscleGroup = emptyMap(),
@@ -154,11 +189,18 @@ class WorkoutSessionViewModel @Inject constructor(
     fun startWorkout(warmupCompleted: Boolean = false) {
         if (_uiState.value !is WorkoutSessionUiState.WarmUpReady) return
 
+        // Pre-populate completedSets for each exercise from any sets already on the backend
+        // (e.g. when the user is resuming a session that was partially saved).
+        val exercisesWithProgress = sessionExercises.map { exercise ->
+            val alreadyDone = existingBackendSets.count { it.trainingExerciseId == exercise.exerciseId }
+            exercise.copy(completedSets = alreadyDone)
+        }
+
         _uiState.value = WorkoutSessionUiState.SessionActive(
             WorkoutSessionData(
-                exercises = sessionExercises,
+                exercises = exercisesWithProgress,
                 currentExerciseIndex = 0,
-                registeredSets = emptyList(),
+                registeredSets = existingBackendSets,
                 autoregulationSuggestion = null,
                 restTimerSeconds = null,
                 volumeByMuscleGroup = emptyMap(),
@@ -167,28 +209,7 @@ class WorkoutSessionViewModel @Inject constructor(
                 warmupCompleted = warmupCompleted,
             )
         )
-
-        // Create the session on the backend; store the backend-assigned log ID.
-        // On failure, emit a snackbar but do not block the user — creation will be retried at finalize time.
-        viewModelScope.launch {
-            val logRequest = LogWorkoutSessionRequestDto(
-                trainingPlanId = currentPlanId,
-                trainingDayId = currentDayId,
-                date = LocalDate.now().toString(),
-                exercises = emptyList(),
-            )
-            when (val result = logWorkoutSessionUseCase(logRequest)) {
-                is Result.Success -> {
-                    backendLogId = result.data.id
-                }
-                is Result.Error -> {
-                    _events.emit(
-                        WorkoutSessionUiEvent.ShowSnackbar(result.exception.toMessage())
-                    )
-                }
-                else -> Unit
-            }
-        }
+        // Backend log is created on the first registerSet() call (if backendLogId is still null).
     }
 
     fun registerSet(exerciseId: String, weightKg: Double, reps: Int, rpe: Int? = null) {
@@ -197,6 +218,9 @@ class WorkoutSessionViewModel @Inject constructor(
 
         val sessionData = currentState.sessionData
         val exercise = sessionData.exercises.find { it.exerciseId == exerciseId } ?: return
+
+        // Capture BEFORE any async work so the first-set branch is stable.
+        val isFirstSet = backendLogId == null
 
         val estimatedOneRepMax = calculateOneRepMax(weightKg, reps)
 
@@ -238,37 +262,72 @@ class WorkoutSessionViewModel @Inject constructor(
             exercise.restSeconds
         }
 
-        _uiState.value = WorkoutSessionUiState.SessionActive(
-            sessionData.copy(
-                exercises = updatedExercises,
-                registeredSets = updatedSets,
-                autoregulationSuggestion = autoregulatedWeight,
-                restTimerSeconds = restSeconds,
-                volumeByMuscleGroup = updatedVolume,
-            )
+        val setDto = LogWorkoutSetRequestDto(
+            trainingExerciseId = setLog.trainingExerciseId,
+            exerciseName = setLog.exerciseName,
+            exerciseSetNumber = setLog.exerciseSetNumber,
+            repsCompleted = setLog.repsCompleted,
+            weightUsed = setLog.weightUsed,
+            durationSeconds = setLog.durationSeconds,
+            completed = setLog.completed,
         )
 
-        startRestTimer(restSeconds)
-
-        // Persist the set to the backend if the session was already created.
-        // Track the job so finalizeSession() can await completion.
-        backendLogId?.let { logId ->
-            val job = viewModelScope.launch {
-                addSetToLogUseCase(
-                    logId,
-                    LogWorkoutSetRequestDto(
-                        trainingExerciseId = setLog.trainingExerciseId,
-                        exerciseName = setLog.exerciseName,
-                        exerciseSetNumber = setLog.exerciseSetNumber,
-                        repsCompleted = setLog.repsCompleted,
-                        weightUsed = setLog.weightUsed,
-                        durationSeconds = setLog.durationSeconds,
-                        completed = setLog.completed,
-                    ),
+        if (isFirstSet) {
+            // Create the backend log with the first set included in the request.
+            // UI update is deferred until after the backend call so backendLogId is set correctly.
+            // On error we still update the UI (set is registered locally) and emit a snackbar.
+            viewModelScope.launch {
+                val logRequest = LogWorkoutSessionRequestDto(
+                    trainingPlanId = currentPlanId,
+                    trainingDayId = currentDayId,
+                    date = LocalDate.now().toString(),
+                    exercises = listOf(setDto),
                 )
+                when (val result = logWorkoutSessionUseCase(logRequest)) {
+                    is Result.Success -> {
+                        backendLogId = result.data.id
+                        Log.i("AIFIT_REGISTER", "Backend log created on first set: ${result.data.id}")
+                    }
+                    is Result.Error -> {
+                        Log.e("AIFIT_REGISTER", "Failed to create backend log on first set: ${result.exception.message}")
+                        _events.send(WorkoutSessionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    }
+                    else -> Unit
+                }
+                // Always update the UI so the user sees the set registered locally.
+                _uiState.value = WorkoutSessionUiState.SessionActive(
+                    sessionData.copy(
+                        exercises = updatedExercises,
+                        registeredSets = updatedSets,
+                        autoregulationSuggestion = autoregulatedWeight,
+                        restTimerSeconds = restSeconds,
+                        volumeByMuscleGroup = updatedVolume,
+                    )
+                )
+                startRestTimer(restSeconds)
             }
-            pendingSetJobs.add(job)
-            job.invokeOnCompletion { pendingSetJobs.remove(job) }
+        } else {
+            // Not the first set — update UI immediately and persist via addSetToLog.
+            _uiState.value = WorkoutSessionUiState.SessionActive(
+                sessionData.copy(
+                    exercises = updatedExercises,
+                    registeredSets = updatedSets,
+                    autoregulationSuggestion = autoregulatedWeight,
+                    restTimerSeconds = restSeconds,
+                    volumeByMuscleGroup = updatedVolume,
+                )
+            )
+
+            startRestTimer(restSeconds)
+
+            // Persist the set to the backend. Track the job so finalizeSession() can await it.
+            backendLogId?.let { logId ->
+                val job = viewModelScope.launch {
+                    addSetToLogUseCase(logId, setDto)
+                }
+                pendingSetJobs.add(job)
+                job.invokeOnCompletion { pendingSetJobs.remove(job) }
+            }
         }
     }
 
@@ -304,12 +363,32 @@ class WorkoutSessionViewModel @Inject constructor(
                         backendLogId = retryResult.data.id
                     }
                     is Result.Error -> {
-                        Log.e("AIFIT_FINALIZE", "Failed to create backend log: ${retryResult.exception.message}")
-                        _events.emit(
-                            WorkoutSessionUiEvent.ShowSnackbar(retryResult.exception.toMessage())
-                        )
-                        _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
-                        return@launch
+                        if (retryResult.exception is AppException.ConflictException) {
+                            // Backend already has a log for this user+day (409).
+                            // Try to recover by finding the existing log and reusing its ID.
+                            Log.w("AIFIT_FINALIZE", "Conflict creating log, searching for existing log for dayId=$currentDayId")
+                            val today = LocalDate.now().toString()
+                            val historyResult = getWorkoutHistoryUseCase(currentPlanId, from = today, to = today)
+                                .filter { it !is Result.Loading }
+                                .first()
+                            val existingLog = (historyResult as? Result.Success)?.data
+                                ?.find { it.trainingDayId == currentDayId }
+                            if (existingLog != null) {
+                                Log.i("AIFIT_FINALIZE", "Recovered from 409: reusing existing log ${existingLog.id}")
+                                backendLogId = existingLog.id
+                                // Do not return — fall through to finalize with the recovered ID.
+                            } else {
+                                Log.e("AIFIT_FINALIZE", "409 conflict but no existing log found for dayId=$currentDayId")
+                                _events.send(WorkoutSessionUiEvent.ShowSnackbar(retryResult.exception.toMessage()))
+                                _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
+                                return@launch
+                            }
+                        } else {
+                            Log.e("AIFIT_FINALIZE", "Failed to create backend log: ${retryResult.exception.message}")
+                            _events.send(WorkoutSessionUiEvent.ShowSnackbar(retryResult.exception.toMessage()))
+                            _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
+                            return@launch
+                        }
                     }
                     else -> {
                         _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
@@ -323,8 +402,8 @@ class WorkoutSessionViewModel @Inject constructor(
                 return@launch
             }
 
-            // Await all pending set upload jobs before finalizing
-            pendingSetJobs.toList().joinAll()
+            // Await all pending set upload jobs before finalizing (with timeout)
+            withTimeoutOrNull(5_000L) { pendingSetJobs.toList().joinAll() }
 
             when (val finalizeResult = finalizeWorkoutSessionUseCase(logId, systemicFatigue, jointPainReport)) {
                 is Result.Success -> {
@@ -332,10 +411,13 @@ class WorkoutSessionViewModel @Inject constructor(
                 }
                 is Result.Error -> {
                     Log.e("AIFIT_FINALIZE", "Finalize failed for logId=$logId: ${finalizeResult.exception.message}")
-                    _events.emit(WorkoutSessionUiEvent.ShowSnackbar(finalizeResult.exception.toMessage()))
+                    _events.send(WorkoutSessionUiEvent.ShowSnackbar(finalizeResult.exception.toMessage()))
                     _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
                 }
-                else -> Unit
+                else -> {
+                    Log.e("AIFIT_FINALIZE", "Unexpected result state during finalize for logId=$logId")
+                    _uiState.value = WorkoutSessionUiState.SessionActive(sessionData)
+                }
             }
         }
     }
@@ -352,7 +434,7 @@ class WorkoutSessionViewModel @Inject constructor(
             }
             backendLogId = null
 
-            _events.emit(WorkoutSessionUiEvent.NavigateBack)
+            _events.send(WorkoutSessionUiEvent.NavigateBack)
         }
     }
 
@@ -365,7 +447,7 @@ class WorkoutSessionViewModel @Inject constructor(
                 _restTimerSeconds.value = remaining
                 if (remaining > 0) delay(1000L)
             }
-            _events.emit(WorkoutSessionUiEvent.ShowSnackbar("Rest complete"))
+            _events.send(WorkoutSessionUiEvent.ShowSnackbar("Rest complete"))
             _restTimerSeconds.value = null
         }
     }

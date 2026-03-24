@@ -305,9 +305,12 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun loadTodayWorkoutHistory(): List<WorkoutLog> {
         val today = LocalDate.now().toString()
-        return getWorkoutHistoryUseCase(from = today, to = today)
-            .first { it !is Result.Loading }
-            .let { r -> if (r is Result.Success) r.data else emptyList() }
+        var result = emptyList<WorkoutLog>()
+        getWorkoutHistoryUseCase(from = today, to = today)
+            .collect { r ->
+                if (r is Result.Success) result = r.data
+            }
+        return result
     }
 
     private fun deriveTodayTraining(

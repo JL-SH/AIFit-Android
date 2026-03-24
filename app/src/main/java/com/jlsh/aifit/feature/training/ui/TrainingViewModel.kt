@@ -71,6 +71,7 @@ class TrainingViewModel @Inject constructor(
     val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
 
     private var fetchPlansJob: Job? = null
+    private var isDeletingPlan = false
 
     // 4. INIT
     init {
@@ -88,6 +89,7 @@ class TrainingViewModel @Inject constructor(
 
     // 5. PUBLIC FUNCTIONS
     fun onRefresh() {
+        if (isDeletingPlan) return
         fetchPlans()
     }
 
@@ -232,7 +234,23 @@ class TrainingViewModel @Inject constructor(
     }
 
     private fun deletePlan(planId: String) {
+        isDeletingPlan = true
         viewModelScope.launch {
+            // Optimistic UI update: remove the plan instantly before the network call
+            val previousHubState = _hubUiState.value
+            val previousUiState = _uiState.value
+            if (previousHubState is TrainingHubUiState.ActivePlan) {
+                val filteredPlans = previousHubState.allPlans.filter { it.id != planId }
+                _hubUiState.value = computeHubState(filteredPlans)
+                if (previousUiState is TrainingUiState.Success) {
+                    val filteredUiPlans = previousUiState.plans.filter { it.id != planId }
+                    _uiState.value = previousUiState.copy(
+                        plans = filteredUiPlans,
+                        activePlan = filteredUiPlans.firstOrNull { it.status == PlanStatus.ACTIVE },
+                    )
+                }
+            }
+
             when (val result = deleteTrainingPlanUseCase(planId)) {
                 is Result.Success -> {
                     emitEvent(TrainingUiEvent.ShowSnackbar("Plan eliminado"))
@@ -240,10 +258,14 @@ class TrainingViewModel @Inject constructor(
                     fetchPlans()
                 }
                 is Result.Error -> {
+                    // Restore previous state on failure
+                    _hubUiState.value = previousHubState
+                    _uiState.value = previousUiState
                     emitEvent(TrainingUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
                 else -> Unit
             }
+            isDeletingPlan = false
         }
     }
 

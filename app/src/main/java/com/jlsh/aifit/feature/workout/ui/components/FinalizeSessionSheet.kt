@@ -67,7 +67,7 @@ fun FinalizeSessionSheet(
 private fun FinalizeSessionSheetContent(
     onConfirm: (systemicFatigue: Int, jointPainReport: List<JointPainEntry>) -> Unit,
 ) {
-    var fatigueValue by remember { mutableFloatStateOf(5f) }
+    var fatigueValue by remember { mutableFloatStateOf(0f) }
     var hasInteractedWithSlider by remember { mutableStateOf(false) }
     val selectedZones = remember { mutableStateMapOf<JointZone, Boolean>() }
     val zoneNotes: SnapshotStateMap<JointZone, String> = remember { mutableStateMapOf() }
