@@ -41,6 +41,10 @@ class TrainingRepositoryImpl @Inject constructor(
         if (cached.isNotEmpty()) {
             // TODO: remove diagnostic log below
             Log.d("AIFIT_PLANS", "EMIT CACHE — count=${cached.size} ids=${cached.map { it.id }.take(3)}")
+            // AIFIT_DEBUG: status de cada plan en caché
+            cached.forEach { p ->
+                Log.d("AIFIT_DEBUG", "[REPO][CACHE] plan id=${p.id} status=${p.status} days=${p.days.size}")
+            }
             emit(Result.Success(cached))
         }
 
@@ -50,6 +54,10 @@ class TrainingRepositoryImpl @Inject constructor(
                 dao.upsertAll(plans.map { it.toEntity(userId) })
                 // TODO: remove diagnostic log below
                 Log.d("AIFIT_PLANS", "EMIT NETWORK — count=${plans.size} ids=${plans.map { it.id }.take(3)}")
+                // AIFIT_DEBUG: status de cada plan recibido de red
+                plans.forEach { p ->
+                    Log.d("AIFIT_DEBUG", "[REPO][NETWORK] plan id=${p.id} status=${p.status} days=${p.days.size}")
+                }
                 emit(Result.Success(plans))
             }
             is Result.Error -> {
@@ -60,10 +68,11 @@ class TrainingRepositoryImpl @Inject constructor(
     }.distinctUntilChanged()
 
     override suspend fun getTrainingPlanDetail(planId: String): Result<TrainingPlan> {
-        val cached = dao.getById(planId)
+        Log.d("AIFIT_DEBUG", "[REPO][DETAIL] START planId=$planId")
         return when (val remote = safeApiCall { apiService.getTrainingPlanById(planId) }) {
             is Result.Success -> {
                 val plan = remote.data.toDomain()
+                Log.d("AIFIT_DEBUG", "[REPO][DETAIL] OK planId=${plan.id} status=${plan.status} days=${plan.days.size} totalExercises=${plan.days.sumOf { it.exercises.size }}")
                 // Persist detail so future cache fallbacks include this plan
                 val userId = sessionManager.getUserId()
                 if (userId != null) {
@@ -72,12 +81,12 @@ class TrainingRepositoryImpl @Inject constructor(
                 Result.Success(plan)
             }
             is Result.Error -> {
-                if (cached != null) {
-                    // Network failed but Room has a prior snapshot — return it
-                    Result.Success(cached.toDomain())
-                } else {
-                    remote
-                }
+                Log.e("AIFIT_DEBUG", "[REPO][DETAIL] ERROR planId=$planId — ${remote.exception.message}")
+                // Room entity never stores days, so returning the cached entity
+                // as a "success" would give the caller a plan with days=emptyList(),
+                // which silently breaks deriveTodayTraining(). Propagate the error
+                // so the caller can retry or fall back gracefully.
+                remote
             }
             else -> Result.Loading
         }
@@ -137,9 +146,21 @@ class TrainingRepositoryImpl @Inject constructor(
     override suspend fun activatePlan(planId: String): Result<TrainingPlan> {
         val userId = sessionManager.getUserId()
             ?: return Result.Error(AppException.UnknownException("No active session"))
+
+        // Read the plan that is currently ACTIVE (and is not the one being activated)
+        // so we can demote it to PAUSED in the local cache after the API call succeeds,
+        // preventing a transient two-active-plan flash.
+        val previouslyActivePlan = dao.getAllByUserId(userId)
+            .firstOrNull { it.status.equals("ACTIVE", ignoreCase = true) && it.id != planId }
+
         return when (val remote = safeApiCall { apiService.activatePlan(planId) }) {
             is Result.Success -> {
                 val plan = remote.data.toDomain()
+                // (1) Demote the old active plan to PAUSED before upserting the new one
+                if (previouslyActivePlan != null) {
+                    dao.upsertAll(listOf(previouslyActivePlan.copy(status = "PAUSED")))
+                }
+                // (2) Upsert the newly activated plan
                 dao.upsertAll(listOf(plan.toEntity(userId)))
                 Result.Success(plan)
             }

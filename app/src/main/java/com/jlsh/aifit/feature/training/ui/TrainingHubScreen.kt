@@ -194,6 +194,7 @@ private fun ActivePlanContent(
     modifier: Modifier = Modifier,
 ) {
     var planToDelete by remember { mutableStateOf<String?>(null) }
+    var planToActivate by remember { mutableStateOf<String?>(null) }
 
     if (planToDelete != null) {
         ConfirmationDialog(
@@ -203,6 +204,18 @@ private fun ActivePlanContent(
                 planToDelete?.let { onDeletePlan(it) }
             },
             onDismiss = { planToDelete = null },
+        )
+    }
+
+    if (planToActivate != null) {
+        ConfirmationDialog(
+            title = "Activar plan",
+            message = "Solo puede haber un plan activo. El plan actual pasará a pausado.",
+            onConfirm = {
+                planToActivate?.let { onActivatePlan(it) }
+                planToActivate = null
+            },
+            onDismiss = { planToActivate = null },
         )
     }
 
@@ -277,7 +290,7 @@ private fun ActivePlanContent(
             PlanSummaryItem(
                 plan = plan,
                 onClick = { onPlanClicked(plan.id) },
-                onActivate = { onActivatePlan(plan.id) },
+                onActivate = { planToActivate = plan.id },
                 onDelete = { planToDelete = plan.id },
             )
         }

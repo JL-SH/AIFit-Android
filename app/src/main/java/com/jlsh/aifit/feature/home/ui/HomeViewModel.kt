@@ -13,6 +13,7 @@ import com.jlsh.aifit.feature.gamification.domain.model.Streak
 import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserStreaksUseCase
 import com.jlsh.aifit.feature.home.ui.state.HomeUiEvent
 import com.jlsh.aifit.feature.home.ui.state.HomeUiState
+import com.jlsh.aifit.feature.home.ui.state.ActivePlanSummary
 import com.jlsh.aifit.feature.home.ui.state.NextMealState
 import com.jlsh.aifit.feature.home.ui.state.TodayNutritionState
 import com.jlsh.aifit.feature.home.ui.state.TodayTrainingState
@@ -42,9 +43,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
@@ -86,19 +87,18 @@ class HomeViewModel @Inject constructor(
         loadJob = viewModelScope.launch {
             _uiState.value = HomeUiState.Loading
 
-            // ── Phase 1: Load ALL data in parallel (including first plan emissions) ──
+            // ── Phase 1: Load ALL data in parallel ──
+            // awaitFreshPlans/awaitFreshDietPlans collect the full flow (cache + network)
+            // so initialTrainingPlans/initialDietPlans always contain fresh server IDs,
+            // not just the Room-cached ones.
             val profileDeferred = async { loadProfile() }
             val nutritionDeferred = async { loadNutrition() }
             val weeklyDeferred = async { loadWeeklySummary() }
             val streaksDeferred = async { loadStreaks() }
             val weightDeferred = async { loadWeightHistory() }
             val workoutHistoryDeferred = async { loadTodayWorkoutHistory() }
-            val trainingPlansDeferred = async {
-                getTrainingPlansUseCase().first { it !is Result.Loading }
-            }
-            val dietPlansDeferred = async {
-                getDietPlansUseCase().first { it !is Result.Loading }
-            }
+            val trainingPlansDeferred = async { awaitFreshPlans() }
+            val dietPlansDeferred = async { awaitFreshDietPlans() }
 
             val profile = profileDeferred.await()
             val nutritionPair = nutritionDeferred.await()
@@ -106,8 +106,14 @@ class HomeViewModel @Inject constructor(
             val streaks = streaksDeferred.await()
             val weightEntries = weightDeferred.await()
             val todayWorkoutLogs = workoutHistoryDeferred.await()
-            val trainingPlansResult = trainingPlansDeferred.await()
-            val dietPlansResult = dietPlansDeferred.await()
+            val initialTrainingPlans = trainingPlansDeferred.await()
+            val initialDietPlans = dietPlansDeferred.await()
+
+            // AIFIT_DEBUG ── checkpoint 1: qué devolvió awaitFreshPlans
+            Log.d("AIFIT_DEBUG", "[VM][loadAll] awaitFreshPlans count=${initialTrainingPlans.size}")
+            initialTrainingPlans.forEach { p ->
+                Log.d("AIFIT_DEBUG", "[VM][loadAll]   plan id=${p.id} status=${p.status}")
+            }
 
             if (profile == null) {
                 _uiState.value = HomeUiState.Error("No se pudo cargar el perfil")
@@ -116,19 +122,44 @@ class HomeViewModel @Inject constructor(
 
             val todayNutrition = deriveNutrition(nutritionPair.first, nutritionPair.second)
 
-            // Derive initial training state from the first plan emission
-            val initialTrainingPlans = (trainingPlansResult as? Result.Success)?.data ?: emptyList()
+            // Derive initial training state — IDs are guaranteed fresh from network
             val initialActivePlan = initialTrainingPlans.find { it.status == PlanStatus.ACTIVE }
-            val initialActivePlanDetail = initialActivePlan?.let { loadPlanDetail(it.id) }
+            // AIFIT_DEBUG ── checkpoint 2: ¿se encontró un plan ACTIVE?
+            if (initialActivePlan == null) {
+                Log.w("AIFIT_DEBUG", "[VM][loadAll] initialActivePlan = NULL — ningún plan tiene status=ACTIVE en la lista de ${initialTrainingPlans.size} planes")
+            } else {
+                Log.d("AIFIT_DEBUG", "[VM][loadAll] initialActivePlan FOUND id=${initialActivePlan.id} status=${initialActivePlan.status}")
+            }
+
+            val initialActivePlanDetail = initialActivePlan?.let {
+                val detail = loadPlanDetail(it.id)
+                // AIFIT_DEBUG ── checkpoint 3: ¿loadPlanDetail tuvo éxito?
+                if (detail == null) {
+                    Log.w("AIFIT_HOME",
+                        "loadAll — loadPlanDetail returned null for planId=${it.id}. " +
+                        "API unavailable or stale ID. UI will show null training; onResumed() will retry.")
+                } else {
+                    Log.d("AIFIT_DEBUG", "[VM][loadAll] loadPlanDetail OK planId=${detail.id} days=${detail.days.size} exercises=${detail.days.sumOf { d -> d.exercises.size }}")
+                }
+                detail
+            }
             cachedActivePlanDetail = initialActivePlanDetail
-            cachedActivePlanId = initialActivePlan?.id  // Fix 2: keep id even if detail load failed
+            cachedActivePlanId = initialActivePlan?.id
             cachedWeeklySummary = weeklySummary
             val initialTodayTraining = deriveTodayTraining(
                 initialActivePlanDetail, weeklySummary, todayWorkoutLogs,
             )
 
-            // Derive initial diet/meal state from the first plan emission
-            val initialDietPlans = (dietPlansResult as? Result.Success)?.data ?: emptyList()
+            // Build ActivePlanSummary so the UI can distinguish "rest day" from "no plan"
+            val activePlanSummary = when {
+                initialActivePlanDetail != null ->
+                    ActivePlanSummary(id = initialActivePlanDetail.id, name = initialActivePlanDetail.name)
+                initialActivePlan != null ->
+                    ActivePlanSummary(id = initialActivePlan.id, name = initialActivePlan.name)
+                else -> null
+            }
+
+            // Derive initial diet/meal state
             val initialActiveDiet = initialDietPlans.find { it.status == PlanStatus.ACTIVE }
             val initialActiveDietDetail = initialActiveDiet?.let { loadDietPlanDetail(it.id) }
             val initialNextMeal = deriveNextMeal(initialActiveDietDetail, nutritionPair.first)
@@ -137,6 +168,7 @@ class HomeViewModel @Inject constructor(
             _uiState.value = HomeUiState.Success(
                 userName = profile.name,
                 avatarUrl = profile.profilePictureUrl,
+                activePlan = activePlanSummary,
                 todayTraining = initialTodayTraining,
                 todayNutrition = todayNutrition,
                 nextMeal = initialNextMeal,
@@ -144,36 +176,29 @@ class HomeViewModel @Inject constructor(
                 weeklySummary = weeklySummary,
                 weightEntries = weightEntries,
             )
+            // AIFIT_DEBUG ── checkpoint 4: estado final emitido
+            Log.d("AIFIT_DEBUG", "[VM][loadAll] _uiState = Success — todayTraining=${
+                if (initialTodayTraining == null) "NULL"
+                else "planId=${initialTodayTraining.planId} dayId=${initialTodayTraining.dayId} exercises=${initialTodayTraining.exerciseCount}"
+            }")
 
-            // ── Phase 3: Reactively update from subsequent emissions (skip the first already consumed) ──
+            // ── Phase 3: Diet-only background sync ──
+            // Training plans are NOT re-collected here: awaitFreshPlans() in Phase 1
+            // already waited for the network response, so cachedActivePlanId is already
+            // the fresh server ID. Re-collecting would only duplicate the API call.
+            // Diet plans are still re-collected to catch server-side changes that could
+            // have raced with the Phase 1 collection.
             launch {
-                getTrainingPlansUseCase().drop(1).collect { result ->
-                    if (result !is Result.Success) return@collect
-                    val plans = result.data
-                    val activePlan = plans.find { it.status == PlanStatus.ACTIVE }
-                    val activePlanDetail = activePlan?.let { loadPlanDetail(it.id) }
-                    cachedActivePlanDetail = activePlanDetail
-                    cachedActivePlanId = activePlan?.id  // Fix 2: keep id even if detail load failed
-                    val todayTraining = deriveTodayTraining(
-                        activePlanDetail, weeklySummary, todayWorkoutLogs,
-                    )
-                    val current = _uiState.value
-                    if (current is HomeUiState.Success) {
-                        _uiState.value = current.copy(todayTraining = todayTraining)
-                    }
+                var latestDietPlans = initialDietPlans
+                getDietPlansUseCase().collect { result ->
+                    if (result is Result.Success) latestDietPlans = result.data
                 }
-            }
-
-            launch {
-                getDietPlansUseCase().drop(1).collect { result ->
-                    if (result !is Result.Success) return@collect
-                    val plans = result.data
-                    val activeDietPlan = plans.find { it.status == PlanStatus.ACTIVE }
-                    val activeDietDetail = activeDietPlan?.let { loadDietPlanDetail(it.id) }
-                    val nextMeal = deriveNextMeal(activeDietDetail, nutritionPair.first)
-                    val current = _uiState.value
-                    if (current is HomeUiState.Success) {
-                        _uiState.value = current.copy(nextMeal = nextMeal)
+                val freshActiveDiet = latestDietPlans.find { it.status == PlanStatus.ACTIVE }
+                if (freshActiveDiet != null && freshActiveDiet.id != initialActiveDiet?.id) {
+                    val detail = loadDietPlanDetail(freshActiveDiet.id)
+                    val nextMeal = deriveNextMeal(detail, nutritionPair.first)
+                    _uiState.update { cur ->
+                        if (cur is HomeUiState.Success) cur.copy(nextMeal = nextMeal) else cur
                     }
                 }
             }
@@ -207,9 +232,8 @@ class HomeViewModel @Inject constructor(
             when (val result = logBodyWeightUseCase(request)) {
                 is Result.Success -> {
                     val newWeightEntries = loadWeightHistory()
-                    val currentState = _uiState.value
-                    if (currentState is HomeUiState.Success) {
-                        _uiState.value = currentState.copy(weightEntries = newWeightEntries)
+                    _uiState.update { current ->
+                        if (current is HomeUiState.Success) current.copy(weightEntries = newWeightEntries) else current
                     }
                     emitEvent(HomeUiEvent.ShowSnackbar("Peso registrado ✓"))
                 }
@@ -242,19 +266,59 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onResumed() {
-        // TODO: remove diagnostic log below
         Log.d("AIFIT_HOME", "onResumed called")
         viewModelScope.launch {
-            refreshWorkoutStatus()
+            // Re-query plans to detect any activation that happened while away.
+            // Collect every non-Loading emission (cache then network) so we don't
+            // miss a freshly-activated plan that is only visible in the network result.
+            var freshActivePlan: TrainingPlan? = null
+            getTrainingPlansUseCase().collect { result ->
+                if (result is Result.Loading) return@collect
+                val candidate = (result as? Result.Success)?.data
+                    ?.find { it.status == PlanStatus.ACTIVE }
+                if (candidate != null) freshActivePlan = candidate
+            }
 
-            // Fix 2: recover from a transient null cachedActivePlanDetail (e.g. network error
-            // during loadPlanDetail after a ViewModel recreation) without requiring a full restart.
-            if (cachedActivePlanDetail == null) {
-                val planId = cachedActivePlanId ?: return@launch
-                val recovered = loadPlanDetail(planId)
-                if (recovered != null) {
-                    cachedActivePlanDetail = recovered
-                    // Re-run refreshWorkoutStatus so deriveTodayTraining uses the recovered plan.
+            val resolvedActivePlan = freshActivePlan
+            when {
+                resolvedActivePlan != null && resolvedActivePlan.id != cachedActivePlanId -> {
+                    // New (or first-ever) active plan detected — load full detail
+                    Log.d("AIFIT_HOME",
+                        "onResumed — new active plan id=${resolvedActivePlan.id}")
+                    val detail = loadPlanDetail(resolvedActivePlan.id)
+                    if (detail != null) {
+                        cachedActivePlanDetail = detail
+                        cachedActivePlanId = resolvedActivePlan.id
+                    } else {
+                        // API failed — still record the plan id so we retry next time
+                        cachedActivePlanId = resolvedActivePlan.id
+                    }
+                    refreshWorkoutStatus()
+                }
+                resolvedActivePlan != null && cachedActivePlanDetail == null -> {
+                    // Same plan but detail was never loaded — retry
+                    Log.d("AIFIT_HOME", "onResumed — same plan, retrying detail load")
+                    val detail = loadPlanDetail(resolvedActivePlan.id)
+                    if (detail != null) {
+                        cachedActivePlanDetail = detail
+                    }
+                    refreshWorkoutStatus()
+                }
+                resolvedActivePlan == null && cachedActivePlanId != null -> {
+                    // Active plan was deactivated while away — clear cached state
+                    Log.d("AIFIT_HOME", "onResumed — active plan cleared")
+                    cachedActivePlanDetail = null
+                    cachedActivePlanId = null
+                    _uiState.update { current ->
+                        if (current is HomeUiState.Success) current.copy(
+                            todayTraining = null,
+                            activePlan = null,
+                        ) else current
+                    }
+                }
+                else -> {
+                    // Same plan (or still no plan) — just refresh workout status
+                    Log.d("AIFIT_HOME", "onResumed — same plan, refreshing")
                     refreshWorkoutStatus()
                 }
             }
@@ -264,15 +328,31 @@ class HomeViewModel @Inject constructor(
     // ── Private helpers ──
 
     private suspend fun refreshWorkoutStatus() {
-        val current = _uiState.value as? HomeUiState.Success ?: return
+        if (_uiState.value !is HomeUiState.Success) return
         val freshWorkoutLogs = loadTodayWorkoutHistory()
+        // AIFIT_DEBUG ── checkpoint 6: estado del caché al hacer refresh
+        Log.d("AIFIT_DEBUG", "[VM][refresh] cachedActivePlanDetail=${
+            if (cachedActivePlanDetail == null) "NULL"
+            else "id=${cachedActivePlanDetail!!.id} days=${cachedActivePlanDetail!!.days.size}"
+        }")
         // TODO: remove diagnostic logs below
         Log.d("AIFIT_HOME", "refreshWorkoutStatus — freshLogs count=${freshWorkoutLogs.size}")
         Log.d("AIFIT_HOME", "freshLogs detail — ${freshWorkoutLogs.map { "id=${it.id} isLocked=${it.isLocked} planId=${it.trainingPlanId}" }}")
         val todayTraining = deriveTodayTraining(
             cachedActivePlanDetail, cachedWeeklySummary, freshWorkoutLogs,
         )
-        _uiState.value = current.copy(todayTraining = todayTraining)
+        // Keep or derive ActivePlanSummary: use cached detail if available, otherwise
+        // preserve whatever is already in state (covers the case where detail load failed
+        // but cachedActivePlanId is set).
+        val freshActivePlanSummary = cachedActivePlanDetail
+            ?.let { ActivePlanSummary(it.id, it.name) }
+            ?: (_uiState.value as? HomeUiState.Success)?.activePlan
+        _uiState.update { current ->
+            if (current is HomeUiState.Success) current.copy(
+                todayTraining = todayTraining,
+                activePlan = freshActivePlanSummary,
+            ) else current
+        }
     }
 
     private suspend fun loadProfile(): UserProfile? =
@@ -286,6 +366,31 @@ class HomeViewModel @Inject constructor(
             is Result.Success -> r.data
             else -> null
         }
+
+    /**
+     * Collects the full getTrainingPlansUseCase() flow (cache emission + network emission)
+     * and returns the last [Result.Success] data, or an empty list if every emission failed.
+     * Using this instead of .first { it !is Result.Loading } guarantees that the returned
+     * list always contains the fresh server IDs, not the potentially stale Room-cached ones.
+     */
+    private suspend fun awaitFreshPlans(): List<TrainingPlan> {
+        var latest = emptyList<TrainingPlan>()
+        getTrainingPlansUseCase().collect { result ->
+            if (result is Result.Success) latest = result.data
+        }
+        return latest
+    }
+
+    /**
+     * Same as [awaitFreshPlans] but for diet plans.
+     */
+    private suspend fun awaitFreshDietPlans(): List<DietPlan> {
+        var latest = emptyList<DietPlan>()
+        getDietPlansUseCase().collect { result ->
+            if (result is Result.Success) latest = result.data
+        }
+        return latest
+    }
 
     private suspend fun loadDietPlanDetail(planId: String): DietPlan? =
         when (val r = getDietPlanDetailUseCase(planId)) {
@@ -343,17 +448,45 @@ class HomeViewModel @Inject constructor(
         weeklySummary: WeeklyProgressSummary?,
         todayWorkoutLogs: List<WorkoutLog>,
     ): TodayTrainingState? {
-        if (activePlan == null || activePlan.days.isEmpty()) return null
+        // AIFIT_DEBUG ── checkpoint 5: razón exacta de retorno null
+        if (activePlan == null) {
+            Log.w("AIFIT_DEBUG", "[VM][derive] RETURN NULL — activePlan is null")
+            return null
+        }
+        if (activePlan.days.isEmpty()) {
+            Log.w("AIFIT_DEBUG", "[VM][derive] RETURN NULL — activePlan.days isEmpty (planId=${activePlan.id})")
+            return null
+        }
 
         val today = java.time.DayOfWeek.from(LocalDate.now())
-        val todayTrainingDay = activePlan.days.find { it.dayOfWeek == today } ?: return null
 
-        if (todayTrainingDay.dayType == TrainingDayType.REST) return null
+        // Step 1: try to match by dayOfWeek (populated for plans generated after the
+        // day_of_week column was added to the database).
+        var todayTrainingDay = activePlan.days.find { it.dayOfWeek == today }
+
+        // Step 2: fallback for legacy plans where every dayOfWeek is null — distribute
+        // training days across the week using the ISO day-of-week index (1=Mon…7=Sun).
+        if (todayTrainingDay == null) {
+            val nonRestDays = activePlan.days.filter {
+                it.dayType != TrainingDayType.REST && it.exercises.isNotEmpty()
+            }
+            if (nonRestDays.isEmpty()) {
+                Log.d("AIFIT_DEBUG", "Today is $today. Found workout: Rest Day (no non-rest days in plan)")
+                return null
+            }
+            todayTrainingDay = nonRestDays[(today.value - 1) % nonRestDays.size]
+        }
+
+        if (todayTrainingDay.dayType == TrainingDayType.REST) {
+            Log.d("AIFIT_DEBUG", "Today is $today. Found workout: Rest Day (dayType=REST, day='${todayTrainingDay.name}')")
+            return null
+        }
 
         val isCompleted = todayWorkoutLogs.any { it.trainingPlanId == activePlan.id && it.isLocked }
         // TODO: remove diagnostic logs below
         Log.d("AIFIT_HOME", "deriveTodayTraining — activePlan=${activePlan.id} todayLogs=${todayWorkoutLogs.size} isCompleted=$isCompleted")
         Log.d("AIFIT_HOME", "todayLogs detail — ${todayWorkoutLogs.map { "id=${it.id} isLocked=${it.isLocked} planId=${it.trainingPlanId}" }}")
+        Log.d("AIFIT_DEBUG", "Today is $today. Found workout: ${todayTrainingDay.name}")
 
         val adherence = if (weeklySummary != null && weeklySummary.workoutsTarget > 0) {
             (weeklySummary.workoutsThisWeek.toFloat() / weeklySummary.workoutsTarget * 100f)

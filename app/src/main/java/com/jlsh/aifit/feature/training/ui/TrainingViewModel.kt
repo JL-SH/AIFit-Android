@@ -111,6 +111,29 @@ class TrainingViewModel @Inject constructor(
     fun onActivatePlan(planId: String) {
         // TODO: remove diagnostic log below
         Log.d("AIFIT_PLANS", "onActivatePlan START — planId=$planId")
+
+        // Capture previous states for rollback on error
+        val previousUiState = _uiState.value
+        val previousHubState = _hubUiState.value
+
+        // Optimistic update: reflect activation immediately so the UI responds without waiting
+        // for the ~3-second API call.
+        val currentSuccess = previousUiState as? TrainingUiState.Success
+        if (currentSuccess != null) {
+            val optimisticPlans = currentSuccess.plans.map { plan ->
+                when {
+                    plan.id == planId -> plan.copy(status = PlanStatus.ACTIVE)
+                    plan.status == PlanStatus.ACTIVE -> plan.copy(status = PlanStatus.PAUSED)
+                    else -> plan
+                }
+            }
+            _uiState.value = currentSuccess.copy(
+                plans = optimisticPlans,
+                activePlan = optimisticPlans.firstOrNull { it.status == PlanStatus.ACTIVE },
+            )
+            _hubUiState.value = computeHubState(optimisticPlans)
+        }
+
         viewModelScope.launch {
             when (val result = setActivePlanUseCase(planId)) {
                 is Result.Success -> {
@@ -119,6 +142,9 @@ class TrainingViewModel @Inject constructor(
                     fetchPlans()
                 }
                 is Result.Error -> {
+                    // Restore previous state so the optimistic change is undone
+                    _uiState.value = previousUiState
+                    _hubUiState.value = previousHubState
                     if (result.exception is AppException.NotFoundException) {
                         // TODO: remove diagnostic log below
                         Log.d("AIFIT_PLANS", "onActivatePlan ERROR (NotFound) — planId=$planId")

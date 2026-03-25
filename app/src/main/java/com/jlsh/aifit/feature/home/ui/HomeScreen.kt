@@ -65,7 +65,7 @@ import com.jlsh.aifit.core.ui.components.display.MacroRingChart
 import com.jlsh.aifit.core.ui.components.display.MacroRingData
 import com.jlsh.aifit.core.ui.components.display.StreakBadge
 import com.jlsh.aifit.core.ui.components.display.UserAvatar
-import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
+import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.gamification.domain.model.Streak
@@ -74,6 +74,7 @@ import com.jlsh.aifit.feature.gamification.domain.model.StreakType
 import com.jlsh.aifit.feature.home.ui.components.LogWeightSheet
 import com.jlsh.aifit.feature.home.ui.state.HomeUiEvent
 import com.jlsh.aifit.feature.home.ui.state.HomeUiState
+import com.jlsh.aifit.feature.home.ui.state.ActivePlanSummary
 import com.jlsh.aifit.feature.home.ui.state.NextMealState
 import com.jlsh.aifit.feature.home.ui.state.TodayNutritionState
 import com.jlsh.aifit.feature.home.ui.state.TodayTrainingState
@@ -136,12 +137,7 @@ fun HomeScreen(
     ) {
         when (val state = uiState) {
             is HomeUiState.Loading -> {
-                InlineLoadingIndicator(
-                    message = "Cargando…",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(AiFitSpacing.xl),
-                )
+                LoadingScreen()
             }
 
             is HomeUiState.Error -> {
@@ -229,6 +225,7 @@ private fun HomeContent(
         item(key = "training") {
             TodayTrainingCard(
                 training = state.todayTraining,
+                activePlan = state.activePlan,
                 onStartSession = onStartSession,
                 onViewDetail = onViewDetail,
                 onCreatePlan = onCreatePlan,
@@ -331,6 +328,7 @@ private fun GreetingHeader(
 @Composable
 private fun TodayTrainingCard(
     training: TodayTrainingState?,
+    activePlan: ActivePlanSummary?,
     onStartSession: (String) -> Unit,
     onViewDetail: (String) -> Unit,
     onCreatePlan: () -> Unit,
@@ -348,124 +346,156 @@ private fun TodayTrainingCard(
                 title = "ENTRENAMIENTO DE HOY",
             )
 
-            if (training != null) {
-                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
-
-                Text(
-                    text = training.planName,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = "${training.dayName}  ·  ${training.exerciseCount} ejercicios",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-
-                // Exercise list
-                if (training.exerciseNames.isNotEmpty()) {
+            when {
+                // ── Case 1: Active plan + workout today ──────────────────────
+                training != null -> {
                     Spacer(modifier = Modifier.height(AiFitSpacing.xs))
-                    Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs)) {
-                        training.exerciseNames.forEach { name ->
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(4.dp)
-                                        .background(
-                                            color = MaterialTheme.colorScheme.primaryContainer,
-                                            shape = RoundedCornerShape(2.dp),
-                                        ),
-                                )
-                                Text(
-                                    text = name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                            }
-                        }
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
-                AdherenceBar(percentage = training.adherencePercentage)
-                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
-
-                if (training.isCompleted) {
-                    // ── Completed banner ──
-                    Surface(
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(8.dp),
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    horizontal = AiFitSpacing.md,
-                                    vertical = AiFitSpacing.sm,
-                                ),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.CheckCircle,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primaryContainer,
-                                modifier = Modifier.size(24.dp),
-                            )
-                            Column {
-                                Text(
-                                    text = "Completado",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                )
-                                Text(
-                                    text = "${training.exerciseCount} ejercicios",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(AiFitSpacing.xs))
-                    SecondaryButton(
-                        text = "VER DETALLE",
-                        onClick = { onViewDetail(training.planId) },
-                        modifier = Modifier.fillMaxWidth(),
+                    Text(
+                        text = training.planName,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
-                } else {
-                    // ── Active: two symmetric buttons ──
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-                    ) {
-                        PrimaryButton(
-                            text = "COMENZAR SESIÓN",
-                            onClick = { onStartSession(training.planId) },
-                            modifier = Modifier.weight(1f),
-                        )
+                    Text(
+                        text = "${training.dayName}  ·  ${training.exerciseCount} ejercicios",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    // Exercise list
+                    if (training.exerciseNames.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                        Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs)) {
+                            training.exerciseNames.forEach { name ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(4.dp)
+                                            .background(
+                                                color = MaterialTheme.colorScheme.primaryContainer,
+                                                shape = RoundedCornerShape(2.dp),
+                                            ),
+                                    )
+                                    Text(
+                                        text = name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                    AdherenceBar(percentage = training.adherencePercentage)
+                    Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+
+                    if (training.isCompleted) {
+                        // ── Completed banner ──
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(8.dp),
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        horizontal = AiFitSpacing.md,
+                                        vertical = AiFitSpacing.sm,
+                                    ),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primaryContainer,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                                Column {
+                                    Text(
+                                        text = "Completado",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                    )
+                                    Text(
+                                        text = "${training.exerciseCount} ejercicios",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                         SecondaryButton(
                             text = "VER DETALLE",
                             onClick = { onViewDetail(training.planId) },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.fillMaxWidth(),
                         )
+                    } else {
+                        // ── Active: two symmetric buttons ──
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                        ) {
+                            PrimaryButton(
+                                text = "COMENZAR SESIÓN",
+                                onClick = { onStartSession(training.planId) },
+                                modifier = Modifier.weight(1f),
+                            )
+                            SecondaryButton(
+                                text = "VER DETALLE",
+                                onClick = { onViewDetail(training.planId) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
                 }
-            } else {
-                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
-                Text(
-                    text = "No tienes un plan de entrenamiento activo",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
-                SecondaryButton(
-                    text = "CREAR PLAN",
-                    onClick = onCreatePlan,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+
+                // ── Case 2: Active plan + rest day today ─────────────────────
+                activePlan != null -> {
+                    Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                    Text(
+                        text = activePlan.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = "Hoy toca descanso 💤",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = "El descanso es parte esencial del progreso. ¡Descansa bien!",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                    SecondaryButton(
+                        text = "VER PLAN",
+                        onClick = { onViewDetail(activePlan.id) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
+                // ── Case 3: No active plan ────────────────────────────────────
+                else -> {
+                    Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                    Text(
+                        text = "No tienes un plan de entrenamiento activo",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                    SecondaryButton(
+                        text = "CREAR PLAN",
+                        onClick = onCreatePlan,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         }
     }

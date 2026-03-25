@@ -9,7 +9,7 @@ enum class PlanStatus {
 
     companion object {
         fun fromString(value: String?): PlanStatus =
-            value?.let { runCatching { valueOf(it) }.getOrDefault(UNKNOWN) } ?: UNKNOWN
+            value?.let { runCatching { valueOf(it.uppercase()) }.getOrDefault(UNKNOWN) } ?: UNKNOWN
     }
 }
 

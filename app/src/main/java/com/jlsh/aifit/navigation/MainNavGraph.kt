@@ -161,7 +161,6 @@ private fun MainNavScreen() {
                             },
                             onNavigateToTrainingDetail = { planId ->
                                 tabNavController.navigate(TrainingRoutes.detailRoute(planId)) {
-                                    popUpTo(HomeRoutes.GRAPH) { inclusive = false }
                                     launchSingleTop = true
                                 }
                             },

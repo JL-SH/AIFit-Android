@@ -10,6 +10,9 @@ sealed class HomeUiState {
     data class Success(
         val userName: String,
         val avatarUrl: String?,
+        /** Non-null when the user has an active training plan, regardless of whether
+         *  today is a training day or a rest day. Null means no active plan exists. */
+        val activePlan: ActivePlanSummary? = null,
         val todayTraining: TodayTrainingState?,
         val todayNutrition: TodayNutritionState?,
         val nextMeal: NextMealState,
@@ -18,6 +21,12 @@ sealed class HomeUiState {
         val weightEntries: List<BodyWeightLog>,
     ) : HomeUiState()
 }
+
+/** Lightweight summary of the active training plan kept in [HomeUiState.Success]. */
+data class ActivePlanSummary(
+    val id: String,
+    val name: String,
+)
 
 data class TodayTrainingState(
     val planId: String,
