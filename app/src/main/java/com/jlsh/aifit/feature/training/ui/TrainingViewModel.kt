@@ -25,11 +25,14 @@ import com.jlsh.aifit.feature.training.ui.state.TrainingUiState
 import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -37,6 +40,7 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class TrainingViewModel @Inject constructor(
     private val getTrainingPlansUseCase: GetTrainingPlansUseCase,
@@ -74,9 +78,26 @@ class TrainingViewModel @Inject constructor(
     private var fetchPlansJob: Job? = null
     private var isDeletingPlan = false
 
+    /**
+     * Debounced refresh trigger (Option A).
+     * Rapid lifecycle transitions (RESUMED → PAUSED → RESUMED during navigation) can fire
+     * onRefresh() 10+ times per second. Routing all UI-initiated refreshes through this
+     * SharedFlow with a 500 ms debounce collapses bursts into a single fetchPlans() call,
+     * while post-mutation refreshes (delete/activate/generate) still call fetchPlans() directly
+     * and are unaffected.
+     */
+    private val _refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
     // 4. INIT
     init {
         fetchPlans()
+        // Debounce guard: collapse rapid successive onRefresh() calls (lifecycle bounces,
+        // navigation transitions) into a single fetchPlans() after a 500 ms quiet period.
+        viewModelScope.launch {
+            _refreshTrigger
+                .debounce(500L)
+                .collect { fetchPlans() }
+        }
         viewModelScope.launch {
             getUserProfileUseCase()
                 .first { it !is Result.Loading }
@@ -93,7 +114,10 @@ class TrainingViewModel @Inject constructor(
         // TODO: remove diagnostic log below
         Log.d("AIFIT_PLANS", "onRefresh triggered — isDeletingPlan=$isDeletingPlan")
         if (isDeletingPlan) return
-        fetchPlans()
+        // Route through debounced trigger instead of calling fetchPlans() directly to
+        // collapse rapid lifecycle-bounce events (e.g. repeatOnLifecycle firing 10+ times
+        // per session during navigation transitions) into a single network call.
+        _refreshTrigger.tryEmit(Unit)
     }
 
     fun onTabSelected(index: Int) {

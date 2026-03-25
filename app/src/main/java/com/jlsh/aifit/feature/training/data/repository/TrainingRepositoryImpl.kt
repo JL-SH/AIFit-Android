@@ -52,6 +52,16 @@ class TrainingRepositoryImpl @Inject constructor(
             is Result.Success -> {
                 val plans = remote.data.map { it.toDomain() }
                 dao.upsertAll(plans.map { it.toEntity(userId) })
+                // Reconciliation: remove any cached row that the server no longer returns.
+                // This eliminates ghost plans (soft-deleted server-side but still in Room),
+                // corrupt statuses (stale cache overriding server truth), and phantom dual-active
+                // artifacts — all caused by the previous additive-only sync strategy.
+                val networkIds = plans.map { it.id }
+                if (networkIds.isEmpty()) {
+                    dao.deleteAll()
+                } else {
+                    dao.deleteAllNotInIds(networkIds)
+                }
                 // TODO: remove diagnostic log below
                 Log.d("AIFIT_PLANS", "EMIT NETWORK — count=${plans.size} ids=${plans.map { it.id }.take(3)}")
                 // AIFIT_DEBUG: status de cada plan recibido de red

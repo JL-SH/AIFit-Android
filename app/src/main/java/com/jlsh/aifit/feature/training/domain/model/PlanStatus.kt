@@ -5,6 +5,7 @@ enum class PlanStatus {
     COMPLETED,
     PAUSED,
     DRAFT,
+    DELETED,
     UNKNOWN;
 
     companion object {

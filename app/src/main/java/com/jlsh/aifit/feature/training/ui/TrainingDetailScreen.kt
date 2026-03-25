@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.TrendingUp
 import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -45,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
+import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
@@ -148,20 +150,35 @@ fun TrainingDetailScreen(
         },
         onRetry = { viewModel.loadPlanDetail(planId) },
     ) { paddingValues, readyState ->
-        TrainingDetailContent(
-            planId = planId,
-            days = readyState.days,
-            onExerciseInfoClick = { exerciseId ->
-                showExplanationForExerciseId = exerciseId
-                educationViewModel.loadExerciseExplanation(exerciseId)
-            },
-            onExerciseProgressionClick = { exerciseId ->
-                showProgressionForExerciseId = exerciseId
-                progressionViewModel.loadExerciseRecommendation(exerciseId)
-            },
-            onNavigateToSession = onNavigateToSession,
-            modifier = Modifier.padding(paddingValues),
-        )
+        if (readyState.days.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center,
+            ) {
+                EmptyStateView(
+                    icon = Icons.Rounded.FitnessCenter,
+                    title = "Sin días de entrenamiento",
+                    subtitle = "Este plan no tiene días disponibles. Es posible que haya sido eliminado o que sus datos no estén disponibles.",
+                )
+            }
+        } else {
+            TrainingDetailContent(
+                planId = planId,
+                days = readyState.days,
+                onExerciseInfoClick = { exerciseId ->
+                    showExplanationForExerciseId = exerciseId
+                    educationViewModel.loadExerciseExplanation(exerciseId)
+                },
+                onExerciseProgressionClick = { exerciseId ->
+                    showProgressionForExerciseId = exerciseId
+                    progressionViewModel.loadExerciseRecommendation(exerciseId)
+                },
+                onNavigateToSession = onNavigateToSession,
+                modifier = Modifier.padding(paddingValues),
+            )
+        }
     }
 }
 
