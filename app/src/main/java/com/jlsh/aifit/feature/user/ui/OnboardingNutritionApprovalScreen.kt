@@ -263,7 +263,7 @@ fun OnboardingNutritionApprovalScreen(
 @Composable
 private fun DietDayCard(day: DietDay) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    val displayName = dayOfWeekName(day.dayNumber)
+    val displayName = DAY_NAMES_ES[day.dayNumber] ?: day.name
 
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -375,15 +375,13 @@ private fun MealItemRow(item: MealItem) {
     )
 }
 
-@Composable
-private fun dayOfWeekName(dayNumber: Int): String = when (dayNumber) {
-    1 -> stringResource(R.string.day_of_week_1)
-    2 -> stringResource(R.string.day_of_week_2)
-    3 -> stringResource(R.string.day_of_week_3)
-    4 -> stringResource(R.string.day_of_week_4)
-    5 -> stringResource(R.string.day_of_week_5)
-    6 -> stringResource(R.string.day_of_week_6)
-    7 -> stringResource(R.string.day_of_week_7)
-    else -> stringResource(R.string.day_of_week_1)
-}
+private val DAY_NAMES_ES = mapOf(
+    1 to "Lunes",
+    2 to "Martes",
+    3 to "Miércoles",
+    4 to "Jueves",
+    5 to "Viernes",
+    6 to "Sábado",
+    7 to "Domingo",
+)
 

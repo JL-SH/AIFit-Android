@@ -184,8 +184,9 @@ fun DietPlanApprovalScreen(
 
 @Composable
 private fun DietApprovalDaySection(day: DietDay) {
+    val dayName = DAY_NAMES_ES[day.dayNumber] ?: day.name
     ExpandableSection(
-        title = "${dietDayOfWeekName(day.dayNumber)} · ${day.totalCalories} kcal",
+        title = "$dayName · ${day.totalCalories} kcal",
     ) {
         Column(
             modifier = Modifier.padding(vertical = AiFitSpacing.sm),
@@ -256,16 +257,12 @@ private fun DietApprovalMealItemRow(item: MealItem) {
     )
 }
 
-private fun dietDayOfWeekName(dayNumber: Int): String = when (dayNumber) {
-    1 -> "Lunes"
-    2 -> "Martes"
-    3 -> "Miércoles"
-    4 -> "Jueves"
-    5 -> "Viernes"
-    6 -> "Sábado"
-    7 -> "Domingo"
-    else -> "Día $dayNumber"
-}
-
-
-
+private val DAY_NAMES_ES = mapOf(
+    1 to "Lunes",
+    2 to "Martes",
+    3 to "Miércoles",
+    4 to "Jueves",
+    5 to "Viernes",
+    6 to "Sábado",
+    7 to "Domingo",
+)

@@ -78,6 +78,10 @@ private fun MainNavScreen() {
     val hideBottomBarRoutes = listOf(
         "training/workout_log",
         "training/session/",
+        "training/generate",        // training/generate?adaptive=...
+        "training/approval/",       // training/approval/{planId}
+        "nutrition/diet_generate",  // nutrition/diet_generate?adaptive=...
+        "nutrition/diet/approval/", // nutrition/diet/approval/{planId}
         "coach/chat/",
         "nutrition/food_vision",
     )

@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
@@ -56,8 +56,8 @@ fun TrainingPlanApprovalScreen(
         Box(modifier = Modifier.fillMaxSize()) {
             val sortedDays = state.days.sortedBy { item ->
                 when (item) {
-                    is TrainingDayItem.Training -> item.day.dayNumber
-                    is TrainingDayItem.Rest -> item.day.dayNumber
+                    is TrainingDayItem.Training -> item.day.dayOfWeek?.ordinal ?: item.day.dayNumber
+                    is TrainingDayItem.Rest -> item.day.dayOfWeek?.ordinal ?: item.day.dayNumber
                 }
             }
             val trainingDays = state.days.filterIsInstance<TrainingDayItem.Training>()
@@ -117,12 +117,13 @@ fun TrainingPlanApprovalScreen(
                 }
 
                 // Days
-                items(sortedDays) { dayItem ->
+                itemsIndexed(sortedDays) { index, dayItem ->
+                    val dayLabel = "Día ${index + 1}"
                     when (dayItem) {
                         is TrainingDayItem.Training -> {
                             val day = dayItem.day
                             ExpandableSection(
-                                title = "Día ${day.dayNumber} · ${day.name}",
+                                title = "$dayLabel · ${day.name}",
                             ) {
                                 Column(
                                     modifier = Modifier.padding(vertical = AiFitSpacing.sm),
@@ -151,7 +152,7 @@ fun TrainingPlanApprovalScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        text = "Día ${day.dayNumber} · ${day.name}",
+                                        text = "$dayLabel · ${day.name}",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )

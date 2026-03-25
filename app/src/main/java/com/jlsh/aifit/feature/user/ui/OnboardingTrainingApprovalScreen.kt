@@ -99,7 +99,9 @@ fun OnboardingTrainingApprovalScreen(
 
     val result = (state as OnboardingState.Ready).result
     val plan = result.trainingPlan
-    val sortedDays = remember(plan.days) { plan.days.sortedBy { it.dayNumber } }
+    val sortedDays = remember(plan.days) {
+        plan.days.sortedBy { it.dayOfWeek?.ordinal ?: it.dayNumber }
+    }
 
     Box(
         modifier = Modifier
@@ -187,7 +189,7 @@ fun OnboardingTrainingApprovalScreen(
 
             items(sortedDays.size) { index ->
                 val day = sortedDays[index]
-                TrainingDayCard(day = day)
+                TrainingDayCard(day = day, dayLabel = "Día ${index + 1}")
             }
 
             // Botones
@@ -277,6 +279,7 @@ private fun SummaryChip(
 @Composable
 private fun TrainingDayCard(
     day: com.jlsh.aifit.feature.training.domain.model.TrainingDay,
+    dayLabel: String,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
 
@@ -294,7 +297,7 @@ private fun TrainingDayCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = stringResource(R.string.training_day_label, day.dayNumber, day.name),
+                    text = "$dayLabel · ${day.name}",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
