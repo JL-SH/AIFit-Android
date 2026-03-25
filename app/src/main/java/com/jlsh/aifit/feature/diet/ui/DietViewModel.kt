@@ -71,6 +71,26 @@ class DietViewModel @Inject constructor(
         }
     }
 
+    fun onApproveDietPlan() {
+        // Plan is already saved and ACTIVE on backend — no action needed.
+        // Navigation to hub is handled by the screen callback.
+        _detailUiState.value = DietUiState.Loading
+    }
+
+    fun onRejectDietPlan(planId: String) {
+        viewModelScope.launch {
+            when (val result = deleteDietPlanUseCase(planId)) {
+                is Result.Success -> {
+                    emitEvent(DietUiEvent.NavigateToDietGenerate)
+                }
+                is Result.Error -> {
+                    emitEvent(DietUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                else -> Unit
+            }
+        }
+    }
+
     fun onGeneratePlan(request: GenerateDietPlanRequestDto) {
         viewModelScope.launch {
             _generateUiState.value = GenerateDietUiState.Generating

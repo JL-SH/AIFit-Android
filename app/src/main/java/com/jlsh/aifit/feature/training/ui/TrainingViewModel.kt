@@ -191,6 +191,28 @@ class TrainingViewModel @Inject constructor(
         emitEvent(TrainingUiEvent.NavigateToGenerate(adaptive, basePlanId))
     }
 
+    fun onApprovePlan() {
+        // Plan is already saved and ACTIVE on backend — no action needed.
+        // Navigation to hub is handled by the screen callback.
+        _detailUiState.value = TrainingDetailUiState.Loading
+    }
+
+    fun onRejectPlan(planId: String) {
+        viewModelScope.launch {
+            _detailUiState.value = TrainingDetailUiState.Loading
+            when (val result = deleteTrainingPlanUseCase(planId)) {
+                is Result.Success -> {
+                    fetchPlans()
+                    emitEvent(TrainingUiEvent.NavigateToGenerate())
+                }
+                is Result.Error -> {
+                    _detailUiState.value = TrainingDetailUiState.Error(result.exception.toMessage())
+                }
+                else -> Unit
+            }
+        }
+    }
+
     fun onGeneratePlan(request: GenerateTrainingPlanRequestDto) {
         generatePlan(request)
     }

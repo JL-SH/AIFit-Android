@@ -25,6 +25,7 @@ import com.jlsh.aifit.core.ui.components.layout.bottomNavItems
 import com.jlsh.aifit.feature.chat.ui.ChatScreen
 import com.jlsh.aifit.feature.chat.ui.ChatSessionListScreen
 import com.jlsh.aifit.feature.diet.ui.DietDetailScreen
+import com.jlsh.aifit.feature.diet.ui.DietPlanApprovalScreen
 import com.jlsh.aifit.feature.diet.ui.GenerateDietScreen
 import com.jlsh.aifit.feature.education.ui.GlossaryScreen
 import com.jlsh.aifit.feature.gamification.ui.GamificationScreen
@@ -41,6 +42,7 @@ import com.jlsh.aifit.feature.shopping.ui.ShoppingDetailScreen
 import com.jlsh.aifit.feature.training.ui.GeneratePlanScreen
 import com.jlsh.aifit.feature.training.ui.TrainingDetailScreen
 import com.jlsh.aifit.feature.training.ui.TrainingHubScreen
+import com.jlsh.aifit.feature.training.ui.TrainingPlanApprovalScreen
 import com.jlsh.aifit.feature.user.ui.ProfileHubScreen
 import com.jlsh.aifit.feature.user.ui.UserProfileScreen
 import com.jlsh.aifit.feature.vision.ui.FoodVisionScreen
@@ -284,8 +286,29 @@ private fun MainNavScreen() {
                             basePlanId = basePlanId,
                             onNavigateBack = { tabNavController.popBackStack() },
                             onNavigateToDetail = { newPlanId ->
-                                tabNavController.navigate(TrainingRoutes.detailRoute(newPlanId)) {
+                                tabNavController.navigate(TrainingRoutes.approvalRoute(newPlanId)) {
                                     popUpTo(TrainingRoutes.GENERATE) { inclusive = true }
+                                }
+                            },
+                        )
+                    }
+                    composable(
+                        route = TrainingRoutes.APPROVAL,
+                        arguments = listOf(
+                            navArgument("planId") { type = NavType.StringType },
+                        ),
+                    ) { backStackEntry ->
+                        val planId = backStackEntry.arguments?.getString("planId") ?: return@composable
+                        TrainingPlanApprovalScreen(
+                            planId = planId,
+                            onAccept = {
+                                tabNavController.navigate(TrainingRoutes.HUB) {
+                                    popUpTo(TrainingRoutes.GRAPH) { inclusive = false }
+                                }
+                            },
+                            onReject = {
+                                tabNavController.navigate(TrainingRoutes.GENERATE) {
+                                    popUpTo(TrainingRoutes.APPROVAL) { inclusive = true }
                                 }
                             },
                         )
@@ -426,8 +449,29 @@ private fun MainNavScreen() {
                             basePlanId = basePlanId,
                             onNavigateBack = { tabNavController.popBackStack() },
                             onNavigateToDetail = { newPlanId ->
-                                tabNavController.navigate(NutritionRoutes.dietDetailRoute(newPlanId)) {
+                                tabNavController.navigate(NutritionRoutes.dietApprovalRoute(newPlanId)) {
                                     popUpTo(NutritionRoutes.DIET_GENERATE) { inclusive = true }
+                                }
+                            },
+                        )
+                    }
+                    composable(
+                        route = NutritionRoutes.DIET_APPROVAL,
+                        arguments = listOf(
+                            navArgument("planId") { type = NavType.StringType },
+                        ),
+                    ) { backStackEntry ->
+                        val planId = backStackEntry.arguments?.getString("planId") ?: return@composable
+                        DietPlanApprovalScreen(
+                            planId = planId,
+                            onAccept = {
+                                tabNavController.navigate(NutritionRoutes.HUB) {
+                                    popUpTo(NutritionRoutes.GRAPH) { inclusive = false }
+                                }
+                            },
+                            onReject = {
+                                tabNavController.navigate(NutritionRoutes.DIET_GENERATE) {
+                                    popUpTo(NutritionRoutes.DIET_APPROVAL) { inclusive = true }
                                 }
                             },
                         )

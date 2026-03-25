@@ -24,6 +24,7 @@ object TrainingRoutes {
     const val HUB = "training"
     const val DETAIL = "training/detail/{planId}"
     const val GENERATE = "training/generate?adaptive={adaptive}&basePlanId={basePlanId}"
+    const val APPROVAL = "training/approval/{planId}"
     const val WORKOUT_SESSION = "training/session/{planId}/{dayId}"
     const val WORKOUT_LOG = "training/workout_log?planId={planId}"
     const val WORKOUT_DETAIL = "training/workout_detail/{logId}"
@@ -31,6 +32,7 @@ object TrainingRoutes {
     fun detailRoute(planId: String) = "training/detail/$planId"
     fun generateRoute(adaptive: Boolean = false, basePlanId: String? = null) =
         "training/generate?adaptive=$adaptive&basePlanId=${basePlanId ?: ""}"
+    fun approvalRoute(planId: String) = "training/approval/$planId"
     fun workoutSessionRoute(planId: String, dayId: String) =
         "training/session/$planId/$dayId"
     fun workoutLogRoute(planId: String? = null) =
@@ -46,6 +48,7 @@ object NutritionRoutes {
     const val TARGET = "nutrition/target"
     const val DIET_DETAIL = "nutrition/diet_detail/{planId}"
     const val DIET_GENERATE = "nutrition/diet_generate?adaptive={adaptive}&basePlanId={basePlanId}"
+    const val DIET_APPROVAL = "nutrition/diet/approval/{planId}"
     const val SHOPPING_DETAIL = "nutrition/shopping_detail/{listId}"
 
     fun trackMealRoute(mode: String = "", prefilled: String = "") =
@@ -53,6 +56,7 @@ object NutritionRoutes {
     fun dietDetailRoute(planId: String) = "nutrition/diet_detail/$planId"
     fun dietGenerateRoute(adaptive: Boolean = false, basePlanId: String? = null) =
         "nutrition/diet_generate?adaptive=$adaptive&basePlanId=${basePlanId ?: ""}"
+    fun dietApprovalRoute(planId: String) = "nutrition/diet/approval/$planId"
     fun shoppingDetailRoute(listId: String) = "nutrition/shopping_detail/$listId"
 }
 

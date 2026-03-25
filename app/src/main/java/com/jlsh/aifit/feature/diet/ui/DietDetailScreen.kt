@@ -89,6 +89,7 @@ fun DietDetailScreen(
             when (event) {
                 is DietUiEvent.NavigateBack -> onNavigateBack()
                 is DietUiEvent.NavigateToDetail -> { /* already on detail */ }
+                is DietUiEvent.NavigateToDietGenerate -> { /* not applicable from detail screen */ }
                 is DietUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
             }
         }
