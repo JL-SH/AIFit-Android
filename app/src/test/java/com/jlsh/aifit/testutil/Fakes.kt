@@ -83,6 +83,9 @@ import com.jlsh.aifit.feature.progress.domain.model.WeightProgress
 import com.jlsh.aifit.feature.progress.domain.model.WeightTrend
 import com.jlsh.aifit.feature.progress.domain.model.WorkoutAdherence
 
+// ─── Workout imports ───────────────────────────────────────────────────────────
+import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
+
 // ─── Education imports ─────────────────────────────────────────────────────────
 import com.jlsh.aifit.feature.education.data.dto.ContextualExplanationResponseDto
 import com.jlsh.aifit.feature.education.data.dto.GlossaryDefinitionResponseDto
@@ -100,6 +103,27 @@ import com.jlsh.aifit.feature.progression.domain.model.PlanProgressionSummary
 import com.jlsh.aifit.feature.progression.domain.model.ProgressTrend
 import com.jlsh.aifit.feature.progression.domain.model.ProgressionRecommendation
 import com.jlsh.aifit.feature.progression.domain.model.ProgressionType
+
+// ─── Gamification imports ──────────────────────────────────────────────────────
+import com.jlsh.aifit.feature.gamification.data.dto.AchievementDefinitionResponseDto
+import com.jlsh.aifit.feature.gamification.data.dto.AchievementExportEntryDto
+import com.jlsh.aifit.feature.gamification.data.dto.ExerciseProgressionExportDto
+import com.jlsh.aifit.feature.gamification.data.dto.PersonalRecordResponseDto
+import com.jlsh.aifit.feature.gamification.data.dto.ProgressExportResponseDto
+import com.jlsh.aifit.feature.gamification.data.dto.StreakExportSummaryDto
+import com.jlsh.aifit.feature.gamification.data.dto.StreakResponseDto
+import com.jlsh.aifit.feature.gamification.data.dto.UserAchievementResponseDto
+import com.jlsh.aifit.feature.gamification.data.dto.WeeklyAdherenceExportDto
+import com.jlsh.aifit.feature.gamification.data.dto.WeightSummaryExportDto
+import com.jlsh.aifit.feature.gamification.domain.model.AchievementDefinition
+import com.jlsh.aifit.feature.gamification.domain.model.AchievementRarity
+import com.jlsh.aifit.feature.gamification.domain.model.AchievementType
+import com.jlsh.aifit.feature.gamification.domain.model.PersonalRecord
+import com.jlsh.aifit.feature.gamification.domain.model.ProgressExport
+import com.jlsh.aifit.feature.gamification.domain.model.Streak
+import com.jlsh.aifit.feature.gamification.domain.model.StreakStatus
+import com.jlsh.aifit.feature.gamification.domain.model.StreakType
+import com.jlsh.aifit.feature.gamification.domain.model.UserAchievement
 
 // ─── Constantes base ───────────────────────────────────────────────────────────
 /** A valid-looking JWT for test purposes (not a real token). */
@@ -1022,4 +1046,171 @@ fun fakePlanProgressionSummaryResponseDto(
 ) = PlanProgressionSummaryResponseDto(
     trainingPlanId = trainingPlanId, totalExercises = totalExercises,
     exercisesAnalyzed = exercisesAnalyzed, recommendations = recommendations,
+)
+
+// ─── Workout ───────────────────────────────────────────────────────────────────
+
+fun fakeWorkoutLog(
+    id: String = "wl-1",
+    trainingPlanId: String = "plan-1",
+    trainingDayId: String = "day-1",
+    date: LocalDate = LocalDate.of(2026, 4, 6),
+    durationMinutes: Int? = 55,
+    perceivedExertion: Int? = 7,
+    notes: String? = null,
+    totalExercises: Int = 5,
+    completedAt: LocalDateTime = LocalDateTime.of(2026, 4, 6, 10, 30),
+    isLocked: Boolean = false,
+) = WorkoutLog(
+    id = id, trainingPlanId = trainingPlanId, trainingDayId = trainingDayId,
+    date = date, durationMinutes = durationMinutes,
+    perceivedExertion = perceivedExertion, notes = notes,
+    totalExercises = totalExercises, completedAt = completedAt,
+    isLocked = isLocked,
+)
+
+// ─── Gamification ──────────────────────────────────────────────────────────────
+
+fun fakeStreak(
+    type: StreakType = StreakType.TRAINING,
+    status: StreakStatus = StreakStatus.ACTIVE,
+    currentCount: Int = 5,
+    longestCount: Int = 10,
+    lastActivityDate: LocalDate = LocalDate.of(2026, 4, 5),
+    startedAt: String = "2026-03-01T10:00:00",
+) = Streak(
+    type = type, status = status, currentCount = currentCount,
+    longestCount = longestCount, lastActivityDate = lastActivityDate,
+    startedAt = startedAt,
+)
+
+fun fakeAchievementDefinition(
+    id: String = "ach-def-1",
+    code: String = "FIRST_WORKOUT",
+    type: AchievementType = AchievementType.STRENGTH_MILESTONE,
+    name: String = "First Workout",
+    description: String = "Complete your first workout session.",
+    rarity: AchievementRarity = AchievementRarity.COMMON,
+    iconKey: String = "fitness_center",
+) = AchievementDefinition(
+    id = id, code = code, type = type, name = name,
+    description = description, rarity = rarity, iconKey = iconKey,
+)
+
+fun fakeUserAchievement(
+    id: String = "user-ach-1",
+    achievement: AchievementDefinition = fakeAchievementDefinition(),
+    unlockedAt: String = "2026-04-01T10:00:00",
+    triggerDescription: String = "Completed first workout session",
+) = UserAchievement(
+    id = id, achievement = achievement,
+    unlockedAt = unlockedAt, triggerDescription = triggerDescription,
+)
+
+fun fakePersonalRecord(
+    id: String = "pr-1",
+    exerciseName: String = "Bench Press",
+    weightKg: Double = 80.0,
+    reps: Int = 8,
+    estimatedOneRepMax: Double = 100.0,
+    achievedAt: String = "2026-04-01T10:00:00",
+) = PersonalRecord(
+    id = id, exerciseName = exerciseName, weightKg = weightKg,
+    reps = reps, estimatedOneRepMax = estimatedOneRepMax, achievedAt = achievedAt,
+)
+
+fun fakeProgressExport(
+    userId: String = "user-1",
+    userName: String = "Test User",
+    period: String = "LAST_MONTH",
+    generatedAt: String = "2026-04-06T10:00:00",
+    totalWorkouts: Int = 12,
+    totalPRs: Int = 3,
+    currentStreak: Int = 5,
+    achievementsUnlocked: Int = 2,
+    weightChange: Double? = -1.5,
+    topExercises: List<String> = listOf("Bench Press: 16%"),
+) = ProgressExport(
+    userId = userId, userName = userName, period = period,
+    generatedAt = generatedAt, totalWorkouts = totalWorkouts,
+    totalPRs = totalPRs, currentStreak = currentStreak,
+    achievementsUnlocked = achievementsUnlocked, weightChange = weightChange,
+    topExercises = topExercises,
+)
+
+fun fakeStreakResponseDto(
+    type: String = "TRAINING",
+    status: String = "ACTIVE",
+    currentCount: Int = 5,
+    longestCount: Int = 10,
+    lastActivityDate: String = "2026-04-05",
+    startedAt: String = "2026-03-01T10:00:00",
+) = StreakResponseDto(
+    type = type, status = status, currentCount = currentCount,
+    longestCount = longestCount, lastActivityDate = lastActivityDate,
+    startedAt = startedAt,
+)
+
+fun fakeAchievementDefinitionResponseDto(
+    id: String = "ach-def-1",
+    code: String = "FIRST_WORKOUT",
+    type: String = "STRENGTH_MILESTONE",
+    name: String = "First Workout",
+    description: String = "Complete your first workout session.",
+    rarity: String = "COMMON",
+    iconKey: String = "fitness_center",
+) = AchievementDefinitionResponseDto(
+    id = id, code = code, type = type, name = name,
+    description = description, rarity = rarity, iconKey = iconKey,
+)
+
+fun fakeUserAchievementResponseDto(
+    id: String = "user-ach-1",
+    achievement: AchievementDefinitionResponseDto = fakeAchievementDefinitionResponseDto(),
+    unlockedAt: String = "2026-04-01T10:00:00",
+    triggerDescription: String = "Completed first workout session",
+) = UserAchievementResponseDto(
+    id = id, achievement = achievement,
+    unlockedAt = unlockedAt, triggerDescription = triggerDescription,
+)
+
+fun fakePersonalRecordResponseDto(
+    id: String = "pr-1",
+    exerciseName: String = "Bench Press",
+    weightKg: Double = 80.0,
+    reps: Int = 8,
+    estimatedOneRepMax: Double = 100.0,
+    achievedAt: String = "2026-04-01T10:00:00",
+) = PersonalRecordResponseDto(
+    id = id, exerciseName = exerciseName, weightKg = weightKg,
+    reps = reps, estimatedOneRepMax = estimatedOneRepMax, achievedAt = achievedAt,
+)
+
+fun fakeProgressExportResponseDto(
+    userId: String = "user-1",
+    userName: String = "Test User",
+    period: String = "LAST_MONTH",
+    generatedAt: String = "2026-04-06T10:00:00",
+    weightSummary: WeightSummaryExportDto? = WeightSummaryExportDto(
+        initialWeight = 80.0, currentWeight = 78.5, change = -1.5,
+    ),
+    personalRecords: List<PersonalRecordResponseDto> = listOf(fakePersonalRecordResponseDto()),
+    weeklyAdherenceSummary: List<WeeklyAdherenceExportDto> = listOf(
+        WeeklyAdherenceExportDto(weekStart = "2026-03-25", trainingDaysCompleted = 4, trainingDaysPlanned = 4, nutritionDaysTracked = 7),
+    ),
+    streaks: List<StreakExportSummaryDto> = listOf(
+        StreakExportSummaryDto(type = "TRAINING", currentCount = 5, longestCount = 10, status = "ACTIVE"),
+    ),
+    unlockedAchievements: List<AchievementExportEntryDto> = listOf(
+        AchievementExportEntryDto(name = "First Workout", rarity = "COMMON", unlockedAt = "2026-04-01T10:00:00"),
+    ),
+    topExercisesProgression: List<ExerciseProgressionExportDto> = listOf(
+        ExerciseProgressionExportDto(exerciseName = "Bench Press", initialBestWeightKg = 60.0, currentBestWeightKg = 70.0, progressionPercentage = 16.7),
+    ),
+) = ProgressExportResponseDto(
+    userId = userId, userName = userName, period = period,
+    generatedAt = generatedAt, weightSummary = weightSummary,
+    personalRecords = personalRecords, weeklyAdherenceSummary = weeklyAdherenceSummary,
+    streaks = streaks, unlockedAchievements = unlockedAchievements,
+    topExercisesProgression = topExercisesProgression,
 )
