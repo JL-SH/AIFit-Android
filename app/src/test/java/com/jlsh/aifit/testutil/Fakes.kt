@@ -60,6 +60,47 @@ import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.model.TargetSource
 import java.time.LocalDate
 
+// ─── Progress imports ──────────────────────────────────────────────────────────
+import com.jlsh.aifit.feature.progress.data.dto.BestSetResponseDto
+import com.jlsh.aifit.feature.progress.data.dto.BodyWeightLogResponseDto
+import com.jlsh.aifit.feature.progress.data.dto.LogBodyWeightRequestDto
+import com.jlsh.aifit.feature.progress.data.dto.NutritionAdherenceResponseDto
+import com.jlsh.aifit.feature.progress.data.dto.PeriodResponseDto
+import com.jlsh.aifit.feature.progress.data.dto.ProgressDashboardResponseDto
+import com.jlsh.aifit.feature.progress.data.dto.StrengthProgressResponseDto
+import com.jlsh.aifit.feature.progress.data.dto.WeeklyProgressSummaryResponseDto
+import com.jlsh.aifit.feature.progress.data.dto.WeightEntryDto
+import com.jlsh.aifit.feature.progress.data.dto.WeightProgressResponseDto
+import com.jlsh.aifit.feature.progress.data.dto.WorkoutAdherenceResponseDto
+import com.jlsh.aifit.feature.progress.data.local.BodyWeightEntity
+import com.jlsh.aifit.feature.progress.domain.model.BodyWeightLog
+import com.jlsh.aifit.feature.progress.domain.model.NutritionAdherence
+import com.jlsh.aifit.feature.progress.domain.model.ProgressDashboard
+import com.jlsh.aifit.feature.progress.domain.model.StrengthProgress
+import com.jlsh.aifit.feature.progress.domain.model.WeeklyProgressSummary
+import com.jlsh.aifit.feature.progress.domain.model.WeightEntry
+import com.jlsh.aifit.feature.progress.domain.model.WeightProgress
+import com.jlsh.aifit.feature.progress.domain.model.WeightTrend
+import com.jlsh.aifit.feature.progress.domain.model.WorkoutAdherence
+
+// ─── Education imports ─────────────────────────────────────────────────────────
+import com.jlsh.aifit.feature.education.data.dto.ContextualExplanationResponseDto
+import com.jlsh.aifit.feature.education.data.dto.GlossaryDefinitionResponseDto
+import com.jlsh.aifit.feature.education.data.dto.WhyThisResponseDto
+import com.jlsh.aifit.feature.education.domain.model.ContextualExplanation
+import com.jlsh.aifit.feature.education.domain.model.ExplanationReferenceType
+import com.jlsh.aifit.feature.education.domain.model.GlossaryDefinition
+import com.jlsh.aifit.feature.education.domain.model.KnowledgeLevel
+import com.jlsh.aifit.feature.education.domain.model.WhyThisExplanation
+
+// ─── Progression imports ───────────────────────────────────────────────────────
+import com.jlsh.aifit.feature.progression.data.dto.PlanProgressionSummaryResponseDto
+import com.jlsh.aifit.feature.progression.data.dto.ProgressionRecommendationResponseDto
+import com.jlsh.aifit.feature.progression.domain.model.PlanProgressionSummary
+import com.jlsh.aifit.feature.progression.domain.model.ProgressTrend
+import com.jlsh.aifit.feature.progression.domain.model.ProgressionRecommendation
+import com.jlsh.aifit.feature.progression.domain.model.ProgressionType
+
 // ─── Constantes base ───────────────────────────────────────────────────────────
 /** A valid-looking JWT for test purposes (not a real token). */
 const val FAKE_TOKEN = "eyJhbGciOiJIUzI1NiJ9.test.signature"
@@ -620,3 +661,365 @@ fun fakeUpdateNutritionTargetRequestDto(
     carbsTarget = carbsTarget, fatTarget = fatTarget,
 )
 
+// ─── Progress ──────────────────────────────────────────────────────────────────
+
+fun fakeWorkoutAdherence(
+    plannedSessions: Int = 12,
+    completedSessions: Int = 10,
+    adherencePercentage: Double = 83.3,
+    currentStreak: Int = 5,
+    longestStreak: Int = 8,
+) = WorkoutAdherence(
+    plannedSessions = plannedSessions,
+    completedSessions = completedSessions,
+    adherencePercentage = adherencePercentage,
+    currentStreak = currentStreak,
+    longestStreak = longestStreak,
+)
+
+fun fakeWeightProgress(
+    startWeight: Double = 80.0,
+    currentWeight: Double = 78.5,
+    targetWeight: Double = 75.0,
+    change: Double = -1.5,
+    trend: WeightTrend = WeightTrend.LOSING,
+    entries: List<WeightEntry> = listOf(
+        WeightEntry(date = LocalDate.of(2026, 3, 1), weight = 80.0),
+        WeightEntry(date = LocalDate.of(2026, 3, 15), weight = 79.0),
+    ),
+) = WeightProgress(
+    startWeight = startWeight,
+    currentWeight = currentWeight,
+    targetWeight = targetWeight,
+    change = change,
+    trend = trend,
+    entries = entries,
+)
+
+fun fakeNutritionAdherence(
+    averageCalories: Double = 2100.0,
+    calorieTarget: Int = 2200,
+    adherencePercentage: Double = 95.5,
+) = NutritionAdherence(
+    averageCalories = averageCalories,
+    calorieTarget = calorieTarget,
+    adherencePercentage = adherencePercentage,
+)
+
+fun fakeStrengthProgress(
+    exerciseName: String = "Bench Press",
+    startMax: Double = 60.0,
+    currentMax: Double = 70.0,
+    changePercentage: Double = 16.7,
+) = StrengthProgress(
+    exerciseName = exerciseName,
+    startMax = startMax,
+    currentMax = currentMax,
+    changePercentage = changePercentage,
+)
+
+fun fakeProgressDashboard(
+    periodFrom: LocalDate = LocalDate.of(2026, 3, 1),
+    periodTo: LocalDate = LocalDate.of(2026, 3, 31),
+    workoutAdherence: WorkoutAdherence = fakeWorkoutAdherence(),
+    weightProgress: WeightProgress = fakeWeightProgress(),
+    nutritionAdherence: NutritionAdherence = fakeNutritionAdherence(),
+    strengthProgress: List<StrengthProgress> = listOf(fakeStrengthProgress()),
+) = ProgressDashboard(
+    periodFrom = periodFrom,
+    periodTo = periodTo,
+    workoutAdherence = workoutAdherence,
+    weightProgress = weightProgress,
+    nutritionAdherence = nutritionAdherence,
+    strengthProgress = strengthProgress,
+)
+
+fun fakeWeeklyProgressSummary(
+    workoutsThisWeek: Int = 3,
+    workoutsTarget: Int = 4,
+    averageCaloriesToday: Double = 2050.0,
+    calorieTarget: Int = 2200,
+    currentStreak: Int = 5,
+    bodyWeight: Double? = 78.5,
+) = WeeklyProgressSummary(
+    workoutsThisWeek = workoutsThisWeek,
+    workoutsTarget = workoutsTarget,
+    averageCaloriesToday = averageCaloriesToday,
+    calorieTarget = calorieTarget,
+    currentStreak = currentStreak,
+    bodyWeight = bodyWeight,
+)
+
+fun fakeBodyWeightLog(
+    id: String = "bw-1",
+    weight: Double = 78.5,
+    date: LocalDate = LocalDate.of(2026, 3, 15),
+    notes: String? = "Morning weight",
+    createdAt: LocalDate = LocalDate.of(2026, 3, 15),
+) = BodyWeightLog(
+    id = id, weight = weight, date = date,
+    notes = notes, createdAt = createdAt,
+)
+
+fun fakeBodyWeightEntity(
+    id: String = "bw-1",
+    weight: Double = 78.5,
+    date: Long = LocalDate.of(2026, 3, 15).toEpochDay(),
+    notes: String? = "Morning weight",
+    createdAt: Long = LocalDate.of(2026, 3, 15).toEpochDay(),
+) = BodyWeightEntity(
+    id = id, weight = weight, date = date,
+    notes = notes, createdAt = createdAt,
+)
+
+fun fakeBodyWeightLogResponseDto(
+    id: String = "bw-1",
+    weight: Double = 78.5,
+    date: String = "2026-03-15",
+    notes: String? = "Morning weight",
+    createdAt: String = "2026-03-15T10:00:00",
+) = BodyWeightLogResponseDto(
+    id = id, weight = weight, date = date,
+    notes = notes, createdAt = createdAt,
+)
+
+fun fakeWorkoutAdherenceResponseDto(
+    plannedSessions: Int = 12,
+    completedSessions: Int = 10,
+    adherencePercentage: Double = 83.3,
+    currentStreak: Int = 5,
+    longestStreak: Int = 8,
+) = WorkoutAdherenceResponseDto(
+    plannedSessions = plannedSessions,
+    completedSessions = completedSessions,
+    adherencePercentage = adherencePercentage,
+    currentStreak = currentStreak,
+    longestStreak = longestStreak,
+)
+
+fun fakeWeightProgressResponseDto(
+    initialWeight: Double = 80.0,
+    currentWeight: Double = 78.5,
+    targetWeight: Double = 75.0,
+    change: Double = -1.5,
+    trend: String = "LOSING",
+    weeklyAverage: Double = 78.8,
+    entries: List<WeightEntryDto> = listOf(
+        WeightEntryDto(date = "2026-03-01", weight = 80.0),
+        WeightEntryDto(date = "2026-03-15", weight = 79.0),
+    ),
+) = WeightProgressResponseDto(
+    initialWeight = initialWeight,
+    currentWeight = currentWeight,
+    targetWeight = targetWeight,
+    change = change,
+    trend = trend,
+    weeklyAverage = weeklyAverage,
+    entries = entries,
+)
+
+fun fakeNutritionAdherenceResponseDto(
+    targetCalories: Int = 2200,
+    averageCaloriesConsumed: Double = 2100.0,
+    calorieAdherencePercentage: Double = 95.5,
+    targetProtein: Double = 165.0,
+    averageProteinConsumed: Double = 155.0,
+    proteinAdherencePercentage: Double = 93.9,
+    daysTracked: Int = 28,
+) = NutritionAdherenceResponseDto(
+    targetCalories = targetCalories,
+    averageCaloriesConsumed = averageCaloriesConsumed,
+    calorieAdherencePercentage = calorieAdherencePercentage,
+    targetProtein = targetProtein,
+    averageProteinConsumed = averageProteinConsumed,
+    proteinAdherencePercentage = proteinAdherencePercentage,
+    daysTracked = daysTracked,
+)
+
+fun fakeStrengthProgressResponseDto(
+    exerciseName: String = "Bench Press",
+    trainingExerciseId: String = "exercise-1",
+    bestSetStart: BestSetResponseDto = BestSetResponseDto(date = "2026-03-01", reps = 8, weight = 60.0),
+    bestSetEnd: BestSetResponseDto = BestSetResponseDto(date = "2026-03-30", reps = 8, weight = 70.0),
+    progressionPercentage: Double = 16.7,
+    trend: String = "IMPROVING",
+) = StrengthProgressResponseDto(
+    exerciseName = exerciseName,
+    trainingExerciseId = trainingExerciseId,
+    bestSetStart = bestSetStart,
+    bestSetEnd = bestSetEnd,
+    progressionPercentage = progressionPercentage,
+    trend = trend,
+)
+
+fun fakeProgressDashboardResponseDto(
+    period: PeriodResponseDto = PeriodResponseDto(from = "2026-03-01", to = "2026-03-31"),
+    workoutAdherence: WorkoutAdherenceResponseDto = fakeWorkoutAdherenceResponseDto(),
+    weightProgress: WeightProgressResponseDto = fakeWeightProgressResponseDto(),
+    nutritionAdherence: NutritionAdherenceResponseDto = fakeNutritionAdherenceResponseDto(),
+    strengthProgress: List<StrengthProgressResponseDto> = listOf(fakeStrengthProgressResponseDto()),
+    generatedAt: String = "2026-03-31T23:59:59",
+) = ProgressDashboardResponseDto(
+    period = period,
+    workoutAdherence = workoutAdherence,
+    weightProgress = weightProgress,
+    nutritionAdherence = nutritionAdherence,
+    strengthProgress = strengthProgress,
+    generatedAt = generatedAt,
+)
+
+fun fakeWeeklyProgressSummaryResponseDto(
+    workoutsThisWeek: Int = 3,
+    workoutsTarget: Int = 4,
+    averageCaloriesToday: Double = 2050.0,
+    calorieTarget: Int = 2200,
+    currentStreak: Int = 5,
+    bodyWeight: Double? = 78.5,
+) = WeeklyProgressSummaryResponseDto(
+    workoutsThisWeek = workoutsThisWeek,
+    workoutsTarget = workoutsTarget,
+    averageCaloriesToday = averageCaloriesToday,
+    calorieTarget = calorieTarget,
+    currentStreak = currentStreak,
+    bodyWeight = bodyWeight,
+)
+
+fun fakeLogBodyWeightRequestDto(
+    weight: Double = 78.5,
+    date: String = "2026-03-15",
+    notes: String? = "Morning weight",
+) = LogBodyWeightRequestDto(
+    weight = weight, date = date, notes = notes,
+)
+
+// ─── Education ─────────────────────────────────────────────────────────────────
+
+fun fakeContextualExplanation(
+    id: String = "expl-1",
+    referenceType: ExplanationReferenceType = ExplanationReferenceType.TRAINING_EXERCISE,
+    referenceId: String = "exercise-1",
+    referenceName: String = "Bench Press",
+    content: String = "The bench press is a compound exercise that targets the chest.",
+    knowledgeLevel: KnowledgeLevel = KnowledgeLevel.BEGINNER,
+    generatedAt: String = "2026-04-01T10:00:00",
+) = ContextualExplanation(
+    id = id, referenceType = referenceType, referenceId = referenceId,
+    referenceName = referenceName, content = content,
+    knowledgeLevel = knowledgeLevel, generatedAt = generatedAt,
+)
+
+fun fakeWhyThisExplanation(
+    referenceType: ExplanationReferenceType = ExplanationReferenceType.TRAINING_EXERCISE,
+    referenceId: String = "exercise-1",
+    referenceName: String = "Bench Press",
+    explanation: String = "This exercise is in your plan because it targets chest development.",
+    knowledgeLevel: KnowledgeLevel = KnowledgeLevel.BEGINNER,
+) = WhyThisExplanation(
+    referenceType = referenceType, referenceId = referenceId,
+    referenceName = referenceName, explanation = explanation,
+    knowledgeLevel = knowledgeLevel,
+)
+
+fun fakeGlossaryDefinition(
+    term: String = "Hypertrophy",
+    definition: String = "The enlargement of an organ or tissue from the increase in size of its cells.",
+    category: String = "BEGINNER",
+    relatedTerms: List<String> = listOf("Progressive Overload", "Volume"),
+) = GlossaryDefinition(
+    term = term, definition = definition,
+    category = category, relatedTerms = relatedTerms,
+)
+
+fun fakeContextualExplanationResponseDto(
+    id: String = "expl-1",
+    referenceType: String = "TRAINING_EXERCISE",
+    referenceId: String = "exercise-1",
+    referenceName: String = "Bench Press",
+    content: String = "The bench press is a compound exercise that targets the chest.",
+    knowledgeLevelAtGeneration: String = "BEGINNER",
+    generatedAt: String = "2026-04-01T10:00:00",
+) = ContextualExplanationResponseDto(
+    id = id, referenceType = referenceType, referenceId = referenceId,
+    referenceName = referenceName, content = content,
+    knowledgeLevelAtGeneration = knowledgeLevelAtGeneration, generatedAt = generatedAt,
+)
+
+fun fakeWhyThisResponseDto(
+    referenceType: String = "TRAINING_EXERCISE",
+    referenceId: String = "exercise-1",
+    referenceName: String = "Bench Press",
+    explanation: String = "This exercise is in your plan because it targets chest development.",
+    knowledgeLevelAtGeneration: String = "BEGINNER",
+) = WhyThisResponseDto(
+    referenceType = referenceType, referenceId = referenceId,
+    referenceName = referenceName, explanation = explanation,
+    knowledgeLevelAtGeneration = knowledgeLevelAtGeneration,
+)
+
+fun fakeGlossaryDefinitionResponseDto(
+    term: String = "Hypertrophy",
+    definition: String = "The enlargement of an organ or tissue from the increase in size of its cells.",
+    knowledgeLevel: String = "BEGINNER",
+    relatedTerms: List<String> = listOf("Progressive Overload", "Volume"),
+) = GlossaryDefinitionResponseDto(
+    term = term, definition = definition,
+    knowledgeLevel = knowledgeLevel, relatedTerms = relatedTerms,
+)
+
+// ─── Progression ───────────────────────────────────────────────────────────────
+
+fun fakeProgressionRecommendation(
+    trainingExerciseId: String = "exercise-1",
+    exerciseName: String = "Bench Press",
+    type: ProgressionType = ProgressionType.INCREASE_LOAD,
+    currentLoad: Double? = 60.0,
+    suggestedLoad: Double? = 65.0,
+    suggestedRepsMin: Int = 8,
+    suggestedRepsMax: Int = 10,
+    rationale: String = "Consistent performance in last 3 sessions allows a load increase.",
+    confidence: Double = 0.85,
+    basedOnSessions: Int = 3,
+) = ProgressionRecommendation(
+    trainingExerciseId = trainingExerciseId, exerciseName = exerciseName,
+    type = type, currentLoad = currentLoad, suggestedLoad = suggestedLoad,
+    suggestedRepsMin = suggestedRepsMin, suggestedRepsMax = suggestedRepsMax,
+    rationale = rationale, confidence = confidence, basedOnSessions = basedOnSessions,
+)
+
+fun fakePlanProgressionSummary(
+    planId: String = "plan-1",
+    recommendations: List<ProgressionRecommendation> = listOf(fakeProgressionRecommendation()),
+    overallTrend: ProgressTrend = ProgressTrend.IMPROVING,
+    lastAnalyzedAt: String = "2026-04-01T10:00:00",
+) = PlanProgressionSummary(
+    planId = planId, recommendations = recommendations,
+    overallTrend = overallTrend, lastAnalyzedAt = lastAnalyzedAt,
+)
+
+fun fakeProgressionRecommendationResponseDto(
+    trainingExerciseId: String = "exercise-1",
+    exerciseName: String = "Bench Press",
+    type: String = "INCREASE_LOAD",
+    currentLoad: Double? = 60.0,
+    suggestedLoad: Double? = 65.0,
+    suggestedRepsMin: Int = 8,
+    suggestedRepsMax: Int = 10,
+    rationale: String = "Consistent performance in last 3 sessions allows a load increase.",
+    confidence: Double = 0.85,
+    basedOnSessions: Int = 3,
+) = ProgressionRecommendationResponseDto(
+    trainingExerciseId = trainingExerciseId, exerciseName = exerciseName,
+    type = type, currentLoad = currentLoad, suggestedLoad = suggestedLoad,
+    suggestedRepsMin = suggestedRepsMin, suggestedRepsMax = suggestedRepsMax,
+    rationale = rationale, confidence = confidence, basedOnSessions = basedOnSessions,
+)
+
+fun fakePlanProgressionSummaryResponseDto(
+    trainingPlanId: String = "plan-1",
+    totalExercises: Int = 10,
+    exercisesAnalyzed: Int = 8,
+    recommendations: List<ProgressionRecommendationResponseDto> = listOf(fakeProgressionRecommendationResponseDto()),
+) = PlanProgressionSummaryResponseDto(
+    trainingPlanId = trainingPlanId, totalExercises = totalExercises,
+    exercisesAnalyzed = exercisesAnalyzed, recommendations = recommendations,
+)
