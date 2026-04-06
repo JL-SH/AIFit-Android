@@ -55,7 +55,7 @@ fun PrimaryButton(
             )
         } else {
             Text(
-                text = text.uppercase(),
+                text = text,
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,

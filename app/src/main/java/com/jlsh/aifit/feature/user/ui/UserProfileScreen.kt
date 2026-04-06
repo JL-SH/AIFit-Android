@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
+import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.components.inputs.AiFitDatePickerBottomSheet
 import com.jlsh.aifit.core.ui.components.inputs.AiFitDropdown
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
@@ -92,6 +93,9 @@ fun UserProfileScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
+        if (uiState is UserUiState.Loading) {
+            LoadingScreen()
+        } else {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -227,13 +231,14 @@ fun UserProfileScreen(
             Spacer(Modifier.height(AiFitSpacing.sm))
 
             PrimaryButton(
-                text = "GUARDAR",
+                text = "Guardar",
                 onClick = viewModel::onSaveProfile,
                 isLoading = uiState is UserUiState.Saving,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(AiFitSpacing.lg))
+        }
         }
     }
 

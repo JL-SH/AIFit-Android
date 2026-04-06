@@ -174,7 +174,7 @@ fun RegisterScreen(
                         text = stringResource(R.string.auth_sign_in),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.clickable { viewModel.onNavigateBack() },
+                        modifier = Modifier.clickable { onNavigateBack() },
                     )
                 }
 
@@ -290,4 +290,7 @@ private fun RegisterScreenPreview() {
         }
     }
 }
+
+
+
 

@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -167,7 +168,9 @@ private fun ProfileHubContent(
             bottom = 88.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
-        modifier = Modifier.padding(paddingValues),
+        modifier = Modifier
+            .padding(paddingValues)
+            .testTag("profile_hub_list"),
     ) {
         // Header
         item {

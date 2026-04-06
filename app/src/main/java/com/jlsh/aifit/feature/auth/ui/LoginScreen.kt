@@ -212,7 +212,7 @@ fun LoginScreen(
                         text = stringResource(R.string.auth_create_one),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.clickable { viewModel.onNavigateToRegister() },
+                        modifier = Modifier.clickable { onNavigateToRegister() },
                     )
                 }
 

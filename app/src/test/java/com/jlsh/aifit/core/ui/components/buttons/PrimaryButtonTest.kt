@@ -27,8 +27,8 @@ class PrimaryButtonTest {
             }
         }
 
-        // PrimaryButton renders text.uppercase()
-        composeTestRule.onNodeWithText("GUARDAR").assertIsDisplayed()
+        // PrimaryButton renders text as-is (no uppercase transformation)
+        composeTestRule.onNodeWithText("Guardar").assertIsDisplayed()
     }
 
     @Test
@@ -40,7 +40,7 @@ class PrimaryButtonTest {
         }
 
         // When loading, only CircularProgressIndicator is shown — no text node
-        composeTestRule.onNodeWithText("GUARDAR").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Guardar").assertDoesNotExist()
     }
 
     @Test
@@ -52,7 +52,7 @@ class PrimaryButtonTest {
             }
         }
 
-        composeTestRule.onNodeWithText("CONTINUAR").performClick()
+        composeTestRule.onNodeWithText("Continuar").performClick()
 
         assertTrue("onClick must be called on button click", clicked)
     }
@@ -67,7 +67,7 @@ class PrimaryButtonTest {
         }
 
         // Button is disabled when loading — click should have no effect
-        composeTestRule.onNodeWithText("CONTINUAR").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Continuar").assertDoesNotExist()
         assertFalse("onClick must NOT be called while loading", clicked)
     }
 
@@ -79,7 +79,6 @@ class PrimaryButtonTest {
             }
         }
 
-        composeTestRule.onNodeWithText("GUARDAR").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("Guardar").assertIsNotEnabled()
     }
 }
-

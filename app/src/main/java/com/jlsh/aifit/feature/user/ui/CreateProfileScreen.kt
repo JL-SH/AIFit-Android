@@ -160,7 +160,7 @@ fun CreateProfileScreen(
         3 -> selectedWorkoutDays.isNotBlank()
         4 -> selectedAvailableMinutes.isNotBlank()
         5 -> true
-        6 -> birthDate.isNotBlank() && weight.isNotBlank() && height.isNotBlank() && selectedGender.isNotBlank()
+        6 -> true // datos físicos opcionales, se pueden rellenar desde el perfil
         7 -> selectedDietPreference.isNotBlank()
         else -> false
     }
@@ -237,6 +237,16 @@ fun CreateProfileScreen(
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.primaryContainer,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+
+                    Spacer(Modifier.height(AiFitSpacing.xs))
+
+                    Text(
+                        text = "${currentStep + 1} / $TOTAL_STEPS",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
                     )
 
                     Spacer(Modifier.height(AiFitSpacing.md))
@@ -453,7 +463,7 @@ fun CreateProfileScreen(
                     }
 
                     PrimaryButton(
-                        text = if (currentStep == TOTAL_STEPS - 1) "COMPLETAR PERFIL" else "Continuar",
+                        text = if (currentStep == TOTAL_STEPS - 1) "Empezar" else "Continuar",
                         onClick = ::handleContinue,
                         enabled = continueEnabled,
                         isLoading = currentStep == TOTAL_STEPS - 1 && uiState is UserUiState.Saving,

@@ -1,6 +1,5 @@
 package com.jlsh.aifit.feature.auth.ui
 
-import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
@@ -98,7 +97,7 @@ class AuthViewModel @Inject constructor(
         if (_email.value.isBlank()) {
             _emailError.value = "El email es obligatorio"
             isValid = false
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(_email.value).matches()) {
+        } else if (!EMAIL_REGEX.matches(_email.value)) {
             _emailError.value = "Introduce un email válido"
             isValid = false
         }
@@ -187,5 +186,10 @@ class AuthViewModel @Inject constructor(
     private fun emitEvent(event: AuthUiEvent) {
         viewModelScope.launch { _events.send(event) }
     }
-}
 
+    companion object {
+        private val EMAIL_REGEX = Regex(
+            "[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}"
+        )
+    }
+}
