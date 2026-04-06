@@ -24,6 +24,20 @@ import com.jlsh.aifit.feature.metabolic.domain.model.MetabolicAnalysis
 import com.jlsh.aifit.feature.metabolic.domain.model.MetabolicInsight
 import com.jlsh.aifit.feature.metabolic.domain.model.MetabolicStatus
 import com.jlsh.aifit.feature.metabolic.domain.model.WeightTrend as MetabolicWeightTrend
+// ─── Vision imports ────────────────────────────────────────────────────────────
+import com.jlsh.aifit.feature.vision.data.dto.FoodPhotoAnalysisResponseDto
+import com.jlsh.aifit.feature.vision.domain.model.FoodPhotoAnalysisResult
+// ─── Shopping imports ──────────────────────────────────────────────────────────
+import com.jlsh.aifit.feature.shopping.data.dto.GenerateShoppingListRequestDto
+import com.jlsh.aifit.feature.shopping.data.dto.ShoppingCategoryGroupResponseDto
+import com.jlsh.aifit.feature.shopping.data.dto.ShoppingItemResponseDto
+import com.jlsh.aifit.feature.shopping.data.dto.ShoppingListResponseDto
+import com.jlsh.aifit.feature.shopping.data.local.ShoppingListEntity
+import com.jlsh.aifit.feature.shopping.domain.model.ShoppingCategory
+import com.jlsh.aifit.feature.shopping.domain.model.ShoppingCategoryGroup
+import com.jlsh.aifit.feature.shopping.domain.model.ShoppingItem
+import com.jlsh.aifit.feature.shopping.domain.model.ShoppingList
+import com.jlsh.aifit.feature.shopping.domain.model.ShoppingListPeriod
 import com.jlsh.aifit.feature.user.data.dto.UserProfileResponseDto
 import com.jlsh.aifit.feature.user.data.local.UserProfileEntity
 import com.jlsh.aifit.feature.user.domain.model.ActivityLevel
@@ -1451,3 +1465,103 @@ fun fakeChatMessageEntity(
     content = content, createdAt = createdAt,
 )
 
+// ─── Vision ────────────────────────────────────────────────────────────────────
+
+fun fakeFoodPhotoAnalysisResult(
+    identifiedFoodName: String = "Grilled Chicken Salad",
+    confidence: Double = 0.92,
+    warnings: List<String> = emptyList(),
+    items: List<FoodItemLog> = listOf(fakeFoodItemLog()),
+    rawDescription: String? = "A plate of grilled chicken with mixed salad.",
+) = FoodPhotoAnalysisResult(
+    identifiedFoodName = identifiedFoodName,
+    confidence = confidence,
+    warnings = warnings,
+    items = items,
+    rawDescription = rawDescription,
+)
+
+fun fakeFoodPhotoAnalysisResponseDto(
+    identifiedFoodName: String = "Grilled Chicken Salad",
+    confidence: Double = 0.92,
+    warnings: List<String>? = null,
+    items: List<FoodItemLogResponseDto> = listOf(fakeFoodItemLogResponseDto()),
+    rawDescription: String? = "A plate of grilled chicken with mixed salad.",
+) = FoodPhotoAnalysisResponseDto(
+    identifiedFoodName = identifiedFoodName,
+    confidence = confidence,
+    warnings = warnings,
+    items = items,
+    rawDescription = rawDescription,
+)
+
+// ─── Shopping ──────────────────────────────────────────────────────────────────
+
+fun fakeShoppingItem(
+    name: String = "Chicken Breast",
+    totalQuantity: Double = 1.5,
+    unit: String = "kg",
+    notes: String? = "boneless, skinless",
+    isChecked: Boolean = false,
+) = ShoppingItem(
+    name = name, totalQuantity = totalQuantity,
+    unit = unit, notes = notes, isChecked = isChecked,
+)
+
+fun fakeShoppingCategoryGroup(
+    category: ShoppingCategory = ShoppingCategory.PROTEINS,
+    items: List<ShoppingItem> = listOf(fakeShoppingItem()),
+) = ShoppingCategoryGroup(category = category, items = items)
+
+fun fakeShoppingList(
+    id: String = "slist-1",
+    dietPlanId: String = "diet-plan-1",
+    period: ShoppingListPeriod = ShoppingListPeriod.ONE_WEEK,
+    categories: List<ShoppingCategoryGroup> = listOf(fakeShoppingCategoryGroup()),
+    generatedAt: String = "2026-04-06T10:00:00Z",
+) = ShoppingList(
+    id = id, dietPlanId = dietPlanId, period = period,
+    categories = categories, generatedAt = generatedAt,
+)
+
+fun fakeShoppingItemResponseDto(
+    name: String = "Chicken Breast",
+    totalQuantity: Double = 1.5,
+    unit: String = "kg",
+    notes: String? = "boneless, skinless",
+) = ShoppingItemResponseDto(
+    name = name, totalQuantity = totalQuantity, unit = unit, notes = notes,
+)
+
+fun fakeShoppingCategoryGroupResponseDto(
+    category: String = "PROTEINS",
+    items: List<ShoppingItemResponseDto> = listOf(fakeShoppingItemResponseDto()),
+) = ShoppingCategoryGroupResponseDto(category = category, items = items)
+
+fun fakeShoppingListResponseDto(
+    id: String = "slist-1",
+    dietPlanId: String = "diet-plan-1",
+    period: String = "ONE_WEEK",
+    categories: List<ShoppingCategoryGroupResponseDto> = listOf(fakeShoppingCategoryGroupResponseDto()),
+    generatedAt: String = "2026-04-06T10:00:00Z",
+) = ShoppingListResponseDto(
+    id = id, dietPlanId = dietPlanId, period = period,
+    categories = categories, generatedAt = generatedAt,
+)
+
+fun fakeShoppingListEntity(
+    id: String = "slist-1",
+    dietPlanId: String = "diet-plan-1",
+    period: String = "ONE_WEEK",
+    generatedAt: Long = 1743933600000L,
+) = ShoppingListEntity(
+    id = id, dietPlanId = dietPlanId,
+    period = period, generatedAt = generatedAt,
+)
+
+fun fakeGenerateShoppingListRequestDto(
+    dietPlanId: String? = "diet-plan-1",
+    period: String = "ONE_WEEK",
+) = GenerateShoppingListRequestDto(
+    dietPlanId = dietPlanId, period = period,
+)
