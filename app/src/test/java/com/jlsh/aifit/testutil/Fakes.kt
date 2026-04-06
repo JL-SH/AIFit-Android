@@ -14,6 +14,35 @@ import com.jlsh.aifit.feature.user.domain.model.UpdateUserProfileRequest
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 
+// ─── Training imports ──────────────────────────────────────────────────────────
+import com.jlsh.aifit.feature.training.data.dto.TrainingDayResponseDto
+import com.jlsh.aifit.feature.training.data.dto.TrainingExerciseResponseDto
+import com.jlsh.aifit.feature.training.data.dto.TrainingPlanResponseDto
+import com.jlsh.aifit.feature.training.data.dto.TrainingPlanSummaryResponseDto
+import com.jlsh.aifit.feature.training.data.dto.GenerateTrainingPlanRequestDto
+import com.jlsh.aifit.feature.training.data.local.TrainingPlanEntity
+import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
+import com.jlsh.aifit.feature.training.domain.model.PlanStatus
+import com.jlsh.aifit.feature.training.domain.model.TrainingDay
+import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
+import com.jlsh.aifit.feature.training.domain.model.TrainingExercise
+import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
+import java.time.LocalDateTime
+
+// ─── Diet imports ──────────────────────────────────────────────────────────────
+import com.jlsh.aifit.feature.diet.data.dto.DietDayResponseDto
+import com.jlsh.aifit.feature.diet.data.dto.DietPlanResponseDto
+import com.jlsh.aifit.feature.diet.data.dto.DietPlanSummaryResponseDto
+import com.jlsh.aifit.feature.diet.data.dto.GenerateDietPlanRequestDto
+import com.jlsh.aifit.feature.diet.data.dto.MealItemResponseDto
+import com.jlsh.aifit.feature.diet.data.dto.MealResponseDto
+import com.jlsh.aifit.feature.diet.data.local.DietPlanEntity
+import com.jlsh.aifit.feature.diet.domain.model.DietDay
+import com.jlsh.aifit.feature.diet.domain.model.DietPlan
+import com.jlsh.aifit.feature.diet.domain.model.Meal
+import com.jlsh.aifit.feature.diet.domain.model.MealItem
+import com.jlsh.aifit.feature.diet.domain.model.MealType
+
 // ─── Constantes base ───────────────────────────────────────────────────────────
 /** A valid-looking JWT for test purposes (not a real token). */
 const val FAKE_TOKEN = "eyJhbGciOiJIUzI1NiJ9.test.signature"
@@ -153,4 +182,240 @@ fun fakeUpdateUserProfileRequest(
 ) = UpdateUserProfileRequest(
     goalType = goalType,
     fitnessLevel = fitnessLevel,
+)
+
+// ─── Training ──────────────────────────────────────────────────────────────────
+
+private val DEFAULT_CREATED_AT = LocalDateTime.of(2026, 3, 1, 10, 0, 0)
+private const val DEFAULT_CREATED_AT_STR = "2026-03-01T10:00:00"
+
+fun fakeTrainingExercise(
+    id: String = "exercise-1",
+    name: String = "Bench Press",
+    primaryMuscle: MuscleGroup = MuscleGroup.CHEST,
+    secondaryMuscle: MuscleGroup? = MuscleGroup.TRICEPS,
+    sets: Int = 4,
+    repsMin: Int = 8,
+    repsMax: Int = 12,
+    restSeconds: Int = 90,
+    order: Int = 1,
+) = TrainingExercise(
+    id = id, name = name, description = null,
+    primaryMuscle = primaryMuscle, secondaryMuscle = secondaryMuscle,
+    sets = sets, repsMin = repsMin, repsMax = repsMax,
+    restSeconds = restSeconds, notes = null, order = order, targetRpe = null,
+)
+
+fun fakeTrainingDay(
+    id: String = "day-1",
+    dayNumber: Int = 1,
+    name: String = "Push Day",
+    estimatedDurationMinutes: Int = 60,
+    exercises: List<TrainingExercise> = listOf(fakeTrainingExercise()),
+    dayType: TrainingDayType = TrainingDayType.TRAINING,
+) = TrainingDay(
+    id = id, dayNumber = dayNumber, name = name,
+    estimatedDurationMinutes = estimatedDurationMinutes,
+    exercises = exercises, dayOfWeek = null, dayType = dayType,
+)
+
+fun fakeTrainingPlan(
+    id: String = "plan-1",
+    name: String = "Test Plan",
+    status: PlanStatus = PlanStatus.ACTIVE,
+    days: List<TrainingDay> = emptyList(),
+    frequencyDaysPerWeek: Int = 4,
+    durationWeeks: Int = 8,
+    goalType: GoalType = GoalType.GAIN_MUSCLE,
+    fitnessLevel: FitnessLevel = FitnessLevel.INTERMEDIATE,
+    location: WorkoutLocation = WorkoutLocation.GYM,
+    totalDays: Int = 32,
+    createdAt: LocalDateTime = DEFAULT_CREATED_AT,
+) = TrainingPlan(
+    id = id, name = name, description = null,
+    frequencyDaysPerWeek = frequencyDaysPerWeek,
+    durationWeeks = durationWeeks,
+    goalType = goalType, fitnessLevel = fitnessLevel,
+    location = location, status = status,
+    totalDays = totalDays, createdAt = createdAt,
+    days = days,
+)
+
+fun fakeTrainingPlanEntity(
+    id: String = "plan-1",
+    userId: String = FAKE_USER_ID,
+    name: String = "Test Plan",
+    status: String = "ACTIVE",
+) = TrainingPlanEntity(
+    id = id, userId = userId, name = name,
+    description = null, status = status,
+    frequencyDaysPerWeek = 4, durationWeeks = 8,
+    goalType = "GAIN_MUSCLE", fitnessLevel = "INTERMEDIATE",
+    location = "GYM", totalDays = 32,
+    createdAt = DEFAULT_CREATED_AT.toInstant(java.time.ZoneOffset.UTC).toEpochMilli(),
+)
+
+fun fakeTrainingPlanSummaryResponseDto(
+    id: String = "plan-1",
+    name: String = "Test Plan",
+    status: String = "ACTIVE",
+) = TrainingPlanSummaryResponseDto(
+    id = id, name = name, description = null,
+    frequencyDaysPerWeek = 4, durationWeeks = 8,
+    goalType = "GAIN_MUSCLE", fitnessLevel = "INTERMEDIATE",
+    location = "GYM", status = status, totalDays = 32,
+    createdAt = DEFAULT_CREATED_AT_STR,
+)
+
+fun fakeTrainingExerciseResponseDto(
+    id: String = "exercise-1",
+    name: String = "Bench Press",
+    primaryMuscle: String = "CHEST",
+    secondaryMuscle: String? = "TRICEPS",
+) = TrainingExerciseResponseDto(
+    id = id, name = name, description = null,
+    primaryMuscle = primaryMuscle, secondaryMuscle = secondaryMuscle,
+    sets = 4, repsMin = 8, repsMax = 12,
+    restSeconds = 90, notes = null, order = 1, targetRpe = null,
+)
+
+fun fakeTrainingDayResponseDto(
+    id: String = "day-1",
+    exercises: List<TrainingExerciseResponseDto> = listOf(fakeTrainingExerciseResponseDto()),
+) = TrainingDayResponseDto(
+    id = id, dayNumber = 1, name = "Push Day",
+    estimatedDurationMinutes = 60, exercises = exercises,
+    dayOfWeek = null, dayType = "TRAINING",
+)
+
+fun fakeTrainingPlanResponseDto(
+    id: String = "plan-1",
+    name: String = "Test Plan",
+    status: String = "ACTIVE",
+    days: List<TrainingDayResponseDto> = listOf(fakeTrainingDayResponseDto()),
+) = TrainingPlanResponseDto(
+    id = id, name = name, description = null,
+    frequencyDaysPerWeek = 4, durationWeeks = 8,
+    goalType = "GAIN_MUSCLE", fitnessLevel = "INTERMEDIATE",
+    location = "GYM", status = status, totalDays = 32,
+    createdAt = DEFAULT_CREATED_AT_STR, days = days,
+)
+
+fun fakeGenerateTrainingPlanRequestDto() = GenerateTrainingPlanRequestDto(
+    frequencyDaysPerWeek = 4, sessionDurationMinutes = 60,
+    durationWeeks = 8, goalType = "GAIN_MUSCLE",
+    fitnessLevel = "INTERMEDIATE", location = "GYM",
+)
+
+// ─── Diet ──────────────────────────────────────────────────────────────────────
+
+fun fakeMealItem(
+    id: String = "item-1",
+    name: String = "Chicken Breast",
+    quantity: Float = 200f,
+    unit: String = "g",
+    calories: Int = 330,
+) = MealItem(
+    id = id, name = name, quantity = quantity, unit = unit,
+    calories = calories, proteinGrams = 62f, carbsGrams = 0f, fatGrams = 7f,
+)
+
+fun fakeMeal(
+    id: String = "meal-1",
+    mealType: MealType = MealType.LUNCH,
+    name: String = "Grilled Chicken",
+    calories: Int = 500,
+    items: List<MealItem> = listOf(fakeMealItem()),
+) = Meal(
+    id = id, mealType = mealType, name = name, time = "13:00",
+    calories = calories, proteinGrams = 40, carbsGrams = 50, fatGrams = 15,
+    items = items,
+)
+
+fun fakeDietDay(
+    id: String = "dday-1",
+    dayNumber: Int = 1,
+    name: String = "Day 1",
+    totalCalories: Int = 2000,
+    meals: List<Meal> = listOf(fakeMeal()),
+) = DietDay(id = id, dayNumber = dayNumber, name = name, totalCalories = totalCalories, meals = meals)
+
+fun fakeDietPlan(
+    id: String = "diet-plan-1",
+    name: String = "Test Diet",
+    status: PlanStatus = PlanStatus.ACTIVE,
+    days: List<DietDay> = emptyList(),
+    preference: DietPreference = DietPreference.NONE,
+    dailyCalories: Int = 2000,
+    createdAt: LocalDateTime = DEFAULT_CREATED_AT,
+) = DietPlan(
+    id = id, name = name, description = null,
+    dailyCalories = dailyCalories, proteinGrams = 150,
+    carbsGrams = 200, fatGrams = 70, durationWeeks = 4,
+    preference = preference, status = status,
+    totalDays = 28, createdAt = createdAt, days = days,
+)
+
+fun fakeDietPlanEntity(
+    id: String = "diet-plan-1",
+    userId: String = FAKE_USER_ID,
+    name: String = "Test Diet",
+    status: String = "ACTIVE",
+) = DietPlanEntity(
+    id = id, userId = userId, name = name, description = null,
+    dailyCalories = 2000, proteinGrams = 150, carbsGrams = 200, fatGrams = 70,
+    durationWeeks = 4, preference = "NONE", status = status, totalDays = 28,
+    createdAt = DEFAULT_CREATED_AT.toInstant(java.time.ZoneOffset.UTC).toEpochMilli(),
+)
+
+fun fakeDietPlanSummaryResponseDto(
+    id: String = "diet-plan-1",
+    name: String = "Test Diet",
+    status: String = "ACTIVE",
+) = DietPlanSummaryResponseDto(
+    id = id, name = name, description = null,
+    dailyCalories = 2000, proteinGrams = 150, carbsGrams = 200, fatGrams = 70,
+    durationWeeks = 4, preference = "NONE", status = status, totalDays = 28,
+    createdAt = DEFAULT_CREATED_AT_STR,
+)
+
+fun fakeMealItemResponseDto(
+    id: String = "item-1",
+    name: String = "Chicken Breast",
+) = MealItemResponseDto(
+    id = id, name = name, quantity = 200f, unit = "g",
+    calories = 330, proteinGrams = 62f, carbsGrams = 0f, fatGrams = 7f,
+)
+
+fun fakeMealResponseDto(
+    id: String = "meal-1",
+    mealType: String = "LUNCH",
+    items: List<MealItemResponseDto> = listOf(fakeMealItemResponseDto()),
+) = MealResponseDto(
+    id = id, mealType = mealType, name = "Grilled Chicken", time = "13:00",
+    calories = 500, proteinGrams = 40, carbsGrams = 50, fatGrams = 15,
+    items = items,
+)
+
+fun fakeDietDayResponseDto(
+    id: String = "dday-1",
+    meals: List<MealResponseDto> = listOf(fakeMealResponseDto()),
+) = DietDayResponseDto(
+    id = id, dayNumber = 1, name = "Day 1", totalCalories = 2000, meals = meals,
+)
+
+fun fakeDietPlanResponseDto(
+    id: String = "diet-plan-1",
+    name: String = "Test Diet",
+    status: String = "ACTIVE",
+    days: List<DietDayResponseDto> = listOf(fakeDietDayResponseDto()),
+) = DietPlanResponseDto(
+    id = id, name = name, description = null,
+    dailyCalories = 2000, proteinGrams = 150, carbsGrams = 200, fatGrams = 70,
+    durationWeeks = 4, preference = "NONE", status = status, totalDays = 28,
+    createdAt = DEFAULT_CREATED_AT_STR, days = days,
+)
+
+fun fakeGenerateDietPlanRequestDto() = GenerateDietPlanRequestDto(
+    durationWeeks = 4, mealsPerDay = 3, dietPreference = "NONE",
 )
