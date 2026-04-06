@@ -2,6 +2,28 @@ package com.jlsh.aifit.testutil
 
 import com.jlsh.aifit.feature.auth.data.dto.AuthResponseDto
 import com.jlsh.aifit.feature.auth.domain.model.AuthToken
+import com.jlsh.aifit.feature.chat.data.dto.ChatMessageResponseDto
+import com.jlsh.aifit.feature.chat.data.dto.ChatSessionResponseDto
+import com.jlsh.aifit.feature.chat.data.dto.ChatSessionSummaryResponseDto
+import com.jlsh.aifit.feature.chat.data.local.ChatMessageEntity
+import com.jlsh.aifit.feature.chat.data.local.ChatSessionEntity
+import com.jlsh.aifit.feature.chat.domain.model.ChatMessage
+import com.jlsh.aifit.feature.chat.domain.model.ChatMessageRole
+import com.jlsh.aifit.feature.chat.domain.model.ChatSession
+import com.jlsh.aifit.feature.chat.domain.model.ChatSessionStatus
+import com.jlsh.aifit.feature.metabolic.data.dto.ApplyMetabolicAdjustmentRequestDto
+import com.jlsh.aifit.feature.metabolic.data.dto.MetabolicAdjustmentRecommendationResponseDto
+import com.jlsh.aifit.feature.metabolic.data.dto.MetabolicAnalysisResponseDto
+import com.jlsh.aifit.feature.metabolic.data.dto.MetabolicInsightResponseDto
+import com.jlsh.aifit.feature.metabolic.data.dto.WeightTrendResponseDto
+import com.jlsh.aifit.feature.metabolic.domain.model.AdjustmentMagnitude
+import com.jlsh.aifit.feature.metabolic.domain.model.AdjustmentType
+import com.jlsh.aifit.feature.metabolic.domain.model.AdjustmentUrgency
+import com.jlsh.aifit.feature.metabolic.domain.model.MetabolicAdjustmentRecommendation
+import com.jlsh.aifit.feature.metabolic.domain.model.MetabolicAnalysis
+import com.jlsh.aifit.feature.metabolic.domain.model.MetabolicInsight
+import com.jlsh.aifit.feature.metabolic.domain.model.MetabolicStatus
+import com.jlsh.aifit.feature.metabolic.domain.model.WeightTrend as MetabolicWeightTrend
 import com.jlsh.aifit.feature.user.data.dto.UserProfileResponseDto
 import com.jlsh.aifit.feature.user.data.local.UserProfileEntity
 import com.jlsh.aifit.feature.user.domain.model.ActivityLevel
@@ -1214,3 +1236,218 @@ fun fakeProgressExportResponseDto(
     streaks = streaks, unlockedAchievements = unlockedAchievements,
     topExercisesProgression = topExercisesProgression,
 )
+
+// ─── Metabolic ─────────────────────────────────────────────────────────────────
+
+fun fakeWeightTrend(
+    averageWeeklyChange: Double = -0.3,
+    trend: String = "LOSING",
+    expectedWeeklyChange: Double = -0.5,
+    deviationFromExpected: Double = 0.2,
+    dataPoints: Int = 14,
+) = MetabolicWeightTrend(
+    averageWeeklyChange = averageWeeklyChange,
+    trend = trend,
+    expectedWeeklyChange = expectedWeeklyChange,
+    deviationFromExpected = deviationFromExpected,
+    dataPoints = dataPoints,
+)
+
+fun fakeMetabolicAdjustmentRecommendation(
+    type: AdjustmentType = AdjustmentType.DECREASE_CALORIES,
+    suggestedCalorieTarget: Int = 2000,
+    suggestedProteinTarget: Double = 160.0,
+    suggestedCarbsTarget: Double = 220.0,
+    suggestedFatTarget: Double = 65.0,
+    magnitude: AdjustmentMagnitude = AdjustmentMagnitude.MODERATE,
+    urgency: AdjustmentUrgency = AdjustmentUrgency.SUGGESTED,
+) = MetabolicAdjustmentRecommendation(
+    type = type,
+    suggestedCalorieTarget = suggestedCalorieTarget,
+    suggestedProteinTarget = suggestedProteinTarget,
+    suggestedCarbsTarget = suggestedCarbsTarget,
+    suggestedFatTarget = suggestedFatTarget,
+    magnitude = magnitude,
+    urgency = urgency,
+)
+
+fun fakeMetabolicAnalysis(
+    status: MetabolicStatus = MetabolicStatus.ON_TRACK,
+    weightTrend: MetabolicWeightTrend = fakeWeightTrend(),
+    calorieAdherenceRate: Double = 92.5,
+    averageCalorieDeficitSurplus: Double = -150.0,
+    recommendation: MetabolicAdjustmentRecommendation? = fakeMetabolicAdjustmentRecommendation(),
+    rationale: String = "Your progress is on track. Minor calorie adjustment suggested.",
+) = MetabolicAnalysis(
+    status = status,
+    weightTrend = weightTrend,
+    calorieAdherenceRate = calorieAdherenceRate,
+    averageCalorieDeficitSurplus = averageCalorieDeficitSurplus,
+    recommendation = recommendation,
+    rationale = rationale,
+)
+
+fun fakeMetabolicInsight(
+    id: String = "insight-1",
+    statusAtTime: MetabolicStatus = MetabolicStatus.ON_TRACK,
+    adjustmentType: AdjustmentType = AdjustmentType.DECREASE_CALORIES,
+    previousCalorieTarget: Int = 2200,
+    newCalorieTarget: Int = 2000,
+    magnitude: AdjustmentMagnitude = AdjustmentMagnitude.MODERATE,
+    rationale: String = "Adherence high, reducing surplus.",
+    appliedAt: String = "2026-04-01T10:00:00Z",
+) = MetabolicInsight(
+    id = id, statusAtTime = statusAtTime, adjustmentType = adjustmentType,
+    previousCalorieTarget = previousCalorieTarget, newCalorieTarget = newCalorieTarget,
+    magnitude = magnitude, rationale = rationale, appliedAt = appliedAt,
+)
+
+fun fakeWeightTrendResponseDto(
+    averageWeeklyChange: Double = -0.3,
+    trend: String = "LOSING",
+    expectedWeeklyChange: Double = -0.5,
+    deviationFromExpected: Double = 0.2,
+    dataPoints: Int = 14,
+) = WeightTrendResponseDto(
+    averageWeeklyChange = averageWeeklyChange,
+    trend = trend,
+    expectedWeeklyChange = expectedWeeklyChange,
+    deviationFromExpected = deviationFromExpected,
+    dataPoints = dataPoints,
+)
+
+fun fakeMetabolicAdjustmentRecommendationResponseDto(
+    type: String = "DECREASE_CALORIES",
+    suggestedCalorieTarget: Int = 2000,
+    suggestedProteinTarget: Double = 160.0,
+    suggestedCarbsTarget: Double = 220.0,
+    suggestedFatTarget: Double = 65.0,
+    magnitude: String = "MODERATE",
+    urgency: String = "SUGGESTED",
+) = MetabolicAdjustmentRecommendationResponseDto(
+    type = type, suggestedCalorieTarget = suggestedCalorieTarget,
+    suggestedProteinTarget = suggestedProteinTarget,
+    suggestedCarbsTarget = suggestedCarbsTarget,
+    suggestedFatTarget = suggestedFatTarget,
+    magnitude = magnitude, urgency = urgency,
+)
+
+fun fakeMetabolicAnalysisResponseDto(
+    status: String = "ON_TRACK",
+    weightTrend: WeightTrendResponseDto = fakeWeightTrendResponseDto(),
+    calorieAdherenceRate: Double = 92.5,
+    averageCalorieDeficitSurplus: Double = -150.0,
+    recommendation: MetabolicAdjustmentRecommendationResponseDto? = fakeMetabolicAdjustmentRecommendationResponseDto(),
+    rationale: String = "Your progress is on track.",
+) = MetabolicAnalysisResponseDto(
+    status = status, weightTrend = weightTrend,
+    calorieAdherenceRate = calorieAdherenceRate,
+    averageCalorieDeficitSurplus = averageCalorieDeficitSurplus,
+    recommendation = recommendation, rationale = rationale,
+)
+
+fun fakeMetabolicInsightResponseDto(
+    id: String = "insight-1",
+    statusAtTime: String = "ON_TRACK",
+    adjustmentType: String = "DECREASE_CALORIES",
+    previousCalorieTarget: Int = 2200,
+    newCalorieTarget: Int = 2000,
+    magnitude: String = "MODERATE",
+    rationale: String = "Adherence high, reducing surplus.",
+    appliedAt: String = "2026-04-01T10:00:00Z",
+) = MetabolicInsightResponseDto(
+    id = id, statusAtTime = statusAtTime, adjustmentType = adjustmentType,
+    previousCalorieTarget = previousCalorieTarget, newCalorieTarget = newCalorieTarget,
+    magnitude = magnitude, rationale = rationale, appliedAt = appliedAt,
+)
+
+fun fakeApplyMetabolicAdjustmentRequestDto(
+    newCalorieTarget: Int = 2000,
+    newProteinTarget: Double = 160.0,
+    newCarbsTarget: Double = 220.0,
+    newFatTarget: Double = 65.0,
+    adjustmentType: String = "DECREASE_CALORIES",
+    magnitude: String = "MODERATE",
+    rationale: String? = "On track adjustment",
+) = ApplyMetabolicAdjustmentRequestDto(
+    newCalorieTarget = newCalorieTarget, newProteinTarget = newProteinTarget,
+    newCarbsTarget = newCarbsTarget, newFatTarget = newFatTarget,
+    adjustmentType = adjustmentType, magnitude = magnitude, rationale = rationale,
+)
+
+// ─── Chat ──────────────────────────────────────────────────────────────────────
+
+fun fakeChatMessage(
+    id: String = "msg-1",
+    role: ChatMessageRole = ChatMessageRole.USER,
+    content: String = "How should I warm up before squats?",
+    createdAt: String = "2026-04-06T10:00:00Z",
+) = ChatMessage(id = id, role = role, content = content, createdAt = createdAt)
+
+fun fakeChatSession(
+    id: String = "session-1",
+    title: String = "Workout Questions",
+    status: ChatSessionStatus = ChatSessionStatus.ACTIVE,
+    messages: List<ChatMessage> = listOf(fakeChatMessage()),
+    createdAt: String = "2026-04-06T09:00:00Z",
+    updatedAt: String = "2026-04-06T10:00:00Z",
+    messageCount: Int = messages.size,
+) = ChatSession(
+    id = id, title = title, status = status, messages = messages,
+    createdAt = createdAt, updatedAt = updatedAt, messageCount = messageCount,
+)
+
+fun fakeChatMessageResponseDto(
+    id: String = "msg-1",
+    role: String = "ASSISTANT",
+    content: String = "Start with 5 minutes of light cardio.",
+    createdAt: String = "2026-04-06T10:01:00Z",
+) = ChatMessageResponseDto(id = id, role = role, content = content, createdAt = createdAt)
+
+fun fakeChatSessionResponseDto(
+    id: String = "session-1",
+    title: String = "Workout Questions",
+    status: String = "ACTIVE",
+    messages: List<ChatMessageResponseDto> = listOf(fakeChatMessageResponseDto()),
+    createdAt: String = "2026-04-06T09:00:00Z",
+    updatedAt: String = "2026-04-06T10:00:00Z",
+) = ChatSessionResponseDto(
+    id = id, title = title, status = status, messages = messages,
+    createdAt = createdAt, updatedAt = updatedAt,
+)
+
+fun fakeChatSessionSummaryResponseDto(
+    id: String = "session-1",
+    title: String = "Workout Questions",
+    status: String = "ACTIVE",
+    messageCount: Int = 3,
+    createdAt: String = "2026-04-06T09:00:00Z",
+    updatedAt: String = "2026-04-06T10:00:00Z",
+) = ChatSessionSummaryResponseDto(
+    id = id, title = title, status = status, messageCount = messageCount,
+    createdAt = createdAt, updatedAt = updatedAt,
+)
+
+fun fakeChatSessionEntity(
+    id: String = "session-1",
+    title: String = "Workout Questions",
+    status: String = "ACTIVE",
+    messageCount: Int = 3,
+    createdAt: Long = 1743933600000L,
+    updatedAt: Long = 1743937200000L,
+) = ChatSessionEntity(
+    id = id, title = title, status = status,
+    messageCount = messageCount, createdAt = createdAt, updatedAt = updatedAt,
+)
+
+fun fakeChatMessageEntity(
+    id: String = "msg-1",
+    sessionId: String = "session-1",
+    role: String = "USER",
+    content: String = "How should I warm up?",
+    createdAt: Long = 1743933600000L,
+) = ChatMessageEntity(
+    id = id, sessionId = sessionId, role = role,
+    content = content, createdAt = createdAt,
+)
+
