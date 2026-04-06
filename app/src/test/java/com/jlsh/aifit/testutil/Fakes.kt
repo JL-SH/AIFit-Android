@@ -43,6 +43,23 @@ import com.jlsh.aifit.feature.diet.domain.model.Meal
 import com.jlsh.aifit.feature.diet.domain.model.MealItem
 import com.jlsh.aifit.feature.diet.domain.model.MealType
 
+// ─── Nutrition imports ─────────────────────────────────────────────────────────
+import com.jlsh.aifit.feature.nutrition.data.dto.AnalyzeMealFromTextRequestDto
+import com.jlsh.aifit.feature.nutrition.data.dto.FoodItemLogResponseDto
+import com.jlsh.aifit.feature.nutrition.data.dto.MealLogResponseDto
+import com.jlsh.aifit.feature.nutrition.data.dto.NutritionLogResponseDto
+import com.jlsh.aifit.feature.nutrition.data.dto.NutritionTargetResponseDto
+import com.jlsh.aifit.feature.nutrition.data.dto.TrackFoodItemRequestDto
+import com.jlsh.aifit.feature.nutrition.data.dto.TrackMealRequestDto
+import com.jlsh.aifit.feature.nutrition.data.dto.UpdateNutritionTargetRequestDto
+import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogEntity
+import com.jlsh.aifit.feature.nutrition.domain.model.FoodItemLog
+import com.jlsh.aifit.feature.nutrition.domain.model.MealLog
+import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
+import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
+import com.jlsh.aifit.feature.nutrition.domain.model.TargetSource
+import java.time.LocalDate
+
 // ─── Constantes base ───────────────────────────────────────────────────────────
 /** A valid-looking JWT for test purposes (not a real token). */
 const val FAKE_TOKEN = "eyJhbGciOiJIUzI1NiJ9.test.signature"
@@ -419,3 +436,187 @@ fun fakeDietPlanResponseDto(
 fun fakeGenerateDietPlanRequestDto() = GenerateDietPlanRequestDto(
     durationWeeks = 4, mealsPerDay = 3, dietPreference = "NONE",
 )
+
+// ─── Nutrition ─────────────────────────────────────────────────────────────────
+
+fun fakeFoodItemLog(
+    id: String = "food-item-1",
+    name: String = "Chicken Breast",
+    quantity: Double = 200.0,
+    unit: String = "g",
+    calories: Int = 330,
+    proteinGrams: Double = 62.0,
+    carbsGrams: Double = 0.0,
+    fatGrams: Double = 7.0,
+) = FoodItemLog(
+    id = id, name = name, quantity = quantity, unit = unit,
+    calories = calories, proteinGrams = proteinGrams,
+    carbsGrams = carbsGrams, fatGrams = fatGrams,
+)
+
+fun fakeMealLog(
+    id: String = "meal-log-1",
+    mealType: MealType = MealType.LUNCH,
+    name: String? = "Grilled Chicken",
+    time: String = "13:00",
+    calories: Int = 520,
+    proteinGrams: Double = 45.0,
+    carbsGrams: Double = 30.0,
+    fatGrams: Double = 18.0,
+    aiGenerated: Boolean = false,
+    rawInputText: String? = null,
+    items: List<FoodItemLog> = listOf(fakeFoodItemLog()),
+) = MealLog(
+    id = id, mealType = mealType, name = name, time = time,
+    calories = calories, proteinGrams = proteinGrams,
+    carbsGrams = carbsGrams, fatGrams = fatGrams,
+    aiGenerated = aiGenerated, rawInputText = rawInputText,
+    items = items,
+)
+
+fun fakeNutritionLog(
+    id: String = "nutrition-log-1",
+    date: LocalDate = LocalDate.of(2026, 4, 6),
+    totalCalories: Int = 1450,
+    totalProteinGrams: Double = 95.0,
+    totalCarbsGrams: Double = 180.0,
+    totalFatGrams: Double = 42.0,
+    meals: List<MealLog> = listOf(fakeMealLog()),
+) = NutritionLog(
+    id = id, date = date, totalCalories = totalCalories,
+    totalProteinGrams = totalProteinGrams, totalCarbsGrams = totalCarbsGrams,
+    totalFatGrams = totalFatGrams, meals = meals,
+)
+
+fun fakeNutritionTarget(
+    id: String = "target-1",
+    calorieTarget: Int = 2200,
+    proteinTarget: Double = 165.0,
+    carbsTarget: Double = 250.0,
+    fatTarget: Double = 73.0,
+    effectiveFrom: LocalDate = LocalDate.of(2026, 4, 1),
+    setBy: TargetSource = TargetSource.MANUAL,
+) = NutritionTarget(
+    id = id, calorieTarget = calorieTarget, proteinTarget = proteinTarget,
+    carbsTarget = carbsTarget, fatTarget = fatTarget,
+    effectiveFrom = effectiveFrom, setBy = setBy,
+)
+
+fun fakeNutritionLogEntity(
+    id: String = "nutrition-log-1",
+    date: Long = LocalDate.of(2026, 4, 6).toEpochDay(),
+    totalCalories: Int = 1450,
+    totalProteinGrams: Double = 95.0,
+    totalCarbsGrams: Double = 180.0,
+    totalFatGrams: Double = 42.0,
+) = NutritionLogEntity(
+    id = id, date = date, totalCalories = totalCalories,
+    totalProteinGrams = totalProteinGrams, totalCarbsGrams = totalCarbsGrams,
+    totalFatGrams = totalFatGrams,
+)
+
+fun fakeNutritionLogResponseDto(
+    id: String = "nutrition-log-1",
+    date: String = "2026-04-06",
+    totalCalories: Int = 1450,
+    totalProteinGrams: Double = 95.0,
+    totalCarbsGrams: Double = 180.0,
+    totalFatGrams: Double = 42.0,
+    meals: List<MealLogResponseDto> = listOf(fakeMealLogResponseDto()),
+) = NutritionLogResponseDto(
+    id = id, date = date, totalCalories = totalCalories,
+    totalProteinGrams = totalProteinGrams, totalCarbsGrams = totalCarbsGrams,
+    totalFatGrams = totalFatGrams, meals = meals,
+)
+
+fun fakeMealLogResponseDto(
+    id: String = "meal-log-1",
+    mealType: String = "LUNCH",
+    name: String? = "Grilled Chicken",
+    time: String = "13:00",
+    calories: Int = 520,
+    proteinGrams: Double = 45.0,
+    carbsGrams: Double = 30.0,
+    fatGrams: Double = 18.0,
+    aiGenerated: Boolean = false,
+    rawInputText: String? = null,
+    items: List<FoodItemLogResponseDto> = listOf(fakeFoodItemLogResponseDto()),
+) = MealLogResponseDto(
+    id = id, mealType = mealType, name = name, time = time,
+    calories = calories, proteinGrams = proteinGrams,
+    carbsGrams = carbsGrams, fatGrams = fatGrams,
+    aiGenerated = aiGenerated, rawInputText = rawInputText, items = items,
+)
+
+fun fakeFoodItemLogResponseDto(
+    id: String = "food-item-1",
+    name: String = "Chicken Breast",
+    quantity: Double = 200.0,
+    unit: String = "g",
+    calories: Int = 330,
+    proteinGrams: Double = 62.0,
+    carbsGrams: Double = 0.0,
+    fatGrams: Double = 7.0,
+) = FoodItemLogResponseDto(
+    id = id, name = name, quantity = quantity, unit = unit,
+    calories = calories, proteinGrams = proteinGrams,
+    carbsGrams = carbsGrams, fatGrams = fatGrams,
+)
+
+fun fakeNutritionTargetResponseDto(
+    id: String = "target-1",
+    calorieTarget: Int = 2200,
+    proteinTarget: Double = 165.0,
+    carbsTarget: Double = 250.0,
+    fatTarget: Double = 73.0,
+    effectiveFrom: String = "2026-04-01",
+    setBy: String = "MANUAL",
+) = NutritionTargetResponseDto(
+    id = id, calorieTarget = calorieTarget, proteinTarget = proteinTarget,
+    carbsTarget = carbsTarget, fatTarget = fatTarget,
+    effectiveFrom = effectiveFrom, setBy = setBy,
+)
+
+fun fakeTrackMealRequestDto(
+    date: String = "2026-04-06",
+    mealType: String = "LUNCH",
+    name: String? = "Grilled Chicken",
+    time: String = "13:00",
+    items: List<TrackFoodItemRequestDto> = listOf(fakeTrackFoodItemRequestDto()),
+) = TrackMealRequestDto(
+    date = date, mealType = mealType, name = name, time = time, items = items,
+)
+
+fun fakeTrackFoodItemRequestDto(
+    name: String = "Chicken Breast",
+    quantity: Double? = 200.0,
+    unit: String = "g",
+    calories: Int? = 330,
+    proteinGrams: Double? = 62.0,
+    carbsGrams: Double? = 0.0,
+    fatGrams: Double? = 7.0,
+) = TrackFoodItemRequestDto(
+    name = name, quantity = quantity, unit = unit,
+    calories = calories, proteinGrams = proteinGrams,
+    carbsGrams = carbsGrams, fatGrams = fatGrams,
+)
+
+fun fakeAnalyzeMealFromTextRequestDto(
+    date: String = "2026-04-06",
+    mealType: String = "LUNCH",
+    time: String = "13:00",
+    text: String = "Grilled chicken with rice and salad",
+) = AnalyzeMealFromTextRequestDto(
+    date = date, mealType = mealType, time = time, text = text,
+)
+
+fun fakeUpdateNutritionTargetRequestDto(
+    calorieTarget: Int? = 2200,
+    proteinTarget: Double? = 165.0,
+    carbsTarget: Double? = 250.0,
+    fatTarget: Double? = 73.0,
+) = UpdateNutritionTargetRequestDto(
+    calorieTarget = calorieTarget, proteinTarget = proteinTarget,
+    carbsTarget = carbsTarget, fatTarget = fatTarget,
+)
+
