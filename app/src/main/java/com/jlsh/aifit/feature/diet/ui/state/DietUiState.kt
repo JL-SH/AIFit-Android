@@ -5,6 +5,7 @@ import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 
 sealed class DietUiState {
     data object Loading : DietUiState(), UiStateHost.Loading
+    data object Regenerating : DietUiState()
     data class Error(override val message: String) : DietUiState(), UiStateHost.Error
     data class Success(
         val plan: DietPlan,

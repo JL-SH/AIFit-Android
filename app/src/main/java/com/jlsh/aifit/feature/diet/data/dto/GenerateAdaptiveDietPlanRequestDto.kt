@@ -11,6 +11,7 @@ data class GenerateAdaptiveDietPlanRequestDto(
     val budget: String? = null,
     val allergies: String? = null,
     val additionalNotes: String? = null,
+    val userConsiderations: String? = null,
     val includeNutritionHistory: Boolean? = null,
 )
 

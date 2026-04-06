@@ -310,8 +310,8 @@ private fun MainNavScreen() {
                                     popUpTo(TrainingRoutes.GRAPH) { inclusive = false }
                                 }
                             },
-                            onReject = {
-                                tabNavController.navigate(TrainingRoutes.GENERATE) {
+                            onNavigateToApproval = { newPlanId ->
+                                tabNavController.navigate(TrainingRoutes.approvalRoute(newPlanId)) {
                                     popUpTo(TrainingRoutes.APPROVAL) { inclusive = true }
                                 }
                             },
@@ -473,8 +473,8 @@ private fun MainNavScreen() {
                                     popUpTo(NutritionRoutes.GRAPH) { inclusive = false }
                                 }
                             },
-                            onReject = {
-                                tabNavController.navigate(NutritionRoutes.DIET_GENERATE) {
+                            onNavigateToApproval = { newPlanId ->
+                                tabNavController.navigate(NutritionRoutes.dietApprovalRoute(newPlanId)) {
                                     popUpTo(NutritionRoutes.DIET_APPROVAL) { inclusive = true }
                                 }
                             },

@@ -12,12 +12,14 @@ import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.ui.state.DietUiEvent
 import com.jlsh.aifit.feature.diet.ui.state.DietUiState
 import com.jlsh.aifit.feature.diet.ui.state.GenerateDietUiState
+import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,6 +29,7 @@ class DietViewModel @Inject constructor(
     private val getDietPlanDetailUseCase: GetDietPlanDetailUseCase,
     private val generateDietPlanUseCase: GenerateDietPlanUseCase,
     private val deleteDietPlanUseCase: DeleteDietPlanUseCase,
+    private val getUserProfileUseCase: GetUserProfileUseCase,
 ) : ViewModel() {
 
     // 1. UI STATE
@@ -85,6 +88,45 @@ class DietViewModel @Inject constructor(
                 }
                 is Result.Error -> {
                     emitEvent(DietUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    fun onRegenerateApprovalDietPlan(currentPlanId: String, feedback: String?) {
+        viewModelScope.launch {
+            _detailUiState.value = DietUiState.Regenerating
+
+            // Delete old plan silently
+            deleteDietPlanUseCase(currentPlanId)
+
+            // Get user profile to build adaptive request
+            when (val profileResult = getUserProfileUseCase().first { it !is Result.Loading }) {
+                is Result.Success -> {
+                    val profile = profileResult.data
+                    val request = GenerateAdaptiveDietPlanRequestDto(
+                        durationWeeks = 8,
+                        mealsPerDay = 3,
+                        dietPreference = profile.dietPreference?.name ?: "NONE",
+                        goalType = profile.goalType?.name,
+                        userConsiderations = feedback,
+                        includeNutritionHistory = true,
+                    )
+                    when (val planResult = generateDietPlanUseCase.invokeAdaptive(request)) {
+                        is Result.Success -> {
+                            emitEvent(DietUiEvent.NavigateToDietApproval(planResult.data.id))
+                        }
+                        is Result.Error -> {
+                            _detailUiState.value = DietUiState.Error(planResult.exception.toMessage())
+                            emitEvent(DietUiEvent.ShowSnackbar(planResult.exception.toMessage()))
+                        }
+                        else -> Unit
+                    }
+                }
+                is Result.Error -> {
+                    _detailUiState.value = DietUiState.Error(profileResult.exception.toMessage())
+                    emitEvent(DietUiEvent.ShowSnackbar(profileResult.exception.toMessage()))
                 }
                 else -> Unit
             }

@@ -102,6 +102,7 @@ fun TrainingHubScreen(
             when (event) {
                 is TrainingUiEvent.NavigateToDetail -> onNavigateToDetail(event.planId)
                 is TrainingUiEvent.NavigateToGenerate -> onNavigateToGenerate(event.adaptive, event.basePlanId)
+                is TrainingUiEvent.NavigateToApproval -> { /* not applicable from hub screen */ }
                 is TrainingUiEvent.NavigateToWorkoutLog -> onNavigateToWorkoutLog(event.planId)
                 is TrainingUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
                 is TrainingUiEvent.PlanDeleted -> { }

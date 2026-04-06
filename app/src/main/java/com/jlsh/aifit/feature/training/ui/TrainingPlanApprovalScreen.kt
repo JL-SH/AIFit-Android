@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.training.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,23 +12,34 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
+import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.ExpandableSection
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
@@ -35,18 +47,60 @@ import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.training.domain.model.TrainingExercise
 import com.jlsh.aifit.feature.training.ui.state.TrainingDayItem
 import com.jlsh.aifit.feature.training.ui.state.TrainingDetailUiState
+import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
 import com.jlsh.aifit.feature.user.ui.displayName
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainingPlanApprovalScreen(
     planId: String,
     onAccept: () -> Unit,
-    onReject: () -> Unit,
+    onNavigateToApproval: (String) -> Unit,
     viewModel: TrainingViewModel = hiltViewModel(),
 ) {
     val detailUiState by viewModel.detailUiState.collectAsStateWithLifecycle()
+    var showFeedbackSheet by remember { mutableStateOf(false) }
+    var feedbackText by remember { mutableStateOf("") }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(planId) { viewModel.loadPlanDetail(planId) }
+
+    // Collect navigation events for regeneration
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is TrainingUiEvent.NavigateToApproval -> onNavigateToApproval(event.planId)
+                else -> Unit
+            }
+        }
+    }
+
+    // Handle Regenerating state — fullscreen loading (mirrors onboarding pattern)
+    if (detailUiState is TrainingDetailUiState.Regenerating) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
+            ) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                )
+                Text(
+                    text = stringResource(R.string.onboarding_regenerating_training),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        return
+    }
 
     ScreenScaffold<TrainingDetailUiState.Ready>(
         uiState = detailUiState,
@@ -185,10 +239,7 @@ fun TrainingPlanApprovalScreen(
                 ) {
                     SecondaryButton(
                         text = "Cambiar Plan",
-                        onClick = {
-                            viewModel.onRejectPlan(planId)
-                            onReject()
-                        },
+                        onClick = { showFeedbackSheet = true },
                         modifier = Modifier.weight(1f),
                     )
                     PrimaryButton(
@@ -200,6 +251,49 @@ fun TrainingPlanApprovalScreen(
                         modifier = Modifier.weight(1f),
                     )
                 }
+            }
+        }
+    }
+
+    // Feedback ModalBottomSheet (mirrors OnboardingTrainingApprovalScreen)
+    if (showFeedbackSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showFeedbackSheet = false },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AiFitSpacing.md)
+                    .padding(bottom = AiFitSpacing.xxl),
+                verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
+            ) {
+                Text(
+                    text = stringResource(R.string.onboarding_adjust_training),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                AiFitTextField(
+                    value = feedbackText,
+                    onValueChange = { feedbackText = it },
+                    label = stringResource(R.string.onboarding_what_to_change),
+                    singleLine = false,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                PrimaryButton(
+                    text = stringResource(R.string.onboarding_regenerate),
+                    onClick = {
+                        scope.launch {
+                            sheetState.hide()
+                            showFeedbackSheet = false
+                            val fb = feedbackText.takeIf { it.isNotBlank() }
+                            feedbackText = ""
+                            viewModel.onRegenerateApprovalPlan(planId, fb)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }
@@ -253,5 +347,3 @@ private fun ApprovalExerciseRow(
         )
     }
 }
-
-

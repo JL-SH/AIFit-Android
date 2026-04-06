@@ -12,6 +12,7 @@ data class GenerateAdaptiveTrainingPlanRequestDto(
     val location: String,
     val injuries: String? = null,
     val additionalNotes: String? = null,
+    val userConsiderations: String? = null,
     val includeAthleteHistory: Boolean? = null,
     val focusAreas: List<String>? = null,
     val avoidExercises: List<String>? = null,

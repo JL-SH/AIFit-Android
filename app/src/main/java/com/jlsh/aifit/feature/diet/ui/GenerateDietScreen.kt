@@ -70,6 +70,7 @@ fun GenerateDietScreen(
             when (event) {
                 is DietUiEvent.NavigateToDetail -> onNavigateToDetail(event.planId)
                 is DietUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                is DietUiEvent.NavigateToDietApproval -> { /* not applicable from generate screen */ }
                 is DietUiEvent.NavigateToDietGenerate -> { /* not applicable from detail screen */ }
                 is DietUiEvent.NavigateBack -> onNavigateBack()
             }

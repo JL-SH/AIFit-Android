@@ -213,6 +213,49 @@ class TrainingViewModel @Inject constructor(
         }
     }
 
+    fun onRegenerateApprovalPlan(currentPlanId: String, feedback: String?) {
+        viewModelScope.launch {
+            _detailUiState.value = TrainingDetailUiState.Regenerating
+
+            // Delete old plan silently
+            deleteTrainingPlanUseCase(currentPlanId)
+
+            // Get user profile to build adaptive request
+            when (val profileResult = getUserProfileUseCase().first { it !is Result.Loading }) {
+                is Result.Success -> {
+                    val profile = profileResult.data
+                    val request = GenerateAdaptiveTrainingPlanRequestDto(
+                        frequencyDaysPerWeek = profile.weeklyWorkoutDays ?: 3,
+                        sessionDurationMinutes = profile.availableMinutesPerSession ?: 60,
+                        durationWeeks = 8,
+                        goalType = profile.goalType?.name ?: "",
+                        fitnessLevel = profile.fitnessLevel?.name ?: "",
+                        location = profile.workoutLocation?.name ?: "",
+                        injuries = profile.injuries,
+                        userConsiderations = feedback,
+                        includeAthleteHistory = true,
+                    )
+                    when (val planResult = generateTrainingPlanUseCase.invokeAdaptive(request)) {
+                        is Result.Success -> {
+                            fetchPlans()
+                            emitEvent(TrainingUiEvent.NavigateToApproval(planResult.data.id))
+                        }
+                        is Result.Error -> {
+                            _detailUiState.value = TrainingDetailUiState.Error(planResult.exception.toMessage())
+                            emitEvent(TrainingUiEvent.ShowSnackbar(planResult.exception.toMessage()))
+                        }
+                        else -> Unit
+                    }
+                }
+                is Result.Error -> {
+                    _detailUiState.value = TrainingDetailUiState.Error(profileResult.exception.toMessage())
+                    emitEvent(TrainingUiEvent.ShowSnackbar(profileResult.exception.toMessage()))
+                }
+                else -> Unit
+            }
+        }
+    }
+
     fun onGeneratePlan(request: GenerateTrainingPlanRequestDto) {
         generatePlan(request)
     }
