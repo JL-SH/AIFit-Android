@@ -717,6 +717,76 @@ class HomeViewModelTest {
         assertNull(stateAfter.todayTraining)
     }
 
+    @Test
+    fun `onResumed muestra activePlan desde summary cuando loadPlanDetail falla`() = runTest {
+        // Initial: no active plan
+        val vm = createViewModel(
+            plansFlow = flowOf(Result.Success(emptyList())),
+        )
+        advanceUntilIdle()
+
+        val stateBeforeResume = vm.uiState.value as HomeUiState.Success
+        assertNull(stateBeforeResume.activePlan)
+
+        // Now a new plan is active but detail load fails
+        val newPlan = fakeTrainingPlan(
+            id = "new-plan",
+            name = "New Active Plan",
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeTrainingDay(dayType = TrainingDayType.REST)),
+        )
+        every { getTrainingPlansUseCase() } returns flowOf(Result.Success(listOf(newPlan)))
+        coEvery { getTrainingPlanDetailUseCase("new-plan") } returns Result.Error(AppException.NetworkException)
+        every { getWorkoutHistoryUseCase(any(), any(), any()) } returns flowOf(Result.Success(emptyList()))
+
+        vm.onResumed()
+        advanceUntilIdle()
+
+        val stateAfterResume = vm.uiState.value as HomeUiState.Success
+        assertNotNull(stateAfterResume.activePlan)
+        assertEquals("new-plan", stateAfterResume.activePlan?.id)
+        assertEquals("New Active Plan", stateAfterResume.activePlan?.name)
+    }
+
+    @Test
+    fun `onResumed no sobreescribe activePlan con null cuando ya habia plan y detail falla`() = runTest {
+        // Initial: active plan with detail success
+        val plan = fakeTrainingPlan(
+            id = "plan-1",
+            name = "My Plan",
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeTrainingDay(dayType = TrainingDayType.REST)),
+        )
+
+        val vm = createViewModel(
+            plansFlow = flowOf(Result.Success(listOf(plan))),
+            planDetailResult = Result.Success(plan),
+        )
+        advanceUntilIdle()
+
+        val stateBefore = vm.uiState.value as HomeUiState.Success
+        assertNotNull(stateBefore.activePlan)
+        assertEquals("plan-1", stateBefore.activePlan?.id)
+
+        // A different plan is now active but detail fails
+        val newPlan = fakeTrainingPlan(
+            id = "new-plan",
+            name = "New Plan",
+            status = PlanStatus.ACTIVE,
+        )
+        every { getTrainingPlansUseCase() } returns flowOf(Result.Success(listOf(newPlan)))
+        coEvery { getTrainingPlanDetailUseCase("new-plan") } returns Result.Error(AppException.NetworkException)
+        every { getWorkoutHistoryUseCase(any(), any(), any()) } returns flowOf(Result.Success(emptyList()))
+
+        vm.onResumed()
+        advanceUntilIdle()
+
+        val stateAfter = vm.uiState.value as HomeUiState.Success
+        assertNotNull(stateAfter.activePlan)
+        assertEquals("new-plan", stateAfter.activePlan?.id)
+        assertEquals("New Plan", stateAfter.activePlan?.name)
+    }
+
     // ── userName y avatarUrl ────────────────────────────────────────────────────
 
     @Test

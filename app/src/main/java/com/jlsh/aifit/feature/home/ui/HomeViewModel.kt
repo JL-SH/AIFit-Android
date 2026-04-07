@@ -76,6 +76,7 @@ class HomeViewModel @Inject constructor(
     private var loadJob: Job? = null
     private var cachedActivePlanDetail: TrainingPlan? = null
     private var cachedActivePlanId: String? = null       // Fix 2: survives a null cachedActivePlanDetail
+    private var cachedActivePlanSummary: ActivePlanSummary? = null
     private var cachedWeeklySummary: WeeklyProgressSummary? = null
 
     init {
@@ -158,6 +159,7 @@ class HomeViewModel @Inject constructor(
                     ActivePlanSummary(id = initialActivePlan.id, name = initialActivePlan.name)
                 else -> null
             }
+            cachedActivePlanSummary = activePlanSummary
 
             // Derive initial diet/meal state
             val initialActiveDiet = initialDietPlans.find { it.status == PlanStatus.ACTIVE }
@@ -285,12 +287,15 @@ class HomeViewModel @Inject constructor(
                     // New (or first-ever) active plan detected — load full detail
                     Log.d("AIFIT_HOME",
                         "onResumed — new active plan id=${resolvedActivePlan.id}")
+                    cachedActivePlanSummary = ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
                     val detail = loadPlanDetail(resolvedActivePlan.id)
                     if (detail != null) {
                         cachedActivePlanDetail = detail
                         cachedActivePlanId = resolvedActivePlan.id
                     } else {
-                        // API failed — still record the plan id so we retry next time
+                        // API failed — clear stale detail from the previous plan
+                        // so refreshWorkoutStatus() falls back to cachedActivePlanSummary
+                        cachedActivePlanDetail = null
                         cachedActivePlanId = resolvedActivePlan.id
                     }
                     refreshWorkoutStatus()
@@ -309,6 +314,7 @@ class HomeViewModel @Inject constructor(
                     Log.d("AIFIT_HOME", "onResumed — active plan cleared")
                     cachedActivePlanDetail = null
                     cachedActivePlanId = null
+                    cachedActivePlanSummary = null
                     _uiState.update { current ->
                         if (current is HomeUiState.Success) current.copy(
                             todayTraining = null,
@@ -342,10 +348,11 @@ class HomeViewModel @Inject constructor(
             cachedActivePlanDetail, cachedWeeklySummary, freshWorkoutLogs,
         )
         // Keep or derive ActivePlanSummary: use cached detail if available, otherwise
-        // preserve whatever is already in state (covers the case where detail load failed
-        // but cachedActivePlanId is set).
+        // fall back to cached summary (covers the case where detail load failed but
+        // cachedActivePlanId is set), then preserve whatever is already in state.
         val freshActivePlanSummary = cachedActivePlanDetail
             ?.let { ActivePlanSummary(it.id, it.name) }
+            ?: cachedActivePlanSummary
             ?: (_uiState.value as? HomeUiState.Success)?.activePlan
         _uiState.update { current ->
             if (current is HomeUiState.Success) current.copy(

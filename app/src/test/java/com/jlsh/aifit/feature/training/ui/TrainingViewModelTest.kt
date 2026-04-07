@@ -360,5 +360,76 @@ class TrainingViewModelTest {
         assertTrue(state is TrainingHubUiState.ActivePlan)
         assertEquals(PlanStatus.COMPLETED, (state as TrainingHubUiState.ActivePlan).selectedFilter)
     }
+
+    // ─── onApprovePlan ──────────────────────────────────────────────────────────
+
+    @Test
+    fun `onApprovePlan activa el plan via setActivePlanUseCase y navega atras`() = runTest {
+        // Initial: no plans → hub = NoActivePlan
+        val vm = createViewModel(plansFlow = flowOf(Result.Success(emptyList())))
+        advanceUntilIdle()
+        assertTrue(vm.hubUiState.value is TrainingHubUiState.NoActivePlan)
+
+        // Mock activation success
+        val activePlan = fakeTrainingPlan(id = "plan-1", status = PlanStatus.ACTIVE)
+        coEvery { setActivePlanUseCase("plan-1") } returns Result.Success(activePlan)
+        // After activation, fetchPlans returns the plan as ACTIVE
+        every { getTrainingPlansUseCase() } returns
+            flowOf(Result.Success(listOf(activePlan)))
+
+        vm.events.test {
+            vm.onApprovePlan("plan-1")
+            advanceUntilIdle()
+
+            coVerify { setActivePlanUseCase("plan-1") }
+            assertTrue(vm.hubUiState.value is TrainingHubUiState.ActivePlan)
+
+            val event = awaitItem()
+            assertTrue(event is TrainingUiEvent.NavigateBack)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onApprovePlan muestra error y no navega cuando setActivePlanUseCase falla`() = runTest {
+        val draftPlan = fakeTrainingPlan(id = "plan-1", status = PlanStatus.DRAFT)
+        val vm = createViewModel(plansFlow = flowOf(Result.Success(listOf(draftPlan))))
+        advanceUntilIdle()
+
+        coEvery { setActivePlanUseCase(any()) } returns
+            Result.Error(AppException.ServerException)
+
+        vm.events.test {
+            vm.onApprovePlan("plan-1")
+            advanceUntilIdle()
+
+            val event = awaitItem()
+            assertTrue(event is TrainingUiEvent.ShowSnackbar)
+            assertTrue(vm.detailUiState.value is TrainingDetailUiState.Error)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `fetchPlans tras onApprovePlan muestra plan como ACTIVE en hubUiState`() = runTest {
+        // Initial: no plans → hub = NoActivePlan
+        val vm = createViewModel(plansFlow = flowOf(Result.Success(emptyList())))
+        advanceUntilIdle()
+        assertTrue(vm.hubUiState.value is TrainingHubUiState.NoActivePlan)
+
+        // Mock activation success
+        val activePlan = fakeTrainingPlan(id = "plan-1", status = PlanStatus.ACTIVE)
+        coEvery { setActivePlanUseCase("plan-1") } returns Result.Success(activePlan)
+        every { getTrainingPlansUseCase() } returns
+            flowOf(Result.Success(listOf(activePlan)))
+
+        vm.onApprovePlan("plan-1")
+        advanceUntilIdle()
+
+        val state = vm.hubUiState.value
+        assertTrue(state is TrainingHubUiState.ActivePlan)
+        assertEquals("plan-1", (state as TrainingHubUiState.ActivePlan).plan.id)
+        assertEquals(PlanStatus.ACTIVE, state.plan.status)
+    }
 }
 

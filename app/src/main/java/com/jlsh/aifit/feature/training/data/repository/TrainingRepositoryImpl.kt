@@ -58,9 +58,9 @@ class TrainingRepositoryImpl @Inject constructor(
                 // artifacts — all caused by the previous additive-only sync strategy.
                 val networkIds = plans.map { it.id }
                 if (networkIds.isEmpty()) {
-                    dao.deleteAll()
+                    dao.deleteAllByUserId(userId)
                 } else {
-                    dao.deleteAllNotInIds(networkIds)
+                    dao.deleteAllNotInIds(userId, networkIds)
                 }
                 // TODO: remove diagnostic log below
                 Log.d("AIFIT_PLANS", "EMIT NETWORK — count=${plans.size} ids=${plans.map { it.id }.take(3)}")

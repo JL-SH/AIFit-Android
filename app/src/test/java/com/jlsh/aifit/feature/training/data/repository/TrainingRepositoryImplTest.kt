@@ -232,6 +232,74 @@ class TrainingRepositoryImplTest {
 
         assertTrue(result is Result.Error)
     }
+
+    // ─── Reconciliation scoped to userId ────────────────────────────────────────
+
+    @Test
+    fun `getPlans usa deleteAllNotInIds con userId cuando API devuelve planes`() = runTest {
+        val freshDto = listOf(fakeTrainingPlanSummaryResponseDto(id = "p-1"))
+
+        every { sessionManager.getUserId() } returns FAKE_USER_ID
+        coEvery { dao.getAllByUserId(FAKE_USER_ID) } returns emptyList()
+        coEvery { apiService.getTrainingPlans() } returns ApiResponse(success = true, data = freshDto)
+
+        sut.getTrainingPlans().test {
+            // Loading
+            awaitItem()
+            // Network result (no cache emission because cache is empty)
+            awaitItem()
+            awaitComplete()
+        }
+
+        coVerify { dao.deleteAllNotInIds(FAKE_USER_ID, listOf("p-1")) }
+    }
+
+    @Test
+    fun `getPlans usa deleteAllByUserId cuando API devuelve lista vacia`() = runTest {
+        val cached = listOf(fakeTrainingPlanEntity())
+
+        every { sessionManager.getUserId() } returns FAKE_USER_ID
+        coEvery { dao.getAllByUserId(FAKE_USER_ID) } returns cached
+        coEvery { apiService.getTrainingPlans() } returns ApiResponse(success = true, data = emptyList())
+
+        sut.getTrainingPlans().test {
+            // Loading
+            awaitItem()
+            // Cache
+            awaitItem()
+            // Network empty
+            awaitItem()
+            awaitComplete()
+        }
+
+        coVerify { dao.deleteAllByUserId(FAKE_USER_ID) }
+        coVerify(exactly = 0) { dao.deleteAll() }
+    }
+
+    @Test
+    fun `getPlans no borra planes de otro usuario durante reconciliacion`() = runTest {
+        val ownPlanDto = fakeTrainingPlanSummaryResponseDto(id = "p-own")
+
+        every { sessionManager.getUserId() } returns FAKE_USER_ID
+        // Only the current user's plans are returned by getAllByUserId
+        coEvery { dao.getAllByUserId(FAKE_USER_ID) } returns listOf(
+            fakeTrainingPlanEntity(id = "p-own", userId = FAKE_USER_ID),
+        )
+        coEvery { apiService.getTrainingPlans() } returns ApiResponse(success = true, data = listOf(ownPlanDto))
+
+        sut.getTrainingPlans().test {
+            awaitItem() // Loading
+            awaitItem() // Cache
+            // Network result may be collapsed by distinctUntilChanged if data equals cache
+            // so we just drain remaining items
+            cancelAndConsumeRemainingEvents()
+        }
+
+        // Must use userId-scoped delete, not the unscoped one
+        coVerify { dao.deleteAllNotInIds(FAKE_USER_ID, listOf("p-own")) }
+        // Must never call the nuclear unscoped deleteAll
+        coVerify(exactly = 0) { dao.deleteAll() }
+    }
 }
 
 

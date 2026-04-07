@@ -67,11 +67,12 @@ fun TrainingPlanApprovalScreen(
 
     LaunchedEffect(planId) { viewModel.loadPlanDetail(planId) }
 
-    // Collect navigation events for regeneration
+    // Collect navigation events for regeneration and approval
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is TrainingUiEvent.NavigateToApproval -> onNavigateToApproval(event.planId)
+                is TrainingUiEvent.NavigateBack -> onAccept()
                 else -> Unit
             }
         }
@@ -244,10 +245,8 @@ fun TrainingPlanApprovalScreen(
                     )
                     PrimaryButton(
                         text = "Aceptar Plan",
-                        onClick = {
-                            viewModel.onApprovePlan()
-                            onAccept()
-                        },
+                        onClick = { viewModel.onApprovePlan(planId) },
+                        enabled = detailUiState !is TrainingDetailUiState.Loading,
                         modifier = Modifier.weight(1f),
                     )
                 }

@@ -95,7 +95,7 @@ class TrainingPlanDaoTest {
             fakeTrainingPlanEntity(id = "p-3"),
         ))
 
-        dao.deleteAllNotInIds(listOf("p-1", "p-3"))
+        dao.deleteAllNotInIds(FAKE_USER_ID, listOf("p-1", "p-3"))
 
         val result = dao.getAllByUserId(FAKE_USER_ID)
         assertEquals(2, result.size)
