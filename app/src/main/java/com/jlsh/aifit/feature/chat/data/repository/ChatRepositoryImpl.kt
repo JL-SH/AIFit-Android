@@ -100,21 +100,29 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun archiveSession(id: String): Result<Unit> =
-        when (val r = safeApiCall { apiService.archiveSession(id) }) {
-            is Result.Success -> {
+    override suspend fun archiveSession(id: String): Result<Unit> {
+        return try {
+            val response = apiService.archiveSession(id)
+            if (response.success) {
                 val cached = chatDao.getSessionById(id)
                 if (cached != null) {
                     chatDao.upsertSession(cached.copy(status = "ARCHIVED"))
                 }
                 Result.Success(Unit)
+            } else {
+                Result.Error(
+                    com.jlsh.aifit.core.common.AppException.UnknownException(
+                        response.message ?: "Error al archivar sesión"
+                    )
+                )
             }
-            is Result.Error -> r
-            else -> Result.Loading
+        } catch (e: Exception) {
+            Result.Error(com.jlsh.aifit.core.network.NetworkErrorMapper.map(e))
         }
+    }
 
     override suspend fun deleteSession(id: String): Result<Unit> =
-        when (val r = safeApiCall { apiService.deleteSession(id) }) {
+        when (val r = safeEmptyApiCall { apiService.deleteSession(id) }) {
             is Result.Success -> {
                 chatDao.deleteMessagesBySessionId(id)
                 chatDao.deleteSession(id)

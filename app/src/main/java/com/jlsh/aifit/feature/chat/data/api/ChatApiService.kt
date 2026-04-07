@@ -6,6 +6,7 @@ import com.jlsh.aifit.feature.chat.data.dto.ChatSessionResponseDto
 import com.jlsh.aifit.feature.chat.data.dto.ChatSessionSummaryResponseDto
 import com.jlsh.aifit.feature.chat.data.dto.SendChatMessageRequestDto
 import com.jlsh.aifit.feature.chat.data.dto.StartChatSessionRequestDto
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -42,6 +43,6 @@ interface ChatApiService {
     @DELETE("chat/sessions/{id}")
     suspend fun deleteSession(
         @Path("id") id: String,
-    ): ApiResponse<Unit>
+    ): Response<Unit>
 }
 
