@@ -17,7 +17,7 @@ object MetabolicMapper {
 
     fun MetabolicAnalysisResponseDto.toDomain(): MetabolicAnalysis = MetabolicAnalysis(
         status = MetabolicStatus.fromString(status),
-        weightTrend = weightTrend.toDomain(),
+        weightTrend = weightTrend?.toDomain(),
         calorieAdherenceRate = calorieAdherenceRate,
         averageCalorieDeficitSurplus = averageCalorieDeficitSurplus,
         recommendation = recommendation?.toDomain(),

@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class MetabolicAnalysisResponseDto(
     val status: String,
-    val weightTrend: WeightTrendResponseDto,
+    val weightTrend: WeightTrendResponseDto? = null,
     val calorieAdherenceRate: Double,
     val averageCalorieDeficitSurplus: Double,
     val recommendation: MetabolicAdjustmentRecommendationResponseDto? = null,

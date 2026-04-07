@@ -119,7 +119,26 @@ private fun MetabolicContent(
 
         // 2. Weight Trend
         item(key = "weight_trend") {
-            WeightTrendCard(trend = state.analysis.weightTrend)
+            val trend = state.analysis.weightTrend
+            if (trend != null && trend.trend != "INSUFFICIENT_DATA") {
+                WeightTrendCard(trend = trend)
+            } else {
+                AiFitCard {
+                    Column(modifier = Modifier.padding(AiFitSpacing.md)) {
+                        Text(
+                            text = "Tendencia de peso",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                        Text(
+                            text = "No hay suficientes datos de peso para calcular la tendencia. Registra tu peso durante al menos 2 semanas.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
         }
 
         // 3. Calorie Adherence

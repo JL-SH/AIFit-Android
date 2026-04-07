@@ -21,10 +21,10 @@ enum class WeightTrend {
 }
 
 data class WeightProgress(
-    val startWeight: Double,
-    val currentWeight: Double,
-    val targetWeight: Double,
-    val change: Double,
+    val startWeight: Double?,
+    val currentWeight: Double?,
+    val targetWeight: Double?,
+    val change: Double?,
     val trend: WeightTrend,
     val entries: List<WeightEntry>,
 )

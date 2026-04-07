@@ -17,7 +17,7 @@ enum class MetabolicStatus {
 
 data class MetabolicAnalysis(
     val status: MetabolicStatus,
-    val weightTrend: WeightTrend,
+    val weightTrend: WeightTrend?,
     val calorieAdherenceRate: Double,
     val averageCalorieDeficitSurplus: Double,
     val recommendation: MetabolicAdjustmentRecommendation?,

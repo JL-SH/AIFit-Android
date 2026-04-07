@@ -192,20 +192,27 @@ private fun DashboardContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         StatItem(
-                            value = String.format("%.1f", dashboard.weightProgress.startWeight),
+                            value = dashboard.weightProgress.startWeight
+                                ?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "--",
                             label = "START",
                         )
                         StatItem(
-                            value = String.format("%.1f", dashboard.weightProgress.currentWeight),
+                            value = dashboard.weightProgress.currentWeight
+                                ?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "--",
                             label = "CURRENT",
                         )
                         StatItem(
-                            value = String.format("%+.1f", dashboard.weightProgress.change),
+                            value = dashboard.weightProgress.change
+                                ?.let { String.format(java.util.Locale.getDefault(), "%+.1f", it) } ?: "--",
                             label = "CHANGE",
-                            valueColor = if (dashboard.weightProgress.change <= 0)
-                                MaterialTheme.colorScheme.primaryContainer
-                            else
-                                MaterialTheme.colorScheme.error,
+                            valueColor = when {
+                                dashboard.weightProgress.change == null ->
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                dashboard.weightProgress.change <= 0 ->
+                                    MaterialTheme.colorScheme.primaryContainer
+                                else ->
+                                    MaterialTheme.colorScheme.error
+                            },
                         )
                     }
                 }
