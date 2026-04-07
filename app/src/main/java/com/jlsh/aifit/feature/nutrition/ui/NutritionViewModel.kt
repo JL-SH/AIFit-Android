@@ -147,8 +147,7 @@ class NutritionViewModel @Inject constructor(
             when (val result = trackMealUseCase(request)) {
                 is Result.Success -> {
                     _trackMealState.value = TrackMealUiState.Saved
-                    emitEvent(NutritionUiEvent.ShowSnackbar("Comida registrada"))
-                    emitEvent(NutritionUiEvent.NavigateBack)
+                    emitEvent(NutritionUiEvent.NavigateToHome)
                 }
                 is Result.Error -> {
                     _trackMealState.value = TrackMealUiState.Error(result.exception.toMessage())
@@ -168,8 +167,7 @@ class NutritionViewModel @Inject constructor(
                 is Result.Success -> {
                     ensureMinAnimationDuration(startTime)
                     _trackMealState.value = TrackMealUiState.Saved
-                    emitEvent(NutritionUiEvent.ShowSnackbar("Comida registrada"))
-                    emitEvent(NutritionUiEvent.NavigateBack)
+                    emitEvent(NutritionUiEvent.NavigateToHome)
                 }
                 is Result.Error -> {
                     ensureMinAnimationDuration(startTime)

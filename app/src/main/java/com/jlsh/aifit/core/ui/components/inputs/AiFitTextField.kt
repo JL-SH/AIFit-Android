@@ -27,6 +27,7 @@ fun AiFitTextField(
     onTrailingIconClick: (() -> Unit)? = null,
     singleLine: Boolean = true,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
 ) {
     OutlinedTextField(
         value = value,
@@ -59,6 +60,7 @@ fun AiFitTextField(
         },
         singleLine = singleLine,
         enabled = enabled,
+        readOnly = readOnly,
         textStyle = MaterialTheme.typography.bodyLarge,
         shape = RoundedCornerShape(8.dp),
         colors = OutlinedTextFieldDefaults.colors(

@@ -2,6 +2,7 @@ package com.jlsh.aifit.feature.nutrition.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +27,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,7 +46,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.AiGenerateButton
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
-import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
 import com.jlsh.aifit.core.ui.components.inputs.AiFitDropdown
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
@@ -57,9 +62,18 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-private val MEAL_TYPE_OPTIONS = MealType.entries
-    .filter { it != MealType.UNKNOWN }
-    .map { it.name }
+/** Mapa de MealType → etiqueta en español para el dropdown */
+private val MEAL_TYPE_DISPLAY = mapOf(
+    MealType.BREAKFAST.name to "Desayuno",
+    MealType.MID_MORNING.name to "Media mañana",
+    MealType.LUNCH.name to "Comida",
+    MealType.AFTERNOON_SNACK.name to "Merienda",
+    MealType.DINNER.name to "Cena",
+    MealType.PRE_WORKOUT.name to "Pre-entreno",
+    MealType.POST_WORKOUT.name to "Post-entreno",
+)
+
+private val MEAL_TYPE_OPTIONS = MEAL_TYPE_DISPLAY.keys.toList()
 
 private val UNIT_OPTIONS = listOf("g", "ml", "unit", "slice", "cup", "tbsp", "tsp")
 
@@ -73,20 +87,30 @@ data class FoodItemEntry(
     val fat: String = "",
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrackMealScreen(
     mode: String,
     onNavigateBack: () -> Unit,
+    onNavigateToHome: () -> Unit = {},
     viewModel: NutritionViewModel = hiltViewModel(),
 ) {
     val trackState by viewModel.trackMealState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var selectedMealType by remember { mutableStateOf(setOf(MEAL_TYPE_OPTIONS.first())) }
+    var selectedMealType by remember { mutableStateOf(MEAL_TYPE_OPTIONS.first()) }
     var mealName by remember { mutableStateOf("") }
     var mealTime by remember {
         mutableStateOf(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")))
     }
+
+    // TimePicker state (BUG-019)
+    var showTimePicker by remember { mutableStateOf(false) }
+    val timePickerState = rememberTimePickerState(
+        initialHour = LocalTime.now().hour,
+        initialMinute = LocalTime.now().minute,
+        is24Hour = true,
+    )
 
     // Manual mode
     val items = remember { mutableStateListOf(FoodItemEntry()) }
@@ -103,11 +127,35 @@ fun TrackMealScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
+                is NutritionUiEvent.NavigateToHome -> onNavigateToHome()
                 is NutritionUiEvent.NavigateBack -> onNavigateBack()
                 is NutritionUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
                 else -> {}
             }
         }
+    }
+
+    // TimePicker dialog (BUG-019)
+    if (showTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    mealTime = String.format("%02d:%02d", timePickerState.hour, timePickerState.minute)
+                    showTimePicker = false
+                }) {
+                    Text("Aceptar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Cancelar")
+                }
+            },
+            text = {
+                TimePicker(state = timePickerState)
+            },
+        )
     }
 
     val isSaving = trackState is TrackMealUiState.Saving
@@ -122,7 +170,7 @@ fun TrackMealScreen(
             containerColor = Color.Transparent,
             topBar = {
                 AiFitTopBar(
-                    title = if (isTextMode) "Analyze Meal" else "Track Meal",
+                    title = if (isTextMode) "Analizar comida" else "Registrar comida",
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                 )
@@ -139,21 +187,33 @@ fun TrackMealScreen(
             ) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
-                AiFitChipGroup(
+                // BUG-018: Dropdown en lugar de ChipGroup
+                AiFitDropdown(
+                    selectedValue = selectedMealType,
                     options = MEAL_TYPE_OPTIONS,
-                    selected = selectedMealType,
-                    onSelectionChanged = { selectedMealType = it },
-                    multiSelect = false,
+                    onOptionSelected = { selectedMealType = it },
+                    label = "Tipo de comida",
                     modifier = Modifier.fillMaxWidth(),
-                    displayMapper = { it.replace("_", " ") },
+                    displayMapper = { MEAL_TYPE_DISPLAY[it] ?: it },
                 )
 
-                AiFitTextField(
-                    value = mealTime,
-                    onValueChange = { mealTime = it },
-                    label = "Time (HH:mm)",
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                // BUG-019: TimePicker en lugar de TextField
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    AiFitTextField(
+                        value = mealTime,
+                        onValueChange = {},
+                        label = "Hora (HH:mm)",
+                        readOnly = true,
+                        trailingIcon = Icons.Rounded.Schedule,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    // Overlay transparente para capturar clicks
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { showTimePicker = true },
+                    )
+                }
 
                 if (isTextMode) {
                     // Text analysis mode
@@ -162,7 +222,7 @@ fun TrackMealScreen(
                         onValueChange = {
                             if (it.length <= 500) analysisText = it
                         },
-                        label = "Describe your meal",
+                        label = "Describe tu comida",
                         singleLine = false,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -179,14 +239,14 @@ fun TrackMealScreen(
                     Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
                     AiGenerateButton(
-                        text = "ANALYZE",
-                        loadingText = "Analyzing meal...",
+                        text = "ANALIZAR",
+                        loadingText = "Analizando comida...",
                         isLoading = isAnalyzing,
                         onClick = {
                             viewModel.onAnalyzeMealFromText(
                                 AnalyzeMealFromTextRequestDto(
                                     date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
-                                    mealType = selectedMealType.first(),
+                                    mealType = selectedMealType,
                                     time = mealTime,
                                     text = analysisText,
                                 ),
@@ -199,7 +259,7 @@ fun TrackMealScreen(
                     AiFitTextField(
                         value = mealName,
                         onValueChange = { mealName = it },
-                        label = "Meal name (optional)",
+                        label = "Nombre de la comida (opcional)",
                         modifier = Modifier.fillMaxWidth(),
                     )
 
@@ -209,7 +269,7 @@ fun TrackMealScreen(
                     )
 
                     Text(
-                        text = "ITEMS",
+                        text = "ALIMENTOS",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 1.5.sp,
@@ -234,11 +294,11 @@ fun TrackMealScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Add,
-                            contentDescription = "Add item",
+                            contentDescription = "Añadir alimento",
                             tint = MaterialTheme.colorScheme.primaryContainer,
                         )
                         Text(
-                            text = "Add item",
+                            text = "Añadir alimento",
                             color = MaterialTheme.colorScheme.primaryContainer,
                         )
                     }
@@ -268,7 +328,7 @@ fun TrackMealScreen(
                     Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
                     PrimaryButton(
-                        text = "SAVE",
+                        text = "GUARDAR",
                         isLoading = isSaving,
                         onClick = {
                             val foodItems = items.map { entry ->
@@ -285,7 +345,7 @@ fun TrackMealScreen(
                             viewModel.onTrackMeal(
                                 TrackMealRequestDto(
                                     date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
-                                    mealType = selectedMealType.first(),
+                                    mealType = selectedMealType,
                                     name = mealName.ifBlank { null },
                                     time = mealTime,
                                     items = foodItems,
@@ -401,5 +461,4 @@ private fun TrackMealScreenPreview() {
         }
     }
 }
-
 

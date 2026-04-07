@@ -401,6 +401,15 @@ private fun MainNavScreen() {
                         TrackMealScreen(
                             mode = mode,
                             onNavigateBack = { tabNavController.popBackStack() },
+                            onNavigateToHome = {
+                                tabNavController.navigate(HomeRoutes.GRAPH) {
+                                    popUpTo(tabNavController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
                         )
                     }
                     composable(NutritionRoutes.FOOD_VISION) {
