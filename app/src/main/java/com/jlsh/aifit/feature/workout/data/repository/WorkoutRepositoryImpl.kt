@@ -90,12 +90,20 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteLog(id: String): Result<Unit> {
+        // Optimistic delete: remove from Room first so the UI never shows the
+        // item the user just deleted, then confirm with the API.
+        val backup = dao.getById(id)
+        dao.deleteById(id)
+
         return when (val remote = safeApiCall { apiService.deleteWorkoutLog(id) }) {
             is Result.Success -> {
-                dao.deleteById(id)
                 Result.Success(Unit)
             }
-            is Result.Error -> remote
+            is Result.Error -> {
+                // Rollback: re-insert the entity so local state stays consistent
+                if (backup != null) dao.upsertAll(listOf(backup))
+                remote
+            }
             else -> Result.Loading
         }
     }

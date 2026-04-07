@@ -257,12 +257,26 @@ class WorkoutViewModel @Inject constructor(
 
     fun onDeleteLog(logId: String) {
         viewModelScope.launch {
+            // Optimistic UI update: remove the log from the history state immediately
+            // so it never flashes when the user navigates back.
+            val previousHistoryState = _historyState.value
+            val currentHistory = previousHistoryState as? WorkoutHistoryUiState.Success
+            if (currentHistory != null) {
+                _historyState.value = currentHistory.copy(
+                    logs = currentHistory.logs.filter { it.id != logId }
+                )
+            }
+
             when (val result = deleteWorkoutLogUseCase(logId)) {
                 is Result.Success -> {
                     emitEvent(WorkoutUiEvent.ShowSnackbar("Session deleted"))
                     emitEvent(WorkoutUiEvent.NavigateBack)
                 }
-                is Result.Error -> emitEvent(WorkoutUiEvent.ShowSnackbar(result.exception.toMessage()))
+                is Result.Error -> {
+                    // Rollback the optimistic UI update
+                    _historyState.value = previousHistoryState
+                    emitEvent(WorkoutUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
                 else -> Unit
             }
         }

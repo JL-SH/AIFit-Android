@@ -16,6 +16,9 @@ interface WorkoutLogDao {
     @Upsert
     suspend fun upsertAll(logs: List<WorkoutLogEntity>)
 
+    @Query("SELECT * FROM workout_logs WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): WorkoutLogEntity?
+
     @Query("DELETE FROM workout_logs WHERE id = :id")
     suspend fun deleteById(id: String)
 }

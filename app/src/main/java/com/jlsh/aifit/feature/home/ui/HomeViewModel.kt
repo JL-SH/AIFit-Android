@@ -271,61 +271,59 @@ class HomeViewModel @Inject constructor(
         Log.d("AIFIT_HOME", "onResumed called")
         viewModelScope.launch {
             // Re-query plans to detect any activation that happened while away.
-            // Collect every non-Loading emission (cache then network) so we don't
-            // miss a freshly-activated plan that is only visible in the network result.
-            var freshActivePlan: TrainingPlan? = null
+            // Process each emission (cache then network) immediately so the UI
+            // reflects the change as soon as Room is read — without waiting for
+            // the network round-trip that previously caused a multi-second delay.
             getTrainingPlansUseCase().collect { result ->
-                if (result is Result.Loading) return@collect
-                val candidate = (result as? Result.Success)?.data
-                    ?.find { it.status == PlanStatus.ACTIVE }
-                if (candidate != null) freshActivePlan = candidate
-            }
+                if (result !is Result.Success) return@collect
 
-            val resolvedActivePlan = freshActivePlan
-            when {
-                resolvedActivePlan != null && resolvedActivePlan.id != cachedActivePlanId -> {
-                    // New (or first-ever) active plan detected — load full detail
-                    Log.d("AIFIT_HOME",
-                        "onResumed — new active plan id=${resolvedActivePlan.id}")
-                    cachedActivePlanSummary = ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
-                    val detail = loadPlanDetail(resolvedActivePlan.id)
-                    if (detail != null) {
-                        cachedActivePlanDetail = detail
-                        cachedActivePlanId = resolvedActivePlan.id
-                    } else {
-                        // API failed — clear stale detail from the previous plan
-                        // so refreshWorkoutStatus() falls back to cachedActivePlanSummary
+                val resolvedActivePlan = result.data.find { it.status == PlanStatus.ACTIVE }
+
+                when {
+                    resolvedActivePlan != null && resolvedActivePlan.id != cachedActivePlanId -> {
+                        // New (or first-ever) active plan detected — load full detail
+                        Log.d("AIFIT_HOME",
+                            "onResumed — new active plan id=${resolvedActivePlan.id}")
+                        cachedActivePlanSummary = ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
+                        val detail = loadPlanDetail(resolvedActivePlan.id)
+                        if (detail != null) {
+                            cachedActivePlanDetail = detail
+                            cachedActivePlanId = resolvedActivePlan.id
+                        } else {
+                            // API failed — clear stale detail from the previous plan
+                            // so refreshWorkoutStatus() falls back to cachedActivePlanSummary
+                            cachedActivePlanDetail = null
+                            cachedActivePlanId = resolvedActivePlan.id
+                        }
+                        refreshWorkoutStatus()
+                    }
+                    resolvedActivePlan != null && cachedActivePlanDetail == null -> {
+                        // Same plan but detail was never loaded — retry
+                        Log.d("AIFIT_HOME", "onResumed — same plan, retrying detail load")
+                        val detail = loadPlanDetail(resolvedActivePlan.id)
+                        if (detail != null) {
+                            cachedActivePlanDetail = detail
+                        }
+                        refreshWorkoutStatus()
+                    }
+                    resolvedActivePlan == null && cachedActivePlanId != null -> {
+                        // Active plan was deactivated while away — clear cached state
+                        Log.d("AIFIT_HOME", "onResumed — active plan cleared")
                         cachedActivePlanDetail = null
-                        cachedActivePlanId = resolvedActivePlan.id
+                        cachedActivePlanId = null
+                        cachedActivePlanSummary = null
+                        _uiState.update { current ->
+                            if (current is HomeUiState.Success) current.copy(
+                                todayTraining = null,
+                                activePlan = null,
+                            ) else current
+                        }
                     }
-                    refreshWorkoutStatus()
-                }
-                resolvedActivePlan != null && cachedActivePlanDetail == null -> {
-                    // Same plan but detail was never loaded — retry
-                    Log.d("AIFIT_HOME", "onResumed — same plan, retrying detail load")
-                    val detail = loadPlanDetail(resolvedActivePlan.id)
-                    if (detail != null) {
-                        cachedActivePlanDetail = detail
+                    else -> {
+                        // Same plan (or still no plan) — just refresh workout status
+                        Log.d("AIFIT_HOME", "onResumed — same plan, refreshing")
+                        refreshWorkoutStatus()
                     }
-                    refreshWorkoutStatus()
-                }
-                resolvedActivePlan == null && cachedActivePlanId != null -> {
-                    // Active plan was deactivated while away — clear cached state
-                    Log.d("AIFIT_HOME", "onResumed — active plan cleared")
-                    cachedActivePlanDetail = null
-                    cachedActivePlanId = null
-                    cachedActivePlanSummary = null
-                    _uiState.update { current ->
-                        if (current is HomeUiState.Success) current.copy(
-                            todayTraining = null,
-                            activePlan = null,
-                        ) else current
-                    }
-                }
-                else -> {
-                    // Same plan (or still no plan) — just refresh workout status
-                    Log.d("AIFIT_HOME", "onResumed — same plan, refreshing")
-                    refreshWorkoutStatus()
                 }
             }
         }

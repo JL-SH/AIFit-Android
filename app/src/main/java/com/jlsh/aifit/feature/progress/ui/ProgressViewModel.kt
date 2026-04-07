@@ -14,6 +14,7 @@ import com.jlsh.aifit.feature.progress.ui.state.DashboardUiState
 import com.jlsh.aifit.feature.progress.ui.state.ProgressUiEvent
 import com.jlsh.aifit.feature.progress.ui.state.WeeklySummaryUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,6 +52,7 @@ class ProgressViewModel @Inject constructor(
     val selectedPeriod: StateFlow<String> = _selectedPeriod.asStateFlow()
 
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
+    private var bodyWeightHistoryJob: Job? = null
 
     // 4. INIT BLOCK
     init {
@@ -83,7 +85,8 @@ class ProgressViewModel @Inject constructor(
     // ===== BODY WEIGHT =====
 
     fun loadBodyWeightHistory() {
-        viewModelScope.launch {
+        bodyWeightHistoryJob?.cancel()
+        bodyWeightHistoryJob = viewModelScope.launch {
             _bodyWeightState.value = _bodyWeightState.value.copy(isLoading = true)
             val from = LocalDate.now().minusMonths(6).format(dateFormatter)
             val to = LocalDate.now().format(dateFormatter)
@@ -139,7 +142,9 @@ class ProgressViewModel @Inject constructor(
                         isSaving = false,
                     )
                     emitEvent(ProgressUiEvent.ShowSnackbar("Peso registrado"))
-                    loadBodyWeightHistory()
+                    // No need to call loadBodyWeightHistory() explicitly — the reactive
+                    // Room observer (started by the initial loadBodyWeightHistory()) will
+                    // auto-emit the updated list after the insert in logWeight().
                 }
                 is Result.Error -> {
                     _bodyWeightState.value = _bodyWeightState.value.copy(isSaving = false)

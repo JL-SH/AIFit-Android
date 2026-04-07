@@ -84,6 +84,7 @@ class WorkoutSessionViewModel @Inject constructor(
     private var ghostSets: List<WorkoutSetLog> = emptyList()
     private var warmUpProtocol: WarmUpProtocol? = null
     private var existingBackendSets: List<WorkoutSetLog> = emptyList()
+    private var backendLogCreationInFlight = false
 
     init {
         val planId = savedStateHandle.get<String>("planId") ?: ""
@@ -220,7 +221,7 @@ class WorkoutSessionViewModel @Inject constructor(
         val exercise = sessionData.exercises.find { it.exerciseId == exerciseId } ?: return
 
         // Capture BEFORE any async work so the first-set branch is stable.
-        val isFirstSet = backendLogId == null
+        val isFirstSet = backendLogId == null && !backendLogCreationInFlight
 
         val estimatedOneRepMax = calculateOneRepMax(weightKg, reps)
 
@@ -273,9 +274,20 @@ class WorkoutSessionViewModel @Inject constructor(
         )
 
         if (isFirstSet) {
-            // Create the backend log with the first set included in the request.
-            // UI update is deferred until after the backend call so backendLogId is set correctly.
-            // On error we still update the UI (set is registered locally) and emit a snackbar.
+            // Update UI immediately — don't wait for network.
+            _uiState.value = WorkoutSessionUiState.SessionActive(
+                sessionData.copy(
+                    exercises = updatedExercises,
+                    registeredSets = updatedSets,
+                    autoregulationSuggestion = autoregulatedWeight,
+                    restTimerSeconds = restSeconds,
+                    volumeByMuscleGroup = updatedVolume,
+                )
+            )
+            startRestTimer(restSeconds)
+
+            // Create the backend log in background.
+            backendLogCreationInFlight = true
             viewModelScope.launch {
                 val logRequest = LogWorkoutSessionRequestDto(
                     trainingPlanId = currentPlanId,
@@ -294,17 +306,7 @@ class WorkoutSessionViewModel @Inject constructor(
                     }
                     else -> Unit
                 }
-                // Always update the UI so the user sees the set registered locally.
-                _uiState.value = WorkoutSessionUiState.SessionActive(
-                    sessionData.copy(
-                        exercises = updatedExercises,
-                        registeredSets = updatedSets,
-                        autoregulationSuggestion = autoregulatedWeight,
-                        restTimerSeconds = restSeconds,
-                        volumeByMuscleGroup = updatedVolume,
-                    )
-                )
-                startRestTimer(restSeconds)
+                backendLogCreationInFlight = false
             }
         } else {
             // Not the first set — update UI immediately and persist via addSetToLog.
@@ -328,6 +330,8 @@ class WorkoutSessionViewModel @Inject constructor(
                 pendingSetJobs.add(job)
                 job.invokeOnCompletion { pendingSetJobs.remove(job) }
             }
+            // If backendLogId is still null (creation in flight), the set is registered
+            // locally in the UI. finalizeSession() will upload all accumulated sets.
         }
     }
 
