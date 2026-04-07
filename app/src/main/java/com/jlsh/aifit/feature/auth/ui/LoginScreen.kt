@@ -1,6 +1,7 @@
 package com.jlsh.aifit.feature.auth.ui
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,21 +37,25 @@ import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.jlsh.aifit.BuildConfig
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.GoogleSignInButton
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
-import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitLogoSplit
 import com.jlsh.aifit.core.ui.components.inputs.AiFitPasswordField
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.feature.auth.ui.state.AuthUiEvent
 import com.jlsh.aifit.feature.auth.ui.state.AuthUiState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 @Composable
@@ -170,8 +175,30 @@ fun LoginScreen(
                     text = stringResource(R.string.auth_google_button),
                     onClick = {
                         scope.launch {
+                            Log.d("AIFIT", "Google Sign-In: iniciando flujo — WebClientId=${BuildConfig.GOOGLE_WEB_CLIENT_ID.take(20)}…")
+
+                            val credentialManager = CredentialManager.create(context)
+
+                            // Lambda reutilizable para procesar la credencial obtenida
+                            val processCredential: suspend (androidx.credentials.GetCredentialResponse) -> Unit = { result ->
+                                val credential = result.credential
+                                Log.d("AIFIT", "Google Sign-In: credencial recibida, tipo=${credential.type}")
+                                if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                                    val googleIdTokenCredential =
+                                        GoogleIdTokenCredential.createFrom(credential.data)
+                                    val idToken = googleIdTokenCredential.idToken
+                                    Log.d("AIFIT", "Google Sign-In: idToken obtenido (${idToken.length} chars)")
+                                    viewModel.onGoogleLoginResult(idToken)
+                                } else {
+                                    Log.e("AIFIT", "Google Sign-In: tipo de credencial inesperado: ${credential.type}")
+                                    snackbarHostState.showSnackbar(
+                                        context.getString(R.string.auth_google_error)
+                                    )
+                                }
+                            }
+
                             try {
-                                val credentialManager = CredentialManager.create(context)
+                                // ── Intento 1: GetGoogleIdOption (One Tap / bottom-sheet automático) ──
                                 val googleIdOption = GetGoogleIdOption.Builder()
                                     .setFilterByAuthorizedAccounts(false)
                                     .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
@@ -179,17 +206,57 @@ fun LoginScreen(
                                 val request = GetCredentialRequest.Builder()
                                     .addCredentialOption(googleIdOption)
                                     .build()
-                                val result = credentialManager.getCredential(context, request)
-                                val credential = result.credential
-                                val googleIdTokenCredential =
-                                    GoogleIdTokenCredential.createFrom(credential.data)
-                                viewModel.onGoogleLoginResult(googleIdTokenCredential.idToken)
+                                Log.d("AIFIT", "Google Sign-In: lanzando GetGoogleIdOption")
+                                processCredential(credentialManager.getCredential(context, request))
+
+                            } catch (e: NoCredentialException) {
+                                // ── Intento 2: GetSignInWithGoogleOption (selector de cuenta explícito) ──
+                                // Ocurre cuando el SHA-1 no está registrado en GCP o no hay cuentas autorizadas.
+                                Log.w("AIFIT", "Google Sign-In: GetGoogleIdOption sin credenciales (SHA-1 no registrado o primera vez) → fallback a GetSignInWithGoogleOption", e)
+                                try {
+                                    val signInOption = GetSignInWithGoogleOption
+                                        .Builder(BuildConfig.GOOGLE_WEB_CLIENT_ID)
+                                        .build()
+                                    val request2 = GetCredentialRequest.Builder()
+                                        .addCredentialOption(signInOption)
+                                        .build()
+                                    Log.d("AIFIT", "Google Sign-In: lanzando GetSignInWithGoogleOption")
+                                    processCredential(credentialManager.getCredential(context, request2))
+
+                                } catch (_: GetCredentialCancellationException) {
+                                    Log.d("AIFIT", "Google Sign-In: usuario canceló (fallback)")
+                                } catch (e2: GetCredentialException) {
+                                    Log.e("AIFIT", "Google Sign-In: fallback falló — type=${e2.type}, msg=${e2.message}", e2)
+                                    snackbarHostState.showSnackbar(
+                                        e2.localizedMessage ?: context.getString(R.string.auth_google_error)
+                                    )
+                                } catch (e2: CancellationException) {
+                                        throw e2  // Cancelación normal de ciclo de vida, no es un error
+                                } catch (e2: Exception) {
+                                    Log.e("AIFIT", "Google Sign-In: error inesperado en fallback — ${e2.javaClass.simpleName}: ${e2.message}", e2)
+                                    snackbarHostState.showSnackbar(
+                                        e2.localizedMessage ?: context.getString(R.string.auth_google_error)
+                                    )
+                                }
+
                             } catch (_: GetCredentialCancellationException) {
-                                // User cancelled — do nothing
-                            } catch (e: Exception) {
+                                Log.d("AIFIT", "Google Sign-In: usuario canceló el flujo")
+                            } catch (e: GoogleIdTokenParsingException) {
+                                Log.e("AIFIT", "Google Sign-In: error al parsear el token de Google", e)
                                 snackbarHostState.showSnackbar(
-                                    e.localizedMessage
-                                        ?: context.getString(R.string.auth_google_error)
+                                    context.getString(R.string.auth_google_error)
+                                )
+                            } catch (e: GetCredentialException) {
+                                Log.e("AIFIT", "Google Sign-In: error de CredentialManager — type=${e.type}, msg=${e.message}", e)
+                                snackbarHostState.showSnackbar(
+                                    e.localizedMessage ?: context.getString(R.string.auth_google_error)
+                                )
+                            } catch (e: CancellationException) {
+                                throw e  // Cancelación normal de ciclo de vida (ej: navegación tras login), no es un error
+                            } catch (e: Exception) {
+                                Log.e("AIFIT", "Google Sign-In: error inesperado — ${e.javaClass.simpleName}: ${e.message}", e)
+                                snackbarHostState.showSnackbar(
+                                    e.localizedMessage ?: context.getString(R.string.auth_google_error)
                                 )
                             }
                         }

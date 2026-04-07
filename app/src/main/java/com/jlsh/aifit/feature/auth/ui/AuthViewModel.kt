@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.auth.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
@@ -164,9 +165,11 @@ class AuthViewModel @Inject constructor(
 
     private fun performGoogleLogin(idToken: String) {
         viewModelScope.launch {
+            Log.d("AIFIT", "AuthViewModel: performGoogleLogin — enviando token al backend")
             _uiState.value = AuthUiState.Loading
             when (val result = googleLoginUseCase(idToken)) {
                 is Result.Success -> {
+                    Log.d("AIFIT", "AuthViewModel: Google login exitoso — profileComplete=${result.data.profileComplete}")
                     _uiState.value = AuthUiState.Success(result.data)
                     if (result.data.profileComplete) {
                         emitEvent(AuthUiEvent.NavigateToMain)
@@ -175,6 +178,7 @@ class AuthViewModel @Inject constructor(
                     }
                 }
                 is Result.Error -> {
+                    Log.e("AIFIT", "AuthViewModel: Google login falló — ${result.exception}")
                     _uiState.value = AuthUiState.Idle
                     emitEvent(AuthUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }

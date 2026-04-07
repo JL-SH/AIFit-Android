@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.auth.data.repository
 
+import android.util.Log
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.core.session.SessionManager
@@ -27,7 +28,10 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun googleLogin(idToken: String): Result<AuthToken> {
+        Log.d("AIFIT", "AuthRepository: googleLogin — llamando a POST auth/google con idToken (${idToken.length} chars)")
         val result = safeApiCall { apiService.googleLogin(GoogleLoginRequestDto(idToken)) }
+        Log.d("AIFIT", "AuthRepository: googleLogin — resultado: ${result::class.simpleName}" +
+                if (result is Result.Error) " → ${result.exception}" else "")
         return handleAuthResult(result)
     }
 
