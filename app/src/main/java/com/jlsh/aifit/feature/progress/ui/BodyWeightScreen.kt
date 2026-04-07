@@ -19,11 +19,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -195,6 +197,7 @@ private fun BodyWeightContent(
                 SectionHeader(title = "RECENT ENTRIES")
             }
             items(state.weightHistory.take(20), key = { it.id }) { log ->
+                val isInitialWeight = log.notes?.contains("Peso inicial", ignoreCase = true) == true
                 AiFitCard {
                     Row(
                         modifier = Modifier
@@ -203,12 +206,30 @@ private fun BodyWeightContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Column {
-                            Text(
-                                text = log.date.format(fullDateFormatter),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                            if (!log.notes.isNullOrBlank()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                            ) {
+                                Text(
+                                    text = log.date.format(fullDateFormatter),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                if (isInitialWeight) {
+                                    Surface(
+                                        shape = MaterialTheme.shapes.small,
+                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                    ) {
+                                        Text(
+                                            text = "Peso inicial",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primaryContainer,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        )
+                                    }
+                                }
+                            }
+                            if (!log.notes.isNullOrBlank() && !isInitialWeight) {
                                 Text(
                                     text = log.notes,
                                     style = MaterialTheme.typography.bodySmall,

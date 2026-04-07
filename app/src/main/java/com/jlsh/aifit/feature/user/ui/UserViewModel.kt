@@ -23,6 +23,8 @@ import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import com.jlsh.aifit.feature.user.domain.usecase.CreateUserProfileUseCase
 import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import com.jlsh.aifit.feature.user.domain.usecase.UpdateUserProfileUseCase
+import com.jlsh.aifit.feature.progress.data.dto.LogBodyWeightRequestDto
+import com.jlsh.aifit.feature.progress.domain.usecase.LogBodyWeightUseCase
 import com.jlsh.aifit.feature.user.ui.state.UserUiEvent
 import com.jlsh.aifit.feature.user.ui.state.UserUiState
 import com.jlsh.aifit.core.ui.components.inputs.DateValidationResult
@@ -46,6 +48,7 @@ class UserViewModel @Inject constructor(
     private val getUserStreaksUseCase: GetUserStreaksUseCase,
     private val getUserAchievementsUseCase: GetUserAchievementsUseCase,
     private val getPersonalRecordsUseCase: GetPersonalRecordsUseCase,
+    private val logBodyWeightUseCase: LogBodyWeightUseCase,
     private val userPreferencesDataStore: UserPreferencesDataStore,
     private val sessionManager: SessionManager,
     savedStateHandle: SavedStateHandle,
@@ -225,19 +228,23 @@ class UserViewModel @Inject constructor(
     private fun loadProfile() {
         viewModelScope.launch {
             _uiState.value = UserUiState.Loading
-            getUserProfileUseCase().collect { result ->
-                when (result) {
-                    is Result.Success -> {
-                        populateForm(result.data)
-                        _uiState.value = UserUiState.Success(result.data)
-                    }
-                    is Result.Error -> {
-                        _uiState.value = UserUiState.Error(result.exception.toMessage())
-                    }
-                    is Result.Loading -> {
-                        _uiState.value = UserUiState.Loading
+            try {
+                getUserProfileUseCase().collect { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            populateForm(result.data)
+                            _uiState.value = UserUiState.Success(result.data)
+                        }
+                        is Result.Error -> {
+                            _uiState.value = UserUiState.Error(result.exception.toMessage())
+                        }
+                        is Result.Loading -> {
+                            _uiState.value = UserUiState.Loading
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                _uiState.value = UserUiState.Error(e.message ?: "Error al cargar el perfil")
             }
         }
     }
@@ -311,16 +318,36 @@ class UserViewModel @Inject constructor(
     private fun createProfile() {
         viewModelScope.launch {
             _uiState.value = UserUiState.Saving
-            when (val result = createUserProfileUseCase(buildCreateRequest())) {
-                is Result.Success -> {
-                    _uiState.value = UserUiState.Success(result.data)
-                    emitEvent(UserUiEvent.ProfileSaved)
+            try {
+                val request = buildCreateRequest()
+                when (val result = createUserProfileUseCase(request)) {
+                    is Result.Success -> {
+                        _uiState.value = UserUiState.Success(result.data)
+
+                        // BUG-012: Log the onboarding weight as the first BodyWeightLog
+                        val initialWeight = request.weight
+                        if (initialWeight != null) {
+                            val weightRequest = LogBodyWeightRequestDto(
+                                weight = initialWeight.toDouble(),
+                                date = LocalDate.now().toString(),
+                                notes = "Peso inicial",
+                            )
+                            logBodyWeightUseCase(weightRequest) // fire-and-forget
+                        }
+
+                        emitEvent(UserUiEvent.ProfileSaved)
+                    }
+                    is Result.Error -> {
+                        _uiState.value = UserUiState.Idle
+                        emitEvent(UserUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    }
+                    is Result.Loading -> {
+                        _uiState.value = UserUiState.Idle
+                    }
                 }
-                is Result.Error -> {
-                    _uiState.value = UserUiState.Idle
-                    emitEvent(UserUiEvent.ShowSnackbar(result.exception.toMessage()))
-                }
-                is Result.Loading -> Unit
+            } catch (e: Exception) {
+                _uiState.value = UserUiState.Idle
+                emitEvent(UserUiEvent.ShowSnackbar(e.message ?: "Error al crear el perfil"))
             }
         }
     }
@@ -346,17 +373,25 @@ class UserViewModel @Inject constructor(
     private fun updateProfile() {
         viewModelScope.launch {
             _uiState.value = UserUiState.Saving
-            when (val result = updateUserProfileUseCase(buildUpdateRequest())) {
-                is Result.Success -> {
-                    _uiState.value = UserUiState.Success(result.data)
-                    emitEvent(UserUiEvent.ShowSnackbar("Perfil actualizado"))
-                    emitEvent(UserUiEvent.NavigateBack)
+            try {
+                when (val result = updateUserProfileUseCase(buildUpdateRequest())) {
+                    is Result.Success -> {
+                        _uiState.value = UserUiState.Success(result.data)
+                        emitEvent(UserUiEvent.ShowSnackbar("Perfil actualizado"))
+                        emitEvent(UserUiEvent.NavigateBack)
+                    }
+                    is Result.Error -> {
+                        _uiState.value = UserUiState.Idle
+                        emitEvent(UserUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    }
+                    is Result.Loading -> {
+                        // Shouldn't happen for a suspend call — recover to Idle
+                        _uiState.value = UserUiState.Idle
+                    }
                 }
-                is Result.Error -> {
-                    _uiState.value = UserUiState.Idle
-                    emitEvent(UserUiEvent.ShowSnackbar(result.exception.toMessage()))
-                }
-                is Result.Loading -> Unit
+            } catch (e: Exception) {
+                _uiState.value = UserUiState.Idle
+                emitEvent(UserUiEvent.ShowSnackbar(e.message ?: "Error al actualizar el perfil"))
             }
         }
     }

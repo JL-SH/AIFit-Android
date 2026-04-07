@@ -249,6 +249,15 @@ private fun HomeContent(
             }
         }
 
+        // Current weight card — always visible when there's at least one entry
+        item(key = "current_weight") {
+            CurrentWeightCard(
+                weightEntries = state.weightEntries,
+                onLogWeight = onLogWeight,
+                onTap = onBodyWeight,
+            )
+        }
+
         if (state.streaks.isNotEmpty()) {
             item(key = "streaks") {
                 StreaksCard(
@@ -680,6 +689,119 @@ private fun StreaksCard(
                         status = streak.status.toBadgeStatus(),
                     )
                 }
+            }
+        }
+    }
+}
+
+// ── 5b. Current Weight ────────────────────────────────────────────────────────
+
+@Composable
+private fun CurrentWeightCard(
+    weightEntries: List<BodyWeightLog>,
+    onLogWeight: () -> Unit,
+    onTap: () -> Unit,
+) {
+    val currentWeight = weightEntries.lastOrNull()?.weight
+    val previousWeight = weightEntries.dropLast(1).lastOrNull()?.weight
+    val weightDelta = if (currentWeight != null && previousWeight != null) {
+        currentWeight - previousWeight
+    } else null
+
+    AiFitCard(
+        onClick = if (currentWeight != null) onTap else null,
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+    ) {
+        Column(
+            modifier = Modifier.padding(AiFitSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+        ) {
+            SectionTitle(
+                icon = Icons.Rounded.MonitorWeight,
+                title = "MI PESO",
+            )
+
+            if (currentWeight != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    Text(
+                        text = "${"%.1f".format(currentWeight)} kg",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    if (weightDelta != null) {
+                        val deltaText = if (weightDelta >= 0) {
+                            "+${"%.1f".format(weightDelta)} kg"
+                        } else {
+                            "${"%.1f".format(weightDelta)} kg"
+                        }
+                        val trendIcon = when {
+                            weightDelta < -0.05 -> Icons.AutoMirrored.Rounded.TrendingDown
+                            weightDelta > 0.05 -> Icons.AutoMirrored.Rounded.TrendingUp
+                            else -> Icons.AutoMirrored.Rounded.TrendingFlat
+                        }
+                        val trendColor = when {
+                            weightDelta < -0.05 -> MaterialTheme.colorScheme.primaryContainer
+                            weightDelta > 0.05 -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+                        ) {
+                            Icon(
+                                imageVector = trendIcon,
+                                contentDescription = null,
+                                tint = trendColor,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Text(
+                                text = deltaText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = trendColor,
+                            )
+                        }
+                    }
+                }
+
+                val lastDate = weightEntries.lastOrNull()?.date
+                if (lastDate != null) {
+                    Text(
+                        text = "Último registro: ${lastDate.format(DateTimeFormatter.ofPattern("d MMM", Locale("es")))}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            } else {
+                Text(
+                    text = "Aún no has registrado tu peso",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onLogWeight)
+                    .padding(vertical = AiFitSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = "Registrar peso",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                )
             }
         }
     }
