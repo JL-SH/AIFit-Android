@@ -164,7 +164,7 @@ class HomeViewModel @Inject constructor(
             // Derive initial diet/meal state
             val initialActiveDiet = initialDietPlans.find { it.status == PlanStatus.ACTIVE }
             val initialActiveDietDetail = initialActiveDiet?.let { loadDietPlanDetail(it.id) }
-            val initialNextMeal = deriveNextMeal(initialActiveDietDetail, nutritionPair.first)
+            val initialNextMeal = deriveNextMeal(initialActiveDietDetail)
 
             // ── Phase 2: Emit initial state with real plan data ──
             _uiState.value = HomeUiState.Success(
@@ -198,7 +198,7 @@ class HomeViewModel @Inject constructor(
                 val freshActiveDiet = latestDietPlans.find { it.status == PlanStatus.ACTIVE }
                 if (freshActiveDiet != null && freshActiveDiet.id != initialActiveDiet?.id) {
                     val detail = loadDietPlanDetail(freshActiveDiet.id)
-                    val nextMeal = deriveNextMeal(detail, nutritionPair.first)
+                    val nextMeal = deriveNextMeal(detail)
                     _uiState.update { cur ->
                         if (cur is HomeUiState.Success) cur.copy(nextMeal = nextMeal) else cur
                     }
@@ -514,7 +514,6 @@ class HomeViewModel @Inject constructor(
 
     private fun deriveNextMeal(
         activeDietPlan: DietPlan?,
-        todayNutritionLog: NutritionLog?,
     ): NextMealState {
         if (activeDietPlan == null || activeDietPlan.days.isEmpty()) return NextMealState.NoPlan
 
@@ -523,22 +522,38 @@ class HomeViewModel @Inject constructor(
             (dayOfWeek - 1) % activeDietPlan.days.size,
         ) ?: return NextMealState.NoPlan
 
-        val loggedMealTypes = todayNutritionLog?.meals
-            ?.map { it.mealType }
-            ?.toSet()
-            ?: emptySet()
+        val now = LocalTime.now()
 
-        val nextMeal = todayDietDay.meals.firstOrNull { it.mealType !in loggedMealTypes }
+        // Sort meals by their scheduled time, then pick the first one strictly after now
+        val nextMeal = todayDietDay.meals
+            .sortedBy { parseMealTime(it.time, it.mealType) }
+            .firstOrNull { parseMealTime(it.time, it.mealType).isAfter(now) }
             ?: return NextMealState.AllDone
 
         return NextMealState.Upcoming(
             mealName = nextMeal.name,
-            estimatedTime = estimatedTimeForMealType(nextMeal.mealType),
+            estimatedTime = nextMeal.time.ifBlank { estimatedTimeForMealType(nextMeal.mealType) },
             calories = nextMeal.calories,
             proteinG = nextMeal.proteinGrams.toDouble(),
             carbsG = nextMeal.carbsGrams.toDouble(),
             fatG = nextMeal.fatGrams.toDouble(),
         )
+    }
+
+    /**
+     * Parses a meal's time string (e.g. "13:00", "8:00") into a [LocalTime].
+     * Falls back to the estimated time for the meal type if parsing fails.
+     */
+    private fun parseMealTime(time: String, mealType: MealType): LocalTime {
+        return try {
+            LocalTime.parse(
+                time.trim().let { if (it.length == 4 && it[1] == ':') "0$it" else it },
+            )
+        } catch (_: Exception) {
+            LocalTime.parse(
+                estimatedTimeForMealType(mealType).let { if (it.length == 4 && it[1] == ':') "0$it" else it },
+            )
+        }
     }
 
     private fun deriveNutrition(

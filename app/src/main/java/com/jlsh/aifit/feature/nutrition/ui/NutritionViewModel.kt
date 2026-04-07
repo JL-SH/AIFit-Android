@@ -227,6 +227,7 @@ class NutritionViewModel @Inject constructor(
 
             when (val result = updateNutritionTargetUseCase(request)) {
                 is Result.Success -> {
+                    loadHubData()
                     emitEvent(NutritionUiEvent.ShowSnackbar("Targets updated"))
                     emitEvent(NutritionUiEvent.NavigateBack)
                 }

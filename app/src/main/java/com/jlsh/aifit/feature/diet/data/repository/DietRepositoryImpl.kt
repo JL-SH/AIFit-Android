@@ -91,13 +91,20 @@ class DietRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteDietPlan(planId: String): Result<Unit> {
-        return when (val remote = safeApiCall { apiService.deleteDietPlan(planId) }) {
-            is Result.Success -> {
+        return try {
+            val response = apiService.deleteDietPlan(planId)
+            if (response.success) {
                 dao.deleteById(planId)
                 Result.Success(Unit)
+            } else {
+                Result.Error(
+                    AppException.UnknownException(
+                        response.message ?: "Error al eliminar plan"
+                    )
+                )
             }
-            is Result.Error -> remote
-            else -> Result.Loading
+        } catch (e: Exception) {
+            Result.Error(com.jlsh.aifit.core.network.NetworkErrorMapper.map(e))
         }
     }
 }
