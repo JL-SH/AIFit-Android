@@ -8,6 +8,7 @@ data class GenerateDietPlanRequestDto(
     val mealsPerDay: Int,
     val dietPreference: String,
     val goalType: String? = null,
+    val dailyCalories: Int? = null,
     val budget: String? = null,
     val allergies: String? = null,
     val additionalNotes: String? = null,

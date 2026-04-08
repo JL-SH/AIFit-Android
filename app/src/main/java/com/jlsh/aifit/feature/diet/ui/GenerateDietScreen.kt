@@ -1,10 +1,26 @@
 package com.jlsh.aifit.feature.diet.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.StartOffset
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,21 +28,29 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Restaurant
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,14 +58,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.AiGenerateButton
 import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
+import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.core.ui.theme.FullShape
 import com.jlsh.aifit.feature.diet.data.dto.GenerateAdaptiveDietPlanRequestDto
 import com.jlsh.aifit.feature.diet.data.dto.GenerateDietPlanRequestDto
 import com.jlsh.aifit.feature.diet.ui.state.DietUiEvent
 import com.jlsh.aifit.feature.diet.ui.state.GenerateDietUiState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // ── Opciones predefinidas ────────────────────────────────────────────────────
 private val DURATION_OPTIONS = listOf("2" to "2 semanas", "4" to "1 mes", "12" to "3 meses")
@@ -51,7 +79,7 @@ private val GOAL_OPTIONS = listOf(
     "LOSE_WEIGHT" to "Perder grasa",
     "GAIN_MUSCLE" to "Ganar músculo",
     "MAINTAIN" to "Mantener peso",
-    "BODY_RECOMPOSITION" to "Recomposición corporal",
+    "IMPROVE_ENDURANCE" to "Ganar resistencia",
 )
 
 private val PREFERENCE_OPTIONS = listOf(
@@ -60,8 +88,21 @@ private val PREFERENCE_OPTIONS = listOf(
     "VEGAN" to "Vegano",
     "GLUTEN_FREE" to "Sin gluten",
     "LACTOSE_FREE" to "Sin lactosa",
-    "KETO" to "Keto",
-    "MEDITERRANEAN" to "Mediterránea",
+)
+
+// ── Animación de carga ──────────────────────────────────────────────────────
+private const val FACT_SLOTS = 4
+private const val ADAPTIVE_PROGRESS_K = 0.018f
+
+private val DIET_FACTS = listOf(
+    "💡 Una alimentación balanceada proporciona todos los nutrientes que tu cuerpo necesita.",
+    "🥩 La proteína ayuda a mantener la masa muscular y te mantiene saciado más tiempo.",
+    "🥗 Incluir verduras en cada comida aumenta la fibra y los micronutrientes.",
+    "💧 Beber suficiente agua mejora la digestión y el rendimiento físico.",
+    "📈 Cambios pequeños y constantes son más sostenibles que dietas extremas.",
+    "🔥 La calidad de los alimentos importa tanto como la cantidad de calorías.",
+    "😴 Un buen descanso regula las hormonas del hambre y la saciedad.",
+    "🧠 Planificar las comidas reduce decisiones impulsivas y mejora la adherencia.",
 )
 
 @Composable
@@ -80,8 +121,17 @@ fun GenerateDietScreen(
     var selectedMeals by remember { mutableStateOf(setOf("4")) }
     var selectedGoal by remember { mutableStateOf(setOf("LOSE_WEIGHT")) }
     var selectedPreference by remember { mutableStateOf(setOf("NONE")) }
+    var dailyCalories by remember { mutableStateOf("") }
     var allergies by remember { mutableStateOf("") }
     var additionalNotes by remember { mutableStateOf("") }
+
+    // Animation state
+    val progress = remember { Animatable(0f) }
+    var elapsedSeconds by rememberSaveable { mutableIntStateOf(0) }
+    var visibleFacts by rememberSaveable {
+        mutableStateOf(DIET_FACTS.take(FACT_SLOTS))
+    }
+    var nextFactIndex by rememberSaveable { mutableIntStateOf(FACT_SLOTS) }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -96,6 +146,53 @@ fun GenerateDietScreen(
 
     val isLoading = generateState is GenerateDietUiState.Generating
 
+    // Manage animation while loading
+    LaunchedEffect(isLoading) {
+        if (isLoading) {
+            elapsedSeconds = 0
+            visibleFacts = DIET_FACTS.take(FACT_SLOTS)
+            nextFactIndex = FACT_SLOTS
+            progress.snapTo(0f)
+
+            // Adaptive progress
+            launch {
+                while (true) {
+                    val current = progress.value
+                    val velocity = ADAPTIVE_PROGRESS_K * (0.95f - current)
+                    val next = (current + velocity).coerceAtMost(0.95f)
+                    progress.animateTo(next, animationSpec = tween(500))
+                }
+            }
+
+            // Timer
+            launch {
+                while (true) {
+                    delay(1000L)
+                    elapsedSeconds++
+                }
+            }
+
+            // Fact rotation
+            launch {
+                delay(5000L)
+                while (true) {
+                    repeat(FACT_SLOTS) { slotIndex ->
+                        val updated = visibleFacts.toMutableList()
+                        updated[slotIndex] = DIET_FACTS[nextFactIndex]
+                        visibleFacts = updated
+                        nextFactIndex = (nextFactIndex + 1) % DIET_FACTS.size
+                        delay(5000L)
+                    }
+                }
+            }
+        } else if (generateState is GenerateDietUiState.Success) {
+            progress.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(600, easing = FastOutSlowInEasing),
+            )
+        }
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -107,33 +204,40 @@ fun GenerateDietScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         if (isLoading) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
+                    .padding(horizontal = AiFitSpacing.md)
                     .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        strokeWidth = 3.dp,
-                        modifier = Modifier.size(40.dp),
-                    )
-                    Text(
-                        text = "Generando tu plan de dieta…",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = "Esto puede tardar unos segundos",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                Spacer(modifier = Modifier.height(AiFitSpacing.xxl))
+
+                DietPhaseHero()
+
+                Spacer(modifier = Modifier.height(AiFitSpacing.xl))
+
+                DietProgressSection(progress = progress.value)
+
+                Spacer(modifier = Modifier.height(AiFitSpacing.lg))
+
+                DietFactsColumn(
+                    facts = visibleFacts,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                )
+
+                Text(
+                    text = "Generando tu plan… ${elapsedSeconds}s",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(modifier = Modifier.height(AiFitSpacing.xl))
             }
         } else {
             Column(
@@ -218,6 +322,15 @@ fun GenerateDietScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
+                // ── Calorías diarias ─────────────────────────────────
+                AiFitNumberField(
+                    value = dailyCalories,
+                    onValueChange = { dailyCalories = it },
+                    label = "Calorías diarias (opcional)",
+                    suffix = "kcal",
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
                 // ── Campos opcionales ────────────────────────────────
                 AiFitTextField(
                     value = allergies,
@@ -245,6 +358,7 @@ fun GenerateDietScreen(
                         val meals = selectedMeals.firstOrNull()?.toIntOrNull() ?: 4
                         val goal = selectedGoal.firstOrNull()
                         val preference = selectedPreference.firstOrNull() ?: "NONE"
+                        val calories = dailyCalories.toIntOrNull()
                         val allergiesVal = allergies.ifBlank { null }
                         val notesVal = additionalNotes.ifBlank { null }
 
@@ -255,6 +369,7 @@ fun GenerateDietScreen(
                                     mealsPerDay = meals,
                                     dietPreference = preference,
                                     goalType = goal,
+                                    dailyCalories = calories,
                                     allergies = allergiesVal,
                                     additionalNotes = notesVal,
                                     includeNutritionHistory = true,
@@ -267,6 +382,7 @@ fun GenerateDietScreen(
                                     mealsPerDay = meals,
                                     dietPreference = preference,
                                     goalType = goal,
+                                    dailyCalories = calories,
                                     allergies = allergiesVal,
                                     additionalNotes = notesVal,
                                 ),
@@ -281,6 +397,181 @@ fun GenerateDietScreen(
         } // else
     }
 }
+
+// ── Composables privados de la pantalla de carga animada ─────────────────────
+
+@Composable
+private fun DietPhaseHero() {
+    val infiniteTransition = rememberInfiniteTransition(label = "diet_hero_transition")
+    val iconScale by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "diet_icon_scale",
+    )
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Surface(
+            modifier = Modifier.size(112.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Rounded.Restaurant,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .scale(iconScale),
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(AiFitSpacing.md))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Diseñando tu plan de dieta",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+            )
+            DietAnimatedDots()
+        }
+
+        Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+
+        Text(
+            text = "Calculando comidas y macros personalizados",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun DietAnimatedDots() {
+    val infiniteTransition = rememberInfiniteTransition(label = "diet_dots_transition")
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        repeat(3) { index ->
+            val alpha by infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = keyframes {
+                        durationMillis = 1_200
+                        0f at 0
+                        0f at 100
+                        1f at 250
+                        1f at 750
+                        0f at 1_200
+                    },
+                    repeatMode = RepeatMode.Restart,
+                    initialStartOffset = StartOffset(index * 300),
+                ),
+                label = "diet_dot_alpha_$index",
+            )
+
+            Text(
+                text = ".",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+            )
+        }
+    }
+}
+
+@Composable
+private fun DietProgressSection(progress: Float) {
+    val percentage = (progress * 100).toInt().coerceIn(0, 100)
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(12.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = FullShape,
+                ),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress.coerceIn(0f, 1f))
+                    .height(12.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = FullShape,
+                    ),
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            Text(
+                text = "$percentage%",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DietFactsColumn(
+    facts: List<String>,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+    ) {
+        repeat(FACT_SLOTS) { slotIndex ->
+            AnimatedContent(
+                targetState = facts.getOrElse(slotIndex) { "" },
+                transitionSpec = {
+                    (slideInVertically { it } + fadeIn()) togetherWith
+                        (slideOutVertically { -it } + fadeOut())
+                },
+                label = "diet_fact_slot_$slotIndex",
+            ) { message ->
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                ) {
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(AiFitSpacing.md),
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Previews ────────────────────────────────────────────────────────────────
 
 @Preview(
     showBackground = true,
@@ -344,3 +635,45 @@ private fun GenerateDietScreenPreview() {
     }
 }
 
+@Preview(
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    name = "GenerateDietScreen Loading Dark",
+)
+@Composable
+private fun GenerateDietScreenLoadingPreview() {
+    AIFitTheme(darkTheme = true) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = AiFitSpacing.md),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(modifier = Modifier.height(AiFitSpacing.xxl))
+                DietPhaseHero()
+                Spacer(modifier = Modifier.height(AiFitSpacing.xl))
+                DietProgressSection(progress = 0.45f)
+                Spacer(modifier = Modifier.height(AiFitSpacing.lg))
+                DietFactsColumn(
+                    facts = DIET_FACTS.take(FACT_SLOTS),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                )
+                Text(
+                    text = "Generando tu plan… 12s",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(modifier = Modifier.height(AiFitSpacing.xl))
+            }
+        }
+    }
+}
