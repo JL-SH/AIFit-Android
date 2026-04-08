@@ -1,6 +1,8 @@
 package com.jlsh.aifit.feature.home.ui.state
 
+import com.jlsh.aifit.feature.gamification.domain.model.AchievementDefinition
 import com.jlsh.aifit.feature.gamification.domain.model.Streak
+import com.jlsh.aifit.feature.gamification.domain.model.UserAchievement
 import com.jlsh.aifit.feature.progress.domain.model.BodyWeightLog
 import com.jlsh.aifit.feature.progress.domain.model.WeeklyProgressSummary
 
@@ -19,6 +21,10 @@ sealed class HomeUiState {
         val streaks: List<Streak>,
         val weeklySummary: WeeklyProgressSummary?,
         val weightEntries: List<BodyWeightLog>,
+        // ── Motivation (BUG-026) ──
+        val lastAchievement: UserAchievement? = null,
+        val nextAchievement: AchievementDefinition? = null,
+        val trainingStreakDays: Int = 0,
     ) : HomeUiState()
 }
 

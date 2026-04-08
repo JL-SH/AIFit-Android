@@ -8,6 +8,8 @@ import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.gamification.domain.model.Streak
+import com.jlsh.aifit.feature.gamification.domain.usecase.GetAllAchievementDefinitionsUseCase
+import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserAchievementsUseCase
 import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserStreaksUseCase
 import com.jlsh.aifit.feature.home.ui.state.HomeUiEvent
 import com.jlsh.aifit.feature.home.ui.state.HomeUiState
@@ -63,6 +65,8 @@ class HomeViewModelTest {
     private val getCurrentNutritionTargetUseCase: GetCurrentNutritionTargetUseCase = mockk()
     private val getWeeklyProgressSummaryUseCase: GetWeeklyProgressSummaryUseCase = mockk()
     private val getUserStreaksUseCase: GetUserStreaksUseCase = mockk()
+    private val getUserAchievementsUseCase: GetUserAchievementsUseCase = mockk()
+    private val getAllDefinitionsUseCase: GetAllAchievementDefinitionsUseCase = mockk()
     private val getBodyWeightHistoryUseCase: GetBodyWeightHistoryUseCase = mockk()
     private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase = mockk()
     private val logBodyWeightUseCase: LogBodyWeightUseCase = mockk()
@@ -119,6 +123,8 @@ class HomeViewModelTest {
         every { getCurrentNutritionTargetUseCase() } returns nutritionTargetFlow
         coEvery { getWeeklyProgressSummaryUseCase() } returns weeklySummaryResult
         coEvery { getUserStreaksUseCase() } returns streaksResult
+        coEvery { getUserAchievementsUseCase() } returns Result.Success(emptyList())
+        coEvery { getAllDefinitionsUseCase() } returns Result.Success(emptyList())
         every { getBodyWeightHistoryUseCase(any(), any()) } returns weightHistoryFlow
         every { getWorkoutHistoryUseCase(any(), any(), any()) } returns workoutHistoryFlow
         return HomeViewModel(
@@ -131,6 +137,8 @@ class HomeViewModelTest {
             getCurrentNutritionTargetUseCase,
             getWeeklyProgressSummaryUseCase,
             getUserStreaksUseCase,
+            getUserAchievementsUseCase,
+            getAllDefinitionsUseCase,
             getBodyWeightHistoryUseCase,
             getWorkoutHistoryUseCase,
             logBodyWeightUseCase,

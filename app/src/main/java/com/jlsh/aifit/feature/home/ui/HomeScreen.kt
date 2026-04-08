@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.rounded.TrendingUp
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.MonitorWeight
 import androidx.compose.material.icons.rounded.Restaurant
@@ -68,9 +69,11 @@ import com.jlsh.aifit.core.ui.components.display.UserAvatar
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.feature.gamification.domain.model.AchievementDefinition
 import com.jlsh.aifit.feature.gamification.domain.model.Streak
 import com.jlsh.aifit.feature.gamification.domain.model.StreakStatus
 import com.jlsh.aifit.feature.gamification.domain.model.StreakType
+import com.jlsh.aifit.feature.gamification.domain.model.UserAchievement
 import com.jlsh.aifit.feature.home.ui.components.LogWeightSheet
 import com.jlsh.aifit.feature.home.ui.state.HomeUiEvent
 import com.jlsh.aifit.feature.home.ui.state.HomeUiState
@@ -230,6 +233,18 @@ private fun HomeContent(
                 onViewDetail = onViewDetail,
                 onCreatePlan = onCreatePlan,
             )
+        }
+
+        // ── Motivation card (BUG-026) ──
+        if (state.trainingStreakDays > 0 || state.lastAchievement != null || state.nextAchievement != null) {
+            item(key = "motivation") {
+                MotivationCard(
+                    streakDays = state.trainingStreakDays,
+                    lastAchievement = state.lastAchievement,
+                    nextAchievement = state.nextAchievement,
+                    onTap = onStreakTap,
+                )
+            }
         }
 
         item(key = "nutrition") {
@@ -661,6 +676,111 @@ private fun NextMealCard(
 }
 
 // ── 5. Streaks ───────────────────────────────────────────────────────────────
+
+// ── 4b. Motivation (BUG-026) ─────────────────────────────────────────────────
+
+@Composable
+private fun MotivationCard(
+    streakDays: Int,
+    lastAchievement: UserAchievement?,
+    nextAchievement: AchievementDefinition?,
+    onTap: () -> Unit,
+) {
+    AiFitCard(onClick = onTap, containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+        Column(
+            modifier = Modifier.padding(AiFitSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+        ) {
+            SectionTitle(
+                icon = Icons.Rounded.EmojiEvents,
+                title = "MOTIVACIÓN",
+            )
+
+            // Streak row
+            if (streakDays > 0) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                ) {
+                    Text(
+                        text = "🔥",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = "$streakDays días seguidos entrenando",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+
+            // Last achievement
+            if (lastAchievement != null) {
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    thickness = 0.5.dp,
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.EmojiEvents,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Column {
+                        Text(
+                            text = "Último logro: ${lastAchievement.achievement.name}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = lastAchievement.unlockedAt.take(10),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            // Next achievement
+            if (nextAchievement != null) {
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    thickness = 0.5.dp,
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Column {
+                        Text(
+                            text = "Próximo: ${nextAchievement.name}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = nextAchievement.description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── 5a. Streaks ──────────────────────────────────────────────────────────────
 
 @Composable
 private fun StreaksCard(

@@ -19,6 +19,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,13 +53,18 @@ fun ProgressExportScreen(
 
     var selectedPeriod by remember { mutableStateOf(ExportPeriod.LAST_MONTH) }
 
+    // Auto-trigger export with pre-selected period on first composition
+    LaunchedEffect(Unit) {
+        viewModel.loadExport(selectedPeriod)
+    }
+
     val periodOptions = ExportPeriod.entries.map { it.name }
     val periodDisplayMapper: (String) -> String = { key ->
         when (key) {
-            "LAST_WEEK" -> "Last week"
-            "LAST_MONTH" -> "Last month"
-            "LAST_3_MONTHS" -> "Last 3 months"
-            "ALL_TIME" -> "All time"
+            "LAST_WEEK" -> "Última semana"
+            "LAST_MONTH" -> "Último mes"
+            "LAST_THREE_MONTHS" -> "Últimos 3 meses"
+            "ALL_TIME" -> "Todo el historial"
             else -> key
         }
     }
@@ -72,7 +78,7 @@ fun ProgressExportScreen(
             containerColor = Color.Transparent,
             topBar = {
                 AiFitTopBar(
-                    title = "Export Progress",
+                    title = "Exportar progreso",
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                 )
@@ -106,7 +112,7 @@ fun ProgressExportScreen(
                 when (val state = exportState) {
                     is ExportUiState.Idle -> {
                         Text(
-                            text = "Select a period to generate your progress report",
+                            text = "Selecciona un período para generar tu informe de progreso",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -114,7 +120,7 @@ fun ProgressExportScreen(
 
                     is ExportUiState.Loading -> {
                         InlineLoadingIndicator(
-                            message = "Generating report...",
+                            message = "Generando informe...",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = AiFitSpacing.lg),
@@ -125,7 +131,7 @@ fun ProgressExportScreen(
                         ExportSummaryCard(export = state.export)
                         Spacer(modifier = Modifier.height(AiFitSpacing.lg))
                         PrimaryButton(
-                            text = "SHARE",
+                            text = "COMPARTIR",
                             onClick = { shareExport(context, state.export) },
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -142,7 +148,7 @@ fun ProgressExportScreen(
                                 color = MaterialTheme.colorScheme.error,
                             )
                             TextButton(onClick = { viewModel.loadExport(selectedPeriod) }) {
-                                Text("Retry")
+                                Text("Reintentar")
                             }
                         }
                     }
@@ -160,30 +166,30 @@ private fun ExportSummaryCard(export: ProgressExport) {
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             Text(
-                text = "Progress Report — ${export.userName}",
+                text = "Informe de progreso — ${export.userName}",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "Period: ${export.period}",
+                text = "Período: ${export.period}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Spacer(modifier = Modifier.height(AiFitSpacing.xs))
 
-            ExportStatRow("Workouts completed", "${export.totalWorkouts}")
-            ExportStatRow("Personal records", "${export.totalPRs}")
-            ExportStatRow("Current streak", "${export.currentStreak} days")
-            ExportStatRow("Achievements unlocked", "${export.achievementsUnlocked}")
+            ExportStatRow("Entrenamientos completados", "${export.totalWorkouts}")
+            ExportStatRow("Récords personales", "${export.totalPRs}")
+            ExportStatRow("Racha actual", "${export.currentStreak} días")
+            ExportStatRow("Logros desbloqueados", "${export.achievementsUnlocked}")
             export.weightChange?.let {
-                ExportStatRow("Weight change", "${"%.1f".format(it)} kg")
+                ExportStatRow("Cambio de peso", "${"%.1f".format(it)} kg")
             }
 
             if (export.topExercises.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                 Text(
-                    text = "TOP EXERCISES",
+                    text = "MEJORES EJERCICIOS",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -221,17 +227,17 @@ private fun ExportStatRow(label: String, value: String) {
 
 private fun shareExport(context: Context, export: ProgressExport) {
     val text = buildString {
-        appendLine("AIFit Progress Report — ${export.userName}")
-        appendLine("Period: ${export.period}")
+        appendLine("AIFit — Informe de progreso — ${export.userName}")
+        appendLine("Período: ${export.period}")
         appendLine()
-        appendLine("Workouts completed: ${export.totalWorkouts}")
-        appendLine("Personal records: ${export.totalPRs}")
-        appendLine("Current streak: ${export.currentStreak} days")
-        appendLine("Achievements unlocked: ${export.achievementsUnlocked}")
-        export.weightChange?.let { appendLine("Weight change: ${"%.1f".format(it)} kg") }
+        appendLine("Entrenamientos completados: ${export.totalWorkouts}")
+        appendLine("Récords personales: ${export.totalPRs}")
+        appendLine("Racha actual: ${export.currentStreak} días")
+        appendLine("Logros desbloqueados: ${export.achievementsUnlocked}")
+        export.weightChange?.let { appendLine("Cambio de peso: ${"%.1f".format(it)} kg") }
         if (export.topExercises.isNotEmpty()) {
             appendLine()
-            appendLine("Top exercises:")
+            appendLine("Mejores ejercicios:")
             export.topExercises.forEach { appendLine("  · $it") }
         }
     }
@@ -241,7 +247,7 @@ private fun shareExport(context: Context, export: ProgressExport) {
         putExtra(Intent.EXTRA_TEXT, text)
         type = "text/plain"
     }
-    context.startActivity(Intent.createChooser(sendIntent, "Share Progress"))
+    context.startActivity(Intent.createChooser(sendIntent, "Compartir progreso"))
 }
 
 @Preview(

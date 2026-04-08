@@ -12,14 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.FitnessCenter
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Whatshot
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -84,14 +82,14 @@ fun GamificationScreen(
             .background(MaterialTheme.colorScheme.background),
     ) {
         AiFitTopBar(
-            title = "Gamification",
+            title = "Gamificación",
             onBack = onNavigateBack,
             background = MaterialTheme.colorScheme.background,
             actions = {
                 IconButton(onClick = { viewModel.onNavigateToExport() }) {
                     Icon(
                         imageVector = Icons.Rounded.FileDownload,
-                        contentDescription = "Export",
+                        contentDescription = "Exportar",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -101,7 +99,7 @@ fun GamificationScreen(
         when (val state = uiState) {
             is GamificationUiState.Loading -> {
                 InlineLoadingIndicator(
-                    message = "Loading...",
+                    message = "Cargando…",
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(AiFitSpacing.xl),
@@ -237,20 +235,53 @@ private fun AchievementsTab(
         return
     }
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+    val unlocked = allDefinitions.filter { it.id in unlockedIds }
+    val locked = allDefinitions.filter { it.id !in unlockedIds }
+
+    LazyColumn(
         contentPadding = PaddingValues(AiFitSpacing.md),
-        horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
     ) {
-        items(allDefinitions, key = { it.id }) { definition ->
-            val isUnlocked = definition.id in unlockedIds
-            val userAchievement = userAchievements.find { it.achievement.id == definition.id }
-            AchievementCard(
-                definition = definition,
-                isUnlocked = isUnlocked,
-                unlockedAt = userAchievement?.unlockedAt,
-            )
+        // ── Logros conseguidos ──
+        if (unlocked.isNotEmpty()) {
+            item(key = "header_unlocked") {
+                Text(
+                    text = "Logros conseguidos",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = AiFitSpacing.xs),
+                )
+            }
+            items(unlocked, key = { "unlocked_${it.id}" }) { definition ->
+                val userAchievement = userAchievements.find { it.achievement.id == definition.id }
+                AchievementCard(
+                    definition = definition,
+                    isUnlocked = true,
+                    unlockedAt = userAchievement?.unlockedAt,
+                )
+            }
+        }
+
+        // ── Próximos logros ──
+        if (locked.isNotEmpty()) {
+            item(key = "header_locked") {
+                Text(
+                    text = "Próximos logros",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(
+                        top = if (unlocked.isNotEmpty()) AiFitSpacing.md else 0.dp,
+                        bottom = AiFitSpacing.xs,
+                    ),
+                )
+            }
+            items(locked, key = { "locked_${it.id}" }) { definition ->
+                AchievementCard(
+                    definition = definition,
+                    isUnlocked = false,
+                    unlockedAt = null,
+                )
+            }
         }
     }
 }
@@ -261,7 +292,7 @@ private fun AchievementCard(
     isUnlocked: Boolean,
     unlockedAt: String?,
 ) {
-    val alpha = if (isUnlocked) 1f else 0.45f
+    val alpha = if (isUnlocked) 1f else 0.55f
     val rarityColor = when (definition.rarity) {
         AchievementRarity.COMMON -> MaterialTheme.colorScheme.surfaceVariant
         AchievementRarity.UNCOMMON -> MaterialTheme.colorScheme.surfaceVariant
@@ -273,60 +304,79 @@ private fun AchievementCard(
     else MaterialTheme.colorScheme.onSurfaceVariant
 
     AiFitCard(modifier = Modifier.alpha(alpha)) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(AiFitSpacing.sm),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+                .padding(AiFitSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
         ) {
-            Icon(
-                imageVector = Icons.Rounded.EmojiEvents,
-                contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = iconTint,
-            )
-            Text(
-                text = definition.name,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-            )
-            Text(
-                text = definition.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-            )
-
-            // Rarity badge
+            // Icon
             Box(
                 modifier = Modifier
-                    .background(rarityColor, MaterialTheme.shapes.small)
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                    .size(48.dp)
+                    .background(rarityColor, MaterialTheme.shapes.medium),
+                contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = definition.rarity.name,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isUnlocked) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                Icon(
+                    imageVector = if (isUnlocked) Icons.Rounded.EmojiEvents else Icons.Rounded.Lock,
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                    tint = iconTint,
                 )
             }
 
-            if (isUnlocked && unlockedAt != null) {
+            // Text content
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+            ) {
                 Text(
-                    text = unlockedAt.take(10),
+                    text = definition.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                )
+
+                Text(
+                    text = if (isUnlocked) definition.description else "Cómo conseguirlo: ${definition.description}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
                 )
-            } else if (!isUnlocked) {
-                Text(
-                    text = "Locked",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // Rarity badge
+                    Box(
+                        modifier = Modifier
+                            .background(rarityColor, MaterialTheme.shapes.small)
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = definition.rarity.name,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (isUnlocked) MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    if (isUnlocked && unlockedAt != null) {
+                        Text(
+                            text = unlockedAt.take(10),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else if (!isUnlocked) {
+                        Text(
+                            text = "Bloqueado",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
     }

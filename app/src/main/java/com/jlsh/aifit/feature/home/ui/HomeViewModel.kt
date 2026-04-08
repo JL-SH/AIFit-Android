@@ -9,7 +9,12 @@ import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.model.MealType
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
+import com.jlsh.aifit.feature.gamification.domain.model.AchievementDefinition
 import com.jlsh.aifit.feature.gamification.domain.model.Streak
+import com.jlsh.aifit.feature.gamification.domain.model.StreakType
+import com.jlsh.aifit.feature.gamification.domain.model.UserAchievement
+import com.jlsh.aifit.feature.gamification.domain.usecase.GetAllAchievementDefinitionsUseCase
+import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserAchievementsUseCase
 import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserStreaksUseCase
 import com.jlsh.aifit.feature.home.ui.state.HomeUiEvent
 import com.jlsh.aifit.feature.home.ui.state.HomeUiState
@@ -62,6 +67,8 @@ class HomeViewModel @Inject constructor(
     private val getCurrentNutritionTargetUseCase: GetCurrentNutritionTargetUseCase,
     private val getWeeklyProgressSummaryUseCase: GetWeeklyProgressSummaryUseCase,
     private val getUserStreaksUseCase: GetUserStreaksUseCase,
+    private val getUserAchievementsUseCase: GetUserAchievementsUseCase,
+    private val getAllDefinitionsUseCase: GetAllAchievementDefinitionsUseCase,
     private val getBodyWeightHistoryUseCase: GetBodyWeightHistoryUseCase,
     private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
     private val logBodyWeightUseCase: LogBodyWeightUseCase,
@@ -100,6 +107,8 @@ class HomeViewModel @Inject constructor(
             val workoutHistoryDeferred = async { loadTodayWorkoutHistory() }
             val trainingPlansDeferred = async { awaitFreshPlans() }
             val dietPlansDeferred = async { awaitFreshDietPlans() }
+            val achievementsDeferred = async { loadUserAchievements() }
+            val definitionsDeferred = async { loadAchievementDefinitions() }
 
             val profile = profileDeferred.await()
             val nutritionPair = nutritionDeferred.await()
@@ -109,6 +118,8 @@ class HomeViewModel @Inject constructor(
             val todayWorkoutLogs = workoutHistoryDeferred.await()
             val initialTrainingPlans = trainingPlansDeferred.await()
             val initialDietPlans = dietPlansDeferred.await()
+            val userAchievements = achievementsDeferred.await()
+            val allDefinitions = definitionsDeferred.await()
 
             // AIFIT_DEBUG ── checkpoint 1: qué devolvió awaitFreshPlans
             Log.d("AIFIT_DEBUG", "[VM][loadAll] awaitFreshPlans count=${initialTrainingPlans.size}")
@@ -166,6 +177,9 @@ class HomeViewModel @Inject constructor(
             val initialActiveDietDetail = initialActiveDiet?.let { loadDietPlanDetail(it.id) }
             val initialNextMeal = deriveNextMeal(initialActiveDietDetail)
 
+            // ── Derive motivation data (BUG-026) ──
+            val motivation = deriveMotivation(userAchievements, allDefinitions, streaks)
+
             // ── Phase 2: Emit initial state with real plan data ──
             _uiState.value = HomeUiState.Success(
                 userName = profile.name,
@@ -177,6 +191,9 @@ class HomeViewModel @Inject constructor(
                 streaks = streaks,
                 weeklySummary = weeklySummary,
                 weightEntries = weightEntries,
+                lastAchievement = motivation.lastAchievement,
+                nextAchievement = motivation.nextAchievement,
+                trainingStreakDays = motivation.trainingStreakDays,
             )
             // AIFIT_DEBUG ── checkpoint 4: estado final emitido
             Log.d("AIFIT_DEBUG", "[VM][loadAll] _uiState = Success — todayTraining=${
@@ -573,6 +590,54 @@ class HomeViewModel @Inject constructor(
 
     private fun emitEvent(event: HomeUiEvent) {
         viewModelScope.launch { _events.send(event) }
+    }
+
+    // ── Gamification helpers (BUG-026) ───────────────────────────────────────
+
+    private suspend fun loadUserAchievements(): List<UserAchievement> =
+        when (val r = getUserAchievementsUseCase()) {
+            is Result.Success -> r.data
+            else -> emptyList()
+        }
+
+    private suspend fun loadAchievementDefinitions(): List<AchievementDefinition> =
+        when (val r = getAllDefinitionsUseCase()) {
+            is Result.Success -> r.data
+            else -> emptyList()
+        }
+
+    private data class MotivationData(
+        val lastAchievement: UserAchievement?,
+        val nextAchievement: AchievementDefinition?,
+        val trainingStreakDays: Int,
+    )
+
+    private fun deriveMotivation(
+        achievements: List<UserAchievement>,
+        definitions: List<AchievementDefinition>,
+        streaks: List<Streak>,
+    ): MotivationData {
+        // Last achievement (within last 72h — fallback to most recent)
+        val recentCutoff = LocalDate.now().minusDays(3).toString()
+        val lastAchievement = achievements
+            .sortedByDescending { it.unlockedAt }
+            .firstOrNull { it.unlockedAt >= recentCutoff }
+
+        // Next achievement to unlock
+        val unlockedIds = achievements.map { it.achievement.id }.toSet()
+        val nextAchievement = definitions.firstOrNull { it.id !in unlockedIds }
+
+        // Training streak
+        val trainingStreak = streaks
+            .filter { it.type == StreakType.TRAINING }
+            .maxByOrNull { it.currentCount }
+        val trainingStreakDays = trainingStreak?.currentCount ?: 0
+
+        return MotivationData(
+            lastAchievement = lastAchievement,
+            nextAchievement = nextAchievement,
+            trainingStreakDays = trainingStreakDays,
+        )
     }
 
     companion object {
