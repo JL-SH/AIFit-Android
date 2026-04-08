@@ -8,10 +8,12 @@ import com.jlsh.aifit.feature.progression.domain.model.PlanProgressionSummary
 import com.jlsh.aifit.feature.progression.domain.model.ProgressionRecommendation
 import com.jlsh.aifit.feature.progression.domain.usecase.GetExerciseProgressionRecommendationUseCase
 import com.jlsh.aifit.feature.progression.domain.usecase.GetFullPlanProgressionRecommendationsUseCase
+import com.jlsh.aifit.feature.workout.domain.usecase.GetWorkoutHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,6 +35,7 @@ sealed class PlanSummaryState {
 class ProgressionViewModel @Inject constructor(
     private val getExerciseRecommendationUseCase: GetExerciseProgressionRecommendationUseCase,
     private val getPlanRecommendationsUseCase: GetFullPlanProgressionRecommendationsUseCase,
+    private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
 ) : ViewModel() {
 
     private val _recommendationState = MutableStateFlow<RecommendationState>(RecommendationState.Idle)
@@ -40,6 +43,23 @@ class ProgressionViewModel @Inject constructor(
 
     private val _planSummaryState = MutableStateFlow<PlanSummaryState>(PlanSummaryState.Idle)
     val planSummaryState: StateFlow<PlanSummaryState> = _planSummaryState.asStateFlow()
+
+    private val _sessionCount = MutableStateFlow<Int?>(null)
+    val sessionCount: StateFlow<Int?> = _sessionCount.asStateFlow()
+
+    init {
+        loadSessionCount()
+    }
+
+    private fun loadSessionCount() {
+        viewModelScope.launch {
+            when (val result = getWorkoutHistoryUseCase().first { it !is Result.Loading }) {
+                is Result.Success -> _sessionCount.value = result.data.size
+                is Result.Error -> _sessionCount.value = 0
+                else -> Unit
+            }
+        }
+    }
 
     fun loadExerciseRecommendation(exerciseId: String) {
         viewModelScope.launch {

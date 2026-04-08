@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.ImportExport
 import androidx.compose.material.icons.rounded.MonitorWeight
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Science
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -57,11 +58,13 @@ import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.components.layout.SectionHeader
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.feature.education.ui.components.GlossaryIntroSheet
 import com.jlsh.aifit.feature.user.domain.model.GoalType
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import com.jlsh.aifit.feature.user.ui.state.UserUiEvent
 import com.jlsh.aifit.feature.user.ui.state.UserUiState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileHubScreen(
     onNavigateToEditProfile: () -> Unit,
@@ -76,6 +79,7 @@ fun ProfileHubScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showGlossaryIntro by remember { mutableStateOf(false) }
 
     val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle(initialValue = true)
     val streakCount by viewModel.streakCount.collectAsStateWithLifecycle()
@@ -122,9 +126,19 @@ fun ProfileHubScreen(
             onExport = onNavigateToExport,
             onAchievements = { onNavigateToGamification("ACHIEVEMENTS") },
             onRecords = { onNavigateToGamification("RECORDS") },
-            onGlossary = onNavigateToGlossary,
+            onGlossary = { showGlossaryIntro = true },
             onThemeToggle = { viewModel.onToggleTheme() },
             onLogout = { showLogoutDialog = true },
+        )
+    }
+
+    if (showGlossaryIntro) {
+        GlossaryIntroSheet(
+            onDismiss = { showGlossaryIntro = false },
+            onConfirm = {
+                showGlossaryIntro = false
+                onNavigateToGlossary()
+            },
         )
     }
 

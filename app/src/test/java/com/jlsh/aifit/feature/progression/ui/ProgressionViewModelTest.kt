@@ -4,10 +4,13 @@ import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.progression.domain.usecase.GetExerciseProgressionRecommendationUseCase
 import com.jlsh.aifit.feature.progression.domain.usecase.GetFullPlanProgressionRecommendationsUseCase
+import com.jlsh.aifit.feature.workout.domain.usecase.GetWorkoutHistoryUseCase
 import com.jlsh.aifit.testutil.*
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
@@ -22,10 +25,14 @@ class ProgressionViewModelTest {
 
     private val getExerciseRecommendationUseCase: GetExerciseProgressionRecommendationUseCase = mockk()
     private val getPlanRecommendationsUseCase: GetFullPlanProgressionRecommendationsUseCase = mockk()
+    private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase = mockk {
+        every { this@mockk.invoke(any(), any(), any()) } returns flowOf(Result.Success(emptyList()))
+    }
 
     private fun createViewModel() = ProgressionViewModel(
         getExerciseRecommendationUseCase,
         getPlanRecommendationsUseCase,
+        getWorkoutHistoryUseCase,
     )
 
     // ─── Estado inicial ────────────────────────────────────────────────────────

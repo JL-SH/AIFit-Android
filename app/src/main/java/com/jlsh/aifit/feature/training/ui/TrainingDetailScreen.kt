@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -54,6 +55,7 @@ import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.education.ui.EducationViewModel
 import com.jlsh.aifit.feature.education.ui.components.ExerciseExplanationSheet
 import com.jlsh.aifit.feature.progression.ui.ProgressionViewModel
+import com.jlsh.aifit.feature.progression.ui.components.ProgressionIntroSheet
 import com.jlsh.aifit.feature.progression.ui.components.ProgressionRecommendationSheet
 import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
 import com.jlsh.aifit.feature.training.domain.model.TrainingDay
@@ -79,8 +81,10 @@ fun TrainingDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val explanationState by educationViewModel.explanationState.collectAsStateWithLifecycle()
     val recommendationState by progressionViewModel.recommendationState.collectAsStateWithLifecycle()
+    val sessionCount by progressionViewModel.sessionCount.collectAsStateWithLifecycle()
 
     var showExplanationForExerciseId by remember { mutableStateOf<String?>(null) }
+    var showProgressionIntroForExerciseId by remember { mutableStateOf<String?>(null) }
     var showProgressionForExerciseId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(planId) {
@@ -108,6 +112,21 @@ fun TrainingDetailScreen(
                 educationViewModel.resetExplanationState()
             },
             onRetry = { showExplanationForExerciseId?.let { educationViewModel.loadExerciseExplanation(it) } },
+        )
+    }
+
+    if (showProgressionIntroForExerciseId != null) {
+        ProgressionIntroSheet(
+            sessionCount = sessionCount,
+            onDismiss = { showProgressionIntroForExerciseId = null },
+            onConfirm = {
+                val exerciseId = showProgressionIntroForExerciseId
+                showProgressionIntroForExerciseId = null
+                if (exerciseId != null) {
+                    showProgressionForExerciseId = exerciseId
+                    progressionViewModel.loadExerciseRecommendation(exerciseId)
+                }
+            },
         )
     }
 
@@ -167,13 +186,13 @@ fun TrainingDetailScreen(
             TrainingDetailContent(
                 planId = planId,
                 days = readyState.days,
+                sessionCount = sessionCount,
                 onExerciseInfoClick = { exerciseId ->
                     showExplanationForExerciseId = exerciseId
                     educationViewModel.loadExerciseExplanation(exerciseId)
                 },
                 onExerciseProgressionClick = { exerciseId ->
-                    showProgressionForExerciseId = exerciseId
-                    progressionViewModel.loadExerciseRecommendation(exerciseId)
+                    showProgressionIntroForExerciseId = exerciseId
                 },
                 onNavigateToSession = onNavigateToSession,
                 modifier = Modifier.padding(paddingValues),
@@ -187,6 +206,7 @@ fun TrainingDetailScreen(
 private fun TrainingDetailContent(
     planId: String,
     days: List<TrainingDayItem>,
+    sessionCount: Int? = null,
     onExerciseInfoClick: (exerciseId: String) -> Unit,
     onExerciseProgressionClick: (exerciseId: String) -> Unit,
     onNavigateToSession: (planId: String, dayId: String) -> Unit,
@@ -214,6 +234,7 @@ private fun TrainingDetailContent(
                 is TrainingDayItem.Rest -> RestDayCard(day = item.day)
                 is TrainingDayItem.Training -> TrainingDayCard(
                     day = item.day,
+                    sessionCount = sessionCount,
                     onExerciseInfoClick = onExerciseInfoClick,
                     onExerciseProgressionClick = onExerciseProgressionClick,
                     onStartSession = { onNavigateToSession(planId, item.day.id) },
@@ -259,6 +280,7 @@ private fun RestDayCard(day: TrainingDay) {
 @Composable
 private fun TrainingDayCard(
     day: TrainingDay,
+    sessionCount: Int? = null,
     onExerciseInfoClick: (exerciseId: String) -> Unit,
     onExerciseProgressionClick: (exerciseId: String) -> Unit,
     onStartSession: () -> Unit,
@@ -308,6 +330,7 @@ private fun TrainingDayCard(
             day.exercises.forEachIndexed { index, exercise ->
                 ExerciseRow(
                     exercise = exercise,
+                    sessionCount = sessionCount,
                     onInfoClick = { onExerciseInfoClick(exercise.id) },
                     onProgressionClick = { onExerciseProgressionClick(exercise.id) },
                 )
@@ -333,9 +356,12 @@ private fun TrainingDayCard(
 @Composable
 private fun ExerciseRow(
     exercise: TrainingExercise,
+    sessionCount: Int? = null,
     onInfoClick: () -> Unit = {},
     onProgressionClick: () -> Unit = {},
 ) {
+    val hasEnoughSessions = (sessionCount ?: 0) >= 3
+    val progressionAlpha = if (hasEnoughSessions) 1f else 0.4f
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -390,7 +416,9 @@ private fun ExerciseRow(
             }
             IconButton(
                 onClick = onProgressionClick,
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier
+                    .size(32.dp)
+                    .alpha(progressionAlpha),
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.TrendingUp,
