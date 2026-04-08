@@ -176,6 +176,8 @@ class ShoppingViewModelTest {
         every { shoppingRepository.getCheckStates("slist-1") } returns flowOf(
             mapOf("PROTEINS:Chicken" to true)
         )
+        every { shoppingRepository.getLocalItems("slist-1") } returns flowOf(emptyList())
+        every { shoppingRepository.getDeletedItemKeys("slist-1") } returns flowOf(emptySet())
 
         val vm = buildViewModel(listId = "slist-1")
         advanceUntilIdle()
@@ -209,6 +211,8 @@ class ShoppingViewModelTest {
         every { shoppingRepository.getCheckStates("slist-1") } returns flowOf(
             mapOf("PROTEINS:Chicken" to false)
         )
+        every { shoppingRepository.getLocalItems("slist-1") } returns flowOf(emptyList())
+        every { shoppingRepository.getDeletedItemKeys("slist-1") } returns flowOf(emptySet())
 
         val vm = buildViewModel(listId = "slist-1")
         advanceUntilIdle()
@@ -226,6 +230,8 @@ class ShoppingViewModelTest {
         every { shoppingRepository.getCheckStates("slist-1") } returns flowOf(
             mapOf("PROTEINS:Chicken" to true)
         )
+        every { shoppingRepository.getLocalItems("slist-1") } returns flowOf(emptyList())
+        every { shoppingRepository.getDeletedItemKeys("slist-1") } returns flowOf(emptySet())
 
         val vm = buildViewModel(listId = "slist-1")
         advanceUntilIdle()
@@ -243,6 +249,8 @@ class ShoppingViewModelTest {
         val list = fakeShoppingList(id = "slist-1")
         coEvery { getShoppingListUseCase("slist-1") } returns Result.Success(list)
         every { shoppingRepository.getCheckStates("slist-1") } returns flowOf(emptyMap())
+        every { shoppingRepository.getLocalItems("slist-1") } returns flowOf(emptyList())
+        every { shoppingRepository.getDeletedItemKeys("slist-1") } returns flowOf(emptySet())
         coEvery { deleteShoppingListUseCase("slist-1") } returns Result.Success(Unit)
 
         val vm = buildViewModel(listId = "slist-1")
@@ -268,6 +276,8 @@ class ShoppingViewModelTest {
         val list = fakeShoppingList(id = "slist-1")
         coEvery { getShoppingListUseCase("slist-1") } returns Result.Success(list)
         every { shoppingRepository.getCheckStates("slist-1") } returns flowOf(emptyMap())
+        every { shoppingRepository.getLocalItems("slist-1") } returns flowOf(emptyList())
+        every { shoppingRepository.getDeletedItemKeys("slist-1") } returns flowOf(emptySet())
         coEvery { deleteShoppingListUseCase("slist-1") } returns Result.Error(AppException.ServerException)
 
         val vm = buildViewModel(listId = "slist-1")
@@ -294,6 +304,104 @@ class ShoppingViewModelTest {
         // Should be a no-op
         vm.onDeleteCurrentList()
         advanceUntilIdle()
+    }
+
+    // ── Edit mode ──────────────────────────────────────────────────────────────
+
+    @Test
+    fun `onToggleEditMode alterna isEditing`() = runTest {
+        val list = fakeShoppingList(id = "slist-1")
+        coEvery { getShoppingListUseCase("slist-1") } returns Result.Success(list)
+        every { shoppingRepository.getCheckStates("slist-1") } returns flowOf(emptyMap())
+        every { shoppingRepository.getLocalItems("slist-1") } returns flowOf(emptyList())
+        every { shoppingRepository.getDeletedItemKeys("slist-1") } returns flowOf(emptySet())
+
+        val vm = buildViewModel(listId = "slist-1")
+        advanceUntilIdle()
+
+        assertFalse(vm.detailState.value.isEditing)
+
+        vm.onToggleEditMode()
+        assertTrue(vm.detailState.value.isEditing)
+
+        vm.onToggleEditMode()
+        assertFalse(vm.detailState.value.isEditing)
+    }
+
+    @Test
+    fun `onAddItem llama addLocalItem en repository y envia snackbar`() = runTest {
+        val list = fakeShoppingList(id = "slist-1")
+        coEvery { getShoppingListUseCase("slist-1") } returns Result.Success(list)
+        every { shoppingRepository.getCheckStates("slist-1") } returns flowOf(emptyMap())
+        every { shoppingRepository.getLocalItems("slist-1") } returns flowOf(emptyList())
+        every { shoppingRepository.getDeletedItemKeys("slist-1") } returns flowOf(emptySet())
+
+        val vm = buildViewModel(listId = "slist-1")
+        advanceUntilIdle()
+
+        vm.events.test {
+            vm.onAddItem("Tomate", "VEGETABLES", 2.0, "kg")
+            advanceUntilIdle()
+
+            coVerify { shoppingRepository.addLocalItem("slist-1", "Tomate", "VEGETABLES", 2.0, "kg", null) }
+
+            val event = awaitItem()
+            assertTrue(event is ShoppingUiEvent.ShowSnackbar)
+            assertEquals("Artículo añadido", (event as ShoppingUiEvent.ShowSnackbar).message)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onRemoveLocalItem llama deleteLocalItem en repository`() = runTest {
+        val list = fakeShoppingList(id = "slist-1")
+        coEvery { getShoppingListUseCase("slist-1") } returns Result.Success(list)
+        every { shoppingRepository.getCheckStates("slist-1") } returns flowOf(emptyMap())
+        every { shoppingRepository.getLocalItems("slist-1") } returns flowOf(emptyList())
+        every { shoppingRepository.getDeletedItemKeys("slist-1") } returns flowOf(emptySet())
+
+        val vm = buildViewModel(listId = "slist-1")
+        advanceUntilIdle()
+
+        vm.onRemoveLocalItem(42L)
+        advanceUntilIdle()
+
+        coVerify { shoppingRepository.deleteLocalItem(42L) }
+    }
+
+    @Test
+    fun `onDeleteServerItem llama markItemDeleted en repository`() = runTest {
+        val list = fakeShoppingList(id = "slist-1")
+        coEvery { getShoppingListUseCase("slist-1") } returns Result.Success(list)
+        every { shoppingRepository.getCheckStates("slist-1") } returns flowOf(emptyMap())
+        every { shoppingRepository.getLocalItems("slist-1") } returns flowOf(emptyList())
+        every { shoppingRepository.getDeletedItemKeys("slist-1") } returns flowOf(emptySet())
+
+        val vm = buildViewModel(listId = "slist-1")
+        advanceUntilIdle()
+
+        vm.onDeleteServerItem("Chicken", "PROTEINS")
+        advanceUntilIdle()
+
+        coVerify { shoppingRepository.markItemDeleted("slist-1", "Chicken", "PROTEINS") }
+    }
+
+    @Test
+    fun `onRestoreServerItem llama unmarkItemDeleted en repository`() = runTest {
+        val list = fakeShoppingList(id = "slist-1")
+        coEvery { getShoppingListUseCase("slist-1") } returns Result.Success(list)
+        every { shoppingRepository.getCheckStates("slist-1") } returns flowOf(emptyMap())
+        every { shoppingRepository.getLocalItems("slist-1") } returns flowOf(emptyList())
+        every { shoppingRepository.getDeletedItemKeys("slist-1") } returns flowOf(emptySet())
+
+        val vm = buildViewModel(listId = "slist-1")
+        advanceUntilIdle()
+
+        vm.onRestoreServerItem("Chicken", "PROTEINS")
+        advanceUntilIdle()
+
+        coVerify { shoppingRepository.unmarkItemDeleted("slist-1", "Chicken", "PROTEINS") }
     }
 }
 

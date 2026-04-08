@@ -5,7 +5,9 @@ import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.feature.shopping.data.api.ShoppingApiService
 import com.jlsh.aifit.feature.shopping.data.dto.GenerateShoppingListRequestDto
 import com.jlsh.aifit.feature.shopping.data.local.ShoppingDao
+import com.jlsh.aifit.feature.shopping.data.local.ShoppingDeletedItemEntity
 import com.jlsh.aifit.feature.shopping.data.local.ShoppingItemCheckEntity
+import com.jlsh.aifit.feature.shopping.data.local.ShoppingLocalItemEntity
 import com.jlsh.aifit.feature.shopping.data.mapper.ShoppingMapper.toDomain
 import com.jlsh.aifit.feature.shopping.data.mapper.ShoppingMapper.toEntity
 import com.jlsh.aifit.feature.shopping.domain.model.ShoppingList
@@ -64,6 +66,8 @@ class ShoppingRepositoryImpl @Inject constructor(
         when (val r = safeApiCall { apiService.deleteList(id) }) {
             is Result.Success -> {
                 shoppingDao.deleteList(id)
+                shoppingDao.deleteAllLocalItems(id)
+                shoppingDao.clearDeletedItems(id)
                 Result.Success(Unit)
             }
             is Result.Error -> r
@@ -89,6 +93,54 @@ class ShoppingRepositoryImpl @Inject constructor(
                 isChecked = checked,
             )
         )
+    }
+
+    // ── Local item edits ──────────────────────────────────────────────────────
+
+    override fun getLocalItems(listId: String): Flow<List<ShoppingLocalItemEntity>> =
+        shoppingDao.getLocalItems(listId)
+
+    override suspend fun addLocalItem(
+        listId: String,
+        name: String,
+        category: String,
+        quantity: Double,
+        unit: String,
+        notes: String?,
+    ) {
+        shoppingDao.insertLocalItem(
+            ShoppingLocalItemEntity(
+                shoppingListId = listId,
+                itemName = name,
+                category = category,
+                totalQuantity = quantity,
+                unit = unit,
+                notes = notes,
+            )
+        )
+    }
+
+    override suspend fun deleteLocalItem(localId: Long) {
+        shoppingDao.deleteLocalItem(localId)
+    }
+
+    override fun getDeletedItemKeys(listId: String): Flow<Set<String>> =
+        shoppingDao.getDeletedItems(listId).map { items ->
+            items.map { "${it.category}:${it.itemName}" }.toSet()
+        }
+
+    override suspend fun markItemDeleted(listId: String, itemName: String, category: String) {
+        shoppingDao.insertDeletedItem(
+            ShoppingDeletedItemEntity(
+                shoppingListId = listId,
+                itemName = itemName,
+                category = category,
+            )
+        )
+    }
+
+    override suspend fun unmarkItemDeleted(listId: String, itemName: String, category: String) {
+        shoppingDao.removeDeletedItem(listId, itemName, category)
     }
 }
 

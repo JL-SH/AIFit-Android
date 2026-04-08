@@ -1,6 +1,7 @@
  package com.jlsh.aifit.feature.shopping.ui.state
 
 import com.jlsh.aifit.core.ui.components.layout.UiStateHost
+import com.jlsh.aifit.feature.shopping.data.local.ShoppingLocalItemEntity
 import com.jlsh.aifit.feature.shopping.domain.model.ShoppingList
 
 sealed class ShoppingListUiState {
@@ -16,5 +17,8 @@ data class ShoppingDetailState(
     val checkStates: Map<String, Boolean> = emptyMap(),
     val isLoading: Boolean = true,
     val error: String? = null,
+    val isEditing: Boolean = false,
+    val localItems: List<ShoppingLocalItemEntity> = emptyList(),
+    val deletedItemKeys: Set<String> = emptySet(),
 )
 

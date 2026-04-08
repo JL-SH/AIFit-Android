@@ -1,15 +1,31 @@
 package com.jlsh.aifit.feature.shopping.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Undo
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -32,11 +49,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
+import com.jlsh.aifit.core.ui.components.inputs.AiFitDropdown
+import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
+import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.SectionHeader
 import com.jlsh.aifit.core.ui.components.list.CheckableListItem
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.feature.shopping.data.local.ShoppingLocalItemEntity
 import com.jlsh.aifit.feature.shopping.domain.model.ShoppingCategory
 import com.jlsh.aifit.feature.shopping.domain.model.ShoppingCategoryGroup
 import com.jlsh.aifit.feature.shopping.domain.model.ShoppingItem
@@ -44,6 +65,18 @@ import com.jlsh.aifit.feature.shopping.domain.model.ShoppingList
 import com.jlsh.aifit.feature.shopping.domain.model.ShoppingListPeriod
 import com.jlsh.aifit.feature.shopping.ui.state.ShoppingDetailState
 import com.jlsh.aifit.feature.shopping.ui.state.ShoppingUiEvent
+
+private val CATEGORY_DISPLAY = mapOf(
+    "PROTEINS" to "Proteínas",
+    "VEGETABLES" to "Verduras",
+    "FRUITS" to "Frutas",
+    "GRAINS_AND_CARBS" to "Cereales y carbohidratos",
+    "DAIRY" to "Lácteos",
+    "FATS_AND_OILS" to "Grasas y aceites",
+    "CONDIMENTS_AND_SPICES" to "Condimentos y especias",
+    "OTHER" to "Otros",
+    "UNKNOWN" to "Sin categoría",
+)
 
 @Composable
 fun ShoppingDetailScreen(
@@ -72,6 +105,20 @@ fun ShoppingDetailScreen(
                 onBack = onNavigateBack,
                 background = MaterialTheme.colorScheme.background,
                 actions = {
+                    // Edit mode toggle
+                    if (detailState.list != null) {
+                        IconButton(onClick = { viewModel.onToggleEditMode() }) {
+                            Icon(
+                                imageVector = if (detailState.isEditing) Icons.Rounded.Close else Icons.Rounded.Edit,
+                                contentDescription = if (detailState.isEditing) "Cerrar edición" else "Editar",
+                                tint = if (detailState.isEditing) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                            )
+                        }
+                    }
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
                             imageVector = Icons.Rounded.DeleteOutline,
@@ -107,6 +154,18 @@ fun ShoppingDetailScreen(
                     onToggleCheck = { itemName, category ->
                         viewModel.onToggleCheck(detailState.list!!.id, itemName, category)
                     },
+                    onDeleteServerItem = { itemName, category ->
+                        viewModel.onDeleteServerItem(itemName, category)
+                    },
+                    onRestoreServerItem = { itemName, category ->
+                        viewModel.onRestoreServerItem(itemName, category)
+                    },
+                    onRemoveLocalItem = { localId ->
+                        viewModel.onRemoveLocalItem(localId)
+                    },
+                    onAddItem = { name, category, quantity, unit ->
+                        viewModel.onAddItem(name, category, quantity, unit)
+                    },
                 )
             }
         }
@@ -131,8 +190,18 @@ private fun ShoppingDetailContent(
     paddingValues: PaddingValues,
     state: ShoppingDetailState,
     onToggleCheck: (itemName: String, category: String) -> Unit,
+    onDeleteServerItem: (itemName: String, category: String) -> Unit,
+    onRestoreServerItem: (itemName: String, category: String) -> Unit,
+    onRemoveLocalItem: (localId: Long) -> Unit,
+    onAddItem: (name: String, category: String, quantity: Double, unit: String) -> Unit,
 ) {
     val list = state.list ?: return
+    val isEditing = state.isEditing
+
+    // Build merged categories: server items (minus deleted) + local items
+    val mergedCategories = remember(list.categories, state.localItems, state.deletedItemKeys) {
+        buildMergedCategories(list.categories, state.localItems, state.deletedItemKeys)
+    }
 
     LazyColumn(
         contentPadding = PaddingValues(
@@ -149,23 +218,271 @@ private fun ShoppingDetailContent(
             PlanStatusBadge(status = list.period.name.replace("_", " "))
         }
 
-        // Categories
-        list.categories.forEach { group ->
-            item(key = "header_${group.category.name}") {
-                SectionHeader(title = group.category.name.replace("_", " "))
+        // Edit mode banner
+        item(key = "edit_banner") {
+            AnimatedVisibility(
+                visible = isEditing,
+                enter = fadeIn() + slideInVertically(),
+                exit = fadeOut() + slideOutVertically(),
+            ) {
+                Text(
+                    text = "Modo edición: puedes añadir o quitar artículos",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(vertical = AiFitSpacing.xs),
+                )
             }
-            items(group.items, key = { "${group.category.name}:${it.name}" }) { item ->
-                val checkKey = "${group.category.name}:${item.name}"
+        }
+
+        // Deleted items (shown in edit mode for recovery)
+        if (isEditing && state.deletedItemKeys.isNotEmpty()) {
+            item(key = "deleted_header") {
+                SectionHeader(title = "Artículos eliminados")
+            }
+            val deletedPairs = state.deletedItemKeys.map { key ->
+                val parts = key.split(":", limit = 2)
+                parts[0] to parts.getOrElse(1) { "" }
+            }
+            items(deletedPairs, key = { "deleted_${it.first}:${it.second}" }) { (cat, name) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = AiFitSpacing.xs, horizontal = AiFitSpacing.md),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .weight(1f)
+                            .alpha(0.5f),
+                    )
+                    IconButton(onClick = { onRestoreServerItem(name, cat) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.Undo,
+                            contentDescription = "Restaurar",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        // Categories (merged)
+        mergedCategories.forEach { merged ->
+            item(key = "header_${merged.categoryName}") {
+                SectionHeader(
+                    title = CATEGORY_DISPLAY[merged.categoryName] ?: merged.categoryName.replace("_", " "),
+                )
+            }
+
+            // Server items (not deleted)
+            items(merged.serverItems, key = { "${merged.categoryName}:${it.name}" }) { item ->
+                val checkKey = "${merged.categoryName}:${item.name}"
                 val isChecked = state.checkStates[checkKey] ?: false
-                CheckableListItem(
-                    text = item.name,
-                    checked = isChecked,
-                    onCheckedChange = { onToggleCheck(item.name, group.category.name) },
-                    subtitle = "${"%.0f".format(item.totalQuantity)} ${item.unit}${if (!item.notes.isNullOrBlank()) " · ${item.notes}" else ""}",
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        CheckableListItem(
+                            text = item.name,
+                            checked = isChecked,
+                            onCheckedChange = { onToggleCheck(item.name, merged.categoryName) },
+                            subtitle = "${"%.0f".format(item.totalQuantity)} ${item.unit}${if (!item.notes.isNullOrBlank()) " · ${item.notes}" else ""}",
+                        )
+                    }
+                    if (isEditing) {
+                        IconButton(onClick = { onDeleteServerItem(item.name, merged.categoryName) }) {
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = "Quitar",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Local items
+            items(merged.localItems, key = { "local_${it.localId}" }) { localItem ->
+                val checkKey = "${localItem.category}:${localItem.itemName}"
+                val isChecked = state.checkStates[checkKey] ?: false
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        CheckableListItem(
+                            text = "✚ ${localItem.itemName}",
+                            checked = isChecked,
+                            onCheckedChange = { onToggleCheck(localItem.itemName, localItem.category) },
+                            subtitle = "${"%.0f".format(localItem.totalQuantity)} ${localItem.unit}",
+                        )
+                    }
+                    if (isEditing) {
+                        IconButton(onClick = { onRemoveLocalItem(localItem.localId) }) {
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = "Quitar",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Add item form (only in edit mode)
+        item(key = "add_item_form") {
+            AnimatedVisibility(
+                visible = isEditing,
+                enter = fadeIn() + slideInVertically(),
+                exit = fadeOut() + slideOutVertically(),
+            ) {
+                AddItemForm(
+                    categories = list.categories.map { it.category.name },
+                    onAddItem = onAddItem,
                 )
             }
         }
     }
+}
+
+// ── Add Item Form ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun AddItemForm(
+    categories: List<String>,
+    onAddItem: (name: String, category: String, quantity: Double, unit: String) -> Unit,
+) {
+    var name by remember { mutableStateOf("") }
+    var quantity by remember { mutableStateOf("") }
+    var unit by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf(categories.firstOrNull() ?: "OTHER") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = AiFitSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+    ) {
+        SectionHeader(title = "Añadir artículo")
+
+        AiFitTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = "Nombre del artículo",
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            AiFitNumberField(
+                value = quantity,
+                onValueChange = { quantity = it },
+                label = "Cantidad",
+                modifier = Modifier.weight(1f),
+            )
+            AiFitTextField(
+                value = unit,
+                onValueChange = { unit = it },
+                label = "Unidad",
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        AiFitDropdown(
+            selectedValue = selectedCategory,
+            options = categories.ifEmpty { listOf("OTHER") },
+            onOptionSelected = { selectedCategory = it },
+            label = "Categoría",
+            displayMapper = { CATEGORY_DISPLAY[it] ?: it.replace("_", " ") },
+        )
+
+        Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+
+        val canAdd = name.isNotBlank() && quantity.isNotBlank() && unit.isNotBlank()
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            IconButton(
+                onClick = {
+                    if (canAdd) {
+                        onAddItem(name.trim(), selectedCategory, quantity.toDoubleOrNull() ?: 1.0, unit.trim())
+                        name = ""
+                        quantity = ""
+                        unit = ""
+                    }
+                },
+                enabled = canAdd,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Rounded.Add,
+                        contentDescription = "Añadir",
+                        tint = if (canAdd) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Añadir",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (canAdd) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Merge helpers ─────────────────────────────────────────────────────────────
+
+private data class MergedCategory(
+    val categoryName: String,
+    val serverItems: List<ShoppingItem>,
+    val localItems: List<ShoppingLocalItemEntity>,
+)
+
+private fun buildMergedCategories(
+    serverCategories: List<ShoppingCategoryGroup>,
+    localItems: List<ShoppingLocalItemEntity>,
+    deletedKeys: Set<String>,
+): List<MergedCategory> {
+    val localByCategory = localItems.groupBy { it.category }
+    val seenCategories = mutableSetOf<String>()
+
+    val result = mutableListOf<MergedCategory>()
+
+    // Server categories first
+    for (group in serverCategories) {
+        val catName = group.category.name
+        seenCategories.add(catName)
+        val filteredItems = group.items.filter { item ->
+            "$catName:${item.name}" !in deletedKeys
+        }
+        val locals = localByCategory[catName] ?: emptyList()
+        if (filteredItems.isNotEmpty() || locals.isNotEmpty()) {
+            result.add(MergedCategory(catName, filteredItems, locals))
+        }
+    }
+
+    // Categories that only have local items
+    for ((catName, locals) in localByCategory) {
+        if (catName !in seenCategories && locals.isNotEmpty()) {
+            result.add(MergedCategory(catName, emptyList(), locals))
+        }
+    }
+
+    return result
 }
 
 @Preview(
@@ -204,6 +521,10 @@ private fun ShoppingDetailPreview() {
                 isLoading = false,
             ),
             onToggleCheck = { _, _ -> },
+            onDeleteServerItem = { _, _ -> },
+            onRestoreServerItem = { _, _ -> },
+            onRemoveLocalItem = {},
+            onAddItem = { _, _, _, _ -> },
         )
     }
 }

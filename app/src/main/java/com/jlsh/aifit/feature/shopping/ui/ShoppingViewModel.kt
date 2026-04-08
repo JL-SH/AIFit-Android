@@ -102,8 +102,22 @@ class ShoppingViewModel @Inject constructor(
                 is Result.Success -> {
                     _detailState.update { it.copy(list = r.data, isLoading = false) }
                     // Collect check states
-                    shoppingRepository.getCheckStates(id).collect { checks ->
-                        _detailState.update { it.copy(checkStates = checks) }
+                    launch {
+                        shoppingRepository.getCheckStates(id).collect { checks ->
+                            _detailState.update { it.copy(checkStates = checks) }
+                        }
+                    }
+                    // Collect local items
+                    launch {
+                        shoppingRepository.getLocalItems(id).collect { items ->
+                            _detailState.update { it.copy(localItems = items) }
+                        }
+                    }
+                    // Collect deleted item keys
+                    launch {
+                        shoppingRepository.getDeletedItemKeys(id).collect { keys ->
+                            _detailState.update { it.copy(deletedItemKeys = keys) }
+                        }
                     }
                 }
                 is Result.Error -> {
@@ -119,6 +133,38 @@ class ShoppingViewModel @Inject constructor(
         val current = _detailState.value.checkStates[key] ?: false
         viewModelScope.launch {
             shoppingRepository.toggleCheck(listId, itemName, category, !current)
+        }
+    }
+
+    fun onToggleEditMode() {
+        _detailState.update { it.copy(isEditing = !it.isEditing) }
+    }
+
+    fun onAddItem(name: String, category: String, quantity: Double, unit: String) {
+        val id = listId ?: return
+        viewModelScope.launch {
+            shoppingRepository.addLocalItem(id, name, category, quantity, unit, null)
+            _events.send(ShoppingUiEvent.ShowSnackbar("Artículo añadido"))
+        }
+    }
+
+    fun onRemoveLocalItem(localId: Long) {
+        viewModelScope.launch {
+            shoppingRepository.deleteLocalItem(localId)
+        }
+    }
+
+    fun onDeleteServerItem(itemName: String, category: String) {
+        val id = listId ?: return
+        viewModelScope.launch {
+            shoppingRepository.markItemDeleted(id, itemName, category)
+        }
+    }
+
+    fun onRestoreServerItem(itemName: String, category: String) {
+        val id = listId ?: return
+        viewModelScope.launch {
+            shoppingRepository.unmarkItemDeleted(id, itemName, category)
         }
     }
 

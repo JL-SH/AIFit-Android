@@ -13,8 +13,10 @@ import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogEntity
 import com.jlsh.aifit.feature.progress.data.local.BodyWeightDao
 import com.jlsh.aifit.feature.progress.data.local.BodyWeightEntity
 import com.jlsh.aifit.feature.shopping.data.local.ShoppingDao
+import com.jlsh.aifit.feature.shopping.data.local.ShoppingDeletedItemEntity
 import com.jlsh.aifit.feature.shopping.data.local.ShoppingItemCheckEntity
 import com.jlsh.aifit.feature.shopping.data.local.ShoppingListEntity
+import com.jlsh.aifit.feature.shopping.data.local.ShoppingLocalItemEntity
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanDao
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanEntity
 import com.jlsh.aifit.feature.user.data.local.UserProfileDao
@@ -34,8 +36,10 @@ import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
         ChatMessageEntity::class,
         ShoppingListEntity::class,
         ShoppingItemCheckEntity::class,
+        ShoppingLocalItemEntity::class,
+        ShoppingDeletedItemEntity::class,
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
