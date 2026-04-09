@@ -298,25 +298,33 @@ class HomeViewModel @Inject constructor(
 
                 when {
                     resolvedActivePlan != null && resolvedActivePlan.id != cachedActivePlanId -> {
-                        // New (or first-ever) active plan detected — load full detail
                         Log.d("AIFIT_HOME",
                             "onResumed — new active plan id=${resolvedActivePlan.id}")
                         cachedActivePlanSummary = ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
+                        cachedActivePlanId = resolvedActivePlan.id
+                        cachedActivePlanDetail = null
+                        _uiState.update { cur ->
+                            if (cur is HomeUiState.Success) cur.copy(
+                                activePlan = cachedActivePlanSummary,
+                                todayTraining = null, // clear old plan's exercises immediately
+                            ) else cur
+                        }
+                        // Now load full detail (days + exercises) in the background
                         val detail = loadPlanDetail(resolvedActivePlan.id)
                         if (detail != null) {
                             cachedActivePlanDetail = detail
-                            cachedActivePlanId = resolvedActivePlan.id
-                        } else {
-                            // API failed — clear stale detail from the previous plan
-                            // so refreshWorkoutStatus() falls back to cachedActivePlanSummary
-                            cachedActivePlanDetail = null
-                            cachedActivePlanId = resolvedActivePlan.id
                         }
                         refreshWorkoutStatus()
                     }
                     resolvedActivePlan != null && cachedActivePlanDetail == null -> {
-                        // Same plan but detail was never loaded — retry
+                        // Same plan but detail was never loaded — show plan name first, retry detail
                         Log.d("AIFIT_HOME", "onResumed — same plan, retrying detail load")
+                        cachedActivePlanSummary = ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
+                        _uiState.update { cur ->
+                            if (cur is HomeUiState.Success) cur.copy(
+                                activePlan = cachedActivePlanSummary,
+                            ) else cur
+                        }
                         val detail = loadPlanDetail(resolvedActivePlan.id)
                         if (detail != null) {
                             cachedActivePlanDetail = detail
