@@ -238,7 +238,10 @@ private fun TodayTab(
     val log = todayState.nutritionLog
     val target = todayState.target
 
-    if (log == null || target == null) {
+    // Only show the full "configure" empty state when there is no target at all.
+    // A null log (no meals logged today) is perfectly normal and should NOT block
+    // the tab — we just show the ring chart with 0 consumed.
+    if (target == null) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -247,7 +250,7 @@ private fun TodayTab(
         ) {
             EmptyStateView(
                 icon = Icons.Rounded.Restaurant,
-                title = "Sin datos de hoy",
+                title = "Sin objetivos de hoy",
                 subtitle = "Configura tu objetivo calórico para empezar",
                 action = {
                     PrimaryButton(
@@ -260,6 +263,8 @@ private fun TodayTab(
         }
         return
     }
+
+    val meals = log?.meals ?: emptyList()
 
     LazyColumn(
         contentPadding = PaddingValues(
@@ -279,13 +284,13 @@ private fun TodayTab(
             ) {
                 MacroRingChart(
                     data = MacroRingData(
-                        currentCalories = log.totalCalories.toFloat(),
+                        currentCalories = (log?.totalCalories ?: 0).toFloat(),
                         targetCalories = target.calorieTarget.toFloat(),
-                        currentProtein = log.totalProteinGrams.toFloat(),
+                        currentProtein = (log?.totalProteinGrams ?: 0.0).toFloat(),
                         targetProtein = target.proteinTarget.toFloat(),
-                        currentCarbs = log.totalCarbsGrams.toFloat(),
+                        currentCarbs = (log?.totalCarbsGrams ?: 0.0).toFloat(),
                         targetCarbs = target.carbsTarget.toFloat(),
-                        currentFat = log.totalFatGrams.toFloat(),
+                        currentFat = (log?.totalFatGrams ?: 0.0).toFloat(),
                         targetFat = target.fatTarget.toFloat(),
                     ),
                     size = 180.dp,
@@ -294,10 +299,10 @@ private fun TodayTab(
         }
 
         item(key = "meals_header") {
-            SectionHeader(title = "MEALS")
+            SectionHeader(title = "COMIDAS")
         }
 
-        if (log.meals.isEmpty()) {
+        if (meals.isEmpty()) {
             item(key = "empty") {
                 Column(
                     modifier = Modifier
@@ -311,7 +316,7 @@ private fun TodayTab(
                         subtitle = "Añade tu primera comida del día",
                         action = {
                             PrimaryButton(
-                                text = "ADD MEAL",
+                                text = "AÑADIR COMIDA",
                                 onClick = onAddMeal,
                                 modifier = Modifier.padding(horizontal = AiFitSpacing.xl),
                             )
@@ -320,7 +325,7 @@ private fun TodayTab(
                 }
             }
         } else {
-            items(log.meals, key = { it.id }) { meal ->
+            items(meals, key = { it.id }) { meal ->
                 SwipeableListItem(
                     onDelete = { onDeleteMeal(meal.id) },
                 ) {

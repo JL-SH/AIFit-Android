@@ -17,12 +17,19 @@ import com.jlsh.aifit.feature.workout.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.time.LocalDate
+import java.util.Collections
 import javax.inject.Inject
 
 class WorkoutRepositoryImpl @Inject constructor(
     private val apiService: WorkoutApiService,
     private val dao: WorkoutLogDao,
 ) : BaseRemoteDataSource(), WorkoutRepository {
+
+    /** IDs whose delete API call is still in-flight.
+     *  While an ID is in this set, [getHistory] will filter it out so
+     *  a concurrent network response cannot re-insert the deleted row. */
+    private val pendingDeleteIds: MutableSet<String> =
+        Collections.synchronizedSet(mutableSetOf())
 
     override suspend fun logSession(request: LogWorkoutSessionRequestDto): Result<WorkoutLog> {
         return when (val remote = safeApiCall { apiService.logWorkoutSession(request) }) {
@@ -55,6 +62,7 @@ class WorkoutRepositoryImpl @Inject constructor(
         val toEpochDay = to?.let { LocalDate.parse(it).toEpochDay() }
         val cached = dao.getAll()
             .filter { entity ->
+                entity.id !in pendingDeleteIds &&
                 (fromEpochDay == null || entity.date >= fromEpochDay) &&
                     (toEpochDay == null || entity.date <= toEpochDay) &&
                     (planId == null || entity.trainingPlanId == planId)
@@ -69,6 +77,7 @@ class WorkoutRepositoryImpl @Inject constructor(
         when (val remote = safeApiCall { apiService.getWorkoutLogs(planId, from, to) }) {
             is Result.Success -> {
                 val logs = remote.data.map { it.toDomain() }
+                    .filter { it.id !in pendingDeleteIds }
                 // TODO: remove diagnostic log below
                 Log.d("AIFIT_REPO", "getHistory network emission — count=${logs.size}, logs=${logs.map { "id=${it.id} isLocked=${it.isLocked} date=${it.date}" }}")
                 dao.upsertAll(logs.map { it.toEntity() })
@@ -94,12 +103,15 @@ class WorkoutRepositoryImpl @Inject constructor(
         // item the user just deleted, then confirm with the API.
         val backup = dao.getById(id)
         dao.deleteById(id)
+        pendingDeleteIds.add(id)
 
         return when (val remote = safeApiCall { apiService.deleteWorkoutLog(id) }) {
             is Result.Success -> {
+                pendingDeleteIds.remove(id)
                 Result.Success(Unit)
             }
             is Result.Error -> {
+                pendingDeleteIds.remove(id)
                 // Rollback: re-insert the entity so local state stays consistent
                 if (backup != null) dao.upsertAll(listOf(backup))
                 remote

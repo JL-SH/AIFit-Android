@@ -129,7 +129,7 @@ class NutritionHubScreenTest {
         val vm = createViewModel()
         setScreen(vm)
 
-        composeTestRule.onNodeWithText("MEALS").assertIsDisplayed()
+        composeTestRule.onNodeWithText("COMIDAS").assertIsDisplayed()
     }
 
     @Test
@@ -165,7 +165,7 @@ class NutritionHubScreenTest {
         )
         setScreen(vm)
 
-        composeTestRule.onNodeWithText("Sin datos de hoy").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Sin objetivos de hoy").assertIsDisplayed()
     }
 
     // ─── Estado Success — Tab DIET PLAN ────────────────────────────────────────

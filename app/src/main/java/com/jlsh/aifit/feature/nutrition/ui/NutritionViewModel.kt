@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.nutrition.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
@@ -92,6 +93,11 @@ class NutritionViewModel @Inject constructor(
             val log = logDeferred.await()
             val target = targetDeferred.await()
             val initialDietPlans = dietPlansDeferred.await()
+
+            // AIFIT_DEBUG — BUG-A: confirmar qué devuelven las llamadas
+            Log.d("AIFIT_DEBUG", "[NutritionVM] loadHubData: log=${if (log != null) "id=${log.id} cal=${log.totalCalories} meals=${log.meals.size}" else "NULL"}")
+            Log.d("AIFIT_DEBUG", "[NutritionVM] loadHubData: target=${if (target != null) "id=${target.id} cal=${target.calorieTarget} setBy=${target.setBy}" else "NULL"}")
+            Log.d("AIFIT_DEBUG", "[NutritionVM] loadHubData: dietPlans=${initialDietPlans.size}")
 
             // Step 2: Emit initial Success state with all data available
             _hubState.value = NutritionHubUiState.Success(
@@ -226,8 +232,11 @@ class NutritionViewModel @Inject constructor(
             when (val result = updateNutritionTargetUseCase(request)) {
                 is Result.Success -> {
                     loadHubData()
-                    emitEvent(NutritionUiEvent.ShowSnackbar("Targets updated"))
+                    // NavigateBack MUST be emitted before ShowSnackbar because
+                    // showSnackbar() is a suspending call that blocks the UI
+                    // collect-loop, preventing subsequent events from being processed.
                     emitEvent(NutritionUiEvent.NavigateBack)
+                    emitEvent(NutritionUiEvent.ShowSnackbar("Objetivos actualizados"))
                 }
                 is Result.Error -> {
                     if (current is NutritionTargetUiState.Ready) {

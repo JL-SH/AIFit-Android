@@ -85,6 +85,7 @@ class HomeViewModel @Inject constructor(
     private var cachedActivePlanId: String? = null       // Fix 2: survives a null cachedActivePlanDetail
     private var cachedActivePlanSummary: ActivePlanSummary? = null
     private var cachedWeeklySummary: WeeklyProgressSummary? = null
+    private var cachedActiveDietDetail: DietPlan? = null  // BUG-B: cache diet for nextMeal refresh
 
     init {
         loadAll()
@@ -175,6 +176,7 @@ class HomeViewModel @Inject constructor(
             // Derive initial diet/meal state
             val initialActiveDiet = initialDietPlans.find { it.status == PlanStatus.ACTIVE }
             val initialActiveDietDetail = initialActiveDiet?.let { loadDietPlanDetail(it.id) }
+            cachedActiveDietDetail = initialActiveDietDetail  // BUG-B: cache for onResumed refresh
             val initialNextMeal = deriveNextMeal(initialActiveDietDetail)
 
             // ── Derive motivation data (BUG-026) ──
@@ -215,6 +217,7 @@ class HomeViewModel @Inject constructor(
                 val freshActiveDiet = latestDietPlans.find { it.status == PlanStatus.ACTIVE }
                 if (freshActiveDiet != null && freshActiveDiet.id != initialActiveDiet?.id) {
                     val detail = loadDietPlanDetail(freshActiveDiet.id)
+                    cachedActiveDietDetail = detail  // BUG-B: keep cache in sync
                     val nextMeal = deriveNextMeal(detail)
                     _uiState.update { cur ->
                         if (cur is HomeUiState.Success) cur.copy(nextMeal = nextMeal) else cur
@@ -286,6 +289,8 @@ class HomeViewModel @Inject constructor(
 
     fun onResumed() {
         Log.d("AIFIT_HOME", "onResumed called")
+        // BUG-B fix: always recalculate nextMeal with the current time
+        refreshNextMeal()
         viewModelScope.launch {
             // Re-query plans to detect any activation that happened while away.
             // Process each emission (cache then network) immediately so the UI
@@ -355,6 +360,19 @@ class HomeViewModel @Inject constructor(
     }
 
     // ── Private helpers ──
+
+    /**
+     * Recalculates the "next meal" state using [cachedActiveDietDetail] and
+     * the **current** [LocalTime.now], then pushes the update to the UI.
+     * Called from [onResumed] so that stale meal suggestions are replaced
+     * every time the user returns to the Home screen.
+     */
+    private fun refreshNextMeal() {
+        val freshNextMeal = deriveNextMeal(cachedActiveDietDetail)
+        _uiState.update { cur ->
+            if (cur is HomeUiState.Success) cur.copy(nextMeal = freshNextMeal) else cur
+        }
+    }
 
     private suspend fun refreshWorkoutStatus() {
         if (_uiState.value !is HomeUiState.Success) return
@@ -547,11 +565,23 @@ class HomeViewModel @Inject constructor(
 
         val now = LocalTime.now()
 
+        // AIFIT_DEBUG — BUG-B: log timezone and current time to diagnose emulator issues
+        Log.d("AIFIT_DEBUG", "[NextMeal] systemZone=${java.time.ZoneId.systemDefault()} LocalTime.now()=$now meals=${todayDietDay.meals.map { "${it.name}@${it.time}" }}")
+
         // Sort meals by their scheduled time, then pick the first one strictly after now
-        val nextMeal = todayDietDay.meals
+        val sortedMeals = todayDietDay.meals
             .sortedBy { parseMealTime(it.time, it.mealType) }
+
+        sortedMeals.forEach { meal ->
+            val mealTime = parseMealTime(meal.time, meal.mealType)
+            Log.d("AIFIT_DEBUG", "[NextMeal]   ${meal.name} parsed=$mealTime isAfterNow=${mealTime.isAfter(now)}")
+        }
+
+        val nextMeal = sortedMeals
             .firstOrNull { parseMealTime(it.time, it.mealType).isAfter(now) }
             ?: return NextMealState.AllDone
+
+        Log.d("AIFIT_DEBUG", "[NextMeal] selected=${nextMeal.name}@${nextMeal.time}")
 
         return NextMealState.Upcoming(
             mealName = nextMeal.name,
