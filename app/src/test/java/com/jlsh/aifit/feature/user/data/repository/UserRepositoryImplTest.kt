@@ -3,6 +3,7 @@ package com.jlsh.aifit.feature.user.data.repository
 import app.cash.turbine.test
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.ApiResponse
+import com.jlsh.aifit.core.datastore.AuthDataStore
 import com.jlsh.aifit.feature.user.data.api.UserApiService
 import com.jlsh.aifit.feature.user.data.local.UserProfileDao
 import com.jlsh.aifit.feature.user.data.mapper.UserMapper.toDomain
@@ -14,6 +15,7 @@ import com.jlsh.aifit.testutil.fakeUserProfileResponseDto
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue
@@ -25,20 +27,26 @@ class UserRepositoryImplTest {
 
     private val apiService: UserApiService = mockk()
     private val dao: UserProfileDao = mockk()
+    private val authDataStore: AuthDataStore = mockk()
     private lateinit var sut: UserRepositoryImpl
+
+    companion object {
+        private const val FAKE_USER_ID = "user-123"
+    }
 
     @Before
     fun setUp() {
-        sut = UserRepositoryImpl(apiService, dao)
+        every { authDataStore.getUserId() } returns FAKE_USER_ID
+        sut = UserRepositoryImpl(apiService, dao, authDataStore)
     }
 
     // ─── getProfile — cache-first ──────────────────────────────────────────────
 
     @Test
     fun `getProfile emite Loading, luego cache, luego dato fresco de API`() = runTest {
-        val cached = fakeUserProfileEntity(id = "me")
+        val cached = fakeUserProfileEntity(id = FAKE_USER_ID)
         val fresh = fakeUserProfileResponseDto(id = "user-1", name = "Fresco")
-        coEvery { dao.getById("me") } returns cached
+        coEvery { dao.getById(FAKE_USER_ID) } returns cached
         coEvery { apiService.getProfile() } returns ApiResponse(success = true, data = fresh)
         coJustRun { dao.upsert(any()) }
 
@@ -61,7 +69,7 @@ class UserRepositoryImplTest {
     @Test
     fun `getProfile sin cache emite Loading luego dato fresco`() = runTest {
         val fresh = fakeUserProfileResponseDto()
-        coEvery { dao.getById("me") } returns null
+        coEvery { dao.getById(FAKE_USER_ID) } returns null
         coEvery { apiService.getProfile() } returns ApiResponse(success = true, data = fresh)
         coJustRun { dao.upsert(any()) }
 
@@ -74,7 +82,7 @@ class UserRepositoryImplTest {
 
     @Test
     fun `getProfile sin cache y API falla emite Loading luego Error`() = runTest {
-        coEvery { dao.getById("me") } returns null
+        coEvery { dao.getById(FAKE_USER_ID) } returns null
         coEvery { apiService.getProfile() } throws IOException("timeout")
 
         sut.getProfile().test {
@@ -86,8 +94,8 @@ class UserRepositoryImplTest {
 
     @Test
     fun `getProfile con cache y API falla no emite Error`() = runTest {
-        val cached = fakeUserProfileEntity(id = "me")
-        coEvery { dao.getById("me") } returns cached
+        val cached = fakeUserProfileEntity(id = FAKE_USER_ID)
+        coEvery { dao.getById(FAKE_USER_ID) } returns cached
         coEvery { apiService.getProfile() } throws IOException("sin red")
 
         sut.getProfile().test {

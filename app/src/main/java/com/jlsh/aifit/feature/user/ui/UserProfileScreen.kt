@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.components.inputs.AiFitDatePickerBottomSheet
 import com.jlsh.aifit.core.ui.components.inputs.AiFitDropdown
@@ -93,9 +94,17 @@ fun UserProfileScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
-        if (uiState is UserUiState.Loading) {
-            LoadingScreen()
-        } else {
+        when {
+            uiState is UserUiState.Loading -> {
+                LoadingScreen()
+            }
+            uiState is UserUiState.Error -> {
+                ErrorScreen(
+                    message = (uiState as UserUiState.Error).message,
+                    onRetry = viewModel::onRefresh,
+                )
+            }
+            else -> {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -239,8 +248,9 @@ fun UserProfileScreen(
 
             Spacer(Modifier.height(AiFitSpacing.lg))
         }
-        }
-    }
+        } // end else
+        } // end when
+    } // end Scaffold
 
     AiFitDatePickerBottomSheet(
         isVisible = showDatePicker,
