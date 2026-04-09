@@ -48,7 +48,7 @@ class ProgressViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     // 3. LOCAL UI STATE
-    private val _selectedPeriod = MutableStateFlow("30 days")
+    private val _selectedPeriod = MutableStateFlow("30 días")
     val selectedPeriod: StateFlow<String> = _selectedPeriod.asStateFlow()
 
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -142,9 +142,7 @@ class ProgressViewModel @Inject constructor(
                         isSaving = false,
                     )
                     emitEvent(ProgressUiEvent.ShowSnackbar("Peso registrado"))
-                    // No need to call loadBodyWeightHistory() explicitly — the reactive
-                    // Room observer (started by the initial loadBodyWeightHistory()) will
-                    // auto-emit the updated list after the insert in logWeight().
+                    loadBodyWeightHistory()
                 }
                 is Result.Error -> {
                     _bodyWeightState.value = _bodyWeightState.value.copy(isSaving = false)
@@ -178,8 +176,8 @@ class ProgressViewModel @Inject constructor(
         viewModelScope.launch {
             _dashboardState.value = DashboardUiState.Loading
             val days = when (_selectedPeriod.value) {
-                "7 days" -> 7L
-                "90 days" -> 90L
+                "7 días" -> 7L
+                "90 días" -> 90L
                 else -> 30L
             }
             val to = LocalDate.now().format(dateFormatter)

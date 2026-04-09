@@ -46,7 +46,7 @@ fun WhyThisMealSheet(
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             Text(
-                text = "Why this meal?",
+                text = "¿Por qué esta comida?",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -54,7 +54,7 @@ fun WhyThisMealSheet(
             when (state) {
                 is WhyThisState.Loading -> {
                     InlineLoadingIndicator(
-                        message = "Loading explanation...",
+                        message = "Cargando explicación…",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = AiFitSpacing.lg),
@@ -92,7 +92,7 @@ fun WhyThisMealSheet(
                             color = MaterialTheme.colorScheme.error,
                         )
                         TextButton(onClick = onRetry) {
-                            Text("Retry")
+                            Text("Reintentar")
                         }
                     }
                 }
@@ -109,12 +109,12 @@ private fun WhyThisMealSheetPreview() {
     AIFitTheme(darkTheme = true) {
         Column(modifier = Modifier.padding(AiFitSpacing.md)) {
             Text(
-                text = "Why this meal?",
+                text = "¿Por qué esta comida?",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "This meal provides the right macro balance for your goals.",
+                text = "Esta comida proporciona el balance de macros adecuado para tus objetivos.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )

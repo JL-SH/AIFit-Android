@@ -48,7 +48,7 @@ fun MealExplanationSheet(
             when (state) {
                 is ExplanationState.Loading -> {
                     InlineLoadingIndicator(
-                        message = "Loading explanation...",
+                        message = "Cargando explicación…",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = AiFitSpacing.lg),
@@ -93,7 +93,7 @@ fun MealExplanationSheet(
                             color = MaterialTheme.colorScheme.error,
                         )
                         TextButton(onClick = onRetry) {
-                            Text("Retry")
+                            Text("Reintentar")
                         }
                     }
                 }

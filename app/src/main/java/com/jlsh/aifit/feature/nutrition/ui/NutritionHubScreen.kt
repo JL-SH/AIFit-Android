@@ -80,7 +80,7 @@ import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-private val HUB_TABS = listOf("TODAY", "DIET PLAN", "SHOPPING")
+private val HUB_TABS = listOf("HOY", "PLAN DIETA", "COMPRA")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +122,7 @@ fun NutritionHubScreen(
         snackbarHostState = snackbarHostState,
         topBar = {
             AiFitTopBar(
-                title = "Nutrition",
+                title = "Nutrición",
                 background = MaterialTheme.colorScheme.secondaryContainer,
             )
         },
@@ -145,9 +145,9 @@ fun NutritionHubScreen(
                     Icon(
                         imageVector = Icons.Rounded.Add,
                         contentDescription = when (selectedTabIndex) {
-                            0 -> "Add Meal"
-                            1 -> "New Plan"
-                            else -> "Generate"
+                            0 -> "Añadir comida"
+                            1 -> "Nuevo plan"
+                            else -> "Generar"
                         },
                     )
                 }

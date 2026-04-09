@@ -63,20 +63,20 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 
-private val FILTER_CHIPS = listOf("All", "Active", "Completed", "Paused")
+private val FILTER_CHIPS = listOf("Todos", "Activo", "Completado", "Pausado")
 
 private fun chipToStatus(chip: String): PlanStatus? = when (chip) {
-    "Active" -> PlanStatus.ACTIVE
-    "Completed" -> PlanStatus.COMPLETED
-    "Paused" -> PlanStatus.PAUSED
+    "Activo" -> PlanStatus.ACTIVE
+    "Completado" -> PlanStatus.COMPLETED
+    "Pausado" -> PlanStatus.PAUSED
     else -> null
 }
 
 private fun statusToChip(status: PlanStatus?): String = when (status) {
-    PlanStatus.ACTIVE -> "Active"
-    PlanStatus.COMPLETED -> "Completed"
-    PlanStatus.PAUSED -> "Paused"
-    else -> "All"
+    PlanStatus.ACTIVE -> "Activo"
+    PlanStatus.COMPLETED -> "Completado"
+    PlanStatus.PAUSED -> "Pausado"
+    else -> "Todos"
 }
 
 @Composable
@@ -114,7 +114,7 @@ fun TrainingHubScreen(
     Scaffold(
         topBar = {
             AiFitTopBar(
-                title = "Training",
+                title = "Entrenamiento",
                 background = MaterialTheme.colorScheme.secondaryContainer,
             )
         },
@@ -128,7 +128,7 @@ fun TrainingHubScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Add,
-                        contentDescription = "New Plan",
+                        contentDescription = "Nuevo plan",
                     )
                 }
             }

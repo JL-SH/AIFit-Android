@@ -71,7 +71,7 @@ fun TrackMealSheet(
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             Text(
-                text = "Add meal",
+                text = "Registrar comida",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = AiFitSpacing.md),
@@ -79,8 +79,8 @@ fun TrackMealSheet(
 
             SheetOption(
                 icon = Icons.Rounded.Edit,
-                title = "Type manually",
-                description = "Enter food items and macros by hand",
+                title = "Registro manual",
+                description = "Introduce los alimentos y macros a mano",
                 onClick = onManual,
             )
             HorizontalDivider(
@@ -89,8 +89,8 @@ fun TrackMealSheet(
             )
             SheetOption(
                 icon = Icons.Rounded.CameraAlt,
-                title = "Scan / Photo",
-                description = "Take a photo of your meal for AI analysis",
+                title = "Escanear / Foto",
+                description = "Haz una foto de tu comida para que la IA la analice",
                 onClick = onScanPhoto,
             )
             HorizontalDivider(
@@ -99,8 +99,8 @@ fun TrackMealSheet(
             )
             SheetOption(
                 icon = Icons.Rounded.AutoAwesome,
-                title = "Analyze text",
-                description = "Describe your meal in natural language",
+                title = "Analizar texto",
+                description = "Describe tu comida con texto libre",
                 onClick = onAnalyzeText,
             )
         }

@@ -46,7 +46,7 @@ fun WhyThisExerciseSheet(
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             Text(
-                text = "Why this exercise?",
+                text = "¿Por qué este ejercicio?",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -54,7 +54,7 @@ fun WhyThisExerciseSheet(
             when (state) {
                 is WhyThisState.Loading -> {
                     InlineLoadingIndicator(
-                        message = "Loading explanation...",
+                        message = "Cargando explicación…",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = AiFitSpacing.lg),
@@ -92,7 +92,7 @@ fun WhyThisExerciseSheet(
                             color = MaterialTheme.colorScheme.error,
                         )
                         TextButton(onClick = onRetry) {
-                            Text("Retry")
+                            Text("Reintentar")
                         }
                     }
                 }
@@ -109,12 +109,12 @@ private fun WhyThisExerciseSheetPreview() {
     AIFitTheme(darkTheme = true) {
         Column(modifier = Modifier.padding(AiFitSpacing.md)) {
             Text(
-                text = "Why this exercise?",
+                text = "¿Por qué este ejercicio?",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "This exercise targets your primary goal of hypertrophy.",
+                text = "Este ejercicio apunta a tu objetivo principal de hipertrofia.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )

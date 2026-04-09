@@ -372,14 +372,14 @@ private fun FoodItemForm(
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
     ) {
         Text(
-            text = "Item $index",
+            text = "Alimento $index",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         AiFitTextField(
             value = item.name,
             onValueChange = { onItemChanged(item.copy(name = it)) },
-            label = "Name",
+            label = "Nombre",
             modifier = Modifier.fillMaxWidth(),
         )
         Row(
@@ -388,14 +388,14 @@ private fun FoodItemForm(
             AiFitNumberField(
                 value = item.quantity,
                 onValueChange = { onItemChanged(item.copy(quantity = it)) },
-                label = "Qty",
+                label = "Cant.",
                 modifier = Modifier.weight(1f),
             )
             AiFitDropdown(
                 selectedValue = item.unit,
                 options = UNIT_OPTIONS,
                 onOptionSelected = { onItemChanged(item.copy(unit = it)) },
-                label = "Unit",
+                label = "Unidad",
                 modifier = Modifier.weight(1f),
             )
         }
@@ -421,13 +421,13 @@ private fun FoodItemForm(
             AiFitNumberField(
                 value = item.carbs,
                 onValueChange = { onItemChanged(item.copy(carbs = it)) },
-                label = "Carbs(g)",
+                label = "Carbos(g)",
                 modifier = Modifier.weight(1f),
             )
             AiFitNumberField(
                 value = item.fat,
                 onValueChange = { onItemChanged(item.copy(fat = it)) },
-                label = "Fat(g)",
+                label = "Grasa(g)",
                 modifier = Modifier.weight(1f),
             )
         }

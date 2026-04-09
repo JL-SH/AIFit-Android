@@ -49,7 +49,7 @@ fun ProgressionRecommendationSheet(
             when (state) {
                 is RecommendationState.Loading -> {
                     InlineLoadingIndicator(
-                        message = "Analyzing progression...",
+                        message = "Analizando progresión…",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = AiFitSpacing.lg),
@@ -87,7 +87,7 @@ fun ProgressionRecommendationSheet(
                         ) {
                             Column {
                                 Text(
-                                    text = "Current",
+                                    text = "Actual",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -104,7 +104,7 @@ fun ProgressionRecommendationSheet(
                             )
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(
-                                    text = "Suggested",
+                                    text = "Sugerido",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -141,12 +141,12 @@ fun ProgressionRecommendationSheet(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            text = "Confidence: ${(rec.confidence * 100).toInt()}%",
+                            text = "Confianza: ${(rec.confidence * 100).toInt()}%",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            text = "Based on ${rec.basedOnSessions} sessions",
+                            text = "Basado en ${rec.basedOnSessions} sesiones",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -166,7 +166,7 @@ fun ProgressionRecommendationSheet(
                             color = MaterialTheme.colorScheme.error,
                         )
                         TextButton(onClick = onRetry) {
-                            Text("Retry")
+                            Text("Reintentar")
                         }
                     }
                 }

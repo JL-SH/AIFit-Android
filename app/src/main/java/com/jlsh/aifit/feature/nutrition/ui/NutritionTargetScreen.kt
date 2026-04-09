@@ -168,7 +168,7 @@ private fun NutritionTargetContent(
         Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
         PrimaryButton(
-            text = "SAVE",
+            text = "GUARDAR",
             isLoading = state.isSaving,
             onClick = { onSave(calories, protein, carbs, fat) },
             modifier = Modifier.fillMaxWidth(),

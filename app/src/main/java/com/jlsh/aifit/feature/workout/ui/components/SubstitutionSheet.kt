@@ -116,7 +116,7 @@ private fun SubstitutionSheetContent(
                         color = MaterialTheme.colorScheme.error,
                     )
                     TextButton(onClick = onDismiss) {
-                        Text(text = "Retry")
+                        Text(text = "Reintentar")
                     }
                 }
             }

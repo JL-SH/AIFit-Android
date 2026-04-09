@@ -123,7 +123,7 @@ fun FoodVisionScreen(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 AiFitTopBar(
-                    title = "Food Vision",
+                    title = "Escáner de comida",
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                 )

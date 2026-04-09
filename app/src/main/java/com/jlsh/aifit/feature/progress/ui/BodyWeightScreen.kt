@@ -81,7 +81,7 @@ fun BodyWeightScreen(
             containerColor = Color.Transparent,
             topBar = {
                 AiFitTopBar(
-                    title = "Body Weight",
+                    title = "Peso corporal",
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                 )
@@ -145,15 +145,15 @@ private fun BodyWeightContent(
             } else {
                 EmptyStateView(
                     icon = Icons.Rounded.MonitorWeight,
-                    title = "Need at least 2 weight entries",
-                    subtitle = "Log your weight to see trends",
+                    title = "Necesitas al menos 2 registros de peso",
+                    subtitle = "Registra tu peso para ver las tendencias",
                 )
             }
         }
 
         // Log form
         item(key = "form") {
-            SectionHeader(title = "LOG WEIGHT")
+            SectionHeader(title = "REGISTRAR PESO")
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -162,13 +162,13 @@ private fun BodyWeightContent(
                     AiFitNumberField(
                         value = state.formWeight,
                         onValueChange = onWeightChanged,
-                        label = "Weight",
+                        label = "Peso",
                         suffix = "kg",
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                     Text(
-                        text = "Date: ${state.formDate.format(fullDateFormatter)}",
+                        text = "Fecha: ${state.formDate.format(fullDateFormatter)}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -176,13 +176,13 @@ private fun BodyWeightContent(
                     AiFitTextField(
                         value = state.formNotes,
                         onValueChange = onNotesChanged,
-                        label = "Notes (optional)",
+                        label = "Notas (opcional)",
                         singleLine = false,
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                     PrimaryButton(
-                        text = "LOG WEIGHT",
+                        text = "REGISTRAR PESO",
                         isLoading = state.isSaving,
                         onClick = onLogWeight,
                         modifier = Modifier.fillMaxWidth(),
@@ -194,7 +194,7 @@ private fun BodyWeightContent(
         // Recent entries
         if (state.weightHistory.isNotEmpty()) {
             item(key = "history_header") {
-                SectionHeader(title = "RECENT ENTRIES")
+                SectionHeader(title = "HISTORIAL RECIENTE")
             }
             items(state.weightHistory.take(20), key = { it.id }) { log ->
                 val isInitialWeight = log.notes?.contains("Peso inicial", ignoreCase = true) == true
@@ -266,7 +266,7 @@ private fun BodyWeightScreenPreview() {
                 state = BodyWeightUiState(
                     weightHistory = listOf(
                         BodyWeightLog("1", 76.2, LocalDate.now(), null, LocalDate.now()),
-                        BodyWeightLog("2", 76.5, LocalDate.now().minusDays(1), "After training", LocalDate.now().minusDays(1)),
+                        BodyWeightLog("2", 76.5, LocalDate.now().minusDays(1), "Después de entrenar", LocalDate.now().minusDays(1)),
                         BodyWeightLog("3", 77.0, LocalDate.now().minusDays(3), null, LocalDate.now().minusDays(3)),
                         BodyWeightLog("4", 77.5, LocalDate.now().minusDays(5), null, LocalDate.now().minusDays(5)),
                     ),

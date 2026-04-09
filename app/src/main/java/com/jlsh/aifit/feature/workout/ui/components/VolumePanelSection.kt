@@ -29,7 +29,7 @@ fun VolumePanelSection(
     }
 
     ExpandableSection(
-        title = "Session Volume",
+        title = "Volumen de sesión",
         modifier = modifier,
         initiallyExpanded = false,
     ) {

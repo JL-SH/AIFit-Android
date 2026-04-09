@@ -533,7 +533,7 @@ private fun MainNavScreen() {
                     composable(ProfileRoutes.HUB) {
                         ProfileHubScreen(
                             onNavigateToEditProfile = {
-                                tabNavController.navigate(ProfileRoutes.EDIT)
+                                tabNavController.navigate(ProfileRoutes.editRoute())
                             },
                             onNavigateToDashboard = {
                                 tabNavController.navigate(ProfileRoutes.DASHBOARD)
@@ -555,7 +555,15 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(ProfileRoutes.EDIT) {
+                    composable(
+                        route = ProfileRoutes.EDIT,
+                        arguments = listOf(
+                            navArgument("mode") {
+                                type = NavType.StringType
+                                defaultValue = "edit"
+                            },
+                        ),
+                    ) {
                         UserProfileScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                         )

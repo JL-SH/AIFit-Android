@@ -71,7 +71,9 @@ object CoachRoutes {
 object ProfileRoutes {
     const val GRAPH = "profile_graph"
     const val HUB = "profile"
-    const val EDIT = "profile/edit"
+    const val EDIT = "profile/edit?mode={mode}"
+
+    fun editRoute() = "profile/edit?mode=edit"
     const val DASHBOARD = "profile/dashboard"
     const val BODY_WEIGHT = "profile/body_weight"
     const val WEEKLY_SUMMARY = "profile/weekly_summary"

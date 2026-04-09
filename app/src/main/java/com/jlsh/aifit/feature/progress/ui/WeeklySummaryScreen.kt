@@ -65,7 +65,7 @@ fun WeeklySummaryScreen(
         snackbarHostState = snackbarHostState,
         topBar = {
             AiFitTopBar(
-                title = "Weekly Summary",
+                title = "Resumen semanal",
                 onBack = onNavigateBack,
             )
         },
@@ -107,7 +107,7 @@ private fun WeeklySummaryContent(
     ) {
         // Workouts
         item(key = "workouts") {
-            SectionHeader(title = "WORKOUTS")
+            SectionHeader(title = "ENTRENAMIENTOS")
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -124,7 +124,7 @@ private fun WeeklySummaryContent(
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "sessions",
+                            text = "sesiones",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -136,7 +136,7 @@ private fun WeeklySummaryContent(
 
         // Nutrition
         item(key = "nutrition") {
-            SectionHeader(title = "NUTRITION")
+            SectionHeader(title = "NUTRICIÓN")
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -154,7 +154,7 @@ private fun WeeklySummaryContent(
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = "avg kcal today",
+                                text = "kcal promedio hoy",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -166,7 +166,7 @@ private fun WeeklySummaryContent(
                                 color = MaterialTheme.colorScheme.primaryContainer,
                             )
                             Text(
-                                text = "target",
+                                text = "objetivo",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -179,7 +179,7 @@ private fun WeeklySummaryContent(
 
         // Streak
         item(key = "streak") {
-            SectionHeader(title = "STREAK")
+            SectionHeader(title = "RACHA")
             AiFitCard {
                 Row(
                     modifier = Modifier
@@ -195,12 +195,12 @@ private fun WeeklySummaryContent(
                     )
                     Column {
                         Text(
-                            text = "${summary.currentStreak} days",
+                            text = "${summary.currentStreak} días",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "current streak",
+                            text = "racha actual",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -211,7 +211,7 @@ private fun WeeklySummaryContent(
 
         // Weight
         item(key = "weight") {
-            SectionHeader(title = "BODY WEIGHT")
+            SectionHeader(title = "PESO CORPORAL")
             AiFitCard {
                 Row(
                     modifier = Modifier
@@ -221,7 +221,7 @@ private fun WeeklySummaryContent(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "Current weight",
+                        text = "Peso actual",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -265,5 +265,3 @@ private fun WeeklySummaryPreview() {
         }
     }
 }
-
-

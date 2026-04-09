@@ -50,7 +50,7 @@ import com.jlsh.aifit.feature.progress.ui.state.ProgressUiEvent
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-private val PERIOD_OPTIONS = listOf("7 days", "30 days", "90 days")
+private val PERIOD_OPTIONS = listOf("7 días", "30 días", "90 días")
 
 @Composable
 fun ProgressDashboardScreen(
@@ -81,7 +81,7 @@ fun ProgressDashboardScreen(
         snackbarHostState = snackbarHostState,
         topBar = {
             AiFitTopBar(
-                title = "Progress Dashboard",
+                title = "Panel de progreso",
                 onBack = onNavigateBack,
             )
         },
@@ -136,7 +136,7 @@ private fun DashboardContent(
 
         // Workout Adherence
         item(key = "workout") {
-            SectionHeader(title = "WORKOUT ADHERENCE")
+            SectionHeader(title = "ADHERENCIA ENTRENAMIENTOS")
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -152,15 +152,15 @@ private fun DashboardContent(
                     ) {
                         StatItem(
                             value = "${dashboard.workoutAdherence.completedSessions}/${dashboard.workoutAdherence.plannedSessions}",
-                            label = "SESSIONS",
+                            label = "SESIONES",
                         )
                         StatItem(
                             value = "${dashboard.workoutAdherence.currentStreak}",
-                            label = "STREAK",
+                            label = "RACHA",
                         )
                         StatItem(
                             value = "${dashboard.workoutAdherence.longestStreak}",
-                            label = "BEST",
+                            label = "MEJOR",
                         )
                     }
                 }
@@ -169,7 +169,7 @@ private fun DashboardContent(
 
         // Weight Trend
         item(key = "weight") {
-            SectionHeader(title = "WEIGHT TREND")
+            SectionHeader(title = "TENDENCIA DE PESO")
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -194,17 +194,17 @@ private fun DashboardContent(
                         StatItem(
                             value = dashboard.weightProgress.startWeight
                                 ?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "--",
-                            label = "START",
+                            label = "INICIO",
                         )
                         StatItem(
                             value = dashboard.weightProgress.currentWeight
                                 ?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "--",
-                            label = "CURRENT",
+                            label = "ACTUAL",
                         )
                         StatItem(
                             value = dashboard.weightProgress.change
                                 ?.let { String.format(java.util.Locale.getDefault(), "%+.1f", it) } ?: "--",
-                            label = "CHANGE",
+                            label = "CAMBIO",
                             valueColor = when {
                                 dashboard.weightProgress.change == null ->
                                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -221,7 +221,7 @@ private fun DashboardContent(
 
         // Nutrition Adherence
         item(key = "nutrition") {
-            SectionHeader(title = "NUTRITION ADHERENCE")
+            SectionHeader(title = "ADHERENCIA NUTRICIÓN")
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -235,11 +235,11 @@ private fun DashboardContent(
                     ) {
                         StatItem(
                             value = "${dashboard.nutritionAdherence.averageCalories.toInt()}",
-                            label = "AVG KCAL",
+                            label = "KCAL PROM.",
                         )
                         StatItem(
                             value = "${dashboard.nutritionAdherence.calorieTarget}",
-                            label = "TARGET",
+                            label = "OBJETIVO",
                         )
                     }
                 }
@@ -249,7 +249,7 @@ private fun DashboardContent(
         // Strength Progress
         if (dashboard.strengthProgress.isNotEmpty()) {
             item(key = "strength_header") {
-                SectionHeader(title = "STRENGTH PROGRESS")
+                SectionHeader(title = "PROGRESO DE FUERZA")
             }
             items(dashboard.strengthProgress, key = { it.exerciseName }) { progress ->
                 AiFitCard {
@@ -289,17 +289,17 @@ private fun DashboardContent(
             Spacer(modifier = Modifier.height(AiFitSpacing.sm))
             Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm)) {
                 PrimaryButton(
-                    text = "LOG WEIGHT",
+                    text = "REGISTRAR PESO",
                     onClick = onLogWeight,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 SecondaryButton(
-                    text = "WEEKLY DETAIL",
+                    text = "DETALLE SEMANAL",
                     onClick = onWeeklyDetail,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 SecondaryButton(
-                    text = "METABOLIC ANALYSIS",
+                    text = "ANÁLISIS METABÓLICO",
                     onClick = onMetabolic,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -388,6 +388,3 @@ private fun ProgressDashboardPreview() {
         }
     }
 }
-
-
-

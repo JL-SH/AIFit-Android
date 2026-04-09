@@ -75,7 +75,7 @@ fun RestTimerBanner(
             color = textColor,
         )
         Text(
-            text = "Dismiss",
+            text = "Cerrar",
             style = MaterialTheme.typography.labelMedium,
             color = textColor,
         )

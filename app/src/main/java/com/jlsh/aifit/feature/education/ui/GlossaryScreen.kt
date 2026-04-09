@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -27,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,9 +44,10 @@ import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.education.domain.model.GlossaryDefinition
+import com.jlsh.aifit.feature.education.ui.components.GlossaryIntroSheet
 import com.jlsh.aifit.feature.education.ui.state.GlossaryState
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun GlossaryScreen(
     onNavigateBack: () -> Unit,
@@ -53,6 +56,14 @@ fun GlossaryScreen(
     val glossaryState by viewModel.glossaryState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var searchQuery by remember { mutableStateOf("") }
+    var showIntroSheet by rememberSaveable { mutableStateOf(true) }
+
+    if (showIntroSheet) {
+        GlossaryIntroSheet(
+            onDismiss = { showIntroSheet = false },
+            onConfirm = { showIntroSheet = false },
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -63,7 +74,7 @@ fun GlossaryScreen(
             containerColor = Color.Transparent,
             topBar = {
                 AiFitTopBar(
-                    title = "Glossary",
+                    title = "Glosario",
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                 )
@@ -79,7 +90,7 @@ fun GlossaryScreen(
                 AiFitTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    label = "Search term",
+                    label = "Buscar término",
                     trailingIcon = Icons.Rounded.Search,
                     onTrailingIconClick = {
                         if (searchQuery.isNotBlank()) {
@@ -95,8 +106,8 @@ fun GlossaryScreen(
                     is GlossaryState.Idle -> {
                         EmptyStateView(
                             icon = Icons.AutoMirrored.Rounded.MenuBook,
-                            title = "Search for a fitness term",
-                            subtitle = "Type a term and press search to get its definition",
+                            title = "Busca un término de fitness",
+                            subtitle = "Escribe un término y pulsa buscar para obtener su definición",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = AiFitSpacing.xxl),
@@ -105,7 +116,7 @@ fun GlossaryScreen(
 
                     is GlossaryState.Loading -> {
                         InlineLoadingIndicator(
-                            message = "Looking up definition...",
+                            message = "Buscando definición…",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = AiFitSpacing.lg),
@@ -137,7 +148,7 @@ fun GlossaryScreen(
                             TextButton(
                                 onClick = { viewModel.loadGlossaryTerm(searchQuery.trim()) },
                             ) {
-                                Text("Retry")
+                                Text("Reintentar")
                             }
                         }
                     }
@@ -173,7 +184,7 @@ private fun GlossaryCard(
             if (definition.relatedTerms.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                 Text(
-                    text = "RELATED",
+                    text = "RELACIONADOS",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

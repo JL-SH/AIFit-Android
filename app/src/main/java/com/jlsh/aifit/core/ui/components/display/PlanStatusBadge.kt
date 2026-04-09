@@ -27,12 +27,23 @@ fun PlanStatusBadge(
         modifier = modifier,
     ) {
         Text(
-            text = status.uppercase(),
+            text = statusDisplayName(status),
             style = MaterialTheme.typography.labelSmall,
             letterSpacing = 1.sp,
             color = textColor,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         )
+    }
+}
+
+private fun statusDisplayName(status: String): String {
+    return when (status.uppercase()) {
+        "ACTIVE" -> "ACTIVO"
+        "COMPLETED" -> "COMPLETADO"
+        "DRAFT" -> "BORRADOR"
+        "ARCHIVED" -> "ARCHIVADO"
+        "PAUSED" -> "PAUSADO"
+        else -> status.uppercase()
     }
 }
 

@@ -421,7 +421,7 @@ private fun WorkoutLogScreenPreview() {
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         PrimaryButton(
-                            text = "FINISH SESSION",
+                            text = "FINALIZAR SESIÓN",
                             onClick = {},
                             modifier = Modifier
                                 .fillMaxWidth()
