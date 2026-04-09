@@ -8,7 +8,6 @@ import com.jlsh.aifit.testutil.FAKE_TOKEN
 import com.jlsh.aifit.testutil.FAKE_USER_ID
 import com.jlsh.aifit.testutil.MainDispatcherRule
 import io.mockk.Runs
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -17,7 +16,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -37,7 +35,7 @@ class SessionManagerTest {
     fun setUp() {
         // Default: no token present
         every { authDataStore.hasToken() } returns false
-        coEvery { localDataCleaner.clearDataForUser(any()) } just Runs
+        every { localDataCleaner.clearAllLocalData() } just Runs
     }
 
     private fun buildSut() = SessionManager(authDataStore, localDataCleaner)
@@ -100,28 +98,27 @@ class SessionManagerTest {
     }
 
     @Test
-    fun `logout calls clearDataForUser when userId is present`() = runTest {
-        every { authDataStore.getUserId() } returns FAKE_USER_ID
+    fun `logout calls clearAllLocalData`() = runTest {
         val sut = buildSut()
 
         sut.logout()
 
-        coEvery { localDataCleaner.clearDataForUser(FAKE_USER_ID) } just Runs
-        // Verify runBlocking executed the suspend function
-        verify { authDataStore.getUserId() }
+        every { localDataCleaner.clearAllLocalData() } just Runs
+        // Verify clearAllLocalData was invoked
+        verify { authDataStore.clear() }
     }
 
     // ─── logoutEvent ───────────────────────────────────────────────────────
 
     @Test
-    fun `logout emits exactly one logoutEvent`() = runTest {
+    fun `logout emits exactly one logoutEvent with null message`() = runTest {
         every { authDataStore.getUserId() } returns null
         val sut = buildSut()
 
         sut.logoutEvent.test {
             sut.logout()
             val event = awaitItem()
-            assertNotNull(event)
+            assertNull(event)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -132,6 +129,79 @@ class SessionManagerTest {
 
         sut.logoutEvent.test {
             expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // ─── invalidateSession (BUG-005) ──────────────────────────────────────
+
+    @Test
+    fun `invalidateSession sets isLoggedIn to false`() {
+        every { authDataStore.hasToken() } returns true
+        val sut = buildSut()
+
+        sut.invalidateSession()
+
+        assertFalse(sut.isLoggedIn.value)
+    }
+
+    @Test
+    fun `invalidateSession clears AuthDataStore`() {
+        val sut = buildSut()
+
+        sut.invalidateSession()
+
+        verify { authDataStore.clear() }
+    }
+
+    @Test
+    fun `invalidateSession clears all local data`() {
+        val sut = buildSut()
+
+        sut.invalidateSession()
+
+        verify { localDataCleaner.clearAllLocalData() }
+    }
+
+    @Test
+    fun `invalidateSession emits logoutEvent with non-null message`() = runTest {
+        val sut = buildSut()
+
+        sut.logoutEvent.test {
+            sut.invalidateSession()
+            val message = awaitItem()
+            assertTrue(!message.isNullOrBlank())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `invalidateSession deduplicates concurrent calls`() = runTest {
+        val sut = buildSut()
+
+        sut.logoutEvent.test {
+            sut.invalidateSession()
+            sut.invalidateSession() // second call should be a no-op
+            val message = awaitItem()
+            assertTrue(!message.isNullOrBlank())
+            // Only one event emitted, not two
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onLoginSuccess resets invalidating guard so next invalidate works`() = runTest {
+        val sut = buildSut()
+        sut.invalidateSession() // first invalidation
+
+        // Re-login resets the guard
+        sut.onLoginSuccess(FAKE_TOKEN, FAKE_USER_ID, FAKE_EMAIL, FAKE_NAME, profileComplete = true)
+
+        sut.logoutEvent.test {
+            sut.invalidateSession() // should work again
+            val message = awaitItem()
+            assertTrue(!message.isNullOrBlank())
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -182,4 +252,3 @@ class SessionManagerTest {
         assertEquals(FAKE_NAME, sut.getUserName())
     }
 }
-

@@ -17,6 +17,8 @@ import com.jlsh.aifit.feature.user.ui.OnboardingViewModel
 fun NavGraphBuilder.authNavGraph(
     navController: NavController,
     startDestination: String = AuthRoutes.LOGIN,
+    sessionExpiredMessage: String? = null,
+    onSessionExpiredMessageShown: () -> Unit = {},
 ) {
     navigation(
         route = AuthRoutes.GRAPH,
@@ -35,6 +37,8 @@ fun NavGraphBuilder.authNavGraph(
                 onNavigateToCreateProfile = {
                     navController.navigate(AuthRoutes.CREATE_PROFILE)
                 },
+                sessionExpiredMessage = sessionExpiredMessage,
+                onSessionExpiredMessageShown = onSessionExpiredMessageShown,
             )
         }
 

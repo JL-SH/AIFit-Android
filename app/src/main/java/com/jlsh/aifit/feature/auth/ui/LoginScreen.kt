@@ -63,6 +63,8 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToMain: () -> Unit,
     onNavigateToCreateProfile: () -> Unit,
+    sessionExpiredMessage: String? = null,
+    onSessionExpiredMessageShown: () -> Unit = {},
     viewModel: AuthViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -74,6 +76,14 @@ fun LoginScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    // Show session-expired message if we were redirected here due to token expiry (BUG-005)
+    LaunchedEffect(sessionExpiredMessage) {
+        if (!sessionExpiredMessage.isNullOrBlank()) {
+            snackbarHostState.showSnackbar(sessionExpiredMessage)
+            onSessionExpiredMessageShown()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->

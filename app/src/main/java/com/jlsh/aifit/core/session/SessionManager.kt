@@ -1,5 +1,6 @@
 package com.jlsh.aifit.core.session
 
+import android.util.Log
 import com.jlsh.aifit.core.datastore.AuthDataStore
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -7,7 +8,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.runBlocking
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,8 +20,14 @@ class SessionManager @Inject constructor(
     private val _isLoggedIn = MutableStateFlow(authDataStore.hasToken())
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
-    private val _logoutEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val logoutEvent: SharedFlow<Unit> = _logoutEvent.asSharedFlow()
+    private val _logoutEvent = MutableSharedFlow<String?>(extraBufferCapacity = 1)
+    val logoutEvent: SharedFlow<String?> = _logoutEvent.asSharedFlow()
+
+    /**
+     * Guard to prevent multiple concurrent invalidateSession() calls
+     * (e.g. several 401 responses arriving at the same time).
+     */
+    private val invalidating = AtomicBoolean(false)
 
     fun onLoginSuccess(
         token: String,
@@ -29,6 +36,7 @@ class SessionManager @Inject constructor(
         name: String,
         profileComplete: Boolean,
     ) {
+        invalidating.set(false)
         authDataStore.saveToken(token)
         authDataStore.saveUserInfo(userId, email, name)
         authDataStore.saveProfileComplete(profileComplete)
@@ -42,13 +50,29 @@ class SessionManager @Inject constructor(
     fun isProfileComplete(): Boolean = authDataStore.isProfileComplete()
 
     fun logout() {
-        val userId = authDataStore.getUserId()
-        if (userId != null) {
-            runBlocking { localDataCleaner.clearDataForUser(userId) }
+        clearSessionInternal()
+        _logoutEvent.tryEmit(null)
+    }
+
+    /**
+     * Called from [TokenAuthenticator] when a 401 proves the token is irrecoverably
+     * expired (no refresh-token endpoint exists in this backend).
+     * Clears ALL local data and navigates the user to login with an explanatory message.
+     */
+    fun invalidateSession() {
+        if (!invalidating.compareAndSet(false, true)) {
+            Log.d("AIFIT", "invalidateSession() already in progress — skipping duplicate")
+            return
         }
+        Log.w("AIFIT", "invalidateSession() — token expired, clearing session")
+        clearSessionInternal()
+        _logoutEvent.tryEmit("Tu sesión ha caducado. Por favor, inicia sesión de nuevo.")
+    }
+
+    private fun clearSessionInternal() {
+        localDataCleaner.clearAllLocalData()
         authDataStore.clear()
         _isLoggedIn.value = false
-        _logoutEvent.tryEmit(Unit)
     }
 
     fun getToken(): String? = authDataStore.getToken()
