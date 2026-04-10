@@ -29,7 +29,10 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -78,6 +81,9 @@ class WorkoutViewModel @Inject constructor(
 
     private val _dateToFilter = MutableStateFlow<String?>(null)
     val dateToFilter: StateFlow<String?> = _dateToFilter.asStateFlow()
+
+    private val _dayOfWeekFilter = MutableStateFlow<DayOfWeek?>(null)
+    val dayOfWeekFilter: StateFlow<DayOfWeek?> = _dayOfWeekFilter.asStateFlow()
 
     // ===== LOGGING =====
 
@@ -205,7 +211,25 @@ class WorkoutViewModel @Inject constructor(
                 to = _dateToFilter.value,
             ).collect { result ->
                 _historyState.value = when (result) {
-                    is Result.Success -> WorkoutHistoryUiState.Success(logs = result.data)
+                    is Result.Success -> {
+                        val dayFilter = _dayOfWeekFilter.value
+                        val filtered = if (dayFilter != null) {
+                            result.data.filter { it.date.dayOfWeek == dayFilter }
+                        } else {
+                            result.data
+                        }
+                        val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es"))
+                        val grouped = filtered
+                            .sortedByDescending { it.date }
+                            .groupBy { it.date.format(monthFormatter).replaceFirstChar { c -> c.uppercase() } }
+                        val nameMap = _availablePlans.value.associate { it.id to it.name }
+                        WorkoutHistoryUiState.Success(
+                            logs = filtered,
+                            logsByMonth = grouped,
+                            planNameMap = nameMap,
+                            selectedDayOfWeek = dayFilter,
+                        )
+                    }
                     is Result.Error -> WorkoutHistoryUiState.Error(result.exception.toMessage())
                     is Result.Loading -> WorkoutHistoryUiState.Loading
                 }
@@ -231,6 +255,18 @@ class WorkoutViewModel @Inject constructor(
     fun onDateRangeFilterChanged(from: String?, to: String?) {
         _dateFromFilter.value = from
         _dateToFilter.value = to
+        loadHistory()
+    }
+
+    fun onDayOfWeekFilterChanged(day: DayOfWeek?) {
+        _dayOfWeekFilter.value = day
+        loadHistory()
+    }
+
+    fun applyFilters(startDate: String?, endDate: String?, dayOfWeek: DayOfWeek? = null) {
+        _dateFromFilter.value = startDate
+        _dateToFilter.value = endDate
+        _dayOfWeekFilter.value = dayOfWeek
         loadHistory()
     }
 

@@ -191,6 +191,10 @@ class TrainingViewModel @Inject constructor(
         emitEvent(TrainingUiEvent.NavigateToGenerate(adaptive, basePlanId))
     }
 
+    fun onNavigateToWorkoutHistory() {
+        emitEvent(TrainingUiEvent.NavigateToWorkoutHistory)
+    }
+
     fun onApprovePlan(planId: String) {
         viewModelScope.launch {
             _detailUiState.value = TrainingDetailUiState.Loading

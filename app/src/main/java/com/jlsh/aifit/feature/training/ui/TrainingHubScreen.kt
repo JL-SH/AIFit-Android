@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.FitnessCenter
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -85,6 +86,7 @@ fun TrainingHubScreen(
     onNavigateToGenerate: (adaptive: Boolean, basePlanId: String?) -> Unit,
     onNavigateToWorkoutLog: (planId: String) -> Unit,
     onNavigateToWorkoutDetail: (logId: String) -> Unit,
+    onNavigateToWorkoutHistory: () -> Unit = {},
     viewModel: TrainingViewModel = hiltViewModel(),
 ) {
     val hubState by viewModel.hubUiState.collectAsStateWithLifecycle()
@@ -104,6 +106,7 @@ fun TrainingHubScreen(
                 is TrainingUiEvent.NavigateToGenerate -> onNavigateToGenerate(event.adaptive, event.basePlanId)
                 is TrainingUiEvent.NavigateToApproval -> { /* not applicable from hub screen */ }
                 is TrainingUiEvent.NavigateToWorkoutLog -> onNavigateToWorkoutLog(event.planId)
+                is TrainingUiEvent.NavigateToWorkoutHistory -> onNavigateToWorkoutHistory()
                 is TrainingUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
                 is TrainingUiEvent.PlanDeleted -> { }
                 is TrainingUiEvent.NavigateBack -> { }
@@ -116,6 +119,14 @@ fun TrainingHubScreen(
             AiFitTopBar(
                 title = "Entrenamiento",
                 background = MaterialTheme.colorScheme.secondaryContainer,
+                actions = {
+                    IconButton(onClick = { viewModel.onNavigateToWorkoutHistory() }) {
+                        Icon(
+                            imageVector = Icons.Rounded.History,
+                            contentDescription = "Historial de entrenamientos",
+                        )
+                    }
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },

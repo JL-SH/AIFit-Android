@@ -47,6 +47,7 @@ import com.jlsh.aifit.feature.user.ui.ProfileHubScreen
 import com.jlsh.aifit.feature.user.ui.UserProfileScreen
 import com.jlsh.aifit.feature.vision.ui.FoodVisionScreen
 import com.jlsh.aifit.feature.workout.ui.WorkoutDetailScreen
+import com.jlsh.aifit.feature.workout.ui.WorkoutHistoryScreen
 import com.jlsh.aifit.feature.workout.ui.WorkoutLogScreen
 import com.jlsh.aifit.feature.workout.ui.WorkoutSessionScreen
 
@@ -222,6 +223,9 @@ private fun MainNavScreen() {
                             onNavigateToWorkoutDetail = { logId ->
                                 tabNavController.navigate(TrainingRoutes.workoutDetailRoute(logId))
                             },
+                            onNavigateToWorkoutHistory = {
+                                tabNavController.navigate(TrainingRoutes.WORKOUT_HISTORY)
+                            },
                         )
                     }
                     composable(
@@ -353,6 +357,14 @@ private fun MainNavScreen() {
                                     }
                                 }
                             },
+                        )
+                    }
+                    composable(route = TrainingRoutes.WORKOUT_HISTORY) {
+                        WorkoutHistoryScreen(
+                            onNavigateToDetail = { logId ->
+                                tabNavController.navigate(TrainingRoutes.workoutDetailRoute(logId))
+                            },
+                            onNavigateBack = { tabNavController.popBackStack() },
                         )
                     }
                 }

@@ -8,6 +8,7 @@ sealed class TrainingUiEvent {
     ) : TrainingUiEvent()
     data class NavigateToApproval(val planId: String) : TrainingUiEvent()
     data class NavigateToWorkoutLog(val planId: String) : TrainingUiEvent()
+    data object NavigateToWorkoutHistory : TrainingUiEvent()
     data object NavigateBack : TrainingUiEvent()
     data class ShowSnackbar(val message: String) : TrainingUiEvent()
     data object PlanDeleted : TrainingUiEvent()

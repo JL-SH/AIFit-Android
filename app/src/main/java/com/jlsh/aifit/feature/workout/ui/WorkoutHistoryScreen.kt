@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -44,14 +45,30 @@ import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutHistoryUiState
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
+
+// ── Day-of-week labels (Spanish) ──
+
+private val DAY_OF_WEEK_ENTRIES = listOf(
+    DayOfWeek.MONDAY to "Lun",
+    DayOfWeek.TUESDAY to "Mar",
+    DayOfWeek.WEDNESDAY to "Mié",
+    DayOfWeek.THURSDAY to "Jue",
+    DayOfWeek.FRIDAY to "Vie",
+    DayOfWeek.SATURDAY to "Sáb",
+    DayOfWeek.SUNDAY to "Dom",
+)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WorkoutHistoryScreen(
     onNavigateToDetail: (logId: String) -> Unit,
+    onNavigateBack: () -> Unit = {},
     viewModel: WorkoutViewModel = hiltViewModel(),
 ) {
     val historyState by viewModel.historyState.collectAsStateWithLifecycle()
@@ -59,13 +76,14 @@ fun WorkoutHistoryScreen(
     val selectedPlanFilter by viewModel.selectedPlanFilter.collectAsStateWithLifecycle()
     val dateFrom by viewModel.dateFromFilter.collectAsStateWithLifecycle()
     val dateTo by viewModel.dateToFilter.collectAsStateWithLifecycle()
+    val dayOfWeekFilter by viewModel.dayOfWeekFilter.collectAsStateWithLifecycle()
 
     var showDateFromPicker by remember { mutableStateOf(false) }
     var showDateToPicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        viewModel.loadHistory()
         viewModel.loadAvailablePlans()
+        viewModel.loadHistory()
     }
 
     LaunchedEffect(Unit) {
@@ -113,12 +131,14 @@ fun WorkoutHistoryScreen(
                     selectedPlanId = selectedPlanFilter,
                     dateFrom = dateFrom,
                     dateTo = dateTo,
+                    selectedDayOfWeek = dayOfWeekFilter,
                     onPlanSelected = { viewModel.onPlanFilterChanged(it) },
                     onDateFromClick = { showDateFromPicker = true },
                     onDateToClick = { showDateToPicker = true },
                     onClearDateFilter = {
                         viewModel.onDateRangeFilterChanged(from = null, to = null)
                     },
+                    onDayOfWeekSelected = { viewModel.onDayOfWeekFilterChanged(it) },
                 )
 
                 if (state.logs.isEmpty()) {
@@ -140,15 +160,33 @@ fun WorkoutHistoryScreen(
                             start = AiFitSpacing.md,
                             top = AiFitSpacing.sm,
                             end = AiFitSpacing.md,
-                            bottom = AiFitSpacing.xxl + AiFitSpacing.xxl, // U-12/U-13 compliance fix
+                            bottom = AiFitSpacing.xxl + AiFitSpacing.xxl,
                         ),
                         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                     ) {
-                        items(state.logs, key = { it.id }) { log ->
-                            WorkoutLogCard(
-                                log = log,
-                                onClick = { viewModel.onLogClicked(log.id) },
-                            )
+                        state.logsByMonth.forEach { (monthLabel, logsInMonth) ->
+                            // ── Month header ──
+                            item(key = "header_$monthLabel") {
+                                Text(
+                                    text = monthLabel,
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                    ),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(
+                                        top = AiFitSpacing.md,
+                                        bottom = AiFitSpacing.xs,
+                                    ),
+                                )
+                            }
+
+                            items(logsInMonth, key = { it.id }) { log ->
+                                WorkoutLogCard(
+                                    log = log,
+                                    planName = state.planNameMap[log.trainingPlanId],
+                                    onClick = { viewModel.onLogClicked(log.id) },
+                                )
+                            }
                         }
                     }
                 }
@@ -164,10 +202,12 @@ private fun HistoryFiltersBar(
     selectedPlanId: String?,
     dateFrom: String?,
     dateTo: String?,
+    selectedDayOfWeek: DayOfWeek?,
     onPlanSelected: (String?) -> Unit,
     onDateFromClick: () -> Unit,
     onDateToClick: () -> Unit,
     onClearDateFilter: () -> Unit,
+    onDayOfWeekSelected: (DayOfWeek?) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -214,6 +254,31 @@ private fun HistoryFiltersBar(
                         ),
                     )
                 }
+            }
+        }
+
+        // ── Day of week chips ──
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+        ) {
+            DAY_OF_WEEK_ENTRIES.forEach { (day, label) ->
+                FilterChip(
+                    selected = selectedDayOfWeek == day,
+                    onClick = {
+                        onDayOfWeekSelected(if (selectedDayOfWeek == day) null else day)
+                    },
+                    label = {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    ),
+                )
             }
         }
 
@@ -285,30 +350,46 @@ private fun HistoryFiltersBar(
 @Composable
 private fun WorkoutLogCard(
     log: WorkoutLog,
+    planName: String? = null,
     onClick: () -> Unit,
 ) {
+    val dayLabel = log.date.dayOfWeek
+        .getDisplayName(TextStyle.FULL, Locale("es"))
+        .replaceFirstChar { it.uppercase() }
+
     AiFitCard(onClick = onClick) {
         Column(
             modifier = Modifier.padding(AiFitSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
         ) {
+            // Row 1: Date with day name + status badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = log.date.format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                    text = "$dayLabel, ${log.date.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                // Status badge
                 if (log.isLocked) {
                     PlanStatusBadge(status = "COMPLETED")
                 } else {
                     PlanStatusBadge(status = "DRAFT")
                 }
             }
+
+            // Row 2: Plan name
+            if (planName != null) {
+                Text(
+                    text = planName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+
+            // Row 3: Duration, exercises, sets, RPE
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -329,6 +410,13 @@ private fun WorkoutLogCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (log.sets.isNotEmpty()) {
+                        Text(
+                            text = "${log.sets.size} series",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
                 log.perceivedExertion?.let { rpe ->
                     Text(
@@ -372,17 +460,19 @@ private fun WorkoutHistoryScreenPreview() {
                 selectedPlanId = null,
                 dateFrom = null,
                 dateTo = null,
+                selectedDayOfWeek = null,
                 onPlanSelected = {},
                 onDateFromClick = {},
                 onDateToClick = {},
                 onClearDateFilter = {},
+                onDayOfWeekSelected = {},
             )
             LazyColumn(
                 contentPadding = PaddingValues(AiFitSpacing.md),
                 verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
             ) {
                 items(fakeLogs, key = { it.id }) { log ->
-                    WorkoutLogCard(log = log, onClick = {})
+                    WorkoutLogCard(log = log, planName = "Plan Fuerza 4x", onClick = {})
                 }
             }
         }
@@ -412,17 +502,19 @@ private fun WorkoutHistoryScreenLightPreview() {
                 selectedPlanId = null,
                 dateFrom = null,
                 dateTo = null,
+                selectedDayOfWeek = null,
                 onPlanSelected = {},
                 onDateFromClick = {},
                 onDateToClick = {},
                 onClearDateFilter = {},
+                onDayOfWeekSelected = {},
             )
             LazyColumn(
                 contentPadding = PaddingValues(AiFitSpacing.md),
                 verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
             ) {
                 items(fakeLogs, key = { it.id }) { log ->
-                    WorkoutLogCard(log = log, onClick = {})
+                    WorkoutLogCard(log = log, planName = "Plan Hipertrofia", onClick = {})
                 }
             }
         }

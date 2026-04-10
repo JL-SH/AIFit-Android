@@ -28,6 +28,7 @@ object TrainingRoutes {
     const val WORKOUT_SESSION = "training/session/{planId}/{dayId}"
     const val WORKOUT_LOG = "training/workout_log?planId={planId}"
     const val WORKOUT_DETAIL = "training/workout_detail/{logId}"
+    const val WORKOUT_HISTORY = "training/workout_history"
 
     fun detailRoute(planId: String) = "training/detail/$planId"
     fun generateRoute(adaptive: Boolean = false, basePlanId: String? = null) =

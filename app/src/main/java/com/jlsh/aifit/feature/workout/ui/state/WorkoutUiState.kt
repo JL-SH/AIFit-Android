@@ -3,6 +3,7 @@ package com.jlsh.aifit.feature.workout.ui.state
 import com.jlsh.aifit.core.ui.components.layout.UiStateHost
 import com.jlsh.aifit.feature.training.domain.model.TrainingDay
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
+import java.time.DayOfWeek
 
 // --- Logging screen states ---
 
@@ -35,6 +36,12 @@ sealed class WorkoutHistoryUiState {
     data class Error(override val message: String) : WorkoutHistoryUiState(), UiStateHost.Error
     data class Success(
         val logs: List<WorkoutLog>,
+        /** Logs grouped by "MMMM yyyy" key, sorted most-recent month first. */
+        val logsByMonth: Map<String, List<WorkoutLog>> = emptyMap(),
+        /** planId → planName lookup for display. */
+        val planNameMap: Map<String, String> = emptyMap(),
+        /** Currently selected day-of-week filter (null = all). */
+        val selectedDayOfWeek: DayOfWeek? = null,
     ) : WorkoutHistoryUiState(), UiStateHost.Success
 }
 
