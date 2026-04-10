@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.user.ui
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -332,7 +333,11 @@ class UserViewModel @Inject constructor(
                                 date = LocalDate.now().toString(),
                                 notes = "Peso inicial",
                             )
-                            logBodyWeightUseCase(weightRequest) // fire-and-forget
+                            when (val weightResult = logBodyWeightUseCase(weightRequest)) {
+                                is Result.Success -> Log.d("AIFIT_DEBUG", "[CreateProfile] Peso inicial registrado: ${initialWeight}kg")
+                                is Result.Error -> Log.w("AIFIT_DEBUG", "[CreateProfile] Error al registrar peso inicial: ${weightResult.exception.message}")
+                                else -> Unit
+                            }
                         }
 
                         emitEvent(UserUiEvent.ProfileSaved)

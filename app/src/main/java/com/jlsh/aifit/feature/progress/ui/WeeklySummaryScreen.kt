@@ -209,33 +209,7 @@ private fun WeeklySummaryContent(
             }
         }
 
-        // Weight
-        item(key = "weight") {
-            SectionHeader(title = "PESO CORPORAL")
-            AiFitCard {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(AiFitSpacing.md),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "Peso actual",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = if (summary.bodyWeight != null)
-                            "${String.format("%.1f", summary.bodyWeight)} kg"
-                        else
-                            "—",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                    )
-                }
-            }
-        }
+        // Weight section removed — weight is displayed in BodyWeightScreen
     }
 }
 

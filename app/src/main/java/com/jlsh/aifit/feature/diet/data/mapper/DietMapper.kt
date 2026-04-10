@@ -51,7 +51,7 @@ object DietMapper {
         status = PlanStatus.fromString(status),
         totalDays = totalDays ?: days.size,
         createdAt = parseDateTime(createdAt),
-        days = days.map { it.toDomain() },
+        days = days.map { it.toDomain() }.sortedBy { it.dayNumber },
     )
 
     fun DietDayResponseDto.toDomain(): DietDay = DietDay(
