@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.chat.ui
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -164,9 +165,17 @@ class ChatViewModel @Inject constructor(
     }
 
     fun onSendMessage() {
-        val sid = sessionId ?: return
+        val sid = sessionId ?: run {
+            Log.e("AIFIT_DEBUG", "onSendMessage: sessionId es NULL, abortando")
+            return
+        }
         val content = _chatState.value.inputText.trim()
-        if (content.isBlank() || content.length > 4000) return
+        if (content.isBlank() || content.length > 4000) {
+            Log.w("AIFIT_DEBUG", "onSendMessage: contenido inválido (blank=${content.isBlank()}, len=${content.length})")
+            return
+        }
+
+        Log.d("AIFIT_DEBUG", "onSendMessage: inicio — sid=$sid, mensaje='${content.take(80)}…'")
 
         // Optimistic: add USER message immediately
         val userMessage = ChatMessage(
@@ -185,8 +194,12 @@ class ChatViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            Log.d("AIFIT_DEBUG", "onSendMessage: llamando sendChatMessageUseCase…")
+            val startTime = System.currentTimeMillis()
             when (val result = sendChatMessageUseCase(sid, content)) {
                 is Result.Success -> {
+                    val elapsed = System.currentTimeMillis() - startTime
+                    Log.d("AIFIT_DEBUG", "onSendMessage: SUCCESS en ${elapsed}ms — role=${result.data.role}, content='${result.data.content.take(100)}…'")
                     _chatState.update {
                         it.copy(
                             messages = it.messages + result.data,
@@ -195,10 +208,14 @@ class ChatViewModel @Inject constructor(
                     }
                 }
                 is Result.Error -> {
+                    val elapsed = System.currentTimeMillis() - startTime
+                    Log.e("AIFIT_DEBUG", "onSendMessage: ERROR en ${elapsed}ms — ${result.exception}")
                     _chatState.update { it.copy(isWaitingResponse = false) }
                     _events.send(ChatUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
-                else -> Unit
+                else -> {
+                    Log.w("AIFIT_DEBUG", "onSendMessage: resultado inesperado (Loading?)")
+                }
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.chat.data.repository
 
+import android.util.Log
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.feature.chat.data.api.ChatApiService
@@ -88,15 +89,24 @@ class ChatRepositoryImpl @Inject constructor(
     }
 
     override suspend fun sendMessage(sessionId: String, content: String): Result<ChatMessage> {
+        Log.d("AIFIT_DEBUG", "ChatRepo.sendMessage: inicio — sessionId=$sessionId, content='${content.take(50)}…'")
         val request = SendChatMessageRequestDto(content = content)
+        Log.d("AIFIT_DEBUG", "ChatRepo.sendMessage: llamando API POST chat/sessions/$sessionId/messages")
         return when (val r = safeApiCall { apiService.sendMessage(sessionId, request) }) {
             is Result.Success -> {
                 val dto = r.data
+                Log.d("AIFIT_DEBUG", "ChatRepo.sendMessage: API SUCCESS — msgId=${dto.id}, role=${dto.role}, content='${dto.content.take(80)}…'")
                 chatDao.insertMessage(dto.toEntity(sessionId))
                 Result.Success(dto.toDomain())
             }
-            is Result.Error -> r
-            else -> Result.Loading
+            is Result.Error -> {
+                Log.e("AIFIT_DEBUG", "ChatRepo.sendMessage: API ERROR — ${r.exception}")
+                r
+            }
+            else -> {
+                Log.w("AIFIT_DEBUG", "ChatRepo.sendMessage: resultado inesperado (Loading)")
+                Result.Loading
+            }
         }
     }
 

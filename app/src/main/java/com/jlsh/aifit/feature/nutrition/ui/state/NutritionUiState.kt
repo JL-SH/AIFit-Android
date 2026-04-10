@@ -4,6 +4,7 @@ import com.jlsh.aifit.core.ui.components.layout.UiStateHost
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
+import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 
 data class TodayState(
     val nutritionLog: NutritionLog? = null,
@@ -17,6 +18,7 @@ sealed class NutritionHubUiState {
         val todayState: TodayState,
         val dietPlans: List<DietPlan>,
         val selectedTabIndex: Int = 0,
+        val selectedDietPlanFilter: PlanStatus? = null,
     ) : NutritionHubUiState(), UiStateHost.Success
 }
 

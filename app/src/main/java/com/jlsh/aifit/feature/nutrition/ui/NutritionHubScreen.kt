@@ -55,6 +55,7 @@ import com.jlsh.aifit.core.ui.components.display.MacroRingData
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
+import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
 import com.jlsh.aifit.core.ui.components.list.SwipeableListItem
 import com.jlsh.aifit.core.ui.components.layout.AiFitTabRow
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
@@ -81,6 +82,24 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 private val HUB_TABS = listOf("HOY", "PLAN DIETA", "COMPRA")
+
+private val DIET_FILTER_CHIPS = listOf("Todos", "Activo", "Borrador", "Pausado", "Completado")
+
+private fun dietChipToStatus(chip: String): PlanStatus? = when (chip) {
+    "Activo" -> PlanStatus.ACTIVE
+    "Borrador" -> PlanStatus.DRAFT
+    "Pausado" -> PlanStatus.PAUSED
+    "Completado" -> PlanStatus.COMPLETED
+    else -> null
+}
+
+private fun dietStatusToChip(status: PlanStatus?): String = when (status) {
+    PlanStatus.ACTIVE -> "Activo"
+    PlanStatus.DRAFT -> "Borrador"
+    PlanStatus.PAUSED -> "Pausado"
+    PlanStatus.COMPLETED -> "Completado"
+    else -> "Todos"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -178,6 +197,8 @@ fun NutritionHubScreen(
                 )
                 1 -> DietPlanTab(
                     plans = successState.dietPlans,
+                    selectedFilter = successState.selectedDietPlanFilter,
+                    onFilterChanged = viewModel::onDietPlanFilterChanged,
                     onPlanClicked = viewModel::onDietPlanClicked,
                     onCreatePlan = { viewModel.onGenerateDietClicked() },
                 )
@@ -397,6 +418,8 @@ private fun MealRow(
 @Composable
 private fun DietPlanTab(
     plans: List<DietPlan>,
+    selectedFilter: PlanStatus?,
+    onFilterChanged: (PlanStatus?) -> Unit,
     onPlanClicked: (String) -> Unit,
     onCreatePlan: () -> Unit,
 ) {
@@ -423,6 +446,14 @@ private fun DietPlanTab(
         return
     }
 
+    val filteredPlans = if (selectedFilter == null) {
+        plans
+    } else {
+        plans.filter { it.status == selectedFilter }
+    }
+
+    val selectedChip = dietStatusToChip(selectedFilter)
+
     LazyColumn(
         contentPadding = PaddingValues(
             start = AiFitSpacing.md,
@@ -432,35 +463,60 @@ private fun DietPlanTab(
         ),
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
     ) {
-        val activePlan = plans.firstOrNull { it.status == PlanStatus.ACTIVE }
-        activePlan?.let { plan ->
-            item(key = "active_${plan.id}") {
-                AiFitCard(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    onClick = { onPlanClicked(plan.id) },
-                ) {
-                    Column(
-                        modifier = Modifier.padding(AiFitSpacing.md),
-                        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+        // ── Active plan highlight (only when showing "Todos" or "Activo") ──
+        if (selectedFilter == null || selectedFilter == PlanStatus.ACTIVE) {
+            val activePlan = plans.firstOrNull { it.status == PlanStatus.ACTIVE }
+            activePlan?.let { plan ->
+                item(key = "active_${plan.id}") {
+                    AiFitCard(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        onClick = { onPlanClicked(plan.id) },
                     ) {
-                        PlanStatusBadge(status = plan.status.name)
-                        Text(
-                            text = plan.name,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Text(
-                            text = "${plan.durationWeeks} weeks • ${plan.dailyCalories} kcal/day",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Column(
+                            modifier = Modifier.padding(AiFitSpacing.md),
+                            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+                        ) {
+                            PlanStatusBadge(status = plan.status.name)
+                            Text(
+                                text = plan.name,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Text(
+                                text = "${plan.durationWeeks} semanas • ${plan.dailyCalories} kcal/día",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }
         }
 
-        val otherPlans = plans.filter { it.id != activePlan?.id }
-        items(otherPlans, key = { it.id }) { plan ->
+        // ── Filter chips ──
+        item(key = "diet_filter_chips") {
+            Spacer(modifier = Modifier.height(AiFitSpacing.sm))
+            AiFitChipGroup(
+                options = DIET_FILTER_CHIPS,
+                selected = setOf(selectedChip),
+                onSelectionChanged = { selection ->
+                    val chip = selection.firstOrNull() ?: "Todos"
+                    onFilterChanged(dietChipToStatus(chip))
+                },
+                multiSelect = false,
+            )
+            Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+        }
+
+        // ── Filtered plan list (excluding the active card already shown above) ──
+        val activePlanId = plans.firstOrNull { it.status == PlanStatus.ACTIVE }?.id
+        val listPlans = if (selectedFilter == null || selectedFilter == PlanStatus.ACTIVE) {
+            filteredPlans.filter { it.id != activePlanId }
+        } else {
+            filteredPlans
+        }
+
+        items(listPlans, key = { it.id }) { plan ->
             AiFitCard(onClick = { onPlanClicked(plan.id) }) {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -480,7 +536,7 @@ private fun DietPlanTab(
                         PlanStatusBadge(status = plan.status.name)
                     }
                     Text(
-                        text = "${plan.durationWeeks} weeks • ${plan.dailyCalories} kcal/day",
+                        text = "${plan.durationWeeks} semanas • ${plan.dailyCalories} kcal/día",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

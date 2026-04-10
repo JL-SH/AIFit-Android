@@ -127,6 +127,13 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
+    fun onDietPlanFilterChanged(status: com.jlsh.aifit.feature.training.domain.model.PlanStatus?) {
+        val current = _hubState.value
+        if (current is NutritionHubUiState.Success) {
+            _hubState.value = current.copy(selectedDietPlanFilter = status)
+        }
+    }
+
     fun onRefresh() {
         loadHubData()
     }
