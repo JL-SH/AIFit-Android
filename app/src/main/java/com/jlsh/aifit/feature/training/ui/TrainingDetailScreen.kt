@@ -53,6 +53,7 @@ import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.education.ui.EducationViewModel
+import com.jlsh.aifit.feature.education.ui.components.EducationConfirmSheet
 import com.jlsh.aifit.feature.education.ui.components.ExerciseExplanationSheet
 import com.jlsh.aifit.feature.progression.ui.ProgressionViewModel
 import com.jlsh.aifit.feature.progression.ui.components.ProgressionIntroSheet
@@ -84,6 +85,7 @@ fun TrainingDetailScreen(
     val sessionCount by progressionViewModel.sessionCount.collectAsStateWithLifecycle()
 
     var showExplanationForExerciseId by remember { mutableStateOf<String?>(null) }
+    var showExplanationConfirmForExerciseId by remember { mutableStateOf<String?>(null) }
     var showProgressionIntroForExerciseId by remember { mutableStateOf<String?>(null) }
     var showProgressionForExerciseId by remember { mutableStateOf<String?>(null) }
 
@@ -104,6 +106,23 @@ fun TrainingDetailScreen(
     }
 
     // ── Sheets ──
+    if (showExplanationConfirmForExerciseId != null) {
+        EducationConfirmSheet(
+            title = "Explicación del ejercicio",
+            description = "La IA generará una explicación detallada de este ejercicio de tu plan.",
+            confirmText = "Generar explicación",
+            onDismiss = { showExplanationConfirmForExerciseId = null },
+            onConfirm = {
+                val exerciseId = showExplanationConfirmForExerciseId
+                showExplanationConfirmForExerciseId = null
+                if (exerciseId != null) {
+                    showExplanationForExerciseId = exerciseId
+                    educationViewModel.loadExerciseExplanation(exerciseId)
+                }
+            },
+        )
+    }
+
     if (showExplanationForExerciseId != null) {
         ExerciseExplanationSheet(
             state = explanationState,
@@ -188,8 +207,7 @@ fun TrainingDetailScreen(
                 days = readyState.days,
                 sessionCount = sessionCount,
                 onExerciseInfoClick = { exerciseId ->
-                    showExplanationForExerciseId = exerciseId
-                    educationViewModel.loadExerciseExplanation(exerciseId)
+                    showExplanationConfirmForExerciseId = exerciseId
                 },
                 onExerciseProgressionClick = { exerciseId ->
                     showProgressionIntroForExerciseId = exerciseId

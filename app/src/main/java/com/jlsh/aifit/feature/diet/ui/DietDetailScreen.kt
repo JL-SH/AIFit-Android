@@ -50,6 +50,7 @@ import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.education.ui.EducationViewModel
+import com.jlsh.aifit.feature.education.ui.components.EducationConfirmSheet
 import com.jlsh.aifit.feature.education.ui.components.MealExplanationSheet
 import com.jlsh.aifit.feature.education.ui.components.WhyThisMealSheet
 import com.jlsh.aifit.feature.diet.domain.model.DietDay
@@ -78,7 +79,9 @@ fun DietDetailScreen(
     val whyThisState by educationViewModel.whyThisState.collectAsStateWithLifecycle()
 
     var showMealExplanationForId by remember { mutableStateOf<String?>(null) }
+    var showMealExplanationConfirmForId by remember { mutableStateOf<String?>(null) }
     var showWhyThisMealForId by remember { mutableStateOf<String?>(null) }
+    var showWhyThisMealConfirmForId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(planId) {
         viewModel.loadPlanDetail(planId)
@@ -97,6 +100,40 @@ fun DietDetailScreen(
     }
 
     // ── Sheets ──
+    if (showMealExplanationConfirmForId != null) {
+        EducationConfirmSheet(
+            title = "Explicación de la comida",
+            description = "La IA generará una explicación detallada de esta comida de tu plan.",
+            confirmText = "Generar explicación",
+            onDismiss = { showMealExplanationConfirmForId = null },
+            onConfirm = {
+                val mealId = showMealExplanationConfirmForId
+                showMealExplanationConfirmForId = null
+                if (mealId != null) {
+                    showMealExplanationForId = mealId
+                    educationViewModel.loadMealExplanation(mealId)
+                }
+            },
+        )
+    }
+
+    if (showWhyThisMealConfirmForId != null) {
+        EducationConfirmSheet(
+            title = "¿Por qué esta comida?",
+            description = "La IA explicará por qué esta comida fue elegida para tu plan de dieta.",
+            confirmText = "Ver explicación",
+            onDismiss = { showWhyThisMealConfirmForId = null },
+            onConfirm = {
+                val mealId = showWhyThisMealConfirmForId
+                showWhyThisMealConfirmForId = null
+                if (mealId != null) {
+                    showWhyThisMealForId = mealId
+                    educationViewModel.loadWhyThisMeal(mealId)
+                }
+            },
+        )
+    }
+
     if (showMealExplanationForId != null) {
         MealExplanationSheet(
             state = explanationState,
@@ -148,12 +185,10 @@ fun DietDetailScreen(
         DietDetailContent(
             plan = successState.plan,
             onMealInfoClick = { mealId ->
-                showMealExplanationForId = mealId
-                educationViewModel.loadMealExplanation(mealId)
+                showMealExplanationConfirmForId = mealId
             },
             onMealWhyClick = { mealId ->
-                showWhyThisMealForId = mealId
-                educationViewModel.loadWhyThisMeal(mealId)
+                showWhyThisMealConfirmForId = mealId
             },
             modifier = Modifier.padding(paddingValues),
         )

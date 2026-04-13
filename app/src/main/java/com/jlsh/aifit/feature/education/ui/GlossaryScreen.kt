@@ -44,6 +44,7 @@ import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.education.domain.model.GlossaryDefinition
+import com.jlsh.aifit.feature.education.ui.components.EducationConfirmSheet
 import com.jlsh.aifit.feature.education.ui.components.GlossaryIntroSheet
 import com.jlsh.aifit.feature.education.ui.state.GlossaryState
 
@@ -57,11 +58,25 @@ fun GlossaryScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var searchQuery by remember { mutableStateOf("") }
     var showIntroSheet by rememberSaveable { mutableStateOf(true) }
+    var showConfirmSheet by remember { mutableStateOf(false) }
 
     if (showIntroSheet) {
         GlossaryIntroSheet(
             onDismiss = { showIntroSheet = false },
             onConfirm = { showIntroSheet = false },
+        )
+    }
+
+    if (showConfirmSheet && searchQuery.isNotBlank()) {
+        EducationConfirmSheet(
+            title = "Explicación del término",
+            description = "La IA generará una explicación detallada de este concepto de fitness.",
+            confirmText = "Generar explicación",
+            onDismiss = { showConfirmSheet = false },
+            onConfirm = {
+                showConfirmSheet = false
+                viewModel.loadGlossaryTerm(searchQuery.trim())
+            },
         )
     }
 
@@ -94,7 +109,7 @@ fun GlossaryScreen(
                     trailingIcon = Icons.Rounded.Search,
                     onTrailingIconClick = {
                         if (searchQuery.isNotBlank()) {
-                            viewModel.loadGlossaryTerm(searchQuery.trim())
+                            showConfirmSheet = true
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),

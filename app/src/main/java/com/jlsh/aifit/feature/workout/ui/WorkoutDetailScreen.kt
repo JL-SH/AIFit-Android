@@ -49,6 +49,7 @@ import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.education.ui.EducationViewModel
+import com.jlsh.aifit.feature.education.ui.components.EducationConfirmSheet
 import com.jlsh.aifit.feature.education.ui.components.ExerciseExplanationSheet
 import com.jlsh.aifit.feature.progression.ui.ProgressionViewModel
 import com.jlsh.aifit.feature.progression.ui.components.ProgressionRecommendationSheet
@@ -78,6 +79,7 @@ fun WorkoutDetailScreen(
     val recommendationState by progressionViewModel.recommendationState.collectAsStateWithLifecycle()
 
     var showExplanationForExerciseId by remember { mutableStateOf<String?>(null) }
+    var showExplanationConfirmForExerciseId by remember { mutableStateOf<String?>(null) }
     var showProgressionForExerciseId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(logId) {
@@ -95,6 +97,23 @@ fun WorkoutDetailScreen(
     }
 
     // ── Sheets ──
+    if (showExplanationConfirmForExerciseId != null) {
+        EducationConfirmSheet(
+            title = "Explicación del ejercicio",
+            description = "La IA generará una explicación detallada de este ejercicio de tu sesión.",
+            confirmText = "Generar explicación",
+            onDismiss = { showExplanationConfirmForExerciseId = null },
+            onConfirm = {
+                val exerciseId = showExplanationConfirmForExerciseId
+                showExplanationConfirmForExerciseId = null
+                if (exerciseId != null) {
+                    showExplanationForExerciseId = exerciseId
+                    educationViewModel.loadExerciseExplanation(exerciseId)
+                }
+            },
+        )
+    }
+
     if (showExplanationForExerciseId != null) {
         ExerciseExplanationSheet(
             state = explanationState,
@@ -132,8 +151,7 @@ fun WorkoutDetailScreen(
             log = successState.log,
             totalVolume = successState.totalVolume,
             onExerciseInfoClick = { exerciseId ->
-                showExplanationForExerciseId = exerciseId
-                educationViewModel.loadExerciseExplanation(exerciseId)
+                showExplanationConfirmForExerciseId = exerciseId
             },
             onExerciseProgressionClick = { exerciseId ->
                 showProgressionForExerciseId = exerciseId

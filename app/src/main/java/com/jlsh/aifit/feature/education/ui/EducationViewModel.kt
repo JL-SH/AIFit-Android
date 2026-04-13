@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.education.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
@@ -39,10 +40,17 @@ class EducationViewModel @Inject constructor(
 
     fun loadExerciseExplanation(exerciseId: String) {
         viewModelScope.launch {
+            Log.d("AIFIT_DEBUG", "education: llamando exerciseExplanation id=$exerciseId")
             _explanationState.value = ExplanationState.Loading
             when (val result = getExerciseExplanationUseCase(exerciseId)) {
-                is Result.Success -> _explanationState.value = ExplanationState.Success(result.data)
-                is Result.Error -> _explanationState.value = ExplanationState.Error(result.exception.toMessage())
+                is Result.Success -> {
+                    Log.d("AIFIT_DEBUG", "education: exerciseExplanation OK data=${result.data}")
+                    _explanationState.value = ExplanationState.Success(result.data)
+                }
+                is Result.Error -> {
+                    Log.e("AIFIT_DEBUG", "education: exerciseExplanation ERROR=${result.exception}", result.exception)
+                    _explanationState.value = ExplanationState.Error(result.exception.toMessage())
+                }
                 else -> Unit
             }
         }
@@ -50,10 +58,17 @@ class EducationViewModel @Inject constructor(
 
     fun loadMealExplanation(mealId: String) {
         viewModelScope.launch {
+            Log.d("AIFIT_DEBUG", "education: llamando mealExplanation id=$mealId")
             _explanationState.value = ExplanationState.Loading
             when (val result = getMealExplanationUseCase(mealId)) {
-                is Result.Success -> _explanationState.value = ExplanationState.Success(result.data)
-                is Result.Error -> _explanationState.value = ExplanationState.Error(result.exception.toMessage())
+                is Result.Success -> {
+                    Log.d("AIFIT_DEBUG", "education: mealExplanation OK data=${result.data}")
+                    _explanationState.value = ExplanationState.Success(result.data)
+                }
+                is Result.Error -> {
+                    Log.e("AIFIT_DEBUG", "education: mealExplanation ERROR=${result.exception}", result.exception)
+                    _explanationState.value = ExplanationState.Error(result.exception.toMessage())
+                }
                 else -> Unit
             }
         }
@@ -61,10 +76,17 @@ class EducationViewModel @Inject constructor(
 
     fun loadWhyThisExercise(exerciseId: String) {
         viewModelScope.launch {
+            Log.d("AIFIT_DEBUG", "education: llamando whyThisExercise id=$exerciseId")
             _whyThisState.value = WhyThisState.Loading
             when (val result = getWhyThisExerciseUseCase(exerciseId)) {
-                is Result.Success -> _whyThisState.value = WhyThisState.Success(result.data)
-                is Result.Error -> _whyThisState.value = WhyThisState.Error(result.exception.toMessage())
+                is Result.Success -> {
+                    Log.d("AIFIT_DEBUG", "education: whyThisExercise OK data=${result.data}")
+                    _whyThisState.value = WhyThisState.Success(result.data)
+                }
+                is Result.Error -> {
+                    Log.e("AIFIT_DEBUG", "education: whyThisExercise ERROR=${result.exception}", result.exception)
+                    _whyThisState.value = WhyThisState.Error(result.exception.toMessage())
+                }
                 else -> Unit
             }
         }
@@ -72,10 +94,17 @@ class EducationViewModel @Inject constructor(
 
     fun loadWhyThisMeal(mealId: String) {
         viewModelScope.launch {
+            Log.d("AIFIT_DEBUG", "education: llamando whyThisMeal id=$mealId")
             _whyThisState.value = WhyThisState.Loading
             when (val result = getWhyThisMealUseCase(mealId)) {
-                is Result.Success -> _whyThisState.value = WhyThisState.Success(result.data)
-                is Result.Error -> _whyThisState.value = WhyThisState.Error(result.exception.toMessage())
+                is Result.Success -> {
+                    Log.d("AIFIT_DEBUG", "education: whyThisMeal OK data=${result.data}")
+                    _whyThisState.value = WhyThisState.Success(result.data)
+                }
+                is Result.Error -> {
+                    Log.e("AIFIT_DEBUG", "education: whyThisMeal ERROR=${result.exception}", result.exception)
+                    _whyThisState.value = WhyThisState.Error(result.exception.toMessage())
+                }
                 else -> Unit
             }
         }
@@ -83,10 +112,17 @@ class EducationViewModel @Inject constructor(
 
     fun loadGlossaryTerm(term: String) {
         viewModelScope.launch {
+            Log.d("AIFIT_DEBUG", "education: llamando glossary term=$term")
             _glossaryState.value = GlossaryState.Loading
             when (val result = getGlossaryTermUseCase(term)) {
-                is Result.Success -> _glossaryState.value = GlossaryState.Success(result.data)
-                is Result.Error -> _glossaryState.value = GlossaryState.Error(result.exception.toMessage())
+                is Result.Success -> {
+                    Log.d("AIFIT_DEBUG", "education: glossary OK data=${result.data}")
+                    _glossaryState.value = GlossaryState.Success(result.data)
+                }
+                is Result.Error -> {
+                    Log.e("AIFIT_DEBUG", "education: glossary ERROR=${result.exception}", result.exception)
+                    _glossaryState.value = GlossaryState.Error(result.exception.toMessage())
+                }
                 else -> Unit
             }
         }
