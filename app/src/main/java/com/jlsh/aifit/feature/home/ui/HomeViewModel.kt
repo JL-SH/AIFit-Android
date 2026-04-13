@@ -655,8 +655,8 @@ class HomeViewModel @Inject constructor(
         definitions: List<AchievementDefinition>,
         streaks: List<Streak>,
     ): MotivationData {
-        // Last achievement (within last 72h — fallback to most recent)
-        val recentCutoff = LocalDate.now().minusDays(3).toString()
+        // Last achievement (within last 7 days)
+        val recentCutoff = LocalDate.now().minusDays(7).toString()
         val lastAchievement = achievements
             .sortedByDescending { it.unlockedAt }
             .firstOrNull { it.unlockedAt >= recentCutoff }

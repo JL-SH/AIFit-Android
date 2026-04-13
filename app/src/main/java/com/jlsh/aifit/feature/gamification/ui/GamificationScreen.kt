@@ -221,9 +221,15 @@ private fun AchievementsTab(
     userAchievements: List<UserAchievement>,
     allDefinitions: List<AchievementDefinition>,
 ) {
-    val unlockedIds = userAchievements.map { it.achievement.id }.toSet()
+    // Los "conseguidos" vienen directamente del servidor (datos verídicos con IDs reales).
+    // NO los derivamos de allDefinitions para evitar depender de que la API funcione.
+    val unlocked: List<AchievementDefinition> = userAchievements.map { it.achievement }
+    val unlockedCodes: Set<String> = unlocked.map { it.code }.toSet()
 
-    if (allDefinitions.isEmpty()) {
+    // Los "bloqueados" son las definiciones (API o fallback local) que el usuario aún no tiene.
+    val locked: List<AchievementDefinition> = allDefinitions.filter { it.code !in unlockedCodes }
+
+    if (unlocked.isEmpty() && locked.isEmpty()) {
         EmptyStateView(
             icon = Icons.Rounded.EmojiEvents,
             title = "Sin logros disponibles",
@@ -235,9 +241,6 @@ private fun AchievementsTab(
         return
     }
 
-    val unlocked = allDefinitions.filter { it.id in unlockedIds }
-    val locked = allDefinitions.filter { it.id !in unlockedIds }
-
     LazyColumn(
         contentPadding = PaddingValues(AiFitSpacing.md),
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
@@ -246,7 +249,7 @@ private fun AchievementsTab(
         if (unlocked.isNotEmpty()) {
             item(key = "header_unlocked") {
                 Text(
-                    text = "Logros conseguidos",
+                    text = "✅ Logros conseguidos (${unlocked.size})",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = AiFitSpacing.xs),
@@ -266,7 +269,7 @@ private fun AchievementsTab(
         if (locked.isNotEmpty()) {
             item(key = "header_locked") {
                 Text(
-                    text = "Próximos logros",
+                    text = "🔒 Próximos logros (${locked.size})",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(
