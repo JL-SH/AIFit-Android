@@ -10,6 +10,7 @@ sealed class AppException(override val message: String) : Exception(message) {
     data object ConflictException : AppException("Conflict")
     data object ServerException : AppException("Server error")
     data object NetworkException : AppException("Network error")
+    data object InsufficientDataException : AppException("Insufficient data")
     data class UnknownException(override val message: String) : AppException(message)
 }
 

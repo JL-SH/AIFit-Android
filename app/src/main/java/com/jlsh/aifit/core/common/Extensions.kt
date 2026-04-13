@@ -9,5 +9,6 @@ fun AppException.toMessage(): String = when (this) {
     is AppException.ConflictException -> "El recurso ya existe o hay un conflicto."
     is AppException.ServerException -> "Error del servidor. Inténtalo más tarde."
     is AppException.UnknownException -> message.ifBlank { "Error inesperado. Inténtalo de nuevo." }
+    is AppException.InsufficientDataException -> "Necesitas más datos para realizar este análisis. Registra al menos 2 semanas de peso y entrenamientos."
 }
 

@@ -7,6 +7,7 @@ import com.jlsh.aifit.feature.metabolic.domain.model.MetabolicInsight
 sealed class MetabolicUiState {
     data object Loading : MetabolicUiState(), UiStateHost.Loading
     data class Error(override val message: String) : MetabolicUiState(), UiStateHost.Error
+    data object InsufficientData : MetabolicUiState()
     data class Success(
         val analysis: MetabolicAnalysis,
         val insights: List<MetabolicInsight>,

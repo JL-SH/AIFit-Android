@@ -24,6 +24,7 @@ object NetworkErrorMapper {
             403 -> AppException.ForbiddenException
             404 -> AppException.NotFoundException("Resource")
             409 -> AppException.ConflictException
+            422 -> AppException.InsufficientDataException
             in 500..599 -> AppException.ServerException
             else -> AppException.UnknownException("HTTP ${exception.code()}")
         }

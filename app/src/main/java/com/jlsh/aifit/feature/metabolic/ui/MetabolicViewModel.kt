@@ -2,6 +2,7 @@ package com.jlsh.aifit.feature.metabolic.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.metabolic.data.dto.ApplyMetabolicAdjustmentRequestDto
@@ -62,7 +63,11 @@ class MetabolicViewModel @Inject constructor(
                     )
                 }
                 is Result.Error -> {
-                    _uiState.value = MetabolicUiState.Error(analysisResult.exception.toMessage())
+                    _uiState.value = if (analysisResult.exception is AppException.InsufficientDataException) {
+                        MetabolicUiState.InsufficientData
+                    } else {
+                        MetabolicUiState.Error(analysisResult.exception.toMessage())
+                    }
                 }
                 else -> Unit
             }

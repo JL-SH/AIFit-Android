@@ -24,8 +24,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,10 +40,8 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
-import androidx.credentials.exceptions.NoCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -77,7 +77,18 @@ fun LoginScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    // Show session-expired message if we were redirected here due to token expiry (BUG-005)
+    val credentialManager = remember { CredentialManager.create(context) }
+    val signInWithGoogleRequest = remember {
+        GetCredentialRequest.Builder()
+            .addCredentialOption(
+                GetSignInWithGoogleOption
+                    .Builder(BuildConfig.GOOGLE_WEB_CLIENT_ID)
+                    .build()
+            )
+            .build()
+    }
+    var isGoogleSignInInProgress by remember { mutableStateOf(false) }
+
     LaunchedEffect(sessionExpiredMessage) {
         if (!sessionExpiredMessage.isNullOrBlank()) {
             snackbarHostState.showSnackbar(sessionExpiredMessage)
@@ -184,13 +195,13 @@ fun LoginScreen(
                 GoogleSignInButton(
                     text = stringResource(R.string.auth_google_button),
                     onClick = {
+                        if (isGoogleSignInInProgress) return@GoogleSignInButton
                         scope.launch {
+                            isGoogleSignInInProgress = true
                             Log.d("AIFIT", "Google Sign-In: iniciando flujo — WebClientId=${BuildConfig.GOOGLE_WEB_CLIENT_ID.take(20)}…")
-
-                            val credentialManager = CredentialManager.create(context)
-
-                            // Lambda reutilizable para procesar la credencial obtenida
-                            val processCredential: suspend (androidx.credentials.GetCredentialResponse) -> Unit = { result ->
+                            try {
+                                Log.d("AIFIT", "Google Sign-In: lanzando GetSignInWithGoogleOption")
+                                val result = credentialManager.getCredential(context, signInWithGoogleRequest)
                                 val credential = result.credential
                                 Log.d("AIFIT", "Google Sign-In: credencial recibida, tipo=${credential.type}")
                                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
@@ -205,50 +216,6 @@ fun LoginScreen(
                                         context.getString(R.string.auth_google_error)
                                     )
                                 }
-                            }
-
-                            try {
-                                // ── Intento 1: GetGoogleIdOption (One Tap / bottom-sheet automático) ──
-                                val googleIdOption = GetGoogleIdOption.Builder()
-                                    .setFilterByAuthorizedAccounts(false)
-                                    .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
-                                    .build()
-                                val request = GetCredentialRequest.Builder()
-                                    .addCredentialOption(googleIdOption)
-                                    .build()
-                                Log.d("AIFIT", "Google Sign-In: lanzando GetGoogleIdOption")
-                                processCredential(credentialManager.getCredential(context, request))
-
-                            } catch (e: NoCredentialException) {
-                                // ── Intento 2: GetSignInWithGoogleOption (selector de cuenta explícito) ──
-                                // Ocurre cuando el SHA-1 no está registrado en GCP o no hay cuentas autorizadas.
-                                Log.w("AIFIT", "Google Sign-In: GetGoogleIdOption sin credenciales (SHA-1 no registrado o primera vez) → fallback a GetSignInWithGoogleOption", e)
-                                try {
-                                    val signInOption = GetSignInWithGoogleOption
-                                        .Builder(BuildConfig.GOOGLE_WEB_CLIENT_ID)
-                                        .build()
-                                    val request2 = GetCredentialRequest.Builder()
-                                        .addCredentialOption(signInOption)
-                                        .build()
-                                    Log.d("AIFIT", "Google Sign-In: lanzando GetSignInWithGoogleOption")
-                                    processCredential(credentialManager.getCredential(context, request2))
-
-                                } catch (_: GetCredentialCancellationException) {
-                                    Log.d("AIFIT", "Google Sign-In: usuario canceló (fallback)")
-                                } catch (e2: GetCredentialException) {
-                                    Log.e("AIFIT", "Google Sign-In: fallback falló — type=${e2.type}, msg=${e2.message}", e2)
-                                    snackbarHostState.showSnackbar(
-                                        e2.localizedMessage ?: context.getString(R.string.auth_google_error)
-                                    )
-                                } catch (e2: CancellationException) {
-                                        throw e2  // Cancelación normal de ciclo de vida, no es un error
-                                } catch (e2: Exception) {
-                                    Log.e("AIFIT", "Google Sign-In: error inesperado en fallback — ${e2.javaClass.simpleName}: ${e2.message}", e2)
-                                    snackbarHostState.showSnackbar(
-                                        e2.localizedMessage ?: context.getString(R.string.auth_google_error)
-                                    )
-                                }
-
                             } catch (_: GetCredentialCancellationException) {
                                 Log.d("AIFIT", "Google Sign-In: usuario canceló el flujo")
                             } catch (e: GoogleIdTokenParsingException) {
@@ -262,12 +229,14 @@ fun LoginScreen(
                                     e.localizedMessage ?: context.getString(R.string.auth_google_error)
                                 )
                             } catch (e: CancellationException) {
-                                throw e  // Cancelación normal de ciclo de vida (ej: navegación tras login), no es un error
+                                throw e  // Cancelación de ciclo de vida, no es un error
                             } catch (e: Exception) {
                                 Log.e("AIFIT", "Google Sign-In: error inesperado — ${e.javaClass.simpleName}: ${e.message}", e)
                                 snackbarHostState.showSnackbar(
                                     e.localizedMessage ?: context.getString(R.string.auth_google_error)
                                 )
+                            } finally {
+                                isGoogleSignInInProgress = false
                             }
                         }
                     },

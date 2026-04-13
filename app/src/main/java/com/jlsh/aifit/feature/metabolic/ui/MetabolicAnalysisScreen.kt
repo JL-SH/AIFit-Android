@@ -18,9 +18,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.TrendingDown
 import androidx.compose.material.icons.automirrored.rounded.TrendingUp
+import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +42,7 @@ import com.jlsh.aifit.core.ui.components.display.AdherenceBar
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
+import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.components.layout.SectionHeader
@@ -74,6 +77,12 @@ fun MetabolicAnalysisScreen(
         }
     }
 
+    // Estado específico: datos insuficientes — no usar ScreenScaffold para poder mostrar pantalla propia
+    if (uiState is MetabolicUiState.InsufficientData) {
+        MetabolicInsufficientDataScreen(onBack = onNavigateBack)
+        return
+    }
+
     ScreenScaffold<MetabolicUiState.Success>(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
@@ -91,6 +100,43 @@ fun MetabolicAnalysisScreen(
             state = successState,
             onApplyAdjustment = viewModel::onApplyAdjustment,
         )
+    }
+}
+
+@Composable
+private fun MetabolicInsufficientDataScreen(onBack: () -> Unit) {
+    Scaffold(
+        topBar = {
+            AiFitTopBar(
+                title = "Análisis metabólico",
+                onBack = onBack,
+                background = MaterialTheme.colorScheme.background,
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+                modifier = Modifier.padding(horizontal = 16.dp),
+            ) {
+                EmptyStateView(
+                    icon = Icons.Rounded.BarChart,
+                    title = "Datos insuficientes",
+                    subtitle = "Necesitas al menos 2 semanas de datos de peso y entrenamiento para recibir tu análisis metabólico personalizado.",
+                )
+                PrimaryButton(
+                    text = "Entendido",
+                    onClick = onBack,
+                )
+            }
+        }
     }
 }
 
