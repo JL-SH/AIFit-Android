@@ -25,11 +25,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -644,7 +646,12 @@ private fun ShoppingTab(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(AiFitSpacing.md),
+                                            .padding(
+                                                start = AiFitSpacing.md,
+                                                top = AiFitSpacing.sm,
+                                                bottom = AiFitSpacing.sm,
+                                                end = 4.dp,
+                                            ),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
@@ -659,11 +666,15 @@ private fun ShoppingTab(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
                                         }
-                                        Icon(
-                                            imageVector = Icons.Rounded.ShoppingCart,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primaryContainer,
-                                        )
+                                        IconButton(
+                                            onClick = { deleteDialogListId = shoppingList.id },
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.DeleteOutline,
+                                                contentDescription = "Eliminar lista",
+                                                tint = MaterialTheme.colorScheme.error,
+                                            )
+                                        }
                                     }
                                 }
                             }

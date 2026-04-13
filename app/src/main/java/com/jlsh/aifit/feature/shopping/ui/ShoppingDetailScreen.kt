@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -426,19 +425,11 @@ private fun AddItemForm(
                 },
                 enabled = canAdd,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Rounded.Add,
-                        contentDescription = "Añadir",
-                        tint = if (canAdd) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Añadir",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (canAdd) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = "Añadir",
+                    tint = if (canAdd) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                )
             }
         }
     }
