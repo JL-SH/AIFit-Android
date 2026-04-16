@@ -77,8 +77,13 @@ fun MetabolicAnalysisScreen(
         }
     }
 
-    // Estado específico: datos insuficientes — no usar ScreenScaffold para poder mostrar pantalla propia
-    if (uiState is MetabolicUiState.InsufficientData) {
+    // Estado específico: datos insuficientes — mostrar pantalla dedicada (puede venir por InsufficientData
+    // o por Success con status == INSUFFICIENT_DATA devuelto por el backend)
+    val currentState = uiState
+    val isInsufficientData = currentState is MetabolicUiState.InsufficientData ||
+        (currentState is MetabolicUiState.Success &&
+            currentState.analysis.status == MetabolicStatus.INSUFFICIENT_DATA)
+    if (isInsufficientData) {
         MetabolicInsufficientDataScreen(onBack = onNavigateBack)
         return
     }
@@ -168,22 +173,6 @@ private fun MetabolicContent(
             val trend = state.analysis.weightTrend
             if (trend != null && trend.trend != "INSUFFICIENT_DATA") {
                 WeightTrendCard(trend = trend)
-            } else {
-                AiFitCard {
-                    Column(modifier = Modifier.padding(AiFitSpacing.md)) {
-                        Text(
-                            text = "Tendencia de peso",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Spacer(modifier = Modifier.height(AiFitSpacing.xs))
-                        Text(
-                            text = "No hay suficientes datos de peso para calcular la tendencia. Registra tu peso durante al menos 2 semanas.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
             }
         }
 
