@@ -34,8 +34,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.chat.ChatBubble
 import com.jlsh.aifit.core.ui.components.chat.ChatInputBar
+import com.jlsh.aifit.core.ui.components.chat.TypingIndicator
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
-import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.LocalBottomBarVisibility
@@ -165,8 +165,7 @@ private fun ChatContent(
             // Typing indicator (appears first visually = bottom)
             if (state.isWaitingResponse) {
                 item(key = "typing") {
-                    InlineLoadingIndicator(
-                        message = "AI Coach está escribiendo…",
+                    TypingIndicator(
                         modifier = Modifier.padding(vertical = AiFitSpacing.sm),
                     )
                 }
