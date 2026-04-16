@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -133,15 +134,11 @@ class TrainingViewModel @Inject constructor(
     }
 
     fun onActivatePlan(planId: String) {
-        // TODO: remove diagnostic log below
         Log.d("AIFIT_PLANS", "onActivatePlan START — planId=$planId")
 
-        // Capture previous states for rollback on error
         val previousUiState = _uiState.value
         val previousHubState = _hubUiState.value
 
-        // Optimistic update: reflect activation immediately so the UI responds without waiting
-        // for the ~3-second API call.
         val currentSuccess = previousUiState as? TrainingUiState.Success
         if (currentSuccess != null) {
             val optimisticPlans = currentSuccess.plans.map { plan ->
@@ -154,6 +151,7 @@ class TrainingViewModel @Inject constructor(
             _uiState.value = currentSuccess.copy(
                 plans = optimisticPlans,
                 activePlan = optimisticPlans.firstOrNull { it.status == PlanStatus.ACTIVE },
+                isActivatingPlan = true,
             )
             _hubUiState.value = computeHubState(optimisticPlans)
         }
@@ -161,16 +159,17 @@ class TrainingViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = setActivePlanUseCase(planId)) {
                 is Result.Success -> {
-                    // TODO: remove diagnostic log below
                     Log.d("AIFIT_PLANS", "onActivatePlan SUCCESS — planId=$planId")
                     fetchPlans()
+                    // Clear activation overlay after fetchPlans completes
+                    _uiState.update { cur ->
+                        if (cur is TrainingUiState.Success) cur.copy(isActivatingPlan = false) else cur
+                    }
                 }
                 is Result.Error -> {
-                    // Restore previous state so the optimistic change is undone
                     _uiState.value = previousUiState
                     _hubUiState.value = previousHubState
                     if (result.exception is AppException.NotFoundException) {
-                        // TODO: remove diagnostic log below
                         Log.d("AIFIT_PLANS", "onActivatePlan ERROR (NotFound) — planId=$planId")
                         emitEvent(TrainingUiEvent.ShowSnackbar("Este plan ya no existe. Actualizando lista..."))
                         fetchPlans()

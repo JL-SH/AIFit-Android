@@ -1,7 +1,9 @@
 package com.jlsh.aifit.feature.training.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,6 +19,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,6 +57,7 @@ import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.training.domain.model.TrainingDay
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.training.ui.state.TrainingHubUiState
+import com.jlsh.aifit.feature.training.ui.state.TrainingUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
 import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.GoalType
@@ -90,6 +94,7 @@ fun TrainingHubScreen(
     viewModel: TrainingViewModel = hiltViewModel(),
 ) {
     val hubState by viewModel.hubUiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -146,6 +151,9 @@ fun TrainingHubScreen(
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
+        val isActivating = (uiState as? TrainingUiState.Success)?.isActivatingPlan == true
+
+        Box(modifier = Modifier.fillMaxSize()) {
         when (val state = hubState) {
             is TrainingHubUiState.Loading -> LoadingScreen(
                 modifier = Modifier.padding(paddingValues),
@@ -192,6 +200,31 @@ fun TrainingHubScreen(
                 )
             }
         }
+
+            // ── Activation overlay ──
+            if (isActivating) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = "Activando plan…",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.inverseOnSurface,
+                        )
+                    }
+                }
+            }
+        } // Box
     }
 }
 

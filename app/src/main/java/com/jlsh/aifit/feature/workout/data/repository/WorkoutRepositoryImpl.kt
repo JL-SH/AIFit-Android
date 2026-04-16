@@ -76,12 +76,19 @@ class WorkoutRepositoryImpl @Inject constructor(
 
         when (val remote = safeApiCall { apiService.getWorkoutLogs(planId, from, to) }) {
             is Result.Success -> {
+                val serverIds = remote.data.map { it.id }.toSet()
+                pendingDeleteIds.removeAll { it !in serverIds }
                 val logs = remote.data.map { it.toDomain() }
                     .filter { it.id !in pendingDeleteIds }
-                // TODO: remove diagnostic log below
                 Log.d("AIFIT_REPO", "getHistory network emission — count=${logs.size}, logs=${logs.map { "id=${it.id} isLocked=${it.isLocked} date=${it.date}" }}")
-                dao.upsertAll(logs.map { it.toEntity() })
-                emit(Result.Success(logs))
+                // Only upsert items NOT pending deletion (re-check at upsert time to
+                // close the race window where deleteLog adds an ID between filter and upsert).
+                val safeToUpsert = logs.filter { it.id !in pendingDeleteIds }
+                dao.upsertAll(safeToUpsert.map { it.toEntity() })
+                // Also remove any pending-delete items that may have been re-inserted
+                // by a prior racing upsert.
+                pendingDeleteIds.forEach { id -> dao.deleteById(id) }
+                emit(Result.Success(logs.filter { it.id !in pendingDeleteIds }))
             }
             is Result.Error -> {
                 if (cached.isEmpty()) emit(remote)
@@ -99,20 +106,19 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteLog(id: String): Result<Unit> {
-        // Optimistic delete: remove from Room first so the UI never shows the
-        // item the user just deleted, then confirm with the API.
+        pendingDeleteIds.add(id)
         val backup = dao.getById(id)
         dao.deleteById(id)
-        pendingDeleteIds.add(id)
 
         return when (val remote = safeApiCall { apiService.deleteWorkoutLog(id) }) {
             is Result.Success -> {
-                pendingDeleteIds.remove(id)
+                // Keep id in pendingDeleteIds — it will be cleaned up by the next
+                // getHistory() network response confirming the server no longer returns it.
+                dao.deleteById(id) // ensure no racing upsert left the row behind
                 Result.Success(Unit)
             }
             is Result.Error -> {
                 pendingDeleteIds.remove(id)
-                // Rollback: re-insert the entity so local state stays consistent
                 if (backup != null) dao.upsertAll(listOf(backup))
                 remote
             }

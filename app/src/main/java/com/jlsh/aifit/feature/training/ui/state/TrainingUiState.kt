@@ -11,6 +11,7 @@ sealed class TrainingUiState {
         val activePlan: TrainingPlan? = null,
         val selectedTabIndex: Int = 0,
         val isRefreshing: Boolean = false,
+        val isActivatingPlan: Boolean = false,
     ) : TrainingUiState(), UiStateHost.Success
 }
 

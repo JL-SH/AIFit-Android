@@ -100,10 +100,8 @@ private val WEEKS_OPTIONS = listOf(
 private val GOAL_OPTIONS = listOf(
     "GAIN_MUSCLE" to "Ganar músculo",
     "LOSE_WEIGHT" to "Perder grasa",
-    "IMPROVE_ENDURANCE" to "Ganar resistencia",
     "MAINTAIN" to "Mantenimiento",
-    "STRENGTH" to "Fuerza",
-    "ATHLETIC_PERFORMANCE" to "Rendimiento atlético",
+    "BODY_RECOMPOSITION" to "Recomposición corporal",
 )
 
 private val LOCATION_OPTIONS = listOf(

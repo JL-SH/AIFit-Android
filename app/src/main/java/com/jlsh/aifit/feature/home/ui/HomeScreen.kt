@@ -1,6 +1,10 @@
 package com.jlsh.aifit.feature.home.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +36,7 @@ import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -208,15 +213,29 @@ private fun HomeContent(
     onProfile: () -> Unit,
     onCreatePlan: () -> Unit,
 ) {
-    LazyColumn(
-        contentPadding = PaddingValues(
-            start = AiFitSpacing.md,
-            end = AiFitSpacing.md,
-            top = AiFitSpacing.sm,
-            bottom = 88.dp,
-        ),
-        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Subtle progress bar shown while the active plan is being re-fetched on resume
+        AnimatedVisibility(
+            visible = state.isRefreshingPlan,
+            enter = fadeIn(tween(200)),
+            exit = fadeOut(tween(300)),
+        ) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            )
+        }
+
+        LazyColumn(
+            contentPadding = PaddingValues(
+                start = AiFitSpacing.md,
+                end = AiFitSpacing.md,
+                top = AiFitSpacing.sm,
+                bottom = 88.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
+        ) {
         item(key = "greeting") {
             GreetingHeader(
                 userName = state.userName,
@@ -226,13 +245,13 @@ private fun HomeContent(
         }
 
         item(key = "training") {
-            TodayTrainingCard(
-                training = state.todayTraining,
-                activePlan = state.activePlan,
-                onStartSession = onStartSession,
-                onViewDetail = onViewDetail,
-                onCreatePlan = onCreatePlan,
-            )
+                    TodayTrainingCard(
+                        training = state.todayTraining,
+                        activePlan = state.activePlan,
+                        onStartSession = onStartSession,
+                        onViewDetail = onViewDetail,
+                        onCreatePlan = onCreatePlan,
+                    )
         }
 
         // ── Motivation card (BUG-026) ──
@@ -301,7 +320,8 @@ private fun HomeContent(
                 )
             }
         }
-    }
+    } // end LazyColumn
+    } // end Column wrapper
 }
 
 // ── 1. Greeting ──────────────────────────────────────────────────────────────
@@ -348,6 +368,7 @@ private fun GreetingHeader(
 }
 
 // ── 2. Today's Training ──────────────────────────────────────────────────────
+
 
 @Composable
 private fun TodayTrainingCard(

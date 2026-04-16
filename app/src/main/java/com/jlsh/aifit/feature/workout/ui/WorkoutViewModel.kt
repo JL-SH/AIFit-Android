@@ -20,6 +20,7 @@ import com.jlsh.aifit.feature.workout.ui.state.WorkoutDetailUiState
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutHistoryUiState
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutUiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -84,6 +85,9 @@ class WorkoutViewModel @Inject constructor(
 
     private val _dayOfWeekFilter = MutableStateFlow<DayOfWeek?>(null)
     val dayOfWeekFilter: StateFlow<DayOfWeek?> = _dayOfWeekFilter.asStateFlow()
+
+    /** Tracks the active loadHistory coroutine so it can be cancelled before a delete. */
+    private var historyJob: Job? = null
 
     // ===== LOGGING =====
 
@@ -204,7 +208,8 @@ class WorkoutViewModel @Inject constructor(
     // ===== HISTORY =====
 
     fun loadHistory() {
-        viewModelScope.launch {
+        historyJob?.cancel()
+        historyJob = viewModelScope.launch {
             getWorkoutHistoryUseCase(
                 planId = _selectedPlanFilter.value,
                 from = _dateFromFilter.value,
@@ -292,6 +297,13 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun onDeleteLog(logId: String) {
+        // Cancel any in-flight loadHistory coroutine BEFORE the delete.
+        // Without this cancellation, the stale network response from the ongoing
+        // loadHistory flow (which arrives ~4-6s later) would overwrite the
+        // optimistic UI update with the full list — making the deleted item reappear.
+        historyJob?.cancel()
+        historyJob = null
+
         viewModelScope.launch {
             // Optimistic UI update: remove the log from the history state immediately
             // so it never flashes when the user navigates back.
@@ -305,12 +317,16 @@ class WorkoutViewModel @Inject constructor(
 
             when (val result = deleteWorkoutLogUseCase(logId)) {
                 is Result.Success -> {
-                    emitEvent(WorkoutUiEvent.ShowSnackbar("Session deleted"))
+                    emitEvent(WorkoutUiEvent.ShowSnackbar("Sesión eliminada"))
                     emitEvent(WorkoutUiEvent.NavigateBack)
+                    // Reload history after navigating back so the list is fresh
+                    // and the deleted item cannot reappear from a stale response.
+                    loadHistory()
                 }
                 is Result.Error -> {
-                    // Rollback the optimistic UI update
+                    // Rollback the optimistic UI update and reload fresh data
                     _historyState.value = previousHistoryState
+                    loadHistory()
                     emitEvent(WorkoutUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
                 else -> Unit

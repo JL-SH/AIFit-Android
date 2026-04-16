@@ -292,6 +292,11 @@ class HomeViewModel @Inject constructor(
         // BUG-B fix: always recalculate nextMeal with the current time
         refreshNextMeal()
         viewModelScope.launch {
+            // Signal to the UI that we are re-checking the active plan
+            _uiState.update { cur ->
+                if (cur is HomeUiState.Success) cur.copy(isRefreshingPlan = true) else cur
+            }
+
             // Re-query plans to detect any activation that happened while away.
             // Process each emission (cache then network) immediately so the UI
             // reflects the change as soon as Room is read — without waiting for
@@ -312,6 +317,7 @@ class HomeViewModel @Inject constructor(
                             if (cur is HomeUiState.Success) cur.copy(
                                 activePlan = cachedActivePlanSummary,
                                 todayTraining = null, // clear old plan's exercises immediately
+                                isRefreshingPlan = true,
                             ) else cur
                         }
                         // Now load full detail (days + exercises) in the background
@@ -328,6 +334,7 @@ class HomeViewModel @Inject constructor(
                         _uiState.update { cur ->
                             if (cur is HomeUiState.Success) cur.copy(
                                 activePlan = cachedActivePlanSummary,
+                                isRefreshingPlan = true,
                             ) else cur
                         }
                         val detail = loadPlanDetail(resolvedActivePlan.id)
@@ -346,6 +353,7 @@ class HomeViewModel @Inject constructor(
                             if (current is HomeUiState.Success) current.copy(
                                 todayTraining = null,
                                 activePlan = null,
+                                isRefreshingPlan = false,
                             ) else current
                         }
                     }
@@ -355,6 +363,11 @@ class HomeViewModel @Inject constructor(
                         refreshWorkoutStatus()
                     }
                 }
+            }
+
+            // All emissions processed — refresh complete
+            _uiState.update { cur ->
+                if (cur is HomeUiState.Success) cur.copy(isRefreshingPlan = false) else cur
             }
         }
     }
