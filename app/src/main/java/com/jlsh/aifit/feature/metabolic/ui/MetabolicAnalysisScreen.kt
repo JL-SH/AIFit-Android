@@ -132,7 +132,7 @@ private fun MetabolicInsufficientDataScreen(onBack: () -> Unit) {
                     subtitle = "Necesitas al menos 2 semanas de datos de peso y entrenamiento para recibir tu análisis metabólico personalizado.",
                 )
                 PrimaryButton(
-                    text = "Entendido",
+                    text = "Volver",
                     onClick = onBack,
                 )
             }
@@ -261,13 +261,13 @@ private fun MetabolicContent(
 @Composable
 private fun StatusSection(status: MetabolicStatus) {
     val statusLabel = when (status) {
-        MetabolicStatus.ON_TRACK -> "ON TRACK"
-        MetabolicStatus.STAGNATED -> "STAGNATED"
-        MetabolicStatus.UNDER_EATING_SIGNAL -> "UNDER EATING"
-        MetabolicStatus.OVER_EATING_SIGNAL -> "OVER EATING"
-        MetabolicStatus.PROGRESSING_TOO_FAST -> "PROGRESSING TOO FAST"
-        MetabolicStatus.INSUFFICIENT_DATA -> "INSUFFICIENT DATA"
-        MetabolicStatus.UNKNOWN -> "UNKNOWN"
+        MetabolicStatus.ON_TRACK -> "En objetivo"
+        MetabolicStatus.STAGNATED -> "Estancado"
+        MetabolicStatus.UNDER_EATING_SIGNAL -> "Comiendo poco"
+        MetabolicStatus.OVER_EATING_SIGNAL -> "Comiendo de más"
+        MetabolicStatus.PROGRESSING_TOO_FAST -> "Progreso demasiado rápido"
+        MetabolicStatus.INSUFFICIENT_DATA -> "Datos insuficientes"
+        MetabolicStatus.UNKNOWN -> "Desconocido"
     }
 
     PlanStatusBadge(status = statusLabel)
@@ -309,7 +309,7 @@ private fun WeightTrendCard(trend: WeightTrend) {
             TrendStatRow("Cambio semanal esperado", "${"%.2f".format(trend.expectedWeeklyChange)} kg")
             TrendStatRow("Desviación", "${"%.2f".format(trend.deviationFromExpected)} kg")
             TrendStatRow("Puntos de datos", "${trend.dataPoints}")
-            TrendStatRow("Tendencia", trend.trend)
+            TrendStatRow("Tendencia", translateTrend(trend.trend))
         }
     }
 }
@@ -405,7 +405,7 @@ private fun RecommendationCard(
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
             )
 
-            PlanStatusBadge(status = recommendation.type.name.replace("_", " "))
+            PlanStatusBadge(status = translateAdjustmentType(recommendation.type))
 
             TrendStatRow("Calorías sugeridas", "${recommendation.suggestedCalorieTarget} kcal")
             TrendStatRow("Proteína", "${"%.0f".format(recommendation.suggestedProteinTarget)}g")
@@ -415,8 +415,8 @@ private fun RecommendationCard(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
             ) {
-                PlanStatusBadge(status = recommendation.magnitude.name)
-                PlanStatusBadge(status = recommendation.urgency.name)
+                PlanStatusBadge(status = translateAdjustmentMagnitude(recommendation.magnitude))
+                PlanStatusBadge(status = translateAdjustmentUrgency(recommendation.urgency))
             }
 
             PrimaryButton(
@@ -443,7 +443,7 @@ private fun InsightRow(insight: MetabolicInsight) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                PlanStatusBadge(status = insight.statusAtTime.name)
+                PlanStatusBadge(status = translateMetabolicStatus(insight.statusAtTime))
                 Text(
                     text = insight.appliedAt.take(10),
                     style = MaterialTheme.typography.bodySmall,
@@ -470,7 +470,7 @@ private fun InsightRow(insight: MetabolicInsight) {
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primaryContainer,
                 )
-                PlanStatusBadge(status = insight.magnitude.name)
+                PlanStatusBadge(status = translateAdjustmentMagnitude(insight.magnitude))
             }
 
             Text(
@@ -481,6 +481,49 @@ private fun InsightRow(insight: MetabolicInsight) {
             )
         }
     }
+}
+
+// ── Helpers de traducción ─────────────────────────────────────────────────────
+
+private fun translateMetabolicStatus(status: MetabolicStatus): String = when (status) {
+    MetabolicStatus.ON_TRACK -> "En objetivo"
+    MetabolicStatus.STAGNATED -> "Estancado"
+    MetabolicStatus.UNDER_EATING_SIGNAL -> "Comiendo poco"
+    MetabolicStatus.OVER_EATING_SIGNAL -> "Comiendo de más"
+    MetabolicStatus.PROGRESSING_TOO_FAST -> "Progreso demasiado rápido"
+    MetabolicStatus.INSUFFICIENT_DATA -> "Datos insuficientes"
+    MetabolicStatus.UNKNOWN -> "Desconocido"
+}
+
+private fun translateAdjustmentType(type: AdjustmentType): String = when (type) {
+    AdjustmentType.INCREASE_CALORIES -> "Aumentar calorías"
+    AdjustmentType.DECREASE_CALORIES -> "Reducir calorías"
+    AdjustmentType.INCREASE_PROTEIN -> "Aumentar proteína"
+    AdjustmentType.REBALANCE_MACROS -> "Reequilibrar macros"
+    AdjustmentType.MAINTAIN -> "Mantener"
+    AdjustmentType.UNKNOWN -> "Desconocido"
+}
+
+private fun translateAdjustmentMagnitude(magnitude: AdjustmentMagnitude): String = when (magnitude) {
+    AdjustmentMagnitude.MINOR -> "Leve"
+    AdjustmentMagnitude.MODERATE -> "Moderado"
+    AdjustmentMagnitude.SIGNIFICANT -> "Significativo"
+    AdjustmentMagnitude.UNKNOWN -> "Desconocido"
+}
+
+private fun translateAdjustmentUrgency(urgency: AdjustmentUrgency): String = when (urgency) {
+    AdjustmentUrgency.INFORMATIONAL -> "Informativo"
+    AdjustmentUrgency.SUGGESTED -> "Sugerido"
+    AdjustmentUrgency.RECOMMENDED -> "Recomendado"
+    AdjustmentUrgency.UNKNOWN -> "Desconocido"
+}
+
+private fun translateTrend(trend: String): String = when (trend.uppercase()) {
+    "STABLE" -> "Estable"
+    "LOSING" -> "Bajando"
+    "GAINING" -> "Subiendo"
+    "INSUFFICIENT_DATA" -> "Datos insuficientes"
+    else -> trend
 }
 
 // ── Preview ──────────────────────────────────────────────────────────────────
