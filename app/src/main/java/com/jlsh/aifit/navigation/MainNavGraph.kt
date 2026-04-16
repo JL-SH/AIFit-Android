@@ -523,6 +523,15 @@ private fun MainNavScreen() {
                             onNavigateToChat = { sessionId ->
                                 tabNavController.navigate(CoachRoutes.chatRoute(sessionId))
                             },
+                            onNavigateToNewChat = {
+                                tabNavController.navigate(CoachRoutes.newChatRoute())
+                            },
+                        )
+                    }
+                    // Ruta para chat nuevo (sin sessionId — sesión se crea al primer mensaje)
+                    composable(route = CoachRoutes.NEW_CHAT) {
+                        ChatScreen(
+                            onNavigateBack = { tabNavController.popBackStack() },
                         )
                     }
                     composable(

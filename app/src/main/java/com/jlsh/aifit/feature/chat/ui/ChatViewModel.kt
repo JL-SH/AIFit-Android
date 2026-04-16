@@ -10,8 +10,10 @@ import com.jlsh.aifit.feature.chat.domain.model.ChatMessage
 import com.jlsh.aifit.feature.chat.domain.model.ChatMessageRole
 import com.jlsh.aifit.feature.chat.domain.usecase.ArchiveChatSessionUseCase
 import com.jlsh.aifit.feature.chat.domain.usecase.DeleteChatSessionUseCase
+import com.jlsh.aifit.feature.chat.domain.usecase.GenerateChatSessionTitleUseCase
 import com.jlsh.aifit.feature.chat.domain.usecase.GetChatSessionUseCase
 import com.jlsh.aifit.feature.chat.domain.usecase.GetChatSessionsUseCase
+import com.jlsh.aifit.feature.chat.domain.usecase.RenameChatSessionUseCase
 import com.jlsh.aifit.feature.chat.domain.usecase.SendChatMessageUseCase
 import com.jlsh.aifit.feature.chat.domain.usecase.StartChatSessionUseCase
 import com.jlsh.aifit.feature.chat.ui.state.ChatListUiState
@@ -38,6 +40,8 @@ class ChatViewModel @Inject constructor(
     private val sendChatMessageUseCase: SendChatMessageUseCase,
     private val archiveChatSessionUseCase: ArchiveChatSessionUseCase,
     private val deleteChatSessionUseCase: DeleteChatSessionUseCase,
+    private val renameChatSessionUseCase: RenameChatSessionUseCase,
+    private val generateChatSessionTitleUseCase: GenerateChatSessionTitleUseCase,
 ) : ViewModel() {
 
     // ── Session List State ───────────────────────────────────────────────────
@@ -52,12 +56,17 @@ class ChatViewModel @Inject constructor(
     private val _events = Channel<ChatUiEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
-    private val sessionId: String? = savedStateHandle.get<String>("sessionId")
+    // Puede ser null cuando el usuario navega a "nuevo chat" sin haber enviado nada aún.
+    // Se asigna el id real en el primer envío.
+    private val savedSessionId: String? = savedStateHandle.get<String>("sessionId")
+    private var effectiveSessionId: String? = savedSessionId
 
     init {
-        if (sessionId != null) {
-            loadSession(sessionId)
+        if (savedSessionId != null) {
+            loadSession(savedSessionId)
         } else {
+            // Chat nuevo: mostrar pantalla vacía lista para escribir
+            _chatState.value = ChatState(isLoading = false)
             loadSessions()
         }
     }
@@ -87,16 +96,9 @@ class ChatViewModel @Inject constructor(
     }
 
     fun onNewSession() {
+        // Navegar a chat nuevo SIN llamar al backend todavía
         viewModelScope.launch {
-            when (val result = startChatSessionUseCase()) {
-                is Result.Success -> {
-                    _events.send(ChatUiEvent.SessionCreated(result.data.id))
-                }
-                is Result.Error -> {
-                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.toMessage()))
-                }
-                else -> Unit
-            }
+            _events.send(ChatUiEvent.NavigateToNewChat)
         }
     }
 
@@ -121,6 +123,21 @@ class ChatViewModel @Inject constructor(
                 is Result.Success -> {
                     loadSessions()
                     _events.send(ChatUiEvent.ShowSnackbar("Sesión archivada"))
+                }
+                is Result.Error -> {
+                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    fun onRenameSession(id: String, newTitle: String) {
+        viewModelScope.launch {
+            when (val result = renameChatSessionUseCase(id, newTitle.trim())) {
+                is Result.Success -> {
+                    loadSessions()
+                    _events.send(ChatUiEvent.ShowSnackbar("Conversación renombrada"))
                 }
                 is Result.Error -> {
                     _events.send(ChatUiEvent.ShowSnackbar(result.exception.toMessage()))
@@ -165,19 +182,16 @@ class ChatViewModel @Inject constructor(
     }
 
     fun onSendMessage() {
-        val sid = sessionId ?: run {
-            Log.e("AIFIT_DEBUG", "onSendMessage: sessionId es NULL, abortando")
-            return
-        }
         val content = _chatState.value.inputText.trim()
         if (content.isBlank() || content.length > 4000) {
             Log.w("AIFIT_DEBUG", "onSendMessage: contenido inválido (blank=${content.isBlank()}, len=${content.length})")
             return
         }
 
-        Log.d("AIFIT_DEBUG", "onSendMessage: inicio — sid=$sid, mensaje='${content.take(80)}…'")
+        // ¿Es el primer mensaje de una sesión nueva (aún sin ID)?
+        val isNewSession = effectiveSessionId == null
+        val isFirstMessage = _chatState.value.messages.isEmpty()
 
-        // Optimistic: add USER message immediately
         val userMessage = ChatMessage(
             id = UUID.randomUUID().toString(),
             role = ChatMessageRole.USER,
@@ -186,25 +200,56 @@ class ChatViewModel @Inject constructor(
         )
 
         _chatState.update {
-            it.copy(
-                messages = it.messages + userMessage,
-                inputText = "",
-                isWaitingResponse = true,
-            )
+            it.copy(messages = it.messages + userMessage, inputText = "", isWaitingResponse = true)
         }
 
         viewModelScope.launch {
-            Log.d("AIFIT_DEBUG", "onSendMessage: llamando sendChatMessageUseCase…")
+            // Si todavía no hay sesión, crearla ahora (primer mensaje)
+            if (isNewSession) {
+                Log.d("AIFIT_DEBUG", "onSendMessage: creando sesión lazy…")
+                when (val created = startChatSessionUseCase()) {
+                    is Result.Success -> {
+                        effectiveSessionId = created.data.id
+                        Log.d("AIFIT_DEBUG", "onSendMessage: sesión creada — id=${effectiveSessionId}")
+                    }
+                    is Result.Error -> {
+                        Log.e("AIFIT_DEBUG", "onSendMessage: error al crear sesión — ${created.exception}")
+                        _chatState.update { it.copy(isWaitingResponse = false) }
+                        _events.send(ChatUiEvent.ShowSnackbar(created.exception.toMessage()))
+                        return@launch
+                    }
+                    else -> return@launch
+                }
+            }
+
+            val sid = effectiveSessionId ?: return@launch
+
+            Log.d("AIFIT_DEBUG", "onSendMessage: enviando mensaje — sid=$sid, content='${content.take(80)}…'")
             val startTime = System.currentTimeMillis()
+
             when (val result = sendChatMessageUseCase(sid, content)) {
                 is Result.Success -> {
                     val elapsed = System.currentTimeMillis() - startTime
-                    Log.d("AIFIT_DEBUG", "onSendMessage: SUCCESS en ${elapsed}ms — role=${result.data.role}, content='${result.data.content.take(100)}…'")
+                    Log.d("AIFIT_DEBUG", "onSendMessage: SUCCESS en ${elapsed}ms")
                     _chatState.update {
-                        it.copy(
-                            messages = it.messages + result.data,
-                            isWaitingResponse = false,
-                        )
+                        it.copy(messages = it.messages + result.data, isWaitingResponse = false)
+                    }
+                    // Generar título por temática usando IA del backend (primer intercambio)
+                    if (isFirstMessage) {
+                        when (val titleResult = generateChatSessionTitleUseCase(sid)) {
+                            is Result.Success -> {
+                                _chatState.update { it.copy(sessionTitle = titleResult.data) }
+                                Log.d("AIFIT_DEBUG", "onSendMessage: título por IA → '${titleResult.data}'")
+                            }
+                            is Result.Error -> {
+                                // Fallback: usar el primer mensaje truncado
+                                val fallback = generateAutoTitle(content)
+                                renameChatSessionUseCase(sid, fallback)
+                                _chatState.update { it.copy(sessionTitle = fallback) }
+                                Log.w("AIFIT_DEBUG", "onSendMessage: error título IA, usando fallback → '$fallback'")
+                            }
+                            else -> Unit
+                        }
                     }
                 }
                 is Result.Error -> {
@@ -213,15 +258,19 @@ class ChatViewModel @Inject constructor(
                     _chatState.update { it.copy(isWaitingResponse = false) }
                     _events.send(ChatUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
-                else -> {
-                    Log.w("AIFIT_DEBUG", "onSendMessage: resultado inesperado (Loading?)")
-                }
+                else -> Log.w("AIFIT_DEBUG", "onSendMessage: resultado inesperado")
             }
         }
     }
 
+    /** Genera un título legible a partir del primer mensaje del usuario (máx. 45 chars). */
+    private fun generateAutoTitle(firstMessage: String): String {
+        val clean = firstMessage.trim().replace('\n', ' ')
+        return if (clean.length <= 45) clean else clean.take(42) + "…"
+    }
+
     fun onArchiveCurrentSession() {
-        val sid = sessionId ?: return
+        val sid = effectiveSessionId ?: return
         viewModelScope.launch {
             when (val result = archiveChatSessionUseCase(sid)) {
                 is Result.Success -> {

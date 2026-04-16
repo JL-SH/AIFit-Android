@@ -65,8 +65,10 @@ object CoachRoutes {
     const val GRAPH = "coach_graph"
     const val SESSION_LIST = "coach"
     const val CHAT = "coach/chat/{sessionId}"
+    const val NEW_CHAT = "coach/new_chat"
 
     fun chatRoute(sessionId: String) = "coach/chat/$sessionId"
+    fun newChatRoute() = NEW_CHAT
 }
 
 object ProfileRoutes {

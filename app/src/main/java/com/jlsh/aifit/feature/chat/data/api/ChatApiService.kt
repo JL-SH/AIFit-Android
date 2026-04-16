@@ -4,6 +4,8 @@ import com.jlsh.aifit.core.network.ApiResponse
 import com.jlsh.aifit.feature.chat.data.dto.ChatMessageResponseDto
 import com.jlsh.aifit.feature.chat.data.dto.ChatSessionResponseDto
 import com.jlsh.aifit.feature.chat.data.dto.ChatSessionSummaryResponseDto
+import com.jlsh.aifit.feature.chat.data.dto.GenerateTitleResponseDto
+import com.jlsh.aifit.feature.chat.data.dto.RenameChatSessionRequestDto
 import com.jlsh.aifit.feature.chat.data.dto.SendChatMessageRequestDto
 import com.jlsh.aifit.feature.chat.data.dto.StartChatSessionRequestDto
 import retrofit2.Response
@@ -39,6 +41,17 @@ interface ChatApiService {
     suspend fun archiveSession(
         @Path("id") id: String,
     ): ApiResponse<Unit>
+
+    @PATCH("chat/sessions/{id}")
+    suspend fun renameSession(
+        @Path("id") id: String,
+        @Body request: RenameChatSessionRequestDto,
+    ): ApiResponse<ChatSessionResponseDto>
+
+    @POST("chat/sessions/{id}/generate-title")
+    suspend fun generateTitle(
+        @Path("id") id: String,
+    ): ApiResponse<GenerateTitleResponseDto>
 
     @DELETE("chat/sessions/{id}")
     suspend fun deleteSession(

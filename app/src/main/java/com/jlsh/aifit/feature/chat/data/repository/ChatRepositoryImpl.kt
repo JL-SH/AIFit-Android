@@ -4,6 +4,7 @@ import android.util.Log
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.feature.chat.data.api.ChatApiService
+import com.jlsh.aifit.feature.chat.data.dto.RenameChatSessionRequestDto
 import com.jlsh.aifit.feature.chat.data.dto.SendChatMessageRequestDto
 import com.jlsh.aifit.feature.chat.data.dto.StartChatSessionRequestDto
 import com.jlsh.aifit.feature.chat.data.local.ChatDao
@@ -137,6 +138,31 @@ class ChatRepositoryImpl @Inject constructor(
                 chatDao.deleteMessagesBySessionId(id)
                 chatDao.deleteSession(id)
                 Result.Success(Unit)
+            }
+            is Result.Error -> r
+            else -> Result.Loading
+        }
+
+    override suspend fun renameSession(id: String, title: String): Result<Unit> {
+        val request = RenameChatSessionRequestDto(title = title)
+        return when (val r = safeApiCall { apiService.renameSession(id, request) }) {
+            is Result.Success -> {
+                val cached = chatDao.getSessionById(id)
+                if (cached != null) chatDao.upsertSession(cached.copy(title = title))
+                Result.Success(Unit)
+            }
+            is Result.Error -> r
+            else -> Result.Loading
+        }
+    }
+
+    override suspend fun generateSessionTitle(id: String): Result<String> =
+        when (val r = safeApiCall { apiService.generateTitle(id) }) {
+            is Result.Success -> {
+                val title = r.data.title
+                val cached = chatDao.getSessionById(id)
+                if (cached != null) chatDao.upsertSession(cached.copy(title = title))
+                Result.Success(title)
             }
             is Result.Error -> r
             else -> Result.Loading
