@@ -19,6 +19,7 @@ sealed class NutritionHubUiState {
         val dietPlans: List<DietPlan>,
         val selectedTabIndex: Int = 0,
         val selectedDietPlanFilter: PlanStatus? = null,
+        val isActivatingPlan: Boolean = false,
     ) : NutritionHubUiState(), UiStateHost.Success
 }
 

@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
+import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
+import com.jlsh.aifit.feature.diet.domain.usecase.SetActiveDietPlanUseCase
 import com.jlsh.aifit.feature.nutrition.data.dto.AnalyzeMealFromTextRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.TrackMealRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.UpdateNutritionTargetRequestDto
@@ -44,6 +46,8 @@ class NutritionViewModel @Inject constructor(
     private val analyzeMealFromTextUseCase: AnalyzeMealFromTextUseCase,
     private val deleteMealLogUseCase: DeleteMealLogUseCase,
     private val updateNutritionTargetUseCase: UpdateNutritionTargetUseCase,
+    private val setActiveDietPlanUseCase: SetActiveDietPlanUseCase,
+    private val deleteDietPlanUseCase: DeleteDietPlanUseCase,
 ) : ViewModel() {
 
     private val _hubState = MutableStateFlow<NutritionHubUiState>(NutritionHubUiState.Loading)
@@ -264,6 +268,62 @@ class NutritionViewModel @Inject constructor(
 
     fun onDietPlanClicked(planId: String) {
         emitEvent(NutritionUiEvent.NavigateToDietDetail(planId))
+    }
+
+    fun onActivateDietPlan(planId: String) {
+        val current = _hubState.value as? NutritionHubUiState.Success ?: return
+        val previousPlans = current.dietPlans
+
+        // Optimistic UI update
+        val optimisticPlans = previousPlans.map { plan ->
+            when {
+                plan.id == planId -> plan.copy(
+                    status = com.jlsh.aifit.feature.training.domain.model.PlanStatus.ACTIVE
+                )
+                plan.status == com.jlsh.aifit.feature.training.domain.model.PlanStatus.ACTIVE -> plan.copy(
+                    status = com.jlsh.aifit.feature.training.domain.model.PlanStatus.PAUSED
+                )
+                else -> plan
+            }
+        }
+        _hubState.value = current.copy(dietPlans = optimisticPlans, isActivatingPlan = true)
+
+        viewModelScope.launch {
+            when (val result = setActiveDietPlanUseCase(planId)) {
+                is Result.Success -> {
+                    loadHubData()
+                    _hubState.value = (_hubState.value as? NutritionHubUiState.Success)
+                        ?.copy(isActivatingPlan = false) ?: _hubState.value
+                }
+                is Result.Error -> {
+                    // Roll back
+                    _hubState.value = current.copy(isActivatingPlan = false)
+                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    fun onDeleteDietPlan(planId: String) {
+        val current = _hubState.value as? NutritionHubUiState.Success ?: return
+        // Optimistic remove
+        _hubState.value = current.copy(dietPlans = current.dietPlans.filter { it.id != planId })
+
+        viewModelScope.launch {
+            when (val result = deleteDietPlanUseCase(planId)) {
+                is Result.Success -> {
+                    emitEvent(NutritionUiEvent.ShowSnackbar("Plan eliminado"))
+                    loadHubData()
+                }
+                is Result.Error -> {
+                    // Roll back
+                    _hubState.value = current
+                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                else -> Unit
+            }
+        }
     }
 
     fun onGenerateDietClicked() {

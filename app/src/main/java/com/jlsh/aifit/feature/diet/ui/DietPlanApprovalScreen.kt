@@ -135,7 +135,7 @@ fun DietPlanApprovalScreen(
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f),
                         )
-                        PlanStatusBadge(status = "ACTIVE")
+                        PlanStatusBadge(status = plan.status.name)
                     }
                 }
 
@@ -222,7 +222,7 @@ fun DietPlanApprovalScreen(
                     PrimaryButton(
                         text = "Aceptar Plan",
                         onClick = {
-                            viewModel.onApproveDietPlan()
+                            viewModel.onApproveDietPlan(planId)
                             onAccept()
                         },
                         modifier = Modifier.weight(1f),

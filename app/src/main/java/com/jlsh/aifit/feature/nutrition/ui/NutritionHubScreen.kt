@@ -200,8 +200,11 @@ fun NutritionHubScreen(
                 1 -> DietPlanTab(
                     plans = successState.dietPlans,
                     selectedFilter = successState.selectedDietPlanFilter,
+                    isActivatingPlan = successState.isActivatingPlan,
                     onFilterChanged = viewModel::onDietPlanFilterChanged,
                     onPlanClicked = viewModel::onDietPlanClicked,
+                    onActivatePlan = viewModel::onActivateDietPlan,
+                    onDeletePlan = viewModel::onDeleteDietPlan,
                     onCreatePlan = { viewModel.onGenerateDietClicked() },
                 )
                 2 -> ShoppingTab(
@@ -421,10 +424,50 @@ private fun MealRow(
 private fun DietPlanTab(
     plans: List<DietPlan>,
     selectedFilter: PlanStatus?,
+    isActivatingPlan: Boolean,
     onFilterChanged: (PlanStatus?) -> Unit,
     onPlanClicked: (String) -> Unit,
+    onActivatePlan: (String) -> Unit,
+    onDeletePlan: (String) -> Unit,
     onCreatePlan: () -> Unit,
 ) {
+    var planToDelete by remember { mutableStateOf<String?>(null) }
+    var planToActivate by remember { mutableStateOf<String?>(null) }
+    val activePlanName = plans.firstOrNull {
+        it.status == PlanStatus.ACTIVE
+    }?.name
+
+    // Delete confirmation dialog
+    if (planToDelete != null) {
+        ConfirmationDialog(
+            title = "Eliminar plan de dieta",
+            message = "Esta acción no se puede deshacer.",
+            onConfirm = {
+                planToDelete?.let { onDeletePlan(it) }
+                planToDelete = null
+            },
+            onDismiss = { planToDelete = null },
+        )
+    }
+
+    // Activate confirmation dialog (only when there is already an active plan)
+    if (planToActivate != null) {
+        val message = if (activePlanName != null) {
+            "Esto pausará el plan \"$activePlanName\" actualmente activo. ¿Continuar?"
+        } else {
+            "El plan seleccionado pasará a ser tu plan activo."
+        }
+        ConfirmationDialog(
+            title = "Activar plan",
+            message = message,
+            onConfirm = {
+                planToActivate?.let { onActivatePlan(it) }
+                planToActivate = null
+            },
+            onDismiss = { planToActivate = null },
+        )
+    }
+
     if (plans.isEmpty()) {
         Column(
             modifier = Modifier
@@ -448,46 +491,123 @@ private fun DietPlanTab(
         return
     }
 
-    val filteredPlans = if (selectedFilter == null) {
-        plans
-    } else {
-        plans.filter { it.status == selectedFilter }
-    }
-
+    val filteredPlans = if (selectedFilter == null) plans else plans.filter { it.status == selectedFilter }
     val selectedChip = dietStatusToChip(selectedFilter)
 
-    LazyColumn(
-        contentPadding = PaddingValues(
-            start = AiFitSpacing.md,
-            top = AiFitSpacing.sm,
-            end = AiFitSpacing.md,
-            bottom = 88.dp,
-        ),
-        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-    ) {
-        // ── Active plan highlight (only when showing "Todos" or "Activo") ──
-        if (selectedFilter == null || selectedFilter == PlanStatus.ACTIVE) {
-            val activePlan = plans.firstOrNull { it.status == PlanStatus.ACTIVE }
-            activePlan?.let { plan ->
-                item(key = "active_${plan.id}") {
-                    AiFitCard(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        onClick = { onPlanClicked(plan.id) },
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(AiFitSpacing.md),
-                            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            contentPadding = PaddingValues(
+                start = AiFitSpacing.md,
+                top = AiFitSpacing.sm,
+                end = AiFitSpacing.md,
+                bottom = 88.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+        ) {
+            // ── Active plan highlight ──
+            if (selectedFilter == null || selectedFilter == PlanStatus.ACTIVE) {
+                val activePlan = plans.firstOrNull { it.status == PlanStatus.ACTIVE }
+                activePlan?.let { plan ->
+                    item(key = "active_${plan.id}") {
+                        AiFitCard(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            onClick = { onPlanClicked(plan.id) },
                         ) {
-                            PlanStatusBadge(status = plan.status.name)
+                            Column(
+                                modifier = Modifier.padding(AiFitSpacing.md),
+                                verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    PlanStatusBadge(status = plan.status.name)
+                                    IconButton(onClick = { planToDelete = plan.id }) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.DeleteOutline,
+                                            contentDescription = "Eliminar plan",
+                                            tint = MaterialTheme.colorScheme.error,
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = plan.name,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Text(
+                                    text = "${plan.durationWeeks} semanas • ${plan.dailyCalories} kcal/día",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── Filter chips ──
+            item(key = "diet_filter_chips") {
+                Spacer(modifier = Modifier.height(AiFitSpacing.sm))
+                AiFitChipGroup(
+                    options = DIET_FILTER_CHIPS,
+                    selected = setOf(selectedChip),
+                    onSelectionChanged = { selection ->
+                        val chip = selection.firstOrNull() ?: "Todos"
+                        onFilterChanged(dietChipToStatus(chip))
+                    },
+                    multiSelect = false,
+                )
+                Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+            }
+
+            // ── Plan list (excluding active card already shown) ──
+            val activePlanId = plans.firstOrNull { it.status == PlanStatus.ACTIVE }?.id
+            val listPlans = if (selectedFilter == null || selectedFilter == PlanStatus.ACTIVE) {
+                filteredPlans.filter { it.id != activePlanId }
+            } else {
+                filteredPlans
+            }
+
+            items(listPlans, key = { it.id }) { plan ->
+                AiFitCard(onClick = { onPlanClicked(plan.id) }) {
+                    Column(
+                        modifier = Modifier.padding(AiFitSpacing.md),
+                        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             Text(
                                 text = plan.name,
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f),
                             )
-                            Text(
-                                text = "${plan.durationWeeks} semanas • ${plan.dailyCalories} kcal/día",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            PlanStatusBadge(status = plan.status.name)
+                            IconButton(onClick = { planToDelete = plan.id }) {
+                                Icon(
+                                    imageVector = Icons.Rounded.DeleteOutline,
+                                    contentDescription = "Eliminar plan",
+                                    tint = MaterialTheme.colorScheme.error,
+                                )
+                            }
+                        }
+                        Text(
+                            text = "${plan.durationWeeks} semanas • ${plan.dailyCalories} kcal/día",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        // Activate button for DRAFT or PAUSED plans
+                        if (plan.status == PlanStatus.DRAFT || plan.status == PlanStatus.PAUSED) {
+                            Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                            PrimaryButton(
+                                text = "Activar plan",
+                                onClick = { planToActivate = plan.id },
+                                modifier = Modifier.fillMaxWidth(),
                             )
                         }
                     }
@@ -495,52 +615,25 @@ private fun DietPlanTab(
             }
         }
 
-        // ── Filter chips ──
-        item(key = "diet_filter_chips") {
-            Spacer(modifier = Modifier.height(AiFitSpacing.sm))
-            AiFitChipGroup(
-                options = DIET_FILTER_CHIPS,
-                selected = setOf(selectedChip),
-                onSelectionChanged = { selection ->
-                    val chip = selection.firstOrNull() ?: "Todos"
-                    onFilterChanged(dietChipToStatus(chip))
-                },
-                multiSelect = false,
-            )
-            Spacer(modifier = Modifier.height(AiFitSpacing.xs))
-        }
-
-        // ── Filtered plan list (excluding the active card already shown above) ──
-        val activePlanId = plans.firstOrNull { it.status == PlanStatus.ACTIVE }?.id
-        val listPlans = if (selectedFilter == null || selectedFilter == PlanStatus.ACTIVE) {
-            filteredPlans.filter { it.id != activePlanId }
-        } else {
-            filteredPlans
-        }
-
-        items(listPlans, key = { it.id }) { plan ->
-            AiFitCard(onClick = { onPlanClicked(plan.id) }) {
+        // Activation overlay
+        if (isActivatingPlan) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)),
+                contentAlignment = Alignment.Center,
+            ) {
                 Column(
-                    modifier = Modifier.padding(AiFitSpacing.md),
-                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = plan.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f),
-                        )
-                        PlanStatusBadge(status = plan.status.name)
-                    }
+                    androidx.compose.material3.CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                     Text(
-                        text = "${plan.durationWeeks} semanas • ${plan.dailyCalories} kcal/día",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = "Activando plan…",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.inverseOnSurface,
                     )
                 }
             }

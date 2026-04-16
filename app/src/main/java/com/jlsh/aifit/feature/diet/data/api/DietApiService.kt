@@ -8,6 +8,7 @@ import com.jlsh.aifit.feature.diet.data.dto.GenerateDietPlanRequestDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -28,6 +29,9 @@ interface DietApiService {
     suspend fun generateAdaptiveDietPlan(
         @Body request: GenerateAdaptiveDietPlanRequestDto,
     ): ApiResponse<DietPlanResponseDto>
+
+    @PATCH("diet-plans/{id}/activate")
+    suspend fun activateDietPlan(@Path("id") planId: String): ApiResponse<DietPlanResponseDto>
 
     @DELETE("diet-plans/{id}")
     suspend fun deleteDietPlan(@Path("id") id: String): ApiResponse<Unit>

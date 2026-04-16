@@ -90,6 +90,27 @@ class DietRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun setActiveDietPlan(planId: String): Result<DietPlan> {
+        val userId = sessionManager.getUserId()
+            ?: return Result.Error(AppException.UnknownException("No active session"))
+        return when (val remote = safeApiCall { apiService.activateDietPlan(planId) }) {
+            is Result.Success -> {
+                // Update activated plan and clear ACTIVE from others in local cache
+                val activatedPlan = remote.data.toDomain()
+                val existing = dao.getAllByUserId(userId)
+                val updated = existing.map { entity ->
+                    if (entity.id == planId) activatedPlan.toEntity(userId)
+                    else if (entity.status == "ACTIVE") entity.copy(status = "PAUSED")
+                    else entity
+                }
+                dao.upsertAll(updated)
+                Result.Success(activatedPlan)
+            }
+            is Result.Error -> remote
+            else -> Result.Loading
+        }
+    }
+
     override suspend fun deleteDietPlan(planId: String): Result<Unit> {
         return try {
             val response = apiService.deleteDietPlan(planId)

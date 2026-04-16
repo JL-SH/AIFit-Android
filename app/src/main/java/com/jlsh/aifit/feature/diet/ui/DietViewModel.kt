@@ -9,6 +9,7 @@ import com.jlsh.aifit.feature.diet.data.dto.GenerateDietPlanRequestDto
 import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GenerateDietPlanUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
+import com.jlsh.aifit.feature.diet.domain.usecase.SetActiveDietPlanUseCase
 import com.jlsh.aifit.feature.diet.ui.state.DietUiEvent
 import com.jlsh.aifit.feature.diet.ui.state.DietUiState
 import com.jlsh.aifit.feature.diet.ui.state.GenerateDietUiState
@@ -29,6 +30,7 @@ class DietViewModel @Inject constructor(
     private val getDietPlanDetailUseCase: GetDietPlanDetailUseCase,
     private val generateDietPlanUseCase: GenerateDietPlanUseCase,
     private val deleteDietPlanUseCase: DeleteDietPlanUseCase,
+    private val setActiveDietPlanUseCase: SetActiveDietPlanUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
 ) : ViewModel() {
 
@@ -74,10 +76,20 @@ class DietViewModel @Inject constructor(
         }
     }
 
-    fun onApproveDietPlan() {
-        // Plan is already saved and ACTIVE on backend — no action needed.
-        // Navigation to hub is handled by the screen callback.
-        _detailUiState.value = DietUiState.Loading
+    fun onApproveDietPlan(planId: String) {
+        viewModelScope.launch {
+            _detailUiState.value = DietUiState.Loading
+            when (val result = setActiveDietPlanUseCase(planId)) {
+                is Result.Success -> {
+                    // Navigation to hub is handled by the screen callback (onAccept)
+                }
+                is Result.Error -> {
+                    _detailUiState.value = DietUiState.Error(result.exception.toMessage())
+                    emitEvent(DietUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                else -> Unit
+            }
+        }
     }
 
     fun onRejectDietPlan(planId: String) {
@@ -195,4 +207,3 @@ class DietViewModel @Inject constructor(
         private const val MIN_ANIMATION_DURATION = 2000L
     }
 }
-
