@@ -3,6 +3,7 @@ package com.jlsh.aifit.feature.user.domain.model
 import java.time.LocalDate
 
 data class UpdateUserProfileRequest(
+    val name: String? = null,
     val birthDate: LocalDate? = null,
     val gender: Gender? = null,
     val goalType: GoalType? = null,

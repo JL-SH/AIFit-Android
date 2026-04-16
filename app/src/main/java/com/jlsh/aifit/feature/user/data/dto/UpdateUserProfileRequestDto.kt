@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UpdateUserProfileRequestDto(
+    val name: String? = null,
     val birthDate: String? = null,
     val gender: String? = null,
     val goalType: String? = null,

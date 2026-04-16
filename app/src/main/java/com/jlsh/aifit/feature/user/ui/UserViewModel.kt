@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.user.ui
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -75,6 +76,14 @@ class UserViewModel @Inject constructor(
 
     private val _recordsCount = MutableStateFlow<String>("—")
     val recordsCount: StateFlow<String> = _recordsCount.asStateFlow()
+
+    // 2d. PROFILE PICTURE
+    private val _profilePictureUrl = MutableStateFlow<String?>(null)
+    val profilePictureUrl: StateFlow<String?> = _profilePictureUrl.asStateFlow()
+
+    /** URI of a photo selected locally but not yet uploaded to the server. */
+    private val _pendingPhotoUri = MutableStateFlow<Uri?>(null)
+    val pendingPhotoUri: StateFlow<Uri?> = _pendingPhotoUri.asStateFlow()
 
     // 3. FORM FIELDS
     private val _name = MutableStateFlow("")
@@ -170,6 +179,10 @@ class UserViewModel @Inject constructor(
         sessionManager.logout()
     }
 
+    fun onProfilePictureSelected(uri: Uri?) {
+        _pendingPhotoUri.value = uri
+    }
+
     fun onToggleTheme() {
         viewModelScope.launch {
             val current = userPreferencesDataStore.isDarkTheme.first()
@@ -252,6 +265,7 @@ class UserViewModel @Inject constructor(
 
     private fun populateForm(profile: UserProfile) {
         _name.value = profile.name
+        _profilePictureUrl.value = profile.profilePictureUrl
         _birthDate.value = profile.birthDate?.toString() ?: ""
         _gender.value = profile.gender?.name ?: ""
         _height.value = profile.height?.toString() ?: ""
@@ -293,6 +307,7 @@ class UserViewModel @Inject constructor(
     )
 
     private fun buildUpdateRequest(): UpdateUserProfileRequest = UpdateUserProfileRequest(
+        name = _name.value.takeIf { it.isNotBlank() },
         birthDate = _birthDate.value.takeIf { it.isNotBlank() }
             ?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
         gender = _gender.value.takeIf { it.isNotBlank() }
@@ -382,7 +397,12 @@ class UserViewModel @Inject constructor(
                 when (val result = updateUserProfileUseCase(buildUpdateRequest())) {
                     is Result.Success -> {
                         _uiState.value = UserUiState.Success(result.data)
-                        emitEvent(UserUiEvent.ShowSnackbar("Perfil actualizado"))
+                        val hadPendingPhoto = _pendingPhotoUri.value != null
+                        _pendingPhotoUri.value = null
+                        val message = if (hadPendingPhoto)
+                            "Perfil actualizado. La foto se guardará cuando el servidor la soporte."
+                        else "Perfil actualizado"
+                        emitEvent(UserUiEvent.ShowSnackbar(message))
                         emitEvent(UserUiEvent.NavigateBack)
                     }
                     is Result.Error -> {

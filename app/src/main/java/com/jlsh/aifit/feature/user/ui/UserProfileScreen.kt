@@ -1,6 +1,11 @@
 package com.jlsh.aifit.feature.user.ui
 
 import android.content.res.Configuration
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -10,10 +15,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -24,12 +33,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
+import com.jlsh.aifit.core.ui.components.display.AvatarSize
+import com.jlsh.aifit.core.ui.components.display.UserAvatar
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.components.inputs.AiFitDatePickerBottomSheet
@@ -40,11 +52,7 @@ import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.user.domain.model.ActivityLevel
-import com.jlsh.aifit.feature.user.domain.model.DietPreference
-import com.jlsh.aifit.feature.user.domain.model.FitnessLevel
 import com.jlsh.aifit.feature.user.domain.model.Gender
-import com.jlsh.aifit.feature.user.domain.model.GoalType
-import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 import com.jlsh.aifit.feature.user.ui.state.UserUiEvent
 import com.jlsh.aifit.feature.user.ui.state.UserUiState
 
@@ -59,20 +67,22 @@ fun UserProfileScreen(
     val birthDateError by viewModel.birthDateError.collectAsStateWithLifecycle()
     val gender by viewModel.gender.collectAsStateWithLifecycle()
     val height by viewModel.height.collectAsStateWithLifecycle()
-    val weight by viewModel.weight.collectAsStateWithLifecycle()
-    val targetWeight by viewModel.targetWeight.collectAsStateWithLifecycle()
-    val goalType by viewModel.goalType.collectAsStateWithLifecycle()
     val activityLevel by viewModel.activityLevel.collectAsStateWithLifecycle()
-    val fitnessLevel by viewModel.fitnessLevel.collectAsStateWithLifecycle()
-    val preferredLocation by viewModel.preferredLocation.collectAsStateWithLifecycle()
-    val dietPreference by viewModel.dietPreference.collectAsStateWithLifecycle()
-    val weeklyWorkoutDays by viewModel.weeklyWorkoutDays.collectAsStateWithLifecycle()
-    val availableMinutes by viewModel.availableMinutes.collectAsStateWithLifecycle()
-    val injuries by viewModel.injuries.collectAsStateWithLifecycle()
-    val calorieTarget by viewModel.calorieTarget.collectAsStateWithLifecycle()
+    val profilePictureUrl by viewModel.profilePictureUrl.collectAsStateWithLifecycle()
+    val pendingPhotoUri by viewModel.pendingPhotoUri.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     var showDatePicker by remember { mutableStateOf(false) }
+
+    // Prefer the locally selected photo; fall back to the server URL.
+    // Coil handles both https:// URLs and content:// URIs from a String.
+    val displayImageUrl: String? = pendingPhotoUri?.toString() ?: profilePictureUrl
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri: Uri? ->
+        uri?.let { viewModel.onProfilePictureSelected(it) }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -95,162 +105,136 @@ fun UserProfileScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         when {
-            uiState is UserUiState.Loading -> {
-                LoadingScreen()
-            }
-            uiState is UserUiState.Error -> {
-                ErrorScreen(
-                    message = (uiState as UserUiState.Error).message,
-                    onRetry = viewModel::onRefresh,
-                )
-            }
+            uiState is UserUiState.Loading -> LoadingScreen()
+            uiState is UserUiState.Error -> ErrorScreen(
+                message = (uiState as UserUiState.Error).message,
+                onRetry = viewModel::onRefresh,
+            )
             else -> {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(paddingValues)
-                .padding(horizontal = AiFitSpacing.md)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
-        ) {
-            Spacer(Modifier.height(AiFitSpacing.sm))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(paddingValues)
+                        .padding(horizontal = AiFitSpacing.md)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(Modifier.height(AiFitSpacing.md))
 
-            AiFitTextField(
-                value = name,
-                onValueChange = viewModel::onNameChanged,
-                label = "Nombre completo",
-                modifier = Modifier.fillMaxWidth(),
-            )
+                    // ── Foto de perfil ────────────────────────────────────────────
+                    Box(
+                        modifier = Modifier
+                            .size(AvatarSize.LARGE.size)
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                            ) {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(
+                                        ActivityResultContracts.PickVisualMedia.ImageOnly,
+                                    ),
+                                )
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        UserAvatar(
+                            name = name.ifBlank { "?" },
+                            imageUrl = displayImageUrl,
+                            size = AvatarSize.LARGE,
+                        )
+                        // Camera badge — overlaps the bottom-right corner of the avatar circle
+                        Box(
+                            modifier = Modifier
+                                .size(22.dp)
+                                .align(Alignment.BottomEnd)
+                                .background(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = CircleShape,
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.PhotoCamera,
+                                contentDescription = "Cambiar foto de perfil",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(13.dp),
+                            )
+                        }
+                    }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    ) { showDatePicker = true },
-            ) {
-                AiFitTextField(
-                    value = if (birthDate.isNotBlank()) birthDate else "",
-                    onValueChange = {},
-                    label = "Fecha de nacimiento",
-                    error = birthDateError,
-                    enabled = false,
-                    trailingIcon = Icons.Rounded.CalendarMonth,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                    Spacer(Modifier.height(AiFitSpacing.xs))
+
+                    // ── Nombre ────────────────────────────────────────────────────
+                    AiFitTextField(
+                        value = name,
+                        onValueChange = viewModel::onNameChanged,
+                        label = "Nombre completo",
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    // ── Fecha de nacimiento ───────────────────────────────────────
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                            ) { showDatePicker = true },
+                    ) {
+                        AiFitTextField(
+                            value = if (birthDate.isNotBlank()) birthDate else "",
+                            onValueChange = {},
+                            label = "Fecha de nacimiento",
+                            error = birthDateError,
+                            enabled = false,
+                            trailingIcon = Icons.Rounded.CalendarMonth,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+
+                    // ── Género ────────────────────────────────────────────────────
+                    AiFitDropdown(
+                        selectedValue = gender,
+                        options = Gender.entries.filter { it != Gender.UNKNOWN }.map { it.name },
+                        onOptionSelected = viewModel::onGenderChanged,
+                        label = "Género",
+                        displayMapper = { it.toGenderDisplay() },
+                    )
+
+                    // ── Altura ────────────────────────────────────────────────────
+                    AiFitNumberField(
+                        value = height,
+                        onValueChange = viewModel::onHeightChanged,
+                        label = "Altura",
+                        suffix = "cm",
+                    )
+
+                    // ── Nivel de actividad ────────────────────────────────────────
+                    AiFitDropdown(
+                        selectedValue = activityLevel,
+                        options = ActivityLevel.entries
+                            .filter { it != ActivityLevel.UNKNOWN }
+                            .map { it.name },
+                        onOptionSelected = viewModel::onActivityLevelChanged,
+                        label = "Nivel de actividad",
+                        displayMapper = { it.toActivityLevelDisplay() },
+                    )
+
+                    Spacer(Modifier.height(AiFitSpacing.sm))
+
+                    PrimaryButton(
+                        text = "Guardar",
+                        onClick = viewModel::onSaveProfile,
+                        isLoading = uiState is UserUiState.Saving,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    Spacer(Modifier.height(AiFitSpacing.lg))
+                }
             }
-
-            AiFitDropdown(
-                selectedValue = gender,
-                options = Gender.entries.filter { it != Gender.UNKNOWN }.map { it.name },
-                onOptionSelected = viewModel::onGenderChanged,
-                label = "Género",
-                displayMapper = { it.toGenderDisplay() },
-            )
-
-            AiFitNumberField(
-                value = height,
-                onValueChange = viewModel::onHeightChanged,
-                label = "Altura",
-                suffix = "cm",
-            )
-
-            AiFitNumberField(
-                value = weight,
-                onValueChange = viewModel::onWeightChanged,
-                label = "Peso actual",
-                suffix = "kg",
-            )
-
-            AiFitNumberField(
-                value = targetWeight,
-                onValueChange = viewModel::onTargetWeightChanged,
-                label = "Peso objetivo",
-                suffix = "kg",
-            )
-
-            AiFitDropdown(
-                selectedValue = goalType,
-                options = GoalType.entries.filter { it != GoalType.UNKNOWN }.map { it.name },
-                onOptionSelected = viewModel::onGoalTypeChanged,
-                label = "Objetivo",
-                displayMapper = { it.toGoalTypeDisplay() },
-            )
-
-            AiFitDropdown(
-                selectedValue = activityLevel,
-                options = ActivityLevel.entries.filter { it != ActivityLevel.UNKNOWN }.map { it.name },
-                onOptionSelected = viewModel::onActivityLevelChanged,
-                label = "Nivel de actividad",
-                displayMapper = { it.toActivityLevelDisplay() },
-            )
-
-            AiFitDropdown(
-                selectedValue = fitnessLevel,
-                options = FitnessLevel.entries.filter { it != FitnessLevel.UNKNOWN }.map { it.name },
-                onOptionSelected = viewModel::onFitnessLevelChanged,
-                label = "Nivel de fitness",
-                displayMapper = { it.toFitnessLevelDisplay() },
-            )
-
-            AiFitDropdown(
-                selectedValue = preferredLocation,
-                options = WorkoutLocation.entries.filter { it != WorkoutLocation.UNKNOWN }.map { it.name },
-                onOptionSelected = viewModel::onPreferredLocationChanged,
-                label = "Ubicación preferida",
-                displayMapper = { it.toPreferredLocationDisplay() },
-            )
-
-            AiFitDropdown(
-                selectedValue = dietPreference,
-                options = DietPreference.entries.filter { it != DietPreference.UNKNOWN }.map { it.name },
-                onOptionSelected = viewModel::onDietPreferenceChanged,
-                label = "Preferencia dietética",
-                displayMapper = { it.toDietPreferenceDisplay() },
-            )
-
-            AiFitNumberField(
-                value = weeklyWorkoutDays,
-                onValueChange = viewModel::onWeeklyWorkoutDaysChanged,
-                label = "Días de entrenamiento/semana",
-            )
-
-            AiFitNumberField(
-                value = availableMinutes,
-                onValueChange = viewModel::onAvailableMinutesChanged,
-                label = "Minutos disponibles/sesión",
-            )
-
-            AiFitTextField(
-                value = injuries,
-                onValueChange = viewModel::onInjuriesChanged,
-                label = "Lesiones o limitaciones",
-                singleLine = false,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            AiFitNumberField(
-                value = calorieTarget,
-                onValueChange = viewModel::onCalorieTargetChanged,
-                label = "Objetivo calórico",
-                suffix = "kcal",
-            )
-
-            Spacer(Modifier.height(AiFitSpacing.sm))
-
-            PrimaryButton(
-                text = "Guardar",
-                onClick = viewModel::onSaveProfile,
-                isLoading = uiState is UserUiState.Saving,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(AiFitSpacing.lg))
         }
-        } // end else
-        } // end when
-    } // end Scaffold
+    }
 
     AiFitDatePickerBottomSheet(
         isVisible = showDatePicker,
@@ -273,12 +257,7 @@ private fun UserProfileScreenPreview() {
     AIFitTheme(darkTheme = true) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
-            topBar = {
-                AiFitTopBar(
-                    title = "Editar perfil",
-                    onBack = {},
-                )
-            },
+            topBar = { AiFitTopBar(title = "Editar perfil", onBack = {}) },
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -287,23 +266,49 @@ private fun UserProfileScreenPreview() {
                     .padding(horizontal = 16.dp)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(16.dp))
 
+                Box(
+                    modifier = Modifier.size(AvatarSize.LARGE.size),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    UserAvatar(name = "Carlos García", size = AvatarSize.LARGE)
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .align(Alignment.BottomEnd)
+                            .background(
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = CircleShape,
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.PhotoCamera,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(13.dp),
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(4.dp))
                 AiFitTextField(
                     value = "Carlos García",
                     onValueChange = {},
                     label = "Nombre completo",
                     modifier = Modifier.fillMaxWidth(),
                 )
-
                 AiFitTextField(
                     value = "1990-05-15",
                     onValueChange = {},
-                    label = "Fecha de nacimiento (yyyy-MM-dd)",
+                    label = "Fecha de nacimiento",
+                    enabled = false,
+                    trailingIcon = Icons.Rounded.CalendarMonth,
                     modifier = Modifier.fillMaxWidth(),
                 )
-
                 AiFitDropdown(
                     selectedValue = "MALE",
                     options = listOf("MALE", "FEMALE", "OTHER"),
@@ -311,37 +316,21 @@ private fun UserProfileScreenPreview() {
                     label = "Género",
                     displayMapper = { it.toGenderDisplay() },
                 )
-
                 AiFitNumberField(
                     value = "180",
                     onValueChange = {},
                     label = "Altura",
                     suffix = "cm",
                 )
-
-                AiFitNumberField(
-                    value = "82",
-                    onValueChange = {},
-                    label = "Peso actual",
-                    suffix = "kg",
-                )
-
                 AiFitDropdown(
-                    selectedValue = "GAIN_MUSCLE",
-                    options = listOf("LOSE_WEIGHT", "GAIN_MUSCLE", "MAINTAIN"),
+                    selectedValue = "MODERATE",
+                    options = listOf("SEDENTARY", "LIGHT", "MODERATE", "ACTIVE", "VERY_ACTIVE"),
                     onOptionSelected = {},
-                    label = "Objetivo",
-                    displayMapper = { it.toGoalTypeDisplay() },
+                    label = "Nivel de actividad",
+                    displayMapper = { it.toActivityLevelDisplay() },
                 )
-
                 Spacer(Modifier.height(8.dp))
-
-                PrimaryButton(
-                    text = "GUARDAR",
-                    onClick = {},
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
+                PrimaryButton(text = "Guardar", onClick = {}, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(24.dp))
             }
         }

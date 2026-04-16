@@ -95,6 +95,7 @@ object UserMapper {
     )
 
     fun UpdateUserProfileRequest.toDto(): UpdateUserProfileRequestDto = UpdateUserProfileRequestDto(
+        name = name,
         birthDate = birthDate?.toString(),
         gender = gender?.name,
         goalType = goalType?.name,
