@@ -5,5 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SendChatMessageRequestDto(
     val content: String,
+    val imageBase64: String? = null,
 )
 

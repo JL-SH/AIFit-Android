@@ -20,3 +20,18 @@ enum class ExportPeriod(val apiValue: String) {
     ALL_TIME("ALL_TIME");
 }
 
+fun ExportPeriod.toDisplayString(): String = when (this) {
+    ExportPeriod.LAST_WEEK -> "Última semana"
+    ExportPeriod.LAST_MONTH -> "Último mes"
+    ExportPeriod.LAST_THREE_MONTHS -> "Últimos 3 meses"
+    ExportPeriod.ALL_TIME -> "Todo el historial"
+}
+
+fun String.toExportPeriodDisplayString(): String = when (this) {
+    "LAST_WEEK" -> "Última semana"
+    "LAST_MONTH" -> "Último mes"
+    "LAST_THREE_MONTHS" -> "Últimos 3 meses"
+    "ALL_TIME" -> "Todo el historial"
+    else -> this
+}
+

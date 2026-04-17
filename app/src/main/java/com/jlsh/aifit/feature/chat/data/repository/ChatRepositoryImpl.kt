@@ -89,9 +89,9 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendMessage(sessionId: String, content: String): Result<ChatMessage> {
-        Log.d("AIFIT_DEBUG", "ChatRepo.sendMessage: inicio — sessionId=$sessionId, content='${content.take(50)}…'")
-        val request = SendChatMessageRequestDto(content = content)
+    override suspend fun sendMessage(sessionId: String, content: String, imageBase64: String?): Result<ChatMessage> {
+        Log.d("AIFIT_DEBUG", "ChatRepo.sendMessage: inicio — sessionId=$sessionId, hasImage=${imageBase64 != null}, content='${content.take(50)}…'")
+        val request = SendChatMessageRequestDto(content = content, imageBase64 = imageBase64)
         Log.d("AIFIT_DEBUG", "ChatRepo.sendMessage: llamando API POST chat/sessions/$sessionId/messages")
         return when (val r = safeApiCall { apiService.sendMessage(sessionId, request) }) {
             is Result.Success -> {

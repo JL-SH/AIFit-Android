@@ -9,7 +9,7 @@ interface ChatRepository {
     fun getSessions(): Flow<Result<List<ChatSession>>>
     fun getSession(id: String): Flow<Result<ChatSession>>
     suspend fun startSession(title: String? = null): Result<ChatSession>
-    suspend fun sendMessage(sessionId: String, content: String): Result<ChatMessage>
+    suspend fun sendMessage(sessionId: String, content: String, imageBase64: String? = null): Result<ChatMessage>
     suspend fun archiveSession(id: String): Result<Unit>
     suspend fun deleteSession(id: String): Result<Unit>
     suspend fun renameSession(id: String, title: String): Result<Unit>

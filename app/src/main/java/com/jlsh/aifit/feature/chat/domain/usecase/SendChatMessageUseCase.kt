@@ -8,7 +8,7 @@ import javax.inject.Inject
 class SendChatMessageUseCase @Inject constructor(
     private val repository: ChatRepository,
 ) {
-    suspend operator fun invoke(sessionId: String, content: String): Result<ChatMessage> =
-        repository.sendMessage(sessionId, content)
+    suspend operator fun invoke(sessionId: String, content: String, imageBase64: String? = null): Result<ChatMessage> =
+        repository.sendMessage(sessionId, content, imageBase64)
 }
 

@@ -28,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +44,6 @@ import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.education.domain.model.GlossaryDefinition
 import com.jlsh.aifit.feature.education.ui.components.EducationConfirmSheet
-import com.jlsh.aifit.feature.education.ui.components.GlossaryIntroSheet
 import com.jlsh.aifit.feature.education.ui.state.GlossaryState
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -57,15 +55,8 @@ fun GlossaryScreen(
     val glossaryState by viewModel.glossaryState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var searchQuery by remember { mutableStateOf("") }
-    var showIntroSheet by rememberSaveable { mutableStateOf(true) }
     var showConfirmSheet by remember { mutableStateOf(false) }
 
-    if (showIntroSheet) {
-        GlossaryIntroSheet(
-            onDismiss = { showIntroSheet = false },
-            onConfirm = { showIntroSheet = false },
-        )
-    }
 
     if (showConfirmSheet && searchQuery.isNotBlank()) {
         EducationConfirmSheet(

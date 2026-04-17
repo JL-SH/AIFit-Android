@@ -16,5 +16,7 @@ data class ChatMessage(
     val role: ChatMessageRole,
     val content: String,
     val createdAt: String,
+    /** Base64 de la imagen adjunta (solo para display local, no se persiste en Room). */
+    val imageBase64: String? = null,
 )
 

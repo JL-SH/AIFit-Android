@@ -1,21 +1,27 @@
 package com.jlsh.aifit.core.ui.components.chat
 
 import android.content.res.Configuration
+import android.util.Base64
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -27,6 +33,7 @@ fun ChatBubble(
     timestamp: String,
     modifier: Modifier = Modifier,
     isMarkdown: Boolean = false,
+    imageBase64: String? = null,
 ) {
     val bubbleShape = if (isUser) {
         RoundedCornerShape(
@@ -58,6 +65,13 @@ fun ChatBubble(
 
     val alignment = if (isUser) Alignment.End else Alignment.Start
 
+    // Decode Base64 image bytes for Coil
+    val imageBytes = remember(imageBase64) {
+        imageBase64?.let {
+            runCatching { Base64.decode(it, Base64.NO_WRAP) }.getOrNull()
+        }
+    }
+
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = alignment,
@@ -69,19 +83,40 @@ fun ChatBubble(
                 .background(backgroundColor)
                 .padding(horizontal = AiFitSpacing.sm + AiFitSpacing.xs, vertical = AiFitSpacing.sm),
         ) {
-            if (isMarkdown && !isUser) {
-                MarkdownText(
-                    markdown = content,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = textColor,
-                    ),
-                )
-            } else {
-                Text(
-                    text = content,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = textColor,
-                )
+            Column {
+                // Show image preview if present
+                if (imageBytes != null) {
+                    AsyncImage(
+                        model = imageBytes,
+                        contentDescription = "Imagen adjunta",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .widthIn(max = 260.dp)
+                            .height(180.dp)
+                            .clip(MaterialTheme.shapes.small),
+                    )
+                    if (content.isNotBlank() && content != "📷 Imagen adjunta") {
+                        Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                    }
+                }
+
+                // Show text content (skip the placeholder text when there's an image and no real text)
+                val showText = content.isNotBlank() &&
+                    !(imageBytes != null && content == "📷 Imagen adjunta")
+                if (showText) {
+                    if (isMarkdown && !isUser) {
+                        MarkdownText(
+                            markdown = content,
+                            style = MaterialTheme.typography.bodyLarge.copy(color = textColor),
+                        )
+                    } else {
+                        Text(
+                            text = content,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = textColor,
+                        )
+                    }
+                }
             }
         }
         Text(

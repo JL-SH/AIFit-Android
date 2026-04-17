@@ -40,6 +40,7 @@ import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.gamification.domain.model.ExportPeriod
 import com.jlsh.aifit.feature.gamification.domain.model.ProgressExport
+import com.jlsh.aifit.feature.gamification.domain.model.toExportPeriodDisplayString
 import com.jlsh.aifit.feature.gamification.ui.state.ExportUiState
 
 @Composable
@@ -171,7 +172,7 @@ private fun ExportSummaryCard(export: ProgressExport) {
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "Período: ${export.period}",
+                text = "Período: ${export.period.toExportPeriodDisplayString()}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -228,7 +229,7 @@ private fun ExportStatRow(label: String, value: String) {
 private fun shareExport(context: Context, export: ProgressExport) {
     val text = buildString {
         appendLine("AIFit — Informe de progreso — ${export.userName}")
-        appendLine("Período: ${export.period}")
+        appendLine("Período: ${export.period.toExportPeriodDisplayString()}")
         appendLine()
         appendLine("Entrenamientos completados: ${export.totalWorkouts}")
         appendLine("Récords personales: ${export.totalPRs}")

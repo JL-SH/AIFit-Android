@@ -1,6 +1,10 @@
 package com.jlsh.aifit.feature.chat.ui
 
 import android.content.res.Configuration
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,6 +59,21 @@ fun ChatScreen(
     val chatState by viewModel.chatState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var showArchiveDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // Gallery picker launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri: Uri? ->
+        uri?.let {
+            val inputStream = context.contentResolver.openInputStream(it)
+            val bytes = inputStream?.readBytes()
+            inputStream?.close()
+            if (bytes != null) {
+                viewModel.onImageSelected(bytes)
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -109,6 +129,12 @@ fun ChatScreen(
                         state = chatState,
                         onInputChanged = viewModel::onInputChanged,
                         onSend = viewModel::onSendMessage,
+                        onAttachImage = {
+                            galleryLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        onRemoveImage = viewModel::onClearPendingImage,
                     )
                 }
             }
@@ -135,6 +161,8 @@ private fun ChatContent(
     state: ChatState,
     onInputChanged: (String) -> Unit,
     onSend: () -> Unit,
+    onAttachImage: () -> Unit,
+    onRemoveImage: () -> Unit,
 ) {
     val listState = rememberLazyListState()
 
@@ -181,8 +209,22 @@ private fun ChatContent(
                     isUser = message.role == ChatMessageRole.USER,
                     timestamp = formatTimestamp(message.createdAt),
                     isMarkdown = message.role == ChatMessageRole.ASSISTANT,
+                    imageBase64 = message.imageBase64,
                     modifier = Modifier.padding(vertical = AiFitSpacing.xs),
                 )
+            }
+
+            // Welcome message shown at the bottom (reverseLayout) when chat is empty
+            if (state.messages.isEmpty() && !state.isWaitingResponse) {
+                item(key = "welcome") {
+                    ChatBubble(
+                        content = "¡Hola! Soy tu **AI Coach** 💪\n\n¿En qué puedo ayudarte hoy?\n\n- Crear o ajustar tu plan de entrenamiento\n- Revisar tu dieta y nutrición\n- Resolver dudas sobre ejercicios\n- Analizar tu progreso",
+                        isUser = false,
+                        timestamp = "",
+                        isMarkdown = true,
+                        modifier = Modifier.padding(vertical = AiFitSpacing.xs),
+                    )
+                }
             }
         }
 
@@ -192,6 +234,9 @@ private fun ChatContent(
             onValueChange = onInputChanged,
             onSend = onSend,
             isLoading = state.isWaitingResponse,
+            pendingImageBytes = state.pendingImageBytes,
+            onAttachImage = onAttachImage,
+            onRemoveImage = onRemoveImage,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -227,7 +272,7 @@ private fun ChatScreenPreview() {
                         ChatMessage(
                             id = "1",
                             role = ChatMessageRole.ASSISTANT,
-                            content = "¡Hola! Soy tu **AI Coach**. ¿En qué puedo ayudarte hoy?\n\n- Crear un plan de entrenamiento\n- Ajustar tu dieta\n- Resolver dudas",
+                            content = "¡Hola! Soy tu **AI Coach**. ¿En qué puedo ayudarte hoy?",
                             createdAt = "2025-03-10T10:00:00Z",
                         ),
                         ChatMessage(
@@ -236,22 +281,15 @@ private fun ChatScreenPreview() {
                             content = "Necesito un plan para ganar masa muscular",
                             createdAt = "2025-03-10T10:01:00Z",
                         ),
-                        ChatMessage(
-                            id = "3",
-                            role = ChatMessageRole.ASSISTANT,
-                            content = "Perfecto. Basándome en tu perfil, te recomiendo un programa de **hipertrofia** de 4 días por semana.\n\n```\nLunes: Pecho + Tríceps\nMartes: Espalda + Bíceps\nJueves: Piernas\nViernes: Hombros + Core\n```",
-                            createdAt = "2025-03-10T10:02:00Z",
-                        ),
                     ),
                     sessionTitle = "Plan de hipertrofia",
                     isLoading = false,
                 ),
                 onInputChanged = {},
                 onSend = {},
+                onAttachImage = {},
+                onRemoveImage = {},
             )
         }
     }
 }
-
-
-

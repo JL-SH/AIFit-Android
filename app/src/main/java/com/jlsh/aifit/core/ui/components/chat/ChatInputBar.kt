@@ -2,12 +2,18 @@ package com.jlsh.aifit.core.ui.components.chat
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.rounded.AttachFile
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -18,8 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
@@ -31,111 +40,144 @@ fun ChatInputBar(
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
     placeholder: String = "Escribe un mensaje...",
+    pendingImageBytes: ByteArray? = null,
+    onAttachImage: (() -> Unit)? = null,
+    onRemoveImage: (() -> Unit)? = null,
 ) {
-    val isSendEnabled = value.isNotBlank() && !isLoading
+    val isSendEnabled = (value.isNotBlank() || pendingImageBytes != null) && !isLoading
 
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = AiFitSpacing.sm, vertical = AiFitSpacing.sm),
-        verticalAlignment = Alignment.Bottom,
+            .background(MaterialTheme.colorScheme.surface),
     ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.weight(1f),
-            enabled = !isLoading,
-            placeholder = {
-                Text(
-                    text = placeholder,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+        // Image preview strip
+        if (pendingImageBytes != null) {
+            Box(
+                modifier = Modifier
+                    .padding(start = AiFitSpacing.sm, top = AiFitSpacing.xs),
+            ) {
+                AsyncImage(
+                    model = pendingImageBytes,
+                    contentDescription = "Imagen adjunta",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline,
+                            shape = MaterialTheme.shapes.small,
+                        ),
                 )
-            },
-            maxLines = 4,
-            shape = MaterialTheme.shapes.medium,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onSurface,
-            ),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                cursorColor = MaterialTheme.colorScheme.primaryContainer,
-            ),
-        )
-        IconButton(
-            onClick = { if (isSendEnabled) onSend() },
-            enabled = isSendEnabled,
+                // Remove button
+                IconButton(
+                    onClick = { onRemoveImage?.invoke() },
+                    modifier = Modifier
+                        .size(22.dp)
+                        .align(Alignment.TopEnd)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.errorContainer),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = "Eliminar imagen",
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AiFitSpacing.sm, vertical = AiFitSpacing.sm),
+            verticalAlignment = Alignment.Bottom,
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    strokeWidth = 2.dp,
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.Send,
-                    contentDescription = "Enviar",
-                    tint = if (isSendEnabled) {
-                        MaterialTheme.colorScheme.primaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
+            // Attach image button
+            if (onAttachImage != null) {
+                IconButton(
+                    onClick = onAttachImage,
+                    enabled = !isLoading,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AttachFile,
+                        contentDescription = "Adjuntar imagen",
+                        tint = if (!isLoading) MaterialTheme.colorScheme.onSurfaceVariant
+                               else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    )
+                }
+            }
+
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.weight(1f),
+                enabled = !isLoading,
+                placeholder = {
+                    Text(
+                        text = placeholder,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                maxLines = 4,
+                shape = MaterialTheme.shapes.medium,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    cursorColor = MaterialTheme.colorScheme.primaryContainer,
+                ),
+            )
+            IconButton(
+                onClick = { if (isSendEnabled) onSend() },
+                enabled = isSendEnabled,
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.Send,
+                        contentDescription = "Enviar",
+                        tint = if (isSendEnabled) MaterialTheme.colorScheme.primaryContainer
+                               else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
 }
 
-@Preview(
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark - Empty"
-)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark - Empty")
 @Composable
 private fun ChatInputBarEmptyPreview() {
     AIFitTheme {
-        ChatInputBar(
-            value = "",
-            onValueChange = {},
-            onSend = {},
-        )
+        ChatInputBar(value = "", onValueChange = {}, onSend = {}, onAttachImage = {})
     }
 }
 
-@Preview(
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark - With Text"
-)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark - With Text")
 @Composable
 private fun ChatInputBarWithTextPreview() {
     AIFitTheme {
-        ChatInputBar(
-            value = "Hola, necesito ayuda",
-            onValueChange = {},
-            onSend = {},
-        )
+        ChatInputBar(value = "Hola, necesito ayuda", onValueChange = {}, onSend = {}, onAttachImage = {})
     }
 }
 
-@Preview(
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark - Loading"
-)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark - Loading")
 @Composable
 private fun ChatInputBarLoadingPreview() {
     AIFitTheme {
-        ChatInputBar(
-            value = "",
-            onValueChange = {},
-            onSend = {},
-            isLoading = true,
-        )
+        ChatInputBar(value = "", onValueChange = {}, onSend = {}, isLoading = true)
     }
 }
