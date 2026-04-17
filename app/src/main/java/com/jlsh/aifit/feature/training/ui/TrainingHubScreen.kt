@@ -122,13 +122,13 @@ fun TrainingHubScreen(
     Scaffold(
         topBar = {
             AiFitTopBar(
-                title = "Entrenamiento",
+                title = stringResource(R.string.training_hub_title),
                 background = MaterialTheme.colorScheme.secondaryContainer,
                 actions = {
                     IconButton(onClick = { viewModel.onNavigateToWorkoutHistory() }) {
                         Icon(
                             imageVector = Icons.Rounded.History,
-                            contentDescription = "Historial de entrenamientos",
+                            contentDescription = stringResource(R.string.training_hub_history_cd),
                         )
                     }
                 },
@@ -144,7 +144,7 @@ fun TrainingHubScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Add,
-                        contentDescription = "Nuevo plan",
+                        contentDescription = stringResource(R.string.training_hub_new_plan_cd),
                     )
                 }
             }
@@ -175,11 +175,11 @@ fun TrainingHubScreen(
                 ) {
                     EmptyStateView(
                         icon = Icons.Rounded.FitnessCenter,
-                        title = "Sin planes activos",
-                        subtitle = "Genera tu primer plan de entrenamiento con IA",
+                        title = stringResource(R.string.training_hub_no_active_title),
+                        subtitle = stringResource(R.string.training_hub_no_active_subtitle),
                         action = {
                             PrimaryButton(
-                                text = "CREAR PLAN",
+                                text = stringResource(R.string.training_hub_create_plan),
                                 onClick = { viewModel.onNavigateToGenerate() },
                                 modifier = Modifier.padding(horizontal = AiFitSpacing.xl),
                             )
@@ -217,7 +217,7 @@ fun TrainingHubScreen(
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
-                            text = "Activando plan…",
+                            text = stringResource(R.string.training_hub_activating_plan),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.inverseOnSurface,
                         )
@@ -254,8 +254,8 @@ private fun ActivePlanContent(
 
     if (planToActivate != null) {
         ConfirmationDialog(
-            title = "Activar plan",
-            message = "Solo puede haber un plan activo. El plan actual pasará a pausado.",
+            title = stringResource(R.string.training_hub_activate_plan_title),
+            message = stringResource(R.string.training_hub_activate_plan_message),
             onConfirm = {
                 planToActivate?.let { onActivatePlan(it) }
                 planToActivate = null
@@ -299,14 +299,14 @@ private fun ActivePlanContent(
                     )
 
                     Text(
-                        text = "Week ${state.currentWeek} of ${state.plan.durationWeeks}",
+                        text = stringResource(R.string.training_hub_week_of, state.currentWeek, state.plan.durationWeeks),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
                     if (state.nextDay != null) {
                         Text(
-                            text = "Next: ${state.nextDay.name}",
+                            text = stringResource(R.string.training_hub_next_day, state.nextDay.name),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primaryContainer,
                         )
@@ -386,7 +386,7 @@ private fun PlanSummaryItem(
             if (plan.status != PlanStatus.ACTIVE && plan.status != PlanStatus.COMPLETED) {
                 TextButton(onClick = onActivate) {
                     Text(
-                        text = "Activar",
+                        text = stringResource(R.string.training_hub_activate_button),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primaryContainer,
                     )

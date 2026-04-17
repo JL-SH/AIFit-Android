@@ -152,5 +152,124 @@
     <string name="metabolic_title">Metabolic analysis</string>
     <string name="metabolic_no_adjustments">No adjustments recommended</string>
     <string name="metabolic_no_adjustments_subtitle">No adjustment needed right now. Keep it up.</string>
+
+    <!-- Training Hub -->
+    <string name="training_hub_title">Training</string>
+    <string name="training_hub_history_cd">Workout history</string>
+    <string name="training_hub_new_plan_cd">New plan</string>
+    <string name="training_hub_no_active_title">No active plans</string>
+    <string name="training_hub_no_active_subtitle">Generate your first AI training plan</string>
+    <string name="training_hub_create_plan">CREATE PLAN</string>
+    <string name="training_hub_activating_plan">Activating plan…</string>
+    <string name="training_hub_activate_plan_title">Activate plan</string>
+    <string name="training_hub_activate_plan_message">Only one plan can be active. The current plan will be paused.</string>
+    <string name="training_hub_activate_button">Activate</string>
+    <string name="training_hub_week_of">Week %1$d of %2$d</string>
+    <string name="training_hub_next_day">Next: %1$s</string>
+
+    <!-- Training Detail -->
+    <string name="training_detail_title">Training plan</string>
+    <string name="training_detail_adaptive_plan_cd">Adaptive plan</string>
+    <string name="training_detail_no_days_title">No training days</string>
+    <string name="training_detail_no_days_subtitle">This plan has no available days. It may have been deleted or its data is unavailable.</string>
+    <string name="training_detail_day_label">Day %1$d — %2$s</string>
+    <string name="training_detail_rest_day">Rest day — recovery</string>
+    <string name="training_detail_start_session">START SESSION</string>
+    <string name="training_detail_rest_seconds">%1$ds rest</string>
+    <string name="training_detail_exercise_explanation_title">Exercise explanation</string>
+    <string name="training_detail_exercise_explanation_desc_plan">AI will generate a detailed explanation of this exercise from your plan.</string>
+    <string name="training_detail_generate_explanation">Generate explanation</string>
+    <string name="training_detail_progression_cd">Progression</string>
+
+    <!-- Training Generate Plan -->
+    <string name="training_generate_title">Generate plan</string>
+    <string name="training_generate_adaptive_title">Adaptive plan</string>
+    <string name="training_generate_frequency_label">WEEKLY FREQUENCY</string>
+    <string name="training_generate_session_duration_label">SESSION DURATION</string>
+    <string name="training_generate_plan_duration_label">PLAN DURATION</string>
+    <string name="training_generate_goal_label">GOAL</string>
+    <string name="training_generate_location_label">TRAINING LOCATION</string>
+    <string name="training_generate_focus_areas_label">FOCUS AREAS</string>
+    <string name="training_generate_injuries_hint">Injuries (optional)</string>
+    <string name="training_generate_notes_hint">Additional notes (optional)</string>
+    <string name="training_generate_avoid_exercises_hint">Exercises to avoid (optional)</string>
+    <string name="training_generate_button">GENERATE PLAN</string>
+    <string name="training_generate_loading_button">Generating your plan…</string>
+    <string name="training_generate_loading_title">Designing your training plan</string>
+    <string name="training_generate_loading_subtitle">Calculating sets, reps and personalised progression</string>
+    <string name="training_generate_loading_timer">Generating your plan… %1$ds</string>
+
+    <!-- Training Approval -->
+    <string name="training_approval_title">Your New Plan</string>
+    <string name="training_approval_plan_label">TRAINING PLAN</string>
+    <string name="training_approval_rest">Rest</string>
+    <string name="training_approval_change_plan">Change Plan</string>
+    <string name="training_approval_accept_plan">Accept Plan</string>
+    <string name="training_approval_training_days">%1$d training days</string>
+    <string name="training_approval_exercises">%1$d exercises</string>
+    <string name="training_approval_day_label">Day %1$d</string>
+
+    <!-- Workout Session -->
+    <string name="workout_session_exercise_counter">Exercise %1$d of %2$d</string>
+    <string name="workout_session_finalize">Finish</string>
+    <string name="workout_session_rest_label">Rest</string>
+    <string name="workout_session_skip_rest">Skip rest</string>
+    <string name="workout_session_previous_session">Previous session</string>
+    <string name="workout_session_current_session">This session</string>
+    <string name="workout_session_substitute_exercise">Substitute exercise</string>
+    <string name="workout_session_options_cd">Options</string>
+    <string name="workout_session_sets_progress">%1$d/%2$d sets</string>
+    <string name="workout_session_set_number">Set %1$d</string>
+    <string name="workout_session_suggestion">Suggestion: %1$s kg for the next set</string>
+    <string name="workout_session_dismiss_cd">Dismiss</string>
+    <string name="workout_session_weight_label">Weight</string>
+    <string name="workout_session_reps_label">Reps</string>
+    <string name="workout_session_rpe_label">RPE (optional)</string>
+    <string name="workout_session_weight_error">Weight &gt; 0</string>
+    <string name="workout_session_reps_error">Reps &gt; 0</string>
+    <string name="workout_session_rpe_error">RPE between 1 and 10</string>
+    <string name="workout_session_add_set">Add set</string>
+
+    <!-- Workout History -->
+    <string name="workout_history_filter_all">All</string>
+    <string name="workout_history_filter_from">From</string>
+    <string name="workout_history_filter_to">To</string>
+    <string name="workout_history_empty_title">No sessions recorded yet</string>
+    <string name="workout_history_empty_subtitle">Complete your first workout to see the history</string>
+    <string name="workout_history_exercises">%1$d exercises</string>
+    <string name="workout_history_sets">%1$d sets</string>
+
+    <!-- Workout Log -->
+    <string name="workout_log_finish_session">FINISH SESSION</string>
+    <string name="workout_log_discard_title">Discard session?</string>
+    <string name="workout_log_discard_message">You will lose the registered data</string>
+    <string name="workout_log_set_header">SET</string>
+    <string name="workout_log_kg_header">KG</string>
+    <string name="workout_log_reps_header">REPS</string>
+    <string name="workout_log_set_completed_cd">Completed</string>
+    <string name="workout_log_set_mark_done_cd">Mark as done</string>
+
+    <!-- Workout Detail -->
+    <string name="workout_detail_title">Workout session</string>
+    <string name="workout_detail_summary_header">SUMMARY</string>
+    <string name="workout_detail_total_volume">Total volume</string>
+    <string name="workout_detail_completed_exercises">Completed exercises</string>
+    <string name="workout_detail_duration_label">Duration</string>
+    <string name="workout_detail_fatigue">Fatigue</string>
+    <string name="workout_detail_joint_pain">Joint pain</string>
+    <string name="workout_detail_no_pain">None</string>
+    <string name="workout_detail_exercises_header">EXERCISES</string>
+    <string name="workout_detail_exercise_explanation_desc_session">AI will generate a detailed explanation of this exercise from your session.</string>
+    <string name="workout_detail_stat_min">MIN</string>
+    <string name="workout_detail_stat_exercises">EXERCISES</string>
+    <string name="workout_detail_stat_sets">SETS</string>
+    <string name="workout_detail_col_set">SET</string>
+    <string name="workout_detail_col_weight">WEIGHT</string>
+    <string name="workout_detail_col_reps">REPS</string>
+    <string name="workout_detail_col_ok">OK</string>
+    <string name="workout_detail_set_completed_cd">Completed</string>
+    <string name="workout_detail_set_not_completed_cd">Not completed</string>
+    <string name="workout_detail_reps_format">%1$d reps</string>
+    <string name="workout_detail_duration_format">%1$d min</string>
 </resources>
 

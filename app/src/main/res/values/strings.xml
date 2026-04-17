@@ -448,4 +448,139 @@
     <string name="abandon_session_message">Se perderá todo el progreso registrado en esta sesión. Esta acción no se puede deshacer.</string>
     <string name="abandon_session_confirm">Abandonar sesión</string>
     <string name="abandon_session_dismiss">Continuar sesión</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         TRAINING HUB
+         ══════════════════════════════════════════════════════════ -->
+    <string name="training_hub_title">Entrenamiento</string>
+    <string name="training_hub_history_cd">Historial de entrenamientos</string>
+    <string name="training_hub_new_plan_cd">Nuevo plan</string>
+    <string name="training_hub_no_active_title">Sin planes activos</string>
+    <string name="training_hub_no_active_subtitle">Genera tu primer plan de entrenamiento con IA</string>
+    <string name="training_hub_create_plan">CREAR PLAN</string>
+    <string name="training_hub_activating_plan">Activando plan…</string>
+    <string name="training_hub_activate_plan_title">Activar plan</string>
+    <string name="training_hub_activate_plan_message">Solo puede haber un plan activo. El plan actual pasará a pausado.</string>
+    <string name="training_hub_activate_button">Activar</string>
+    <string name="training_hub_week_of">Semana %1$d de %2$d</string>
+    <string name="training_hub_next_day">Siguiente: %1$s</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         TRAINING DETAIL
+         ══════════════════════════════════════════════════════════ -->
+    <string name="training_detail_title">Plan de entrenamiento</string>
+    <string name="training_detail_adaptive_plan_cd">Plan adaptativo</string>
+    <string name="training_detail_no_days_title">Sin días de entrenamiento</string>
+    <string name="training_detail_no_days_subtitle">Este plan no tiene días disponibles. Es posible que haya sido eliminado o que sus datos no estén disponibles.</string>
+    <string name="training_detail_day_label">Día %1$d — %2$s</string>
+    <string name="training_detail_rest_day">Descanso — recuperación</string>
+    <string name="training_detail_start_session">INICIAR SESIÓN</string>
+    <string name="training_detail_rest_seconds">%1$ds descanso</string>
+    <string name="training_detail_exercise_explanation_title">Explicación del ejercicio</string>
+    <string name="training_detail_exercise_explanation_desc_plan">La IA generará una explicación detallada de este ejercicio de tu plan.</string>
+    <string name="training_detail_generate_explanation">Generar explicación</string>
+    <string name="training_detail_progression_cd">Progresión</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         TRAINING GENERATE PLAN
+         ══════════════════════════════════════════════════════════ -->
+    <string name="training_generate_title">Generar plan</string>
+    <string name="training_generate_adaptive_title">Plan adaptativo</string>
+    <string name="training_generate_frequency_label">FRECUENCIA SEMANAL</string>
+    <string name="training_generate_session_duration_label">DURACIÓN POR SESIÓN</string>
+    <string name="training_generate_plan_duration_label">DURACIÓN DEL PLAN</string>
+    <string name="training_generate_goal_label">OBJETIVO</string>
+    <string name="training_generate_location_label">LUGAR DE ENTRENAMIENTO</string>
+    <string name="training_generate_focus_areas_label">ÁREAS DE ENFOQUE</string>
+    <string name="training_generate_injuries_hint">Lesiones (opcional)</string>
+    <string name="training_generate_notes_hint">Notas adicionales (opcional)</string>
+    <string name="training_generate_avoid_exercises_hint">Ejercicios a evitar (opcional)</string>
+    <string name="training_generate_button">GENERAR PLAN</string>
+    <string name="training_generate_loading_button">Generando tu plan…</string>
+    <string name="training_generate_loading_title">Diseñando tu plan de entrenamiento</string>
+    <string name="training_generate_loading_subtitle">Calculando series, reps y progresión personalizada</string>
+    <string name="training_generate_loading_timer">Generando tu plan… %1$ds</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         TRAINING APPROVAL
+         ══════════════════════════════════════════════════════════ -->
+    <string name="training_approval_title">Tu Nuevo Plan</string>
+    <string name="training_approval_plan_label">PLAN DE ENTRENAMIENTO</string>
+    <string name="training_approval_rest">Descanso</string>
+    <string name="training_approval_change_plan">Cambiar Plan</string>
+    <string name="training_approval_accept_plan">Aceptar Plan</string>
+    <string name="training_approval_training_days">%1$d días de entrenamiento</string>
+    <string name="training_approval_exercises">%1$d ejercicios</string>
+    <string name="training_approval_day_label">Día %1$d</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         WORKOUT SESSION
+         ══════════════════════════════════════════════════════════ -->
+    <string name="workout_session_exercise_counter">Ejercicio %1$d de %2$d</string>
+    <string name="workout_session_finalize">Finalizar</string>
+    <string name="workout_session_rest_label">Descanso</string>
+    <string name="workout_session_skip_rest">Saltar descanso</string>
+    <string name="workout_session_previous_session">Sesión anterior</string>
+    <string name="workout_session_current_session">Esta sesión</string>
+    <string name="workout_session_substitute_exercise">Sustituir ejercicio</string>
+    <string name="workout_session_options_cd">Opciones</string>
+    <string name="workout_session_sets_progress">%1$d/%2$d series</string>
+    <string name="workout_session_set_number">Serie %1$d</string>
+    <string name="workout_session_suggestion">Sugerencia: %1$s kg para la siguiente serie</string>
+    <string name="workout_session_dismiss_cd">Descartar</string>
+    <string name="workout_session_weight_label">Peso</string>
+    <string name="workout_session_reps_label">Reps</string>
+    <string name="workout_session_rpe_label">RPE (opcional)</string>
+    <string name="workout_session_weight_error">Peso &gt; 0</string>
+    <string name="workout_session_reps_error">Reps &gt; 0</string>
+    <string name="workout_session_rpe_error">RPE entre 1 y 10</string>
+    <string name="workout_session_add_set">Añadir serie</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         WORKOUT HISTORY
+         ══════════════════════════════════════════════════════════ -->
+    <string name="workout_history_filter_all">Todos</string>
+    <string name="workout_history_filter_from">Desde</string>
+    <string name="workout_history_filter_to">Hasta</string>
+    <string name="workout_history_empty_title">No has registrado sesiones aún</string>
+    <string name="workout_history_empty_subtitle">Completa tu primer entrenamiento para ver el historial</string>
+    <string name="workout_history_exercises">%1$d ejercicios</string>
+    <string name="workout_history_sets">%1$d series</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         WORKOUT LOG
+         ══════════════════════════════════════════════════════════ -->
+    <string name="workout_log_finish_session">FINALIZAR SESIÓN</string>
+    <string name="workout_log_discard_title">¿Descartar sesión?</string>
+    <string name="workout_log_discard_message">Perderás los datos registrados</string>
+    <string name="workout_log_set_header">SET</string>
+    <string name="workout_log_kg_header">KG</string>
+    <string name="workout_log_reps_header">REPS</string>
+    <string name="workout_log_set_completed_cd">Completada</string>
+    <string name="workout_log_set_mark_done_cd">Marcar como hecha</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         WORKOUT DETAIL
+         ══════════════════════════════════════════════════════════ -->
+    <string name="workout_detail_title">Sesión de entrenamiento</string>
+    <string name="workout_detail_summary_header">RESUMEN</string>
+    <string name="workout_detail_total_volume">Volumen total</string>
+    <string name="workout_detail_completed_exercises">Ejercicios completados</string>
+    <string name="workout_detail_duration_label">Duración</string>
+    <string name="workout_detail_fatigue">Fatiga</string>
+    <string name="workout_detail_joint_pain">Dolor articular</string>
+    <string name="workout_detail_no_pain">Ninguno</string>
+    <string name="workout_detail_exercises_header">EJERCICIOS</string>
+    <string name="workout_detail_exercise_explanation_desc_session">La IA generará una explicación detallada de este ejercicio de tu sesión.</string>
+    <string name="workout_detail_stat_min">MIN</string>
+    <string name="workout_detail_stat_exercises">EJERCICIOS</string>
+    <string name="workout_detail_stat_sets">SERIES</string>
+    <string name="workout_detail_col_set">SERIE</string>
+    <string name="workout_detail_col_weight">PESO</string>
+    <string name="workout_detail_col_reps">REPS</string>
+    <string name="workout_detail_col_ok">OK</string>
+    <string name="workout_detail_set_completed_cd">Completada</string>
+    <string name="workout_detail_set_not_completed_cd">No completada</string>
+    <string name="workout_detail_reps_format">%1$d reps</string>
+    <string name="workout_detail_duration_format">%1$d min</string>
 </resources>

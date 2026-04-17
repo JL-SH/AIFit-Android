@@ -29,11 +29,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
@@ -150,8 +152,8 @@ fun WorkoutHistoryScreen(
                     ) {
                         EmptyStateView(
                             icon = Icons.Rounded.FitnessCenter,
-                            title = "No has registrado sesiones aún",
-                            subtitle = "Completa tu primer entrenamiento para ver el historial",
+                            title = stringResource(R.string.workout_history_empty_title),
+                            subtitle = stringResource(R.string.workout_history_empty_subtitle),
                         )
                     }
                 } else {
@@ -228,7 +230,7 @@ private fun HistoryFiltersBar(
                     onClick = { onPlanSelected(null) },
                     label = {
                         Text(
-                            text = "Todos",
+                            text = stringResource(R.string.workout_history_filter_all),
                             style = MaterialTheme.typography.labelMedium,
                         )
                     },
@@ -292,7 +294,7 @@ private fun HistoryFiltersBar(
                 onClick = onDateFromClick,
                 label = {
                     Text(
-                        text = dateFrom ?: "Desde",
+                        text = dateFrom ?: stringResource(R.string.workout_history_filter_from),
                         style = MaterialTheme.typography.labelMedium,
                     )
                 },
@@ -314,7 +316,7 @@ private fun HistoryFiltersBar(
                 onClick = onDateToClick,
                 label = {
                     Text(
-                        text = dateTo ?: "Hasta",
+                        text = dateTo ?: stringResource(R.string.workout_history_filter_to),
                         style = MaterialTheme.typography.labelMedium,
                     )
                 },
@@ -412,7 +414,7 @@ private fun WorkoutLogCard(
                     )
                     if (log.sets.isNotEmpty()) {
                         Text(
-                            text = "${log.sets.size} series",
+                            text = stringResource(R.string.workout_history_sets, log.sets.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

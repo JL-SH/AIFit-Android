@@ -226,13 +226,13 @@ private fun WorkoutSessionContent(
         Scaffold(
             topBar = {
                 AiFitTopBar(
-                    title = "Ejercicio ${pagerState.currentPage + 1} de ${exercises.size}",
+                    title = stringResource(R.string.workout_session_exercise_counter, pagerState.currentPage + 1, exercises.size),
                     onBack = onAbandon,
                     actions = {
                         if (hasRegisteredSets) {
                             TextButton(onClick = onFinalize) {
                                 Text(
-                                    text = "Finalizar",
+                                    text = stringResource(R.string.workout_session_finalize),
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                 )
                             }
@@ -313,7 +313,7 @@ private fun RestTimerOverlay(
                 )
                 Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                 Text(
-                    text = "Descanso",
+                    text = stringResource(R.string.workout_session_rest_label),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -330,7 +330,7 @@ private fun RestTimerOverlay(
             )
 
             SecondaryButton(
-                text = "Saltar descanso",
+                text = stringResource(R.string.workout_session_skip_rest),
                 onClick = onDismiss,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -375,7 +375,7 @@ private fun ExercisePage(
         if (ghostSets.isNotEmpty()) {
             item(key = "ghost_header") {
                 Text(
-                    text = "Sesión anterior",
+                    text = stringResource(R.string.workout_session_previous_session),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     modifier = Modifier.padding(top = AiFitSpacing.xs),
@@ -389,7 +389,7 @@ private fun ExercisePage(
         if (registeredSets.isNotEmpty()) {
             item(key = "registered_header") {
                 Text(
-                    text = "Esta sesión",
+                    text = stringResource(R.string.workout_session_current_session),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = AiFitSpacing.sm),
@@ -456,7 +456,7 @@ private fun ExerciseHeader(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.MoreVert,
-                            contentDescription = "Opciones",
+                            contentDescription = stringResource(R.string.workout_session_options_cd),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -465,7 +465,7 @@ private fun ExerciseHeader(
                         onDismissRequest = { menuExpanded = false },
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Sustituir ejercicio") },
+                            text = { Text(stringResource(R.string.workout_session_substitute_exercise)) },
                             onClick = {
                                 menuExpanded = false
                                 onRequestSubstitution()
@@ -483,7 +483,7 @@ private fun ExerciseHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "${exercise.completedSets}/${exercise.targetSets} series",
+                text = stringResource(R.string.workout_session_sets_progress, exercise.completedSets, exercise.targetSets),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primaryContainer,
             )
@@ -501,7 +501,7 @@ private fun GhostSetRow(set: WorkoutSetLog) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = "Serie ${set.exerciseSetNumber}",
+            text = stringResource(R.string.workout_session_set_number, set.exerciseSetNumber),
             style = MaterialTheme.typography.bodySmall,
             color = mutedColor,
         )
@@ -527,7 +527,7 @@ private fun RegisteredSetRow(set: WorkoutSetLog) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = "Serie ${set.exerciseSetNumber}",
+            text = stringResource(R.string.workout_session_set_number, set.exerciseSetNumber),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -558,7 +558,7 @@ private fun AutoregulationChip(suggestion: Double) {
         onClick = { },
         label = {
             Text(
-                text = "Sugerencia: ${"%.1f".format(suggestion)} kg para la siguiente serie",
+                text = stringResource(R.string.workout_session_suggestion, "%.1f".format(suggestion)),
                 style = MaterialTheme.typography.labelMedium,
             )
         },
@@ -569,7 +569,7 @@ private fun AutoregulationChip(suggestion: Double) {
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Close,
-                    contentDescription = "Descartar",
+                    contentDescription = stringResource(R.string.workout_session_dismiss_cd),
                     modifier = Modifier.size(14.dp),
                 )
             }
@@ -594,6 +594,10 @@ private fun SetRegistrationForm(
     var repsError by remember { mutableStateOf<String?>(null) }
     var rpeError by remember { mutableStateOf<String?>(null) }
 
+    val weightErrorStr = stringResource(R.string.workout_session_weight_error)
+    val repsErrorStr = stringResource(R.string.workout_session_reps_error)
+    val rpeErrorStr = stringResource(R.string.workout_session_rpe_error)
+
     Column(
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
     ) {
@@ -607,7 +611,7 @@ private fun SetRegistrationForm(
                     weight = it
                     weightError = null
                 },
-                label = "Peso",
+                label = stringResource(R.string.workout_session_weight_label),
                 suffix = "kg",
                 error = weightError,
                 modifier = Modifier.weight(1f),
@@ -618,7 +622,7 @@ private fun SetRegistrationForm(
                     reps = it
                     repsError = null
                 },
-                label = "Reps",
+                label = stringResource(R.string.workout_session_reps_label),
                 error = repsError,
                 modifier = Modifier.weight(1f),
             )
@@ -628,7 +632,7 @@ private fun SetRegistrationForm(
                     rpe = it
                     rpeError = null
                 },
-                label = "RPE (opcional)",
+                label = stringResource(R.string.workout_session_rpe_label),
                 error = rpeError,
                 modifier = Modifier.weight(1f),
             )
@@ -637,7 +641,7 @@ private fun SetRegistrationForm(
         Spacer(modifier = Modifier.height(AiFitSpacing.xs))
 
         PrimaryButton(
-            text = "Añadir serie",
+            text = stringResource(R.string.workout_session_add_set),
             onClick = {
                 val weightVal = weight.toDoubleOrNull()
                 val repsVal = reps.toIntOrNull()
@@ -646,15 +650,15 @@ private fun SetRegistrationForm(
                 var hasError = false
 
                 if (weightVal == null || weightVal <= 0) {
-                    weightError = "Peso > 0"
+                    weightError = weightErrorStr
                     hasError = true
                 }
                 if (repsVal == null || repsVal <= 0) {
-                    repsError = "Reps > 0"
+                    repsError = repsErrorStr
                     hasError = true
                 }
                 if (rpeVal != null && (rpeVal < 1 || rpeVal > 10)) {
-                    rpeError = "RPE entre 1 y 10"
+                    rpeError = rpeErrorStr
                     hasError = true
                 }
 

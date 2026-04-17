@@ -105,7 +105,7 @@ fun TrainingPlanApprovalScreen(
 
     ScreenScaffold<TrainingDetailUiState.Ready>(
         uiState = detailUiState,
-        topBar = { AiFitTopBar(title = "Tu Nuevo Plan") },
+        topBar = { AiFitTopBar(title = stringResource(R.string.training_approval_title)) },
         onRetry = { viewModel.loadPlanDetail(planId) },
     ) { paddingValues, state ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -150,11 +150,11 @@ fun TrainingPlanApprovalScreen(
                         horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                     ) {
                         ApprovalSummaryChip(
-                            text = "${trainingDays.size} días de entrenamiento",
+                            text = stringResource(R.string.training_approval_training_days, trainingDays.size),
                             modifier = Modifier.weight(1f),
                         )
                         ApprovalSummaryChip(
-                            text = "$exerciseCount ejercicios",
+                            text = stringResource(R.string.training_approval_exercises, exerciseCount),
                             modifier = Modifier.weight(1f),
                         )
                     }
@@ -163,7 +163,7 @@ fun TrainingPlanApprovalScreen(
                 // Days label
                 item {
                     Text(
-                        text = "PLAN DE ENTRENAMIENTO",
+                        text = stringResource(R.string.training_approval_plan_label),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 1.5.sp,
@@ -173,7 +173,7 @@ fun TrainingPlanApprovalScreen(
 
                 // Days
                 itemsIndexed(sortedDays) { index, dayItem ->
-                    val dayLabel = "Día ${index + 1}"
+                    val dayLabel = stringResource(R.string.training_approval_day_label, index + 1)
                     when (dayItem) {
                         is TrainingDayItem.Training -> {
                             val day = dayItem.day
@@ -212,7 +212,7 @@ fun TrainingPlanApprovalScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                     Text(
-                                        text = "Descanso",
+                                        text = stringResource(R.string.training_approval_rest),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -239,12 +239,12 @@ fun TrainingPlanApprovalScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     SecondaryButton(
-                        text = "Cambiar Plan",
+                        text = stringResource(R.string.training_approval_change_plan),
                         onClick = { showFeedbackSheet = true },
                         modifier = Modifier.weight(1f),
                     )
                     PrimaryButton(
-                        text = "Aceptar Plan",
+                        text = stringResource(R.string.training_approval_accept_plan),
                         onClick = { viewModel.onApprovePlan(planId) },
                         enabled = detailUiState !is TrainingDetailUiState.Loading,
                         modifier = Modifier.weight(1f),

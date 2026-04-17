@@ -37,6 +37,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.jlsh.aifit.R
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -99,9 +101,9 @@ fun WorkoutDetailScreen(
     // ── Sheets ──
     if (showExplanationConfirmForExerciseId != null) {
         EducationConfirmSheet(
-            title = "Explicación del ejercicio",
-            description = "La IA generará una explicación detallada de este ejercicio de tu sesión.",
-            confirmText = "Generar explicación",
+            title = stringResource(R.string.training_detail_exercise_explanation_title),
+            description = stringResource(R.string.workout_detail_exercise_explanation_desc_session),
+            confirmText = stringResource(R.string.training_detail_generate_explanation),
             onDismiss = { showExplanationConfirmForExerciseId = null },
             onConfirm = {
                 val exerciseId = showExplanationConfirmForExerciseId
@@ -141,7 +143,7 @@ fun WorkoutDetailScreen(
         snackbarHostState = snackbarHostState,
         topBar = {
             AiFitTopBar(
-                title = "Sesión de entrenamiento",
+                title = stringResource(R.string.workout_detail_title),
                 onBack = onNavigateBack,
             )
         },
@@ -240,7 +242,7 @@ private fun WorkoutDetailContent(
                     log.durationMinutes?.let { dur ->
                         StatCell(
                             value = "$dur",
-                            label = "MIN",
+                            label = stringResource(R.string.workout_detail_stat_min),
                             modifier = Modifier.weight(1f),
                         )
                         StatDivider()
@@ -255,13 +257,13 @@ private fun WorkoutDetailContent(
                     }
                     StatCell(
                         value = "${log.totalExercises}",
-                        label = "EJERCICIOS",
+                        label = stringResource(R.string.workout_detail_stat_exercises),
                         modifier = Modifier.weight(1f),
                     )
                     StatDivider()
                     StatCell(
                         value = "$completedSets/$totalSets",
-                        label = "SERIES",
+                        label = stringResource(R.string.workout_detail_stat_sets),
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -288,7 +290,7 @@ private fun WorkoutDetailContent(
                     verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                 ) {
                     Text(
-                        text = "RESUMEN",
+                        text = stringResource(R.string.workout_detail_summary_header),
                         style = MaterialTheme.typography.labelSmall,
                         letterSpacing = 1.5.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -296,42 +298,42 @@ private fun WorkoutDetailContent(
 
                     // Total volume
                     SummaryRow(
-                        label = "Volumen total",
+                        label = stringResource(R.string.workout_detail_total_volume),
                         value = "${totalVolume.toLong()} kg",
                     )
 
                     // Exercises count
                     SummaryRow(
-                        label = "Ejercicios completados",
+                        label = stringResource(R.string.workout_detail_completed_exercises),
                         value = "${log.totalExercises}",
                     )
 
                     // Duration
                     log.durationMinutes?.let { dur ->
                         SummaryRow(
-                            label = "Duración",
-                            value = "$dur min",
+                            label = stringResource(R.string.workout_detail_duration_label),
+                            value = stringResource(R.string.workout_detail_duration_format, dur),
                         )
                     }
 
                     // Fatigue
                     log.perceivedSystemicFatigue?.let { fatigue ->
                         SummaryRow(
-                            label = "Fatiga",
+                            label = stringResource(R.string.workout_detail_fatigue),
                             value = "$fatigue/10",
                         )
                     }
 
                     // Joint pain zones
                     val painText = if (log.jointPainReport.isEmpty()) {
-                        "Ninguno"
+                        stringResource(R.string.workout_detail_no_pain)
                     } else {
                         log.jointPainReport.joinToString(", ") { entry ->
                             jointZoneLabel(entry.zone)
                         }
                     }
                     SummaryRow(
-                        label = "Dolor articular",
+                        label = stringResource(R.string.workout_detail_joint_pain),
                         value = painText,
                     )
                 }
@@ -347,7 +349,7 @@ private fun WorkoutDetailContent(
         // Section header
         item(key = "exercises_header") {
             Text(
-                text = "EJERCICIOS",
+                text = stringResource(R.string.workout_detail_exercises_header),
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 1.5.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -426,14 +428,14 @@ private fun WorkoutDetailContent(
                     if (log.isLocked) {
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Text(
-                                text = "SERIE",
+                                text = stringResource(R.string.workout_detail_col_set),
                                 style = MaterialTheme.typography.labelSmall,
                                 letterSpacing = 1.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(0.12f),
                             )
                             Text(
-                                text = "PESO",
+                                text = stringResource(R.string.workout_detail_col_weight),
                                 style = MaterialTheme.typography.labelSmall,
                                 letterSpacing = 1.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -441,7 +443,7 @@ private fun WorkoutDetailContent(
                                 modifier = Modifier.weight(0.22f),
                             )
                             Text(
-                                text = "REPS",
+                                text = stringResource(R.string.workout_detail_col_reps),
                                 style = MaterialTheme.typography.labelSmall,
                                 letterSpacing = 1.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -465,7 +467,7 @@ private fun WorkoutDetailContent(
                                 modifier = Modifier.weight(0.18f),
                             )
                             Text(
-                                text = "OK",
+                                text = stringResource(R.string.workout_detail_col_ok),
                                 style = MaterialTheme.typography.labelSmall,
                                 letterSpacing = 1.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -476,14 +478,14 @@ private fun WorkoutDetailContent(
                     } else {
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Text(
-                                text = "SERIE",
+                                text = stringResource(R.string.workout_detail_col_set),
                                 style = MaterialTheme.typography.labelSmall,
                                 letterSpacing = 1.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(0.15f),
                             )
                             Text(
-                                text = "PESO",
+                                text = stringResource(R.string.workout_detail_col_weight),
                                 style = MaterialTheme.typography.labelSmall,
                                 letterSpacing = 1.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -491,7 +493,7 @@ private fun WorkoutDetailContent(
                                 modifier = Modifier.weight(0.3f),
                             )
                             Text(
-                                text = "REPS",
+                                text = stringResource(R.string.workout_detail_col_reps),
                                 style = MaterialTheme.typography.labelSmall,
                                 letterSpacing = 1.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -499,7 +501,7 @@ private fun WorkoutDetailContent(
                                 modifier = Modifier.weight(0.3f),
                             )
                             Text(
-                                text = "OK",
+                                text = stringResource(R.string.workout_detail_col_ok),
                                 style = MaterialTheme.typography.labelSmall,
                                 letterSpacing = 1.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -654,7 +656,7 @@ private fun SetDetailRow(
         )
         // Reps — dato importante
         Text(
-            text = set.repsCompleted?.let { "$it reps" } ?: "—",
+            text = set.repsCompleted?.let { stringResource(R.string.workout_detail_reps_format, it) } ?: "—",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
@@ -667,7 +669,7 @@ private fun SetDetailRow(
         ) {
             Icon(
                 imageVector = if (set.completed) Icons.Rounded.Check else Icons.Rounded.Close,
-                contentDescription = if (set.completed) "Completada" else "No completada",
+                contentDescription = if (set.completed) stringResource(R.string.workout_detail_set_completed_cd) else stringResource(R.string.workout_detail_set_not_completed_cd),
                 tint = if (set.completed)
                     MaterialTheme.colorScheme.primaryContainer
                 else
@@ -729,7 +731,7 @@ private fun LockedSetDetailRow(
         ) {
             Icon(
                 imageVector = if (set.completed) Icons.Rounded.Check else Icons.Rounded.Close,
-                contentDescription = if (set.completed) "Completada" else "No completada",
+                contentDescription = if (set.completed) stringResource(R.string.workout_detail_set_completed_cd) else stringResource(R.string.workout_detail_set_not_completed_cd),
                 tint = if (set.completed)
                     MaterialTheme.colorScheme.primaryContainer
                 else

@@ -50,12 +50,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.AiGenerateButton
 import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
@@ -221,7 +223,7 @@ fun GeneratePlanScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             AiFitTopBar(
-                title = if (adaptive) "Plan adaptativo" else "Generar plan",
+                title = if (adaptive) stringResource(R.string.training_generate_adaptive_title) else stringResource(R.string.training_generate_title),
                 onBack = if (isLoading) null else onNavigateBack,
             )
         },
@@ -254,7 +256,7 @@ fun GeneratePlanScreen(
                 )
 
                 Text(
-                    text = "Generando tu plan… ${elapsedSeconds}s",
+                    text = stringResource(R.string.training_generate_loading_timer, elapsedSeconds),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -276,7 +278,7 @@ fun GeneratePlanScreen(
 
             // ── Frecuencia semanal ────────────────────────────────
             Text(
-                text = "FRECUENCIA SEMANAL",
+                text = stringResource(R.string.training_generate_frequency_label),
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 1.5.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -294,7 +296,7 @@ fun GeneratePlanScreen(
 
             // ── Duración por sesión ───────────────────────────────
             Text(
-                text = "DURACIÓN POR SESIÓN",
+                text = stringResource(R.string.training_generate_session_duration_label),
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 1.5.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -312,7 +314,7 @@ fun GeneratePlanScreen(
 
             // ── Duración del plan ─────────────────────────────────
             Text(
-                text = "DURACIÓN DEL PLAN",
+                text = stringResource(R.string.training_generate_plan_duration_label),
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 1.5.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -330,7 +332,7 @@ fun GeneratePlanScreen(
 
             // ── Objetivo ─────────────────────────────────────────
             Text(
-                text = "OBJETIVO",
+                text = stringResource(R.string.training_generate_goal_label),
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 1.5.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -348,7 +350,7 @@ fun GeneratePlanScreen(
 
             // ── Lugar de entrenamiento ────────────────────────────
             Text(
-                text = "LUGAR DE ENTRENAMIENTO",
+                text = stringResource(R.string.training_generate_location_label),
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 1.5.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -367,7 +369,7 @@ fun GeneratePlanScreen(
             AiFitTextField(
                 value = injuries,
                 onValueChange = { injuries = it },
-                label = "Lesiones (opcional)",
+                label = stringResource(R.string.training_generate_injuries_hint),
                 singleLine = false,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -375,14 +377,14 @@ fun GeneratePlanScreen(
             AiFitTextField(
                 value = additionalNotes,
                 onValueChange = { additionalNotes = it },
-                label = "Notas adicionales (opcional)",
+                label = stringResource(R.string.training_generate_notes_hint),
                 singleLine = false,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             if (adaptive) {
                 Text(
-                    text = "ÁREAS DE ENFOQUE",
+                    text = stringResource(R.string.training_generate_focus_areas_label),
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -401,7 +403,7 @@ fun GeneratePlanScreen(
                 AiFitTextField(
                     value = avoidExercises,
                     onValueChange = { avoidExercises = it },
-                    label = "Ejercicios a evitar (opcional)",
+                    label = stringResource(R.string.training_generate_avoid_exercises_hint),
                     singleLine = false,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -410,8 +412,8 @@ fun GeneratePlanScreen(
             Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
             AiGenerateButton(
-                text = "GENERAR PLAN",
-                loadingText = "Generando tu plan...",
+                text = stringResource(R.string.training_generate_button),
+                loadingText = stringResource(R.string.training_generate_loading_button),
                 isLoading = isLoading,
                 onClick = {
                     val frequencyVal = selectedFrequency.firstOrNull()?.toIntOrNull() ?: 4
@@ -508,7 +510,7 @@ private fun TrainingPhaseHero() {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Diseñando tu plan de entrenamiento",
+                text = stringResource(R.string.training_generate_loading_title),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
@@ -519,7 +521,7 @@ private fun TrainingPhaseHero() {
         Spacer(modifier = Modifier.height(AiFitSpacing.xs))
 
         Text(
-            text = "Calculando series, reps y progresión personalizada",
+            text = stringResource(R.string.training_generate_loading_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

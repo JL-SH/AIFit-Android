@@ -41,6 +41,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
+import com.jlsh.aifit.R
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -108,9 +110,9 @@ fun TrainingDetailScreen(
     // ── Sheets ──
     if (showExplanationConfirmForExerciseId != null) {
         EducationConfirmSheet(
-            title = "Explicación del ejercicio",
-            description = "La IA generará una explicación detallada de este ejercicio de tu plan.",
-            confirmText = "Generar explicación",
+            title = stringResource(R.string.training_detail_exercise_explanation_title),
+            description = stringResource(R.string.training_detail_exercise_explanation_desc_plan),
+            confirmText = stringResource(R.string.training_detail_generate_explanation),
             onDismiss = { showExplanationConfirmForExerciseId = null },
             onConfirm = {
                 val exerciseId = showExplanationConfirmForExerciseId
@@ -162,7 +164,7 @@ fun TrainingDetailScreen(
 
     val topBarTitle = when (val state = detailState) {
         is TrainingDetailUiState.Ready -> state.planName
-        else -> "Plan de entrenamiento"
+        else -> stringResource(R.string.training_detail_title)
     }
 
     ScreenScaffold<TrainingDetailUiState.Ready>(
@@ -178,7 +180,7 @@ fun TrainingDetailScreen(
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.AutoAwesome,
-                            contentDescription = "Plan adaptativo",
+                            contentDescription = stringResource(R.string.training_detail_adaptive_plan_cd),
                             tint = MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.size(24.dp),
                         )
@@ -197,8 +199,8 @@ fun TrainingDetailScreen(
             ) {
                 EmptyStateView(
                     icon = Icons.Rounded.FitnessCenter,
-                    title = "Sin días de entrenamiento",
-                    subtitle = "Este plan no tiene días disponibles. Es posible que haya sido eliminado o que sus datos no estén disponibles.",
+                    title = stringResource(R.string.training_detail_no_days_title),
+                    subtitle = stringResource(R.string.training_detail_no_days_subtitle),
                 )
             }
         } else {
@@ -274,18 +276,18 @@ private fun RestDayCard(day: TrainingDay) {
         ) {
             Icon(
                 imageVector = Icons.Outlined.SelfImprovement,
-                contentDescription = "Recovery",
+                contentDescription = stringResource(R.string.training_detail_rest_day),
                 tint = MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier.size(32.dp),
             )
             Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs)) {
                 Text(
-                    text = "Day ${day.dayNumber} — ${day.name}",
+                    text = stringResource(R.string.training_detail_day_label, day.dayNumber, day.name),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "Rest day — recovery",
+                    text = stringResource(R.string.training_detail_rest_day),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -316,7 +318,7 @@ private fun TrainingDayCard(
         ) {
             // Day name
             Text(
-                text = "Day ${day.dayNumber} — ${day.name}",
+                text = stringResource(R.string.training_detail_day_label, day.dayNumber, day.name),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -364,7 +366,7 @@ private fun TrainingDayCard(
 
             // Start Session button
             PrimaryButton(
-                text = "START SESSION",
+                text = stringResource(R.string.training_detail_start_session),
                 onClick = onStartSession,
             )
         }
@@ -413,7 +415,7 @@ private fun ExerciseRow(
                     )
                 }
                 Text(
-                    text = "${exercise.restSeconds}s rest",
+                    text = stringResource(R.string.training_detail_rest_seconds, exercise.restSeconds),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -427,7 +429,7 @@ private fun ExerciseRow(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Info,
-                    contentDescription = "Info",
+                    contentDescription = stringResource(R.string.training_detail_exercise_explanation_title),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
                 )
@@ -440,7 +442,7 @@ private fun ExerciseRow(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.TrendingUp,
-                    contentDescription = "Progresión",
+                    contentDescription = stringResource(R.string.training_detail_progression_cd),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
                 )
