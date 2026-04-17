@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AIFit</string>
+
+    <!-- Common -->
+    <string name="common_retry">Retry</string>
+    <string name="common_confirm">Confirm</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_save">Save</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_edit">Edit</string>
+    <string name="common_close">Close</string>
+    <string name="common_error">Error</string>
+    <string name="common_continue">Continue</string>
+    <string name="common_accept">Accept</string>
+    <string name="common_loading">Loading…</string>
+    <string name="common_or">or</string>
+    <string name="common_back">Back</string>
+    <string name="common_error_generic">Something went wrong. Please try again.</string>
+    <string name="common_no_data">No data available</string>
+
+    <!-- Days of the week -->
+    <string name="day_monday">Monday</string>
+    <string name="day_tuesday">Tuesday</string>
+    <string name="day_wednesday">Wednesday</string>
+    <string name="day_thursday">Thursday</string>
+    <string name="day_friday">Friday</string>
+    <string name="day_saturday">Saturday</string>
+    <string name="day_sunday">Sunday</string>
+
+    <!-- Day of week names (indexed) -->
+    <string name="day_of_week_1">Monday</string>
+    <string name="day_of_week_2">Tuesday</string>
+    <string name="day_of_week_3">Wednesday</string>
+    <string name="day_of_week_4">Thursday</string>
+    <string name="day_of_week_5">Friday</string>
+    <string name="day_of_week_6">Saturday</string>
+    <string name="day_of_week_7">Sunday</string>
+
+    <!-- Plan Status -->
+    <string name="plan_status_active">Active</string>
+    <string name="plan_status_completed">Completed</string>
+    <string name="plan_status_paused">Paused</string>
+    <string name="plan_status_draft">Not started</string>
+    <string name="plan_status_all">All</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_training">Train</string>
+    <string name="nav_nutrition">Nutrition</string>
+    <string name="nav_coach">Coach</string>
+    <string name="nav_profile">Me</string>
+
+    <!-- Auth -->
+    <string name="auth_tagline">Your personal AI trainer</string>
+    <string name="auth_email_label">Email</string>
+    <string name="auth_password_label">Password</string>
+    <string name="auth_login_button">LOG IN</string>
+    <string name="auth_google_button">CONTINUE WITH GOOGLE</string>
+    <string name="auth_google_error">Error signing in with Google</string>
+    <string name="auth_no_account">Don\'t have an account?\u0020\u0020</string>
+    <string name="auth_create_one">Create one</string>
+    <string name="auth_create_account_title">Create your account</string>
+    <string name="auth_name_label">Full name</string>
+    <string name="auth_create_account_button">CREATE ACCOUNT</string>
+    <string name="auth_have_account">Already have an account?\u0020\u0020</string>
+    <string name="auth_sign_in">Sign in</string>
+
+    <!-- Home -->
+    <string name="home_error_profile">Could not load profile</string>
+    <string name="home_weight_saved">Weight logged ✓</string>
+    <string name="home_today_training">TODAY\'S WORKOUT</string>
+    <string name="home_completed">Completed</string>
+    <string name="home_view_detail">VIEW DETAIL</string>
+    <string name="home_start_session">START SESSION</string>
+    <string name="home_no_active_plan">You don\'t have an active training plan</string>
+    <string name="home_create_plan">CREATE PLAN</string>
+    <string name="home_today_nutrition">TODAY\'S NUTRITION</string>
+    <string name="home_track_meal">LOG MEAL</string>
+    <string name="home_track_first_meal">Log your first meal of the day</string>
+    <string name="home_next_meal">Next meal</string>
+    <string name="home_streaks">STREAKS</string>
+    <string name="home_weekly_progress">WEEKLY PROGRESS</string>
+    <string name="home_workouts">Workouts</string>
+    <string name="home_avg_calories">Avg calories</string>
+    <string name="home_log_weight">Log weight</string>
+    <string name="home_weight_trend">WEIGHT TREND</string>
+    <string name="home_log_weight_sheet_title">Log weight</string>
+    <string name="home_log_weight_save">SAVE</string>
+
+    <!-- Training -->
+    <string name="training_title">Training</string>
+    <string name="training_no_active_plans">No active plans</string>
+    <string name="training_no_active_plans_subtitle">Generate your first AI training plan</string>
+    <string name="training_create_plan">CREATE PLAN</string>
+    <string name="training_week_of">Week %1$d of %2$d</string>
+    <string name="training_next_day">Next: %1$s</string>
+    <string name="training_activate">Activate</string>
+    <string name="training_plan_deleted">Plan deleted</string>
+    <string name="training_delete_plan_title">Delete plan</string>
+    <string name="training_delete_plan_message">Are you sure you want to delete this plan? This action cannot be undone.</string>
+    <string name="training_generating_message">Generating your personalised plan…</string>
+    <string name="training_day_label">Day %1$d – %2$s</string>
+    <string name="training_rest_day">Rest day – recovery</string>
+    <string name="training_start_session">START SESSION</string>
+    <string name="training_rest_suffix">%1$ds rest</string>
+    <string name="training_sets_reps">%1$d sets — %2$d reps</string>
+    <string name="training_generate_plan">Generate plan</string>
+    <string name="training_adaptive_plan">Adaptive plan</string>
+    <string name="training_focus_areas">FOCUS AREAS</string>
+    <string name="training_generate_button">GENERATE PLAN</string>
+    <string name="training_generating">Generating your plan…</string>
+
+    <!-- Nutrition -->
+    <string name="nutrition_title">Nutrition</string>
+    <string name="nutrition_configure">CONFIGURE</string>
+    <string name="nutrition_add_meal">ADD MEAL</string>
+    <string name="nutrition_no_data_today">No data today</string>
+    <string name="nutrition_configure_subtitle">Set your calorie goal to get started</string>
+    <string name="nutrition_meals_header">MEALS</string>
+    <string name="nutrition_no_meals_today">No meals logged today</string>
+    <string name="nutrition_no_meals_subtitle">Add your first meal of the day</string>
+    <string name="nutrition_create_plan">CREATE PLAN</string>
+    <string name="nutrition_no_diet_plans">No diet plans</string>
+    <string name="nutrition_no_diet_plans_subtitle">Generate your first AI diet plan</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Me</string>
+    <string name="profile_logout_title">Log out</string>
+    <string name="profile_logout_message">Are you sure you want to log out?</string>
+    <string name="profile_streak_stat">Streak</string>
+    <string name="profile_achievements_stat">Achievements</string>
+    <string name="profile_records_stat">Records</string>
+    <string name="profile_section_account">My account</string>
+    <string name="profile_edit">Edit profile</string>
+    <string name="profile_section_progress">Progress</string>
+    <string name="profile_section_achievements">Achievements</string>
+    <string name="profile_section_tools">Tools</string>
+    <string name="profile_section_app">App</string>
+    <string name="profile_dark_theme">Dark theme</string>
+    <string name="profile_logout">Log out</string>
+
+    <!-- Chat / Coach -->
+    <string name="coach_title">AI Coach</string>
+    <string name="coach_typing">AI Coach is typing…</string>
+    <string name="coach_no_sessions">No conversations</string>
+    <string name="coach_no_sessions_subtitle">Start a conversation with your AI Coach</string>
+    <string name="coach_delete_title">Delete session</string>
+    <string name="coach_delete_message">Are you sure you want to delete this conversation?</string>
+
+    <!-- Metabolic -->
+    <string name="metabolic_title">Metabolic analysis</string>
+    <string name="metabolic_no_adjustments">No adjustments recommended</string>
+    <string name="metabolic_no_adjustments_subtitle">No adjustment needed right now. Keep it up.</string>
+</resources>
+
