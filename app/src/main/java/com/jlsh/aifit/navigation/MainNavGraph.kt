@@ -128,14 +128,24 @@ private fun MainNavScreen() {
                     composable(HomeRoutes.HOME) {
                         HomeScreen(
                             onNavigateToWorkoutSession = { planId, dayId ->
+                                // Navigate to Training tab first so Back lands on TrainingHub
+                                tabNavController.navigate(TrainingRoutes.GRAPH) {
+                                    popUpTo(tabNavController.graph.startDestinationId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                                 tabNavController.navigate(TrainingRoutes.workoutSessionRoute(planId, dayId)) {
-                                    popUpTo(HomeRoutes.GRAPH) { inclusive = false }
                                     launchSingleTop = true
                                 }
                             },
                             onNavigateToTrackMeal = {
+                                // Navigate to Nutrition tab first so Back lands on NutritionHub
+                                tabNavController.navigate(NutritionRoutes.GRAPH) {
+                                    popUpTo(tabNavController.graph.startDestinationId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                                 tabNavController.navigate(NutritionRoutes.trackMealRoute()) {
-                                    popUpTo(HomeRoutes.GRAPH) { inclusive = false }
                                     launchSingleTop = true
                                 }
                             },
@@ -146,8 +156,13 @@ private fun MainNavScreen() {
                                 tabNavController.navigate(HomeRoutes.BODY_WEIGHT)
                             },
                             onNavigateToGamification = { tab ->
+                                // Navigate to Profile tab first so Back lands on ProfileHub
+                                tabNavController.navigate(ProfileRoutes.GRAPH) {
+                                    popUpTo(tabNavController.graph.startDestinationId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                                 tabNavController.navigate(ProfileRoutes.gamificationRoute(tab)) {
-                                    popUpTo(HomeRoutes.GRAPH) { inclusive = false }
                                     launchSingleTop = true
                                 }
                             },

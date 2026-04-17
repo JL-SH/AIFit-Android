@@ -41,6 +41,7 @@ abstract class NutritionModule {
             retrofit.create(NutritionTargetApiService::class.java)
 
         @Provides
+        @Singleton
         fun provideNutritionLogDao(database: AiFitDatabase): NutritionLogDao =
             database.nutritionLogDao()
     }

@@ -45,6 +45,7 @@ abstract class ProgressModule {
             retrofit.create(BodyWeightApiService::class.java)
 
         @Provides
+        @Singleton
         fun provideBodyWeightDao(database: AiFitDatabase): BodyWeightDao =
             database.bodyWeightDao()
     }

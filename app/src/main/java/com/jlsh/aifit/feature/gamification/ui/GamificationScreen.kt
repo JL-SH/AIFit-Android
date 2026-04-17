@@ -31,11 +31,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.StreakBadge
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
@@ -82,14 +84,14 @@ fun GamificationScreen(
             .background(MaterialTheme.colorScheme.background),
     ) {
         AiFitTopBar(
-            title = "Gamificación",
+            title = stringResource(R.string.gamification_title),
             onBack = onNavigateBack,
             background = MaterialTheme.colorScheme.background,
             actions = {
                 IconButton(onClick = { viewModel.onNavigateToExport() }) {
                     Icon(
                         imageVector = Icons.Rounded.FileDownload,
-                        contentDescription = "Exportar",
+                        contentDescription = stringResource(R.string.gamification_export_cd),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -99,7 +101,7 @@ fun GamificationScreen(
         when (val state = uiState) {
             is GamificationUiState.Loading -> {
                 InlineLoadingIndicator(
-                    message = "Cargando…",
+                    message = stringResource(R.string.common_loading),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(AiFitSpacing.xl),
@@ -125,7 +127,11 @@ fun GamificationScreen(
 
             is GamificationUiState.Success -> {
                 AiFitTabRow(
-                    tabs = listOf("RACHAS", "LOGROS", "RÉCORDS"),
+                    tabs = listOf(
+                        stringResource(R.string.gamification_tab_streaks),
+                        stringResource(R.string.gamification_tab_achievements),
+                        stringResource(R.string.gamification_tab_records),
+                    ),
                     selectedIndex = state.selectedTabIndex,
                     onTabSelected = viewModel::onTabSelected,
                 )
@@ -150,8 +156,8 @@ private fun StreaksTab(streaks: List<Streak>) {
     if (streaks.isEmpty()) {
         EmptyStateView(
             icon = Icons.Rounded.Whatshot,
-            title = "Sin rachas activas",
-            subtitle = "Empieza a entrenar para iniciar tus rachas",
+            title = stringResource(R.string.gamification_streak_empty_title),
+            subtitle = stringResource(R.string.gamification_streak_empty_subtitle),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = AiFitSpacing.xxl),
@@ -180,31 +186,31 @@ private fun StreaksTab(streaks: List<Streak>) {
                     ) {
                         Column {
                             Text(
-                                text = "Racha actual",
+                                text = stringResource(R.string.gamification_streak_current_label),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Text(
-                                text = "${streak.currentCount} días",
+                                text = stringResource(R.string.gamification_streak_days, streak.currentCount),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "Mejor racha",
+                                text = stringResource(R.string.gamification_streak_best_label),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Text(
-                                text = "${streak.longestCount} días",
+                                text = stringResource(R.string.gamification_streak_days, streak.longestCount),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primaryContainer,
                             )
                         }
                     }
                     Text(
-                        text = "Última actividad: ${streak.lastActivityDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}",
+                        text = stringResource(R.string.gamification_streak_last_activity, streak.lastActivityDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -232,8 +238,8 @@ private fun AchievementsTab(
     if (unlocked.isEmpty() && locked.isEmpty()) {
         EmptyStateView(
             icon = Icons.Rounded.EmojiEvents,
-            title = "Sin logros disponibles",
-            subtitle = "Los logros aparecerán a medida que progreses",
+            title = stringResource(R.string.gamification_achievement_empty_title),
+            subtitle = stringResource(R.string.gamification_achievement_empty_subtitle),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = AiFitSpacing.xxl),
@@ -249,7 +255,7 @@ private fun AchievementsTab(
         if (unlocked.isNotEmpty()) {
             item(key = "header_unlocked") {
                 Text(
-                    text = "✅ Logros conseguidos (${unlocked.size})",
+                    text = stringResource(R.string.gamification_achievement_unlocked_header, unlocked.size),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = AiFitSpacing.xs),
@@ -269,7 +275,7 @@ private fun AchievementsTab(
         if (locked.isNotEmpty()) {
             item(key = "header_locked") {
                 Text(
-                    text = "🔒 Próximos logros (${locked.size})",
+                    text = stringResource(R.string.gamification_achievement_locked_header, locked.size),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(
@@ -342,7 +348,7 @@ private fun AchievementCard(
                 )
 
                 Text(
-                    text = if (isUnlocked) definition.description else "Cómo conseguirlo: ${definition.description}",
+                    text = if (isUnlocked) definition.description else stringResource(R.string.gamification_achievement_how_to, definition.description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 3,
@@ -374,7 +380,7 @@ private fun AchievementCard(
                         )
                     } else if (!isUnlocked) {
                         Text(
-                            text = "Bloqueado",
+                            text = stringResource(R.string.gamification_achievement_locked),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -392,8 +398,8 @@ private fun RecordsTab(records: List<PersonalRecord>) {
     if (records.isEmpty()) {
         EmptyStateView(
             icon = Icons.Rounded.FitnessCenter,
-            title = "Sin récords personales",
-            subtitle = "Completa sesiones para registrar récords",
+            title = stringResource(R.string.gamification_record_empty_title),
+            subtitle = stringResource(R.string.gamification_record_empty_subtitle),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = AiFitSpacing.xxl),
@@ -439,7 +445,7 @@ private fun RecordsTab(records: List<PersonalRecord>) {
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(
-                                    text = "1RM est.",
+                                    text = stringResource(R.string.gamification_record_one_rm),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -464,11 +470,12 @@ private fun RecordsTab(records: List<PersonalRecord>) {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+@Composable
 private fun streakTypeLabel(type: StreakType): String = when (type) {
-    StreakType.TRAINING -> "Entrenamiento"
-    StreakType.NUTRITION -> "Nutrición"
-    StreakType.COMBINED -> "Combinada"
-    StreakType.UNKNOWN -> "Racha"
+    StreakType.TRAINING -> stringResource(R.string.gamification_streak_type_training)
+    StreakType.NUTRITION -> stringResource(R.string.gamification_streak_type_nutrition)
+    StreakType.COMBINED -> stringResource(R.string.gamification_streak_type_combined)
+    StreakType.UNKNOWN -> stringResource(R.string.gamification_streak_type_unknown)
 }
 
 private fun StreakStatus.toBadgeStatus(): BadgeStreakStatus = when (this) {

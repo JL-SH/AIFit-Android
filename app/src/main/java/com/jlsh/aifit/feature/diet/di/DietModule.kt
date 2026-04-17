@@ -29,6 +29,7 @@ abstract class DietModule {
             retrofit.create(DietApiService::class.java)
 
         @Provides
+        @Singleton
         fun provideDietPlanDao(database: AiFitDatabase): DietPlanDao =
             database.dietPlanDao()
     }

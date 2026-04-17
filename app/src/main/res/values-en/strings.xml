@@ -416,5 +416,186 @@
     <string name="vision_confidence">Confidence: %1$d%%</string>
     <string name="vision_log_meal_btn">LOG MEAL</string>
     <string name="vision_try_again_btn">TRY AGAIN</string>
+
+    <!-- Common (shared) -->
+    <string name="common_loading">Loading…</string>
+    <string name="common_back">Back</string>
+
+    <!-- Progress Dashboard -->
+    <string name="progress_dashboard_title">Progress Dashboard</string>
+    <string name="progress_dashboard_period_7d">7 days</string>
+    <string name="progress_dashboard_period_30d">30 days</string>
+    <string name="progress_dashboard_period_90d">90 days</string>
+    <string name="progress_dashboard_workout_adherence">WORKOUT ADHERENCE</string>
+    <string name="progress_dashboard_sessions">SESSIONS</string>
+    <string name="progress_dashboard_streak">STREAK</string>
+    <string name="progress_dashboard_best">BEST</string>
+    <string name="progress_dashboard_weight_trend">WEIGHT TREND</string>
+    <string name="progress_dashboard_start">START</string>
+    <string name="progress_dashboard_current">CURRENT</string>
+    <string name="progress_dashboard_change">CHANGE</string>
+    <string name="progress_dashboard_nutrition_adherence">NUTRITION ADHERENCE</string>
+    <string name="progress_dashboard_avg_kcal">AVG KCAL</string>
+    <string name="progress_dashboard_goal">GOAL</string>
+    <string name="progress_dashboard_strength">STRENGTH PROGRESS</string>
+    <string name="progress_dashboard_log_weight_btn">LOG WEIGHT</string>
+    <string name="progress_dashboard_weekly_detail_btn">WEEKLY DETAIL</string>
+    <string name="progress_dashboard_metabolic_btn">METABOLIC ANALYSIS</string>
+
+    <!-- Progress Weight -->
+    <string name="progress_weight_title">Body Weight</string>
+    <string name="progress_weight_chart_empty_title">You need at least 2 weight entries</string>
+    <string name="progress_weight_chart_empty_subtitle">Log your weight to see trends</string>
+    <string name="progress_weight_log_header">LOG WEIGHT</string>
+    <string name="progress_weight_field_label">Weight</string>
+    <string name="progress_weight_date_format">Date: %1$s</string>
+    <string name="progress_weight_notes_label">Notes (optional)</string>
+    <string name="progress_weight_log_btn">LOG WEIGHT</string>
+    <string name="progress_weight_history_header">RECENT HISTORY</string>
+    <string name="progress_weight_initial_badge">Initial weight</string>
+
+    <!-- Progress Weekly Summary -->
+    <string name="progress_weekly_title">Weekly Summary</string>
+    <string name="progress_weekly_workouts_header">WORKOUTS</string>
+    <string name="progress_weekly_sessions">sessions</string>
+    <string name="progress_weekly_nutrition_header">NUTRITION</string>
+    <string name="progress_weekly_avg_kcal">avg kcal today</string>
+    <string name="progress_weekly_goal">goal</string>
+    <string name="progress_weekly_streak_header">STREAK</string>
+    <string name="progress_weekly_streak_cd">Streak</string>
+    <string name="progress_weekly_streak_days">%1$d days</string>
+    <string name="progress_weekly_streak_current">current streak</string>
+
+    <!-- Metabolic -->
+    <string name="metabolic_title">Metabolic Analysis</string>
+    <string name="metabolic_insufficient_data_title">Insufficient data</string>
+    <string name="metabolic_insufficient_data_subtitle">You need at least 2 weeks of weight and training data to receive your personalised metabolic analysis.</string>
+    <string name="metabolic_no_adjustment_title">No adjustments recommended</string>
+    <string name="metabolic_no_adjustment_subtitle">No adjustment needed right now. Keep it up!</string>
+    <string name="metabolic_insights_header">Adjustment history</string>
+    <string name="metabolic_apply_dialog_title">Apply this adjustment?</string>
+    <string name="metabolic_apply_dialog_message">New target: %1$d kcal\nProtein: %2$sg\nCarbs: %3$sg\nFat: %4$sg</string>
+    <string name="metabolic_apply_btn">Apply</string>
+    <string name="metabolic_applying_btn">APPLYING…</string>
+    <string name="metabolic_apply_adjustment_btn">APPLY ADJUSTMENT</string>
+    <string name="metabolic_weight_trend_title">Weight trend</string>
+    <string name="metabolic_avg_weekly_change">Avg weekly change</string>
+    <string name="metabolic_expected_weekly_change">Expected weekly change</string>
+    <string name="metabolic_deviation">Deviation</string>
+    <string name="metabolic_data_points">Data points</string>
+    <string name="metabolic_trend_label">Trend</string>
+    <string name="metabolic_calorie_adherence_title">Calorie adherence</string>
+    <string name="metabolic_rationale_title">Analysis</string>
+    <string name="metabolic_recommendation_title">Recommendation</string>
+    <string name="metabolic_suggested_calories">Suggested calories</string>
+    <string name="metabolic_status_on_track">On track</string>
+    <string name="metabolic_status_stagnated">Stagnated</string>
+    <string name="metabolic_status_under_eating">Under eating</string>
+    <string name="metabolic_status_over_eating">Over eating</string>
+    <string name="metabolic_status_too_fast">Progressing too fast</string>
+    <string name="metabolic_status_insufficient_data">Insufficient data</string>
+    <string name="metabolic_status_unknown">Unknown</string>
+    <string name="metabolic_adjustment_increase_calories">Increase calories</string>
+    <string name="metabolic_adjustment_decrease_calories">Reduce calories</string>
+    <string name="metabolic_adjustment_increase_protein">Increase protein</string>
+    <string name="metabolic_adjustment_rebalance_macros">Rebalance macros</string>
+    <string name="metabolic_adjustment_maintain">Maintain</string>
+    <string name="metabolic_adjustment_unknown">Unknown</string>
+    <string name="metabolic_magnitude_minor">Minor</string>
+    <string name="metabolic_magnitude_moderate">Moderate</string>
+    <string name="metabolic_magnitude_significant">Significant</string>
+    <string name="metabolic_magnitude_unknown">Unknown</string>
+    <string name="metabolic_urgency_informational">Informational</string>
+    <string name="metabolic_urgency_suggested">Suggested</string>
+    <string name="metabolic_urgency_recommended">Recommended</string>
+    <string name="metabolic_urgency_unknown">Unknown</string>
+    <string name="metabolic_trend_stable">Stable</string>
+    <string name="metabolic_trend_losing">Losing</string>
+    <string name="metabolic_trend_gaining">Gaining</string>
+
+    <!-- Gamification -->
+    <string name="gamification_title">Gamification</string>
+    <string name="gamification_export_cd">Export</string>
+    <string name="gamification_tab_streaks">STREAKS</string>
+    <string name="gamification_tab_achievements">ACHIEVEMENTS</string>
+    <string name="gamification_tab_records">RECORDS</string>
+    <string name="gamification_streak_empty_title">No active streaks</string>
+    <string name="gamification_streak_empty_subtitle">Start training to begin your streaks</string>
+    <string name="gamification_streak_current_label">Current streak</string>
+    <string name="gamification_streak_days">%1$d days</string>
+    <string name="gamification_streak_best_label">Best streak</string>
+    <string name="gamification_streak_last_activity">Last activity: %1$s</string>
+    <string name="gamification_streak_type_training">Training</string>
+    <string name="gamification_streak_type_nutrition">Nutrition</string>
+    <string name="gamification_streak_type_combined">Combined</string>
+    <string name="gamification_streak_type_unknown">Streak</string>
+    <string name="gamification_achievement_empty_title">No achievements available</string>
+    <string name="gamification_achievement_empty_subtitle">Achievements will appear as you progress</string>
+    <string name="gamification_achievement_unlocked_header">✅ Achievements unlocked (%1$d)</string>
+    <string name="gamification_achievement_locked_header">🔒 Upcoming achievements (%1$d)</string>
+    <string name="gamification_achievement_how_to">How to unlock: %1$s</string>
+    <string name="gamification_achievement_locked">Locked</string>
+    <string name="gamification_record_empty_title">No personal records</string>
+    <string name="gamification_record_empty_subtitle">Complete sessions to record PRs</string>
+    <string name="gamification_record_one_rm">Est. 1RM</string>
+
+    <!-- Export period labels -->
+    <string name="export_period_last_week">Last week</string>
+    <string name="export_period_last_month">Last month</string>
+    <string name="export_period_last_3_months">Last 3 months</string>
+    <string name="export_period_all_time">All time</string>
+
+    <!-- Gamification Export -->
+    <string name="gamification_export_title">Export progress</string>
+    <string name="gamification_export_idle_text">Select a period to generate your progress report</string>
+    <string name="gamification_export_loading">Generating report…</string>
+    <string name="gamification_export_share_btn">SHARE</string>
+    <string name="gamification_export_retry">Retry</string>
+    <string name="gamification_export_report_title">Progress report — %1$s</string>
+    <string name="gamification_export_period_row">Period: %1$s</string>
+    <string name="gamification_export_total_workouts">Workouts completed</string>
+    <string name="gamification_export_total_prs">Personal records</string>
+    <string name="gamification_export_current_streak">Current streak</string>
+    <string name="gamification_export_achievements">Achievements unlocked</string>
+    <string name="gamification_export_weight_change">Weight change</string>
+    <string name="gamification_export_top_exercises">TOP EXERCISES</string>
+    <string name="gamification_export_streak_days">%1$d days</string>
+
+    <!-- Shopping -->
+    <string name="shopping_title">Shopping list</string>
+    <string name="shopping_edit_cd">Edit</string>
+    <string name="shopping_close_edit_cd">Close edit</string>
+    <string name="shopping_delete_cd">Delete</string>
+    <string name="shopping_restore_cd">Restore</string>
+    <string name="shopping_remove_cd">Remove</string>
+    <string name="shopping_add_cd">Add</string>
+    <string name="shopping_delete_title">Delete list</string>
+    <string name="shopping_delete_message">Are you sure you want to delete this shopping list?</string>
+    <string name="shopping_delete_confirm">Delete</string>
+    <string name="shopping_edit_banner">Edit mode: you can add or remove items</string>
+    <string name="shopping_deleted_header">Removed items</string>
+    <string name="shopping_add_item_header">Add item</string>
+    <string name="shopping_item_name_label">Item name</string>
+    <string name="shopping_quantity_label">Qty</string>
+    <string name="shopping_unit_label">Unit</string>
+    <string name="shopping_category_label">Category</string>
+    <string name="shopping_category_proteins">Proteins</string>
+    <string name="shopping_category_vegetables">Vegetables</string>
+    <string name="shopping_category_fruits">Fruits</string>
+    <string name="shopping_category_grains">Grains &amp; carbs</string>
+    <string name="shopping_category_dairy">Dairy</string>
+    <string name="shopping_category_fats">Fats &amp; oils</string>
+    <string name="shopping_category_condiments">Condiments &amp; spices</string>
+    <string name="shopping_category_other">Other</string>
+    <string name="shopping_category_unknown">Uncategorised</string>
+    <string name="shopping_generate_title">Generate shopping list</string>
+    <string name="shopping_generate_period_label">Period</string>
+    <string name="shopping_generate_period_weekly">Weekly</string>
+    <string name="shopping_generate_period_biweekly">Biweekly</string>
+    <string name="shopping_generate_period_monthly">Monthly</string>
+    <string name="shopping_generate_plan_label">Diet plan</string>
+    <string name="shopping_generate_plan_selector">Select plan</string>
+    <string name="shopping_generate_btn">Generate list</string>
+    <string name="shopping_generate_loading">Generating…</string>
 </resources>
 

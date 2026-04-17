@@ -28,10 +28,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.ChartEntry
@@ -81,7 +83,7 @@ fun BodyWeightScreen(
             containerColor = Color.Transparent,
             topBar = {
                 AiFitTopBar(
-                    title = "Peso corporal",
+                    title = stringResource(R.string.progress_weight_title),
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                 )
@@ -145,15 +147,15 @@ private fun BodyWeightContent(
             } else {
                 EmptyStateView(
                     icon = Icons.Rounded.MonitorWeight,
-                    title = "Necesitas al menos 2 registros de peso",
-                    subtitle = "Registra tu peso para ver las tendencias",
+                    title = stringResource(R.string.progress_weight_chart_empty_title),
+                    subtitle = stringResource(R.string.progress_weight_chart_empty_subtitle),
                 )
             }
         }
 
         // Log form
         item(key = "form") {
-            SectionHeader(title = "REGISTRAR PESO")
+            SectionHeader(title = stringResource(R.string.progress_weight_log_header))
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -162,13 +164,13 @@ private fun BodyWeightContent(
                     AiFitNumberField(
                         value = state.formWeight,
                         onValueChange = onWeightChanged,
-                        label = "Peso",
+                        label = stringResource(R.string.progress_weight_field_label),
                         suffix = "kg",
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                     Text(
-                        text = "Fecha: ${state.formDate.format(fullDateFormatter)}",
+                        text = stringResource(R.string.progress_weight_date_format, state.formDate.format(fullDateFormatter)),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -176,13 +178,13 @@ private fun BodyWeightContent(
                     AiFitTextField(
                         value = state.formNotes,
                         onValueChange = onNotesChanged,
-                        label = "Notas (opcional)",
+                        label = stringResource(R.string.progress_weight_notes_label),
                         singleLine = false,
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                     PrimaryButton(
-                        text = "REGISTRAR PESO",
+                        text = stringResource(R.string.progress_weight_log_btn),
                         isLoading = state.isSaving,
                         onClick = onLogWeight,
                         modifier = Modifier.fillMaxWidth(),
@@ -194,7 +196,7 @@ private fun BodyWeightContent(
         // Recent entries
         if (state.weightHistory.isNotEmpty()) {
             item(key = "history_header") {
-                SectionHeader(title = "HISTORIAL RECIENTE")
+                SectionHeader(title = stringResource(R.string.progress_weight_history_header))
             }
             items(state.weightHistory.take(20), key = { it.id }) { log ->
                 val isInitialWeight = log.notes?.contains("Peso inicial", ignoreCase = true) == true
@@ -221,7 +223,7 @@ private fun BodyWeightContent(
                                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
                                     ) {
                                         Text(
-                                            text = "Peso inicial",
+                                            text = stringResource(R.string.progress_weight_initial_badge),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.primaryContainer,
                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),

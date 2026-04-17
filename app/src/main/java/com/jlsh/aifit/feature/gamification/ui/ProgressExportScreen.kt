@@ -28,9 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
@@ -40,7 +42,6 @@ import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.gamification.domain.model.ExportPeriod
 import com.jlsh.aifit.feature.gamification.domain.model.ProgressExport
-import com.jlsh.aifit.feature.gamification.domain.model.toExportPeriodDisplayString
 import com.jlsh.aifit.feature.gamification.ui.state.ExportUiState
 
 @Composable
@@ -60,12 +61,16 @@ fun ProgressExportScreen(
     }
 
     val periodOptions = ExportPeriod.entries.map { it.name }
+    val lastWeekLabel = stringResource(R.string.export_period_last_week)
+    val lastMonthLabel = stringResource(R.string.export_period_last_month)
+    val last3MonthsLabel = stringResource(R.string.export_period_last_3_months)
+    val allTimeLabel = stringResource(R.string.export_period_all_time)
     val periodDisplayMapper: (String) -> String = { key ->
         when (key) {
-            "LAST_WEEK" -> "Última semana"
-            "LAST_MONTH" -> "Último mes"
-            "LAST_THREE_MONTHS" -> "Últimos 3 meses"
-            "ALL_TIME" -> "Todo el historial"
+            "LAST_WEEK" -> lastWeekLabel
+            "LAST_MONTH" -> lastMonthLabel
+            "LAST_THREE_MONTHS" -> last3MonthsLabel
+            "ALL_TIME" -> allTimeLabel
             else -> key
         }
     }
@@ -79,7 +84,7 @@ fun ProgressExportScreen(
             containerColor = Color.Transparent,
             topBar = {
                 AiFitTopBar(
-                    title = "Exportar progreso",
+                    title = stringResource(R.string.gamification_export_title),
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                 )
@@ -113,7 +118,7 @@ fun ProgressExportScreen(
                 when (val state = exportState) {
                     is ExportUiState.Idle -> {
                         Text(
-                            text = "Selecciona un período para generar tu informe de progreso",
+                            text = stringResource(R.string.gamification_export_idle_text),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -121,7 +126,7 @@ fun ProgressExportScreen(
 
                     is ExportUiState.Loading -> {
                         InlineLoadingIndicator(
-                            message = "Generando informe...",
+                            message = stringResource(R.string.gamification_export_loading),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = AiFitSpacing.lg),
@@ -129,11 +134,14 @@ fun ProgressExportScreen(
                     }
 
                     is ExportUiState.Success -> {
-                        ExportSummaryCard(export = state.export)
+                        ExportSummaryCard(
+                            export = state.export,
+                            periodDisplayMapper = periodDisplayMapper,
+                        )
                         Spacer(modifier = Modifier.height(AiFitSpacing.lg))
                         PrimaryButton(
-                            text = "COMPARTIR",
-                            onClick = { shareExport(context, state.export) },
+                            text = stringResource(R.string.gamification_export_share_btn),
+                            onClick = { shareExport(context, state.export, periodDisplayMapper) },
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
@@ -149,7 +157,7 @@ fun ProgressExportScreen(
                                 color = MaterialTheme.colorScheme.error,
                             )
                             TextButton(onClick = { viewModel.loadExport(selectedPeriod) }) {
-                                Text("Reintentar")
+                                Text(stringResource(R.string.gamification_export_retry))
                             }
                         }
                     }
@@ -160,37 +168,40 @@ fun ProgressExportScreen(
 }
 
 @Composable
-private fun ExportSummaryCard(export: ProgressExport) {
+private fun ExportSummaryCard(
+    export: ProgressExport,
+    periodDisplayMapper: (String) -> String,
+) {
     AiFitCard {
         Column(
             modifier = Modifier.padding(AiFitSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             Text(
-                text = "Informe de progreso — ${export.userName}",
+                text = stringResource(R.string.gamification_export_report_title, export.userName),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "Período: ${export.period.toExportPeriodDisplayString()}",
+                text = stringResource(R.string.gamification_export_period_row, periodDisplayMapper(export.period)),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Spacer(modifier = Modifier.height(AiFitSpacing.xs))
 
-            ExportStatRow("Entrenamientos completados", "${export.totalWorkouts}")
-            ExportStatRow("Récords personales", "${export.totalPRs}")
-            ExportStatRow("Racha actual", "${export.currentStreak} días")
-            ExportStatRow("Logros desbloqueados", "${export.achievementsUnlocked}")
+            ExportStatRow(stringResource(R.string.gamification_export_total_workouts), "${export.totalWorkouts}")
+            ExportStatRow(stringResource(R.string.gamification_export_total_prs), "${export.totalPRs}")
+            ExportStatRow(stringResource(R.string.gamification_export_current_streak), stringResource(R.string.gamification_export_streak_days, export.currentStreak))
+            ExportStatRow(stringResource(R.string.gamification_export_achievements), "${export.achievementsUnlocked}")
             export.weightChange?.let {
-                ExportStatRow("Cambio de peso", "${"%.1f".format(it)} kg")
+                ExportStatRow(stringResource(R.string.gamification_export_weight_change), "${"%.1f".format(it)} kg")
             }
 
             if (export.topExercises.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                 Text(
-                    text = "MEJORES EJERCICIOS",
+                    text = stringResource(R.string.gamification_export_top_exercises),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -226,10 +237,10 @@ private fun ExportStatRow(label: String, value: String) {
     }
 }
 
-private fun shareExport(context: Context, export: ProgressExport) {
+private fun shareExport(context: Context, export: ProgressExport, periodDisplay: (String) -> String) {
     val text = buildString {
         appendLine("AIFit — Informe de progreso — ${export.userName}")
-        appendLine("Período: ${export.period.toExportPeriodDisplayString()}")
+        appendLine("Período: ${periodDisplay(export.period)}")
         appendLine()
         appendLine("Entrenamientos completados: ${export.totalWorkouts}")
         appendLine("Récords personales: ${export.totalPRs}")
@@ -277,8 +288,8 @@ private fun ProgressExportScreenPreview() {
                     weightChange = -1.5,
                     topExercises = listOf("Bench Press: +15%", "Squat: +10%"),
                 ),
+                periodDisplayMapper = { it },
             )
         }
     }
 }
-

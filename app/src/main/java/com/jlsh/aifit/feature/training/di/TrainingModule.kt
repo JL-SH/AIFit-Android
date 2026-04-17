@@ -29,6 +29,7 @@ abstract class TrainingModule {
             retrofit.create(TrainingApiService::class.java)
 
         @Provides
+        @Singleton
         fun provideTrainingPlanDao(database: AiFitDatabase): TrainingPlanDao =
             database.trainingPlanDao()
     }

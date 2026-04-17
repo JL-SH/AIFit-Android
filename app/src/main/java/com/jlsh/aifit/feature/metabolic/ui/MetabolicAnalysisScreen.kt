@@ -33,10 +33,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AdherenceBar
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
@@ -93,7 +95,7 @@ fun MetabolicAnalysisScreen(
         snackbarHostState = snackbarHostState,
         topBar = {
             AiFitTopBar(
-                title = "Análisis metabólico",
+                title = stringResource(R.string.metabolic_title),
                 onBack = onNavigateBack,
                 background = MaterialTheme.colorScheme.background,
             )
@@ -113,7 +115,7 @@ private fun MetabolicInsufficientDataScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             AiFitTopBar(
-                title = "Análisis metabólico",
+                title = stringResource(R.string.metabolic_title),
                 onBack = onBack,
                 background = MaterialTheme.colorScheme.background,
             )
@@ -133,11 +135,11 @@ private fun MetabolicInsufficientDataScreen(onBack: () -> Unit) {
             ) {
                 EmptyStateView(
                     icon = Icons.Rounded.BarChart,
-                    title = "Datos insuficientes",
-                    subtitle = "Necesitas al menos 2 semanas de datos de peso y entrenamiento para recibir tu análisis metabólico personalizado.",
+                    title = stringResource(R.string.metabolic_insufficient_data_title),
+                    subtitle = stringResource(R.string.metabolic_insufficient_data_subtitle),
                 )
                 PrimaryButton(
-                    text = "Volver",
+                    text = stringResource(R.string.common_back),
                     onClick = onBack,
                 )
             }
@@ -201,13 +203,13 @@ private fun MetabolicContent(
                 AiFitCard {
                     Column(modifier = Modifier.padding(AiFitSpacing.md)) {
                         Text(
-                            text = "Sin ajustes recomendados",
+                            text = stringResource(R.string.metabolic_no_adjustment_title),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                         Text(
-                            text = "No se necesita un ajuste en este momento. Sigue así.",
+                            text = stringResource(R.string.metabolic_no_adjustment_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -219,7 +221,7 @@ private fun MetabolicContent(
         // 6. Insights history
         if (state.insights.isNotEmpty()) {
             item(key = "insights_header") {
-                SectionHeader(title = "Historial de ajustes")
+                SectionHeader(title = stringResource(R.string.metabolic_insights_header))
             }
             items(state.insights, key = { it.id }) { insight ->
                 InsightRow(insight = insight)
@@ -230,12 +232,15 @@ private fun MetabolicContent(
     if (showConfirmDialog && state.analysis.recommendation != null) {
         val rec = state.analysis.recommendation
         ConfirmationDialog(
-            title = "¿Aplicar este ajuste?",
-            message = "Nuevo objetivo: ${rec.suggestedCalorieTarget} kcal\n" +
-                    "Proteína: ${"%.0f".format(rec.suggestedProteinTarget)}g\n" +
-                    "Carbos: ${"%.0f".format(rec.suggestedCarbsTarget)}g\n" +
-                    "Grasa: ${"%.0f".format(rec.suggestedFatTarget)}g",
-            confirmText = "Aplicar",
+            title = stringResource(R.string.metabolic_apply_dialog_title),
+            message = stringResource(
+                R.string.metabolic_apply_dialog_message,
+                rec.suggestedCalorieTarget,
+                "%.0f".format(rec.suggestedProteinTarget),
+                "%.0f".format(rec.suggestedCarbsTarget),
+                "%.0f".format(rec.suggestedFatTarget),
+            ),
+            confirmText = stringResource(R.string.metabolic_apply_btn),
             onConfirm = {
                 showConfirmDialog = false
                 onApplyAdjustment()
@@ -250,15 +255,14 @@ private fun MetabolicContent(
 @Composable
 private fun StatusSection(status: MetabolicStatus) {
     val statusLabel = when (status) {
-        MetabolicStatus.ON_TRACK -> "En objetivo"
-        MetabolicStatus.STAGNATED -> "Estancado"
-        MetabolicStatus.UNDER_EATING_SIGNAL -> "Comiendo poco"
-        MetabolicStatus.OVER_EATING_SIGNAL -> "Comiendo de más"
-        MetabolicStatus.PROGRESSING_TOO_FAST -> "Progreso demasiado rápido"
-        MetabolicStatus.INSUFFICIENT_DATA -> "Datos insuficientes"
-        MetabolicStatus.UNKNOWN -> "Desconocido"
+        MetabolicStatus.ON_TRACK -> stringResource(R.string.metabolic_status_on_track)
+        MetabolicStatus.STAGNATED -> stringResource(R.string.metabolic_status_stagnated)
+        MetabolicStatus.UNDER_EATING_SIGNAL -> stringResource(R.string.metabolic_status_under_eating)
+        MetabolicStatus.OVER_EATING_SIGNAL -> stringResource(R.string.metabolic_status_over_eating)
+        MetabolicStatus.PROGRESSING_TOO_FAST -> stringResource(R.string.metabolic_status_too_fast)
+        MetabolicStatus.INSUFFICIENT_DATA -> stringResource(R.string.metabolic_status_insufficient_data)
+        MetabolicStatus.UNKNOWN -> stringResource(R.string.metabolic_status_unknown)
     }
-
     PlanStatusBadge(status = statusLabel)
 }
 
@@ -282,7 +286,7 @@ private fun WeightTrendCard(trend: WeightTrend) {
                 horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
             ) {
                 Text(
-                    text = "Tendencia de peso",
+                    text = stringResource(R.string.metabolic_weight_trend_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -294,11 +298,11 @@ private fun WeightTrendCard(trend: WeightTrend) {
                 )
             }
 
-            TrendStatRow("Cambio semanal promedio", "${"%.2f".format(trend.averageWeeklyChange)} kg")
-            TrendStatRow("Cambio semanal esperado", "${"%.2f".format(trend.expectedWeeklyChange)} kg")
-            TrendStatRow("Desviación", "${"%.2f".format(trend.deviationFromExpected)} kg")
-            TrendStatRow("Puntos de datos", "${trend.dataPoints}")
-            TrendStatRow("Tendencia", translateTrend(trend.trend))
+            TrendStatRow(stringResource(R.string.metabolic_avg_weekly_change), "${"%.2f".format(trend.averageWeeklyChange)} kg")
+            TrendStatRow(stringResource(R.string.metabolic_expected_weekly_change), "${"%.2f".format(trend.expectedWeeklyChange)} kg")
+            TrendStatRow(stringResource(R.string.metabolic_deviation), "${"%.2f".format(trend.deviationFromExpected)} kg")
+            TrendStatRow(stringResource(R.string.metabolic_data_points), "${trend.dataPoints}")
+            TrendStatRow(stringResource(R.string.metabolic_trend_label), translateTrend(trend.trend))
         }
     }
 }
@@ -337,7 +341,7 @@ private fun CalorieAdherenceCard(
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             Text(
-                text = "Adherencia calórica",
+                text = stringResource(R.string.metabolic_calorie_adherence_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -359,7 +363,7 @@ private fun RationaleCard(rationale: String) {
     AiFitCard {
         Column(modifier = Modifier.padding(AiFitSpacing.md)) {
             Text(
-                text = "Análisis",
+                text = stringResource(R.string.metabolic_rationale_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -389,17 +393,17 @@ private fun RecommendationCard(
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             Text(
-                text = "Recomendación",
+                text = stringResource(R.string.metabolic_recommendation_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
             )
 
             PlanStatusBadge(status = translateAdjustmentType(recommendation.type))
 
-            TrendStatRow("Calorías sugeridas", "${recommendation.suggestedCalorieTarget} kcal")
-            TrendStatRow("Proteína", "${"%.0f".format(recommendation.suggestedProteinTarget)}g")
-            TrendStatRow("Carbohidratos", "${"%.0f".format(recommendation.suggestedCarbsTarget)}g")
-            TrendStatRow("Grasa", "${"%.0f".format(recommendation.suggestedFatTarget)}g")
+            TrendStatRow(stringResource(R.string.metabolic_suggested_calories), "${recommendation.suggestedCalorieTarget} kcal")
+            TrendStatRow(stringResource(R.string.macro_protein), "${"%.0f".format(recommendation.suggestedProteinTarget)}g")
+            TrendStatRow(stringResource(R.string.macro_carbs), "${"%.0f".format(recommendation.suggestedCarbsTarget)}g")
+            TrendStatRow(stringResource(R.string.diet_detail_macro_fat), "${"%.0f".format(recommendation.suggestedFatTarget)}g")
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
@@ -409,7 +413,7 @@ private fun RecommendationCard(
             }
 
             PrimaryButton(
-                text = if (isApplying) "APLICANDO…" else "APLICAR AJUSTE",
+                text = if (isApplying) stringResource(R.string.metabolic_applying_btn) else stringResource(R.string.metabolic_apply_adjustment_btn),
                 onClick = onApply,
                 enabled = !isApplying,
                 modifier = Modifier.fillMaxWidth(),
@@ -474,44 +478,49 @@ private fun InsightRow(insight: MetabolicInsight) {
 
 // ── Helpers de traducción ─────────────────────────────────────────────────────
 
+@Composable
 private fun translateMetabolicStatus(status: MetabolicStatus): String = when (status) {
-    MetabolicStatus.ON_TRACK -> "En objetivo"
-    MetabolicStatus.STAGNATED -> "Estancado"
-    MetabolicStatus.UNDER_EATING_SIGNAL -> "Comiendo poco"
-    MetabolicStatus.OVER_EATING_SIGNAL -> "Comiendo de más"
-    MetabolicStatus.PROGRESSING_TOO_FAST -> "Progreso demasiado rápido"
-    MetabolicStatus.INSUFFICIENT_DATA -> "Datos insuficientes"
-    MetabolicStatus.UNKNOWN -> "Desconocido"
+    MetabolicStatus.ON_TRACK -> stringResource(R.string.metabolic_status_on_track)
+    MetabolicStatus.STAGNATED -> stringResource(R.string.metabolic_status_stagnated)
+    MetabolicStatus.UNDER_EATING_SIGNAL -> stringResource(R.string.metabolic_status_under_eating)
+    MetabolicStatus.OVER_EATING_SIGNAL -> stringResource(R.string.metabolic_status_over_eating)
+    MetabolicStatus.PROGRESSING_TOO_FAST -> stringResource(R.string.metabolic_status_too_fast)
+    MetabolicStatus.INSUFFICIENT_DATA -> stringResource(R.string.metabolic_status_insufficient_data)
+    MetabolicStatus.UNKNOWN -> stringResource(R.string.metabolic_status_unknown)
 }
 
+@Composable
 private fun translateAdjustmentType(type: AdjustmentType): String = when (type) {
-    AdjustmentType.INCREASE_CALORIES -> "Aumentar calorías"
-    AdjustmentType.DECREASE_CALORIES -> "Reducir calorías"
-    AdjustmentType.INCREASE_PROTEIN -> "Aumentar proteína"
-    AdjustmentType.REBALANCE_MACROS -> "Reequilibrar macros"
-    AdjustmentType.MAINTAIN -> "Mantener"
-    AdjustmentType.UNKNOWN -> "Desconocido"
+    AdjustmentType.INCREASE_CALORIES -> stringResource(R.string.metabolic_adjustment_increase_calories)
+    AdjustmentType.DECREASE_CALORIES -> stringResource(R.string.metabolic_adjustment_decrease_calories)
+    AdjustmentType.INCREASE_PROTEIN -> stringResource(R.string.metabolic_adjustment_increase_protein)
+    AdjustmentType.REBALANCE_MACROS -> stringResource(R.string.metabolic_adjustment_rebalance_macros)
+    AdjustmentType.MAINTAIN -> stringResource(R.string.metabolic_adjustment_maintain)
+    AdjustmentType.UNKNOWN -> stringResource(R.string.metabolic_adjustment_unknown)
 }
 
+@Composable
 private fun translateAdjustmentMagnitude(magnitude: AdjustmentMagnitude): String = when (magnitude) {
-    AdjustmentMagnitude.MINOR -> "Leve"
-    AdjustmentMagnitude.MODERATE -> "Moderado"
-    AdjustmentMagnitude.SIGNIFICANT -> "Significativo"
-    AdjustmentMagnitude.UNKNOWN -> "Desconocido"
+    AdjustmentMagnitude.MINOR -> stringResource(R.string.metabolic_magnitude_minor)
+    AdjustmentMagnitude.MODERATE -> stringResource(R.string.metabolic_magnitude_moderate)
+    AdjustmentMagnitude.SIGNIFICANT -> stringResource(R.string.metabolic_magnitude_significant)
+    AdjustmentMagnitude.UNKNOWN -> stringResource(R.string.metabolic_magnitude_unknown)
 }
 
+@Composable
 private fun translateAdjustmentUrgency(urgency: AdjustmentUrgency): String = when (urgency) {
-    AdjustmentUrgency.INFORMATIONAL -> "Informativo"
-    AdjustmentUrgency.SUGGESTED -> "Sugerido"
-    AdjustmentUrgency.RECOMMENDED -> "Recomendado"
-    AdjustmentUrgency.UNKNOWN -> "Desconocido"
+    AdjustmentUrgency.INFORMATIONAL -> stringResource(R.string.metabolic_urgency_informational)
+    AdjustmentUrgency.SUGGESTED -> stringResource(R.string.metabolic_urgency_suggested)
+    AdjustmentUrgency.RECOMMENDED -> stringResource(R.string.metabolic_urgency_recommended)
+    AdjustmentUrgency.UNKNOWN -> stringResource(R.string.metabolic_urgency_unknown)
 }
 
+@Composable
 private fun translateTrend(trend: String): String = when (trend.uppercase()) {
-    "STABLE" -> "Estable"
-    "LOSING" -> "Bajando"
-    "GAINING" -> "Subiendo"
-    "INSUFFICIENT_DATA" -> "Datos insuficientes"
+    "STABLE" -> stringResource(R.string.metabolic_trend_stable)
+    "LOSING" -> stringResource(R.string.metabolic_trend_losing)
+    "GAINING" -> stringResource(R.string.metabolic_trend_gaining)
+    "INSUFFICIENT_DATA" -> stringResource(R.string.metabolic_status_insufficient_data)
     else -> trend
 }
 

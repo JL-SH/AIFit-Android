@@ -29,6 +29,7 @@ abstract class UserModule {
             retrofit.create(UserApiService::class.java)
 
         @Provides
+        @Singleton
         fun provideUserProfileDao(database: AiFitDatabase): UserProfileDao =
             database.userProfileDao()
     }

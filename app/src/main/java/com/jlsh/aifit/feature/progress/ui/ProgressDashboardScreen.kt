@@ -22,10 +22,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.components.display.AdherenceBar
@@ -49,8 +51,6 @@ import com.jlsh.aifit.feature.progress.ui.state.DashboardUiState
 import com.jlsh.aifit.feature.progress.ui.state.ProgressUiEvent
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
-private val PERIOD_OPTIONS = listOf("7 días", "30 días", "90 días")
 
 @Composable
 fun ProgressDashboardScreen(
@@ -81,7 +81,7 @@ fun ProgressDashboardScreen(
         snackbarHostState = snackbarHostState,
         topBar = {
             AiFitTopBar(
-                title = "Panel de progreso",
+                title = stringResource(R.string.progress_dashboard_title),
                 onBack = onNavigateBack,
             )
         },
@@ -111,6 +111,11 @@ private fun DashboardContent(
 ) {
     val dashboard = state.dashboard
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd/MM") }
+    val periodOptions = listOf(
+        stringResource(R.string.progress_dashboard_period_7d),
+        stringResource(R.string.progress_dashboard_period_30d),
+        stringResource(R.string.progress_dashboard_period_90d),
+    )
 
     LazyColumn(
         contentPadding = PaddingValues(
@@ -125,7 +130,7 @@ private fun DashboardContent(
         // Period selector
         item(key = "period") {
             AiFitChipGroup(
-                options = PERIOD_OPTIONS,
+                options = periodOptions,
                 selected = setOf(selectedPeriod),
                 onSelectionChanged = { selection ->
                     selection.firstOrNull()?.let { onPeriodSelected(it) }
@@ -136,7 +141,7 @@ private fun DashboardContent(
 
         // Workout Adherence
         item(key = "workout") {
-            SectionHeader(title = "ADHERENCIA ENTRENAMIENTOS")
+            SectionHeader(title = stringResource(R.string.progress_dashboard_workout_adherence))
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -152,15 +157,15 @@ private fun DashboardContent(
                     ) {
                         StatItem(
                             value = "${dashboard.workoutAdherence.completedSessions}/${dashboard.workoutAdherence.plannedSessions}",
-                            label = "SESIONES",
+                            label = stringResource(R.string.progress_dashboard_sessions),
                         )
                         StatItem(
                             value = "${dashboard.workoutAdherence.currentStreak}",
-                            label = "RACHA",
+                            label = stringResource(R.string.progress_dashboard_streak),
                         )
                         StatItem(
                             value = "${dashboard.workoutAdherence.longestStreak}",
-                            label = "MEJOR",
+                            label = stringResource(R.string.progress_dashboard_best),
                         )
                     }
                 }
@@ -169,7 +174,7 @@ private fun DashboardContent(
 
         // Weight Trend
         item(key = "weight") {
-            SectionHeader(title = "TENDENCIA DE PESO")
+            SectionHeader(title = stringResource(R.string.progress_dashboard_weight_trend))
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -194,17 +199,17 @@ private fun DashboardContent(
                         StatItem(
                             value = dashboard.weightProgress.startWeight
                                 ?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "--",
-                            label = "INICIO",
+                            label = stringResource(R.string.progress_dashboard_start),
                         )
                         StatItem(
                             value = dashboard.weightProgress.currentWeight
                                 ?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "--",
-                            label = "ACTUAL",
+                            label = stringResource(R.string.progress_dashboard_current),
                         )
                         StatItem(
                             value = dashboard.weightProgress.change
                                 ?.let { String.format(java.util.Locale.getDefault(), "%+.1f", it) } ?: "--",
-                            label = "CAMBIO",
+                            label = stringResource(R.string.progress_dashboard_change),
                             valueColor = when {
                                 dashboard.weightProgress.change == null ->
                                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -221,7 +226,7 @@ private fun DashboardContent(
 
         // Nutrition Adherence
         item(key = "nutrition") {
-            SectionHeader(title = "ADHERENCIA NUTRICIÓN")
+            SectionHeader(title = stringResource(R.string.progress_dashboard_nutrition_adherence))
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -235,11 +240,11 @@ private fun DashboardContent(
                     ) {
                         StatItem(
                             value = "${dashboard.nutritionAdherence.averageCalories.toInt()}",
-                            label = "KCAL PROM.",
+                            label = stringResource(R.string.progress_dashboard_avg_kcal),
                         )
                         StatItem(
                             value = "${dashboard.nutritionAdherence.calorieTarget}",
-                            label = "OBJETIVO",
+                            label = stringResource(R.string.progress_dashboard_goal),
                         )
                     }
                 }
@@ -249,7 +254,7 @@ private fun DashboardContent(
         // Strength Progress
         if (dashboard.strengthProgress.isNotEmpty()) {
             item(key = "strength_header") {
-                SectionHeader(title = "PROGRESO DE FUERZA")
+                SectionHeader(title = stringResource(R.string.progress_dashboard_strength))
             }
             items(dashboard.strengthProgress, key = { it.exerciseName }) { progress ->
                 AiFitCard {
@@ -289,17 +294,17 @@ private fun DashboardContent(
             Spacer(modifier = Modifier.height(AiFitSpacing.sm))
             Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm)) {
                 PrimaryButton(
-                    text = "REGISTRAR PESO",
+                    text = stringResource(R.string.progress_dashboard_log_weight_btn),
                     onClick = onLogWeight,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 SecondaryButton(
-                    text = "DETALLE SEMANAL",
+                    text = stringResource(R.string.progress_dashboard_weekly_detail_btn),
                     onClick = onWeeklyDetail,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 SecondaryButton(
-                    text = "ANÁLISIS METABÓLICO",
+                    text = stringResource(R.string.progress_dashboard_metabolic_btn),
                     onClick = onMetabolic,
                     modifier = Modifier.fillMaxWidth(),
                 )

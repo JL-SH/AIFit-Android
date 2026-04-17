@@ -29,6 +29,7 @@ abstract class WorkoutModule {
             retrofit.create(WorkoutApiService::class.java)
 
         @Provides
+        @Singleton
         fun provideWorkoutLogDao(database: AiFitDatabase): WorkoutLogDao =
             database.workoutLogDao()
     }

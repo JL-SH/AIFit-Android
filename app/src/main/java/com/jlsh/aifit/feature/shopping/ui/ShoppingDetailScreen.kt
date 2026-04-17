@@ -41,10 +41,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
@@ -64,18 +66,6 @@ import com.jlsh.aifit.feature.shopping.domain.model.ShoppingList
 import com.jlsh.aifit.feature.shopping.domain.model.ShoppingListPeriod
 import com.jlsh.aifit.feature.shopping.ui.state.ShoppingDetailState
 import com.jlsh.aifit.feature.shopping.ui.state.ShoppingUiEvent
-
-private val CATEGORY_DISPLAY = mapOf(
-    "PROTEINS" to "Proteínas",
-    "VEGETABLES" to "Verduras",
-    "FRUITS" to "Frutas",
-    "GRAINS_AND_CARBS" to "Cereales y carbohidratos",
-    "DAIRY" to "Lácteos",
-    "FATS_AND_OILS" to "Grasas y aceites",
-    "CONDIMENTS_AND_SPICES" to "Condimentos y especias",
-    "OTHER" to "Otros",
-    "UNKNOWN" to "Sin categoría",
-)
 
 @Composable
 fun ShoppingDetailScreen(
@@ -100,7 +90,7 @@ fun ShoppingDetailScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             AiFitTopBar(
-                title = "Lista de compras",
+                title = stringResource(R.string.shopping_title),
                 onBack = onNavigateBack,
                 background = MaterialTheme.colorScheme.background,
                 actions = {
@@ -109,7 +99,7 @@ fun ShoppingDetailScreen(
                         IconButton(onClick = { viewModel.onToggleEditMode() }) {
                             Icon(
                                 imageVector = if (detailState.isEditing) Icons.Rounded.Close else Icons.Rounded.Edit,
-                                contentDescription = if (detailState.isEditing) "Cerrar edición" else "Editar",
+                                contentDescription = if (detailState.isEditing) stringResource(R.string.shopping_close_edit_cd) else stringResource(R.string.shopping_edit_cd),
                                 tint = if (detailState.isEditing) {
                                     MaterialTheme.colorScheme.primary
                                 } else {
@@ -121,7 +111,7 @@ fun ShoppingDetailScreen(
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
                             imageVector = Icons.Rounded.DeleteOutline,
-                            contentDescription = "Eliminar",
+                            contentDescription = stringResource(R.string.shopping_delete_cd),
                             tint = MaterialTheme.colorScheme.error,
                         )
                     }
@@ -172,9 +162,9 @@ fun ShoppingDetailScreen(
 
     if (showDeleteDialog) {
         ConfirmationDialog(
-            title = "Eliminar lista",
-            message = "¿Seguro que quieres eliminar esta lista de compras?",
-            confirmText = "Eliminar",
+            title = stringResource(R.string.shopping_delete_title),
+            message = stringResource(R.string.shopping_delete_message),
+            confirmText = stringResource(R.string.shopping_delete_confirm),
             onConfirm = {
                 showDeleteDialog = false
                 viewModel.onDeleteCurrentList()
@@ -225,7 +215,7 @@ private fun ShoppingDetailContent(
                 exit = fadeOut() + slideOutVertically(),
             ) {
                 Text(
-                    text = "Modo edición: puedes añadir o quitar artículos",
+                    text = stringResource(R.string.shopping_edit_banner),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(vertical = AiFitSpacing.xs),
@@ -236,7 +226,7 @@ private fun ShoppingDetailContent(
         // Deleted items (shown in edit mode for recovery)
         if (isEditing && state.deletedItemKeys.isNotEmpty()) {
             item(key = "deleted_header") {
-                SectionHeader(title = "Artículos eliminados")
+                SectionHeader(title = stringResource(R.string.shopping_deleted_header))
             }
             val deletedPairs = state.deletedItemKeys.map { key ->
                 val parts = key.split(":", limit = 2)
@@ -260,7 +250,7 @@ private fun ShoppingDetailContent(
                     IconButton(onClick = { onRestoreServerItem(name, cat) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.Undo,
-                            contentDescription = "Restaurar",
+                            contentDescription = stringResource(R.string.shopping_restore_cd),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp),
                         )
@@ -273,7 +263,7 @@ private fun ShoppingDetailContent(
         mergedCategories.forEach { merged ->
             item(key = "header_${merged.categoryName}") {
                 SectionHeader(
-                    title = CATEGORY_DISPLAY[merged.categoryName] ?: merged.categoryName.replace("_", " "),
+                    title = categoryDisplayName(merged.categoryName),
                 )
             }
 
@@ -298,7 +288,7 @@ private fun ShoppingDetailContent(
                         IconButton(onClick = { onDeleteServerItem(item.name, merged.categoryName) }) {
                             Icon(
                                 imageVector = Icons.Rounded.Close,
-                                contentDescription = "Quitar",
+                                contentDescription = stringResource(R.string.shopping_remove_cd),
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(20.dp),
                             )
@@ -328,7 +318,7 @@ private fun ShoppingDetailContent(
                         IconButton(onClick = { onRemoveLocalItem(localItem.localId) }) {
                             Icon(
                                 imageVector = Icons.Rounded.Close,
-                                contentDescription = "Quitar",
+                                contentDescription = stringResource(R.string.shopping_remove_cd),
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(20.dp),
                             )
@@ -366,18 +356,31 @@ private fun AddItemForm(
     var unit by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(categories.firstOrNull() ?: "OTHER") }
 
+    // Resolve category display names inside composable scope
+    val categoryDisplayMap = mapOf(
+        "PROTEINS" to stringResource(R.string.shopping_category_proteins),
+        "VEGETABLES" to stringResource(R.string.shopping_category_vegetables),
+        "FRUITS" to stringResource(R.string.shopping_category_fruits),
+        "GRAINS_AND_CARBS" to stringResource(R.string.shopping_category_grains),
+        "DAIRY" to stringResource(R.string.shopping_category_dairy),
+        "FATS_AND_OILS" to stringResource(R.string.shopping_category_fats),
+        "CONDIMENTS_AND_SPICES" to stringResource(R.string.shopping_category_condiments),
+        "OTHER" to stringResource(R.string.shopping_category_other),
+        "UNKNOWN" to stringResource(R.string.shopping_category_unknown),
+    )
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = AiFitSpacing.md),
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
     ) {
-        SectionHeader(title = "Añadir artículo")
+        SectionHeader(title = stringResource(R.string.shopping_add_item_header))
 
         AiFitTextField(
             value = name,
             onValueChange = { name = it },
-            label = "Nombre del artículo",
+            label = stringResource(R.string.shopping_item_name_label),
         )
 
         Row(
@@ -387,13 +390,13 @@ private fun AddItemForm(
             AiFitNumberField(
                 value = quantity,
                 onValueChange = { quantity = it },
-                label = "Cantidad",
+                label = stringResource(R.string.shopping_quantity_label),
                 modifier = Modifier.weight(1f),
             )
             AiFitTextField(
                 value = unit,
                 onValueChange = { unit = it },
-                label = "Unidad",
+                label = stringResource(R.string.shopping_unit_label),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -402,8 +405,8 @@ private fun AddItemForm(
             selectedValue = selectedCategory,
             options = categories.ifEmpty { listOf("OTHER") },
             onOptionSelected = { selectedCategory = it },
-            label = "Categoría",
-            displayMapper = { CATEGORY_DISPLAY[it] ?: it.replace("_", " ") },
+            label = stringResource(R.string.shopping_category_label),
+            displayMapper = { categoryDisplayMap[it] ?: it.replace("_", " ") },
         )
 
         Spacer(modifier = Modifier.height(AiFitSpacing.xs))
@@ -427,12 +430,28 @@ private fun AddItemForm(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
-                    contentDescription = "Añadir",
+                    contentDescription = stringResource(R.string.shopping_add_cd),
                     tint = if (canAdd) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                 )
             }
         }
     }
+}
+
+// ── Category display helper ───────────────────────────────────────────────────
+
+@Composable
+private fun categoryDisplayName(key: String): String = when (key) {
+    "PROTEINS" -> stringResource(R.string.shopping_category_proteins)
+    "VEGETABLES" -> stringResource(R.string.shopping_category_vegetables)
+    "FRUITS" -> stringResource(R.string.shopping_category_fruits)
+    "GRAINS_AND_CARBS" -> stringResource(R.string.shopping_category_grains)
+    "DAIRY" -> stringResource(R.string.shopping_category_dairy)
+    "FATS_AND_OILS" -> stringResource(R.string.shopping_category_fats)
+    "CONDIMENTS_AND_SPICES" -> stringResource(R.string.shopping_category_condiments)
+    "OTHER" -> stringResource(R.string.shopping_category_other)
+    "UNKNOWN" -> stringResource(R.string.shopping_category_unknown)
+    else -> key.replace("_", " ")
 }
 
 // ── Merge helpers ─────────────────────────────────────────────────────────────
@@ -519,5 +538,4 @@ private fun ShoppingDetailPreview() {
         )
     }
 }
-
 

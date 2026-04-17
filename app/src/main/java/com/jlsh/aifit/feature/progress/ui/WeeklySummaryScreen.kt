@@ -23,10 +23,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.display.AdherenceBar
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
@@ -65,7 +67,7 @@ fun WeeklySummaryScreen(
         snackbarHostState = snackbarHostState,
         topBar = {
             AiFitTopBar(
-                title = "Resumen semanal",
+                title = stringResource(R.string.progress_weekly_title),
                 onBack = onNavigateBack,
             )
         },
@@ -107,7 +109,7 @@ private fun WeeklySummaryContent(
     ) {
         // Workouts
         item(key = "workouts") {
-            SectionHeader(title = "ENTRENAMIENTOS")
+            SectionHeader(title = stringResource(R.string.progress_weekly_workouts_header))
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -124,7 +126,7 @@ private fun WeeklySummaryContent(
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "sesiones",
+                            text = stringResource(R.string.progress_weekly_sessions),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -136,7 +138,7 @@ private fun WeeklySummaryContent(
 
         // Nutrition
         item(key = "nutrition") {
-            SectionHeader(title = "NUTRICIÓN")
+            SectionHeader(title = stringResource(R.string.progress_weekly_nutrition_header))
             AiFitCard {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
@@ -154,7 +156,7 @@ private fun WeeklySummaryContent(
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = "kcal promedio hoy",
+                                text = stringResource(R.string.progress_weekly_avg_kcal),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -166,7 +168,7 @@ private fun WeeklySummaryContent(
                                 color = MaterialTheme.colorScheme.primaryContainer,
                             )
                             Text(
-                                text = "objetivo",
+                                text = stringResource(R.string.progress_weekly_goal),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -179,7 +181,7 @@ private fun WeeklySummaryContent(
 
         // Streak
         item(key = "streak") {
-            SectionHeader(title = "RACHA")
+            SectionHeader(title = stringResource(R.string.progress_weekly_streak_header))
             AiFitCard {
                 Row(
                     modifier = Modifier
@@ -190,17 +192,17 @@ private fun WeeklySummaryContent(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.LocalFireDepartment,
-                        contentDescription = "Streak",
+                        contentDescription = stringResource(R.string.progress_weekly_streak_cd),
                         tint = MaterialTheme.colorScheme.primaryContainer,
                     )
                     Column {
                         Text(
-                            text = "${summary.currentStreak} días",
+                            text = stringResource(R.string.progress_weekly_streak_days, summary.currentStreak),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "racha actual",
+                            text = stringResource(R.string.progress_weekly_streak_current),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
