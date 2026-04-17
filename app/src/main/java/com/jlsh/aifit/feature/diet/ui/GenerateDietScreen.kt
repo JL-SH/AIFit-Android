@@ -50,12 +50,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.AiGenerateButton
 import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
@@ -197,7 +199,7 @@ fun GenerateDietScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             AiFitTopBar(
-                title = if (adaptive) "Plan de dieta adaptativo" else "Generar plan de dieta",
+                title = if (adaptive) stringResource(R.string.diet_generate_title_adaptive) else stringResource(R.string.diet_generate_title),
                 onBack = if (isLoading) null else onNavigateBack,
             )
         },
@@ -230,7 +232,7 @@ fun GenerateDietScreen(
                 )
 
                 Text(
-                    text = "Generando tu plan… ${elapsedSeconds}s",
+                    text = stringResource(R.string.diet_generate_loading_timer, elapsedSeconds),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -252,7 +254,7 @@ fun GenerateDietScreen(
 
                 // ── Duración ─────────────────────────────────────────
                 Text(
-                    text = "DURACIÓN",
+                    text = stringResource(R.string.diet_generate_duration_label),
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -270,7 +272,7 @@ fun GenerateDietScreen(
 
                 // ── Comidas por día ──────────────────────────────────
                 Text(
-                    text = "COMIDAS POR DÍA",
+                    text = stringResource(R.string.diet_generate_meals_label),
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -288,7 +290,7 @@ fun GenerateDietScreen(
 
                 // ── Objetivo ─────────────────────────────────────────
                 Text(
-                    text = "OBJETIVO",
+                    text = stringResource(R.string.diet_generate_goal_label),
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -306,7 +308,7 @@ fun GenerateDietScreen(
 
                 // ── Preferencia alimentaria ──────────────────────────
                 Text(
-                    text = "PREFERENCIA ALIMENTARIA",
+                    text = stringResource(R.string.diet_generate_preference_label),
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -326,7 +328,7 @@ fun GenerateDietScreen(
                 AiFitNumberField(
                     value = dailyCalories,
                     onValueChange = { dailyCalories = it },
-                    label = "Calorías diarias (opcional)",
+                    label = stringResource(R.string.diet_generate_calories_label),
                     suffix = "kcal",
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -335,14 +337,14 @@ fun GenerateDietScreen(
                 AiFitTextField(
                     value = allergies,
                     onValueChange = { allergies = it },
-                    label = "Alergias (opcional)",
+                    label = stringResource(R.string.diet_generate_allergies_label),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 AiFitTextField(
                     value = additionalNotes,
                     onValueChange = { additionalNotes = it },
-                    label = "Notas adicionales (opcional)",
+                    label = stringResource(R.string.diet_generate_notes_label),
                     singleLine = false,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -350,8 +352,8 @@ fun GenerateDietScreen(
                 Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
                 AiGenerateButton(
-                    text = "GENERAR PLAN",
-                    loadingText = "Generando tu plan…",
+                    text = stringResource(R.string.diet_generate_btn),
+                    loadingText = stringResource(R.string.diet_generate_loading_text),
                     isLoading = isLoading,
                     onClick = {
                         val weeks = selectedDuration.firstOrNull()?.toIntOrNull() ?: 4
@@ -441,7 +443,7 @@ private fun DietPhaseHero() {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Diseñando tu plan de dieta",
+                text = stringResource(R.string.diet_generate_hero_title),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
@@ -452,7 +454,7 @@ private fun DietPhaseHero() {
         Spacer(modifier = Modifier.height(AiFitSpacing.xs))
 
         Text(
-            text = "Calculando comidas y macros personalizados",
+            text = stringResource(R.string.diet_generate_hero_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -595,7 +597,7 @@ private fun GenerateDietScreenPreview() {
             ) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.sm))
                 Text(
-                    text = "DURACIÓN",
+                    text = stringResource(R.string.diet_generate_duration_label),
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -610,7 +612,7 @@ private fun GenerateDietScreenPreview() {
                     },
                 )
                 Text(
-                    text = "OBJETIVO",
+                    text = stringResource(R.string.diet_generate_goal_label),
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

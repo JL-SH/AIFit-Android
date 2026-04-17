@@ -49,12 +49,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
@@ -123,7 +125,7 @@ fun FoodVisionScreen(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 AiFitTopBar(
-                    title = "Escáner de comida",
+                    title = stringResource(R.string.vision_title),
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                 )
@@ -163,7 +165,7 @@ fun FoodVisionScreen(
                                 .padding(paddingValues),
                             contentAlignment = Alignment.Center,
                         ) {
-                            InlineLoadingIndicator(message = "Analizando imagen…")
+                            InlineLoadingIndicator(message = stringResource(R.string.vision_analyzing))
                         }
                     }
                     is VisionUiState.Result -> ResultOverlay(
@@ -187,7 +189,7 @@ fun FoodVisionScreen(
                                 )
                                 Spacer(modifier = Modifier.height(AiFitSpacing.md))
                                 SecondaryButton(
-                                    text = "Reintentar",
+                                    text = stringResource(R.string.vision_retry),
                                     onClick = viewModel::onTryAgain,
                                 )
                             }
@@ -213,12 +215,12 @@ private fun PermissionDeniedContent(
     ) {
         EmptyStateView(
             icon = Icons.Rounded.CameraAlt,
-            title = "Acceso a cámara necesario",
-            subtitle = "Habilita la cámara en ajustes para escanear comida",
+            title = stringResource(R.string.vision_permission_title),
+            subtitle = stringResource(R.string.vision_permission_subtitle),
         )
         Spacer(modifier = Modifier.height(AiFitSpacing.md))
         SecondaryButton(
-            text = "Abrir Ajustes",
+            text = stringResource(R.string.vision_open_settings),
             onClick = onOpenSettings,
         )
     }
@@ -276,7 +278,7 @@ private fun CameraContent(
             IconButton(onClick = onGallery) {
                 Icon(
                     imageVector = Icons.Rounded.PhotoLibrary,
-                    contentDescription = "Galería",
+                    contentDescription = stringResource(R.string.vision_gallery_cd),
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(32.dp),
                 )
@@ -303,7 +305,7 @@ private fun CameraContent(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.CameraAlt,
-                    contentDescription = "Capturar",
+                    contentDescription = stringResource(R.string.vision_capture_cd),
                     modifier = Modifier.size(28.dp),
                 )
             }
@@ -338,7 +340,7 @@ private fun ResultOverlay(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "Confianza: ${"%.0f".format(result.confidence * 100)}%",
+                    text = stringResource(R.string.vision_confidence, (result.confidence * 100).toInt()),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -373,12 +375,12 @@ private fun ResultOverlay(
         item(key = "actions") {
             Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm)) {
                 PrimaryButton(
-                    text = "REGISTRAR COMIDA",
+                    text = stringResource(R.string.vision_log_meal_btn),
                     onClick = onLogMeal,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 SecondaryButton(
-                    text = "INTENTAR DE NUEVO",
+                    text = stringResource(R.string.vision_try_again_btn),
                     onClick = onTryAgain,
                     modifier = Modifier.fillMaxWidth(),
                 )

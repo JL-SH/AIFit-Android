@@ -46,10 +46,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.MacroRingChart
@@ -83,25 +85,48 @@ import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-private val HUB_TABS = listOf("HOY", "PLAN DIETA", "COMPRA")
+private val DIET_STATUS_KEYS = listOf("all", "active", "draft", "paused", "completed")
 
-private val DIET_FILTER_CHIPS = listOf("Todos", "Activo", "Borrador", "Pausado", "Completado")
-
-private fun dietChipToStatus(chip: String): PlanStatus? = when (chip) {
-    "Activo" -> PlanStatus.ACTIVE
-    "Borrador" -> PlanStatus.DRAFT
-    "Pausado" -> PlanStatus.PAUSED
-    "Completado" -> PlanStatus.COMPLETED
+private fun dietKeyToStatus(key: String): PlanStatus? = when (key) {
+    "active" -> PlanStatus.ACTIVE
+    "draft" -> PlanStatus.DRAFT
+    "paused" -> PlanStatus.PAUSED
+    "completed" -> PlanStatus.COMPLETED
     else -> null
 }
 
-private fun dietStatusToChip(status: PlanStatus?): String = when (status) {
-    PlanStatus.ACTIVE -> "Activo"
-    PlanStatus.DRAFT -> "Borrador"
-    PlanStatus.PAUSED -> "Pausado"
-    PlanStatus.COMPLETED -> "Completado"
-    else -> "Todos"
+private fun dietStatusToKey(status: PlanStatus?): String = when (status) {
+    PlanStatus.ACTIVE -> "active"
+    PlanStatus.DRAFT -> "draft"
+    PlanStatus.PAUSED -> "paused"
+    PlanStatus.COMPLETED -> "completed"
+    else -> "all"
 }
+
+@Composable
+private fun dietKeyDisplayName(key: String): String = stringResource(
+    when (key) {
+        "active" -> R.string.plan_status_active
+        "draft" -> R.string.plan_status_draft
+        "paused" -> R.string.plan_status_paused
+        "completed" -> R.string.plan_status_completed
+        else -> R.string.plan_status_all
+    }
+)
+
+@Composable
+private fun mealTypeDisplay(mealType: MealType): String = stringResource(
+        when (mealType) {
+            MealType.BREAKFAST -> R.string.meal_type_breakfast
+            MealType.MID_MORNING -> R.string.meal_type_morning_snack
+            MealType.LUNCH -> R.string.meal_type_lunch
+            MealType.AFTERNOON_SNACK -> R.string.meal_type_snack
+            MealType.DINNER -> R.string.meal_type_dinner
+            MealType.PRE_WORKOUT -> R.string.meal_type_pre_workout
+            MealType.POST_WORKOUT -> R.string.meal_type_post_workout
+            else -> R.string.meal_type_unknown
+        }
+    )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,12 +163,18 @@ fun NutritionHubScreen(
         }
     }
 
+    val hubTabs = listOf(
+        stringResource(R.string.nutrition_hub_tab_today),
+        stringResource(R.string.nutrition_hub_tab_diet_plan),
+        stringResource(R.string.nutrition_hub_tab_shopping),
+    )
+
     ScreenScaffold<NutritionHubUiState.Success>(
         uiState = hubState,
         snackbarHostState = snackbarHostState,
         topBar = {
             AiFitTopBar(
-                title = "Nutrición",
+                title = stringResource(R.string.nutrition_hub_title),
                 background = MaterialTheme.colorScheme.secondaryContainer,
             )
         },
@@ -166,9 +197,9 @@ fun NutritionHubScreen(
                     Icon(
                         imageVector = Icons.Rounded.Add,
                         contentDescription = when (selectedTabIndex) {
-                            0 -> "Añadir comida"
-                            1 -> "Nuevo plan"
-                            else -> "Generar"
+                            0 -> stringResource(R.string.nutrition_hub_fab_add_meal)
+                            1 -> stringResource(R.string.nutrition_hub_fab_new_plan)
+                            else -> stringResource(R.string.nutrition_hub_generate_list)
                         },
                     )
                 }
@@ -182,7 +213,7 @@ fun NutritionHubScreen(
             .padding(paddingValues)
         ) {
             AiFitTabRow(
-                tabs = HUB_TABS,
+                tabs = hubTabs,
                 selectedIndex = selectedTabIndex,
                 onTabSelected = viewModel::onTabSelected,
             )
@@ -217,8 +248,8 @@ fun NutritionHubScreen(
 
     if (showDeleteDialog && mealToDeleteId != null) {
         ConfirmationDialog(
-            title = "Eliminar comida",
-            message = "Esta acción no se puede deshacer.",
+            title = stringResource(R.string.nutrition_hub_delete_meal_title),
+            message = stringResource(R.string.common_irreversible_action),
             onConfirm = {
                 mealToDeleteId?.let { viewModel.onDeleteMeal(it) }
                 showDeleteDialog = false
@@ -276,11 +307,11 @@ private fun TodayTab(
         ) {
             EmptyStateView(
                 icon = Icons.Rounded.Restaurant,
-                title = "Sin objetivos de hoy",
-                subtitle = "Configura tu objetivo calórico para empezar",
+                title = stringResource(R.string.nutrition_hub_no_target_title),
+                subtitle = stringResource(R.string.nutrition_hub_no_target_subtitle),
                 action = {
                     PrimaryButton(
-                        text = "CONFIGURAR",
+                        text = stringResource(R.string.nutrition_hub_configure),
                         onClick = onRingClicked,
                         modifier = Modifier.padding(horizontal = AiFitSpacing.xl),
                     )
@@ -325,7 +356,7 @@ private fun TodayTab(
         }
 
         item(key = "meals_header") {
-            SectionHeader(title = "COMIDAS")
+            SectionHeader(title = stringResource(R.string.nutrition_hub_meals_header))
         }
 
         if (meals.isEmpty()) {
@@ -338,11 +369,11 @@ private fun TodayTab(
                 ) {
                     EmptyStateView(
                         icon = Icons.Rounded.Restaurant,
-                        title = "No has registrado comidas hoy",
-                        subtitle = "Añade tu primera comida del día",
+                        title = stringResource(R.string.nutrition_hub_no_meals_title),
+                        subtitle = stringResource(R.string.nutrition_hub_no_meals_subtitle),
                         action = {
                             PrimaryButton(
-                                text = "AÑADIR COMIDA",
+                                text = stringResource(R.string.nutrition_hub_add_meal_btn),
                                 onClick = onAddMeal,
                                 modifier = Modifier.padding(horizontal = AiFitSpacing.xl),
                             )
@@ -366,6 +397,7 @@ private fun TodayTab(
 private fun MealRow(
     meal: MealLog,
 ) {
+    val mealTypeLabel = mealTypeDisplay(meal.mealType)
     AiFitCard {
         Row(
             modifier = Modifier
@@ -384,7 +416,7 @@ private fun MealRow(
                         shape = RoundedCornerShape(6.dp),
                     ) {
                         Text(
-                            text = meal.mealType.name.replace("_", " "),
+                            text = mealTypeLabel,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -393,7 +425,7 @@ private fun MealRow(
                     if (meal.aiGenerated) {
                         Icon(
                             imageVector = Icons.Rounded.AutoAwesome,
-                            contentDescription = "AI",
+                            contentDescription = stringResource(R.string.nutrition_hub_ai_generated_cd),
                             tint = MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.size(14.dp),
                         )
@@ -401,7 +433,7 @@ private fun MealRow(
                 }
                 Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                 Text(
-                    text = meal.name ?: meal.mealType.name.replace("_", " "),
+                    text = meal.name ?: mealTypeLabel,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -437,11 +469,20 @@ private fun DietPlanTab(
         it.status == PlanStatus.ACTIVE
     }?.name
 
+    // Build display map for filter chips (must be Composable context)
+    val dietKeyDisplayMap = mapOf(
+        "all" to stringResource(R.string.plan_status_all),
+        "active" to stringResource(R.string.plan_status_active),
+        "draft" to stringResource(R.string.plan_status_draft),
+        "paused" to stringResource(R.string.plan_status_paused),
+        "completed" to stringResource(R.string.plan_status_completed),
+    )
+
     // Delete confirmation dialog
     if (planToDelete != null) {
         ConfirmationDialog(
-            title = "Eliminar plan de dieta",
-            message = "Esta acción no se puede deshacer.",
+            title = stringResource(R.string.nutrition_hub_delete_diet_plan_title),
+            message = stringResource(R.string.common_irreversible_action),
             onConfirm = {
                 planToDelete?.let { onDeletePlan(it) }
                 planToDelete = null
@@ -453,12 +494,12 @@ private fun DietPlanTab(
     // Activate confirmation dialog (only when there is already an active plan)
     if (planToActivate != null) {
         val message = if (activePlanName != null) {
-            "Esto pausará el plan \"$activePlanName\" actualmente activo. ¿Continuar?"
+            stringResource(R.string.nutrition_hub_activate_plan_pause_message, activePlanName)
         } else {
-            "El plan seleccionado pasará a ser tu plan activo."
+            stringResource(R.string.nutrition_hub_activate_plan_message)
         }
         ConfirmationDialog(
-            title = "Activar plan",
+            title = stringResource(R.string.nutrition_hub_activate_plan_title),
             message = message,
             onConfirm = {
                 planToActivate?.let { onActivatePlan(it) }
@@ -477,11 +518,11 @@ private fun DietPlanTab(
         ) {
             EmptyStateView(
                 icon = Icons.Rounded.Restaurant,
-                title = "Sin planes de dieta",
-                subtitle = "Genera tu primer plan de dieta con IA",
+                title = stringResource(R.string.nutrition_hub_no_diet_plans_title),
+                subtitle = stringResource(R.string.nutrition_hub_no_diet_plans_subtitle),
                 action = {
                     PrimaryButton(
-                        text = "CREAR PLAN",
+                        text = stringResource(R.string.nutrition_hub_create_plan),
                         onClick = onCreatePlan,
                         modifier = Modifier.padding(horizontal = AiFitSpacing.xl),
                     )
@@ -491,8 +532,7 @@ private fun DietPlanTab(
         return
     }
 
-    val filteredPlans = if (selectedFilter == null) plans else plans.filter { it.status == selectedFilter }
-    val selectedChip = dietStatusToChip(selectedFilter)
+    val selectedKey = dietStatusToKey(selectedFilter)
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -526,7 +566,7 @@ private fun DietPlanTab(
                                     IconButton(onClick = { planToDelete = plan.id }) {
                                         Icon(
                                             imageVector = Icons.Rounded.DeleteOutline,
-                                            contentDescription = "Eliminar plan",
+                                            contentDescription = stringResource(R.string.nutrition_hub_delete_plan_cd),
                                             tint = MaterialTheme.colorScheme.error,
                                         )
                                     }
@@ -537,7 +577,7 @@ private fun DietPlanTab(
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
                                 Text(
-                                    text = "${plan.durationWeeks} semanas • ${plan.dailyCalories} kcal/día",
+                                    text = stringResource(R.string.nutrition_hub_plan_summary, plan.durationWeeks, plan.dailyCalories),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -551,19 +591,21 @@ private fun DietPlanTab(
             item(key = "diet_filter_chips") {
                 Spacer(modifier = Modifier.height(AiFitSpacing.sm))
                 AiFitChipGroup(
-                    options = DIET_FILTER_CHIPS,
-                    selected = setOf(selectedChip),
+                    options = DIET_STATUS_KEYS,
+                    selected = setOf(selectedKey),
                     onSelectionChanged = { selection ->
-                        val chip = selection.firstOrNull() ?: "Todos"
-                        onFilterChanged(dietChipToStatus(chip))
+                        val key = selection.firstOrNull() ?: "all"
+                        onFilterChanged(dietKeyToStatus(key))
                     },
                     multiSelect = false,
+                    displayMapper = { key -> dietKeyDisplayName(key) },
                 )
                 Spacer(modifier = Modifier.height(AiFitSpacing.xs))
             }
 
             // ── Plan list (excluding active card already shown) ──
             val activePlanId = plans.firstOrNull { it.status == PlanStatus.ACTIVE }?.id
+            val filteredPlans = if (selectedFilter == null) plans else plans.filter { it.status == selectedFilter }
             val listPlans = if (selectedFilter == null || selectedFilter == PlanStatus.ACTIVE) {
                 filteredPlans.filter { it.id != activePlanId }
             } else {
@@ -591,13 +633,13 @@ private fun DietPlanTab(
                             IconButton(onClick = { planToDelete = plan.id }) {
                                 Icon(
                                     imageVector = Icons.Rounded.DeleteOutline,
-                                    contentDescription = "Eliminar plan",
+                                    contentDescription = stringResource(R.string.nutrition_hub_delete_plan_cd),
                                     tint = MaterialTheme.colorScheme.error,
                                 )
                             }
                         }
                         Text(
-                            text = "${plan.durationWeeks} semanas • ${plan.dailyCalories} kcal/día",
+                            text = stringResource(R.string.nutrition_hub_plan_summary, plan.durationWeeks, plan.dailyCalories),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -605,7 +647,7 @@ private fun DietPlanTab(
                         if (plan.status == PlanStatus.DRAFT || plan.status == PlanStatus.PAUSED) {
                             Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                             PrimaryButton(
-                                text = "Activar plan",
+                                text = stringResource(R.string.nutrition_hub_activate_plan_btn),
                                 onClick = { planToActivate = plan.id },
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -631,7 +673,7 @@ private fun DietPlanTab(
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
-                        text = "Activando plan…",
+                        text = stringResource(R.string.nutrition_hub_activating_plan),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.inverseOnSurface,
                     )
@@ -680,7 +722,7 @@ private fun ShoppingTab(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "Cargando…",
+                        text = stringResource(R.string.common_loading),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -695,7 +737,7 @@ private fun ShoppingTab(
                 ) {
                     EmptyStateView(
                         icon = Icons.Rounded.ShoppingCart,
-                        title = "Error al cargar listas",
+                        title = stringResource(R.string.nutrition_hub_shopping_error_title),
                         subtitle = state.message,
                     )
                 }
@@ -710,12 +752,12 @@ private fun ShoppingTab(
                     ) {
                         EmptyStateView(
                             icon = Icons.Rounded.ShoppingCart,
-                            title = "Genera tu primera lista de compras",
-                            subtitle = "Basada en tu plan de dieta activo",
+                            title = stringResource(R.string.nutrition_hub_shopping_empty_title),
+                            subtitle = stringResource(R.string.nutrition_hub_shopping_empty_subtitle),
                         )
                         Spacer(modifier = Modifier.height(AiFitSpacing.md))
                         PrimaryButton(
-                            text = "Generar lista",
+                            text = stringResource(R.string.nutrition_hub_generate_list),
                             onClick = { showGenerateSheet = true },
                         )
                     }
@@ -764,7 +806,7 @@ private fun ShoppingTab(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Rounded.DeleteOutline,
-                                                contentDescription = "Eliminar lista",
+                                                contentDescription = stringResource(R.string.nutrition_hub_delete_list_cd),
                                                 tint = MaterialTheme.colorScheme.error,
                                             )
                                         }
@@ -788,16 +830,16 @@ private fun ShoppingTab(
         ) {
             Icon(
                 imageVector = Icons.Rounded.Add,
-                contentDescription = "Generar lista",
+                contentDescription = stringResource(R.string.nutrition_hub_generate_list),
             )
         }
     }
 
     deleteDialogListId?.let { id ->
         ConfirmationDialog(
-            title = "Eliminar lista",
-            message = "¿Seguro que quieres eliminar esta lista de compras?",
-            confirmText = "Eliminar",
+            title = stringResource(R.string.nutrition_hub_delete_list_title),
+            message = stringResource(R.string.nutrition_hub_delete_list_message),
+            confirmText = stringResource(R.string.common_delete),
             onConfirm = {
                 shoppingViewModel.onDeleteList(id)
                 deleteDialogListId = null

@@ -271,5 +271,150 @@
     <string name="workout_detail_set_not_completed_cd">Not completed</string>
     <string name="workout_detail_reps_format">%1$d reps</string>
     <string name="workout_detail_duration_format">%1$d min</string>
+
+    <!-- Meal types -->
+    <string name="meal_type_breakfast">Breakfast</string>
+    <string name="meal_type_morning_snack">Mid-morning snack</string>
+    <string name="meal_type_lunch">Lunch</string>
+    <string name="meal_type_snack">Afternoon snack</string>
+    <string name="meal_type_dinner">Dinner</string>
+    <string name="meal_type_pre_workout">Pre-workout</string>
+    <string name="meal_type_post_workout">Post-workout</string>
+    <string name="meal_type_late_snack">Late snack</string>
+    <string name="meal_type_unknown">—</string>
+
+    <!-- Macros -->
+    <string name="macro_calories">Calories</string>
+    <string name="macro_protein">Protein</string>
+    <string name="macro_carbs">Carbohydrates</string>
+    <string name="macro_fat">Fat</string>
+
+    <!-- Common -->
+    <string name="common_irreversible_action">This action cannot be undone.</string>
+
+    <!-- Nutrition Hub -->
+    <string name="nutrition_hub_title">Nutrition</string>
+    <string name="nutrition_hub_tab_today">TODAY</string>
+    <string name="nutrition_hub_tab_diet_plan">DIET PLAN</string>
+    <string name="nutrition_hub_tab_shopping">SHOPPING</string>
+    <string name="nutrition_hub_fab_add_meal">Add meal</string>
+    <string name="nutrition_hub_fab_new_plan">New plan</string>
+    <string name="nutrition_hub_no_target_title">No goals for today</string>
+    <string name="nutrition_hub_no_target_subtitle">Set your calorie goal to get started</string>
+    <string name="nutrition_hub_configure">CONFIGURE</string>
+    <string name="nutrition_hub_meals_header">MEALS</string>
+    <string name="nutrition_hub_no_meals_title">No meals logged today</string>
+    <string name="nutrition_hub_no_meals_subtitle">Add your first meal of the day</string>
+    <string name="nutrition_hub_add_meal_btn">ADD MEAL</string>
+    <string name="nutrition_hub_delete_meal_title">Delete meal</string>
+    <string name="nutrition_hub_no_diet_plans_title">No diet plans</string>
+    <string name="nutrition_hub_no_diet_plans_subtitle">Generate your first diet plan with AI</string>
+    <string name="nutrition_hub_create_plan">CREATE PLAN</string>
+    <string name="nutrition_hub_delete_diet_plan_title">Delete diet plan</string>
+    <string name="nutrition_hub_activate_plan_title">Activate plan</string>
+    <string name="nutrition_hub_activate_plan_pause_message">This will pause the plan \"%1$s\" currently active. Continue?</string>
+    <string name="nutrition_hub_activate_plan_message">The selected plan will become your active plan.</string>
+    <string name="nutrition_hub_activating_plan">Activating plan…</string>
+    <string name="nutrition_hub_delete_plan_cd">Delete plan</string>
+    <string name="nutrition_hub_plan_summary">%1$d weeks • %2$d kcal/day</string>
+    <string name="nutrition_hub_activate_plan_btn">Activate plan</string>
+    <string name="nutrition_hub_shopping_error_title">Error loading lists</string>
+    <string name="nutrition_hub_shopping_empty_title">Generate your first shopping list</string>
+    <string name="nutrition_hub_shopping_empty_subtitle">Based on your active diet plan</string>
+    <string name="nutrition_hub_generate_list">Generate list</string>
+    <string name="nutrition_hub_delete_list_title">Delete list</string>
+    <string name="nutrition_hub_delete_list_message">Are you sure you want to delete this shopping list?</string>
+    <string name="nutrition_hub_delete_list_cd">Delete list</string>
+    <string name="nutrition_hub_ai_generated_cd">AI generated</string>
+
+    <!-- Nutrition Target -->
+    <string name="nutrition_target_title">Nutrition Targets</string>
+    <string name="nutrition_target_calories_label">Calorie target</string>
+    <string name="nutrition_target_protein_label">Protein</string>
+    <string name="nutrition_target_carbs_label">Carbohydrates</string>
+    <string name="nutrition_target_fat_label">Fat</string>
+
+    <!-- Track Meal -->
+    <string name="nutrition_track_title_manual">Track meal</string>
+    <string name="nutrition_track_title_analyze">Analyze meal</string>
+    <string name="nutrition_track_meal_type_label">Meal type</string>
+    <string name="nutrition_track_time_label">Time (HH:mm)</string>
+    <string name="nutrition_track_describe_food">Describe your meal</string>
+    <string name="nutrition_track_analyze_btn">ANALYZE</string>
+    <string name="nutrition_track_analyzing">Analyzing meal…</string>
+    <string name="nutrition_track_meal_name_label">Meal name (optional)</string>
+    <string name="nutrition_track_food_items_header">FOOD ITEMS</string>
+    <string name="nutrition_track_add_food_item">Add food item</string>
+    <string name="nutrition_track_total_calories">Total: %1$d kcal</string>
+    <string name="nutrition_track_macros_summary">P:%1$dg C:%2$dg F:%3$dg</string>
+    <string name="nutrition_track_food_item_number">Food item %1$d</string>
+    <string name="nutrition_track_food_name_label">Name</string>
+    <string name="nutrition_track_quantity_label">Qty.</string>
+    <string name="nutrition_track_unit_label">Unit</string>
+    <string name="nutrition_track_kcal_label">kcal</string>
+    <string name="nutrition_track_protein_label">Prot(g)</string>
+    <string name="nutrition_track_carbs_label">Carbs(g)</string>
+    <string name="nutrition_track_fat_label">Fat(g)</string>
+
+    <!-- Diet Detail -->
+    <string name="diet_detail_topbar_fallback">Diet plan</string>
+    <string name="diet_detail_adaptive_plan_cd">Adaptive plan</string>
+    <string name="diet_detail_macros_header">MACRO DISTRIBUTION</string>
+    <string name="diet_detail_weekly_plan_header">WEEKLY PLAN</string>
+    <string name="diet_detail_kcal_label">KCAL</string>
+    <string name="diet_detail_protein_label">PROTEIN</string>
+    <string name="diet_detail_carbs_label">CARBS</string>
+    <string name="diet_detail_fat_label">FAT</string>
+    <string name="diet_detail_day_section_title">Day %1$d — %2$s</string>
+    <string name="diet_detail_info_cd">Info</string>
+    <string name="diet_detail_why_cd">Why?</string>
+    <string name="diet_detail_explain_meal_title">Meal explanation</string>
+    <string name="diet_detail_explain_meal_description">AI will generate a detailed explanation of this meal from your plan.</string>
+    <string name="diet_detail_explain_meal_confirm">Generate explanation</string>
+    <string name="diet_detail_why_meal_title">Why this meal?</string>
+    <string name="diet_detail_why_meal_description">AI will explain why this meal was chosen for your diet plan.</string>
+    <string name="diet_detail_why_meal_confirm">See explanation</string>
+    <string name="diet_detail_macro_protein">Protein</string>
+    <string name="diet_detail_macro_carbs">Carbohydrates</string>
+    <string name="diet_detail_macro_fat">Fat</string>
+
+    <!-- Diet Generate -->
+    <string name="diet_generate_title">Generate diet plan</string>
+    <string name="diet_generate_title_adaptive">Adaptive diet plan</string>
+    <string name="diet_generate_duration_label">DURATION</string>
+    <string name="diet_generate_meals_label">MEALS PER DAY</string>
+    <string name="diet_generate_goal_label">GOAL</string>
+    <string name="diet_generate_preference_label">DIETARY PREFERENCE</string>
+    <string name="diet_generate_calories_label">Daily calories (optional)</string>
+    <string name="diet_generate_allergies_label">Allergies (optional)</string>
+    <string name="diet_generate_notes_label">Additional notes (optional)</string>
+    <string name="diet_generate_btn">GENERATE PLAN</string>
+    <string name="diet_generate_loading_text">Generating your plan…</string>
+    <string name="diet_generate_loading_timer">Generating your plan… %1$ds</string>
+    <string name="diet_generate_hero_title">Designing your diet plan</string>
+    <string name="diet_generate_hero_subtitle">Calculating personalized meals and macros</string>
+
+    <!-- Diet Approval -->
+    <string name="diet_approval_topbar_title">Your New Plan</string>
+    <string name="diet_approval_weekly_plan_label">WEEKLY PLAN</string>
+    <string name="diet_approval_change_plan">Change Plan</string>
+    <string name="diet_approval_accept_plan">Accept Plan</string>
+    <string name="diet_approval_kcal_per_day">%1$d kcal / day</string>
+    <string name="diet_approval_macros_summary">P: %1$dg · C: %2$dg · F: %3$dg</string>
+    <string name="diet_approval_weeks_preference">%1$d weeks · %2$s</string>
+    <string name="diet_approval_day_section_title">%1$s · %2$d kcal</string>
+
+    <!-- Vision -->
+    <string name="vision_title">Food Scanner</string>
+    <string name="vision_permission_title">Camera access required</string>
+    <string name="vision_permission_subtitle">Enable camera in settings to scan food</string>
+    <string name="vision_open_settings">Open Settings</string>
+    <string name="vision_gallery_cd">Gallery</string>
+    <string name="vision_capture_cd">Capture</string>
+    <string name="vision_analyzing">Analyzing image…</string>
+    <string name="vision_retry">Retry</string>
+    <string name="vision_confidence">Confidence: %1$d%%</string>
+    <string name="vision_log_meal_btn">LOG MEAL</string>
+    <string name="vision_try_again_btn">TRY AGAIN</string>
 </resources>
 

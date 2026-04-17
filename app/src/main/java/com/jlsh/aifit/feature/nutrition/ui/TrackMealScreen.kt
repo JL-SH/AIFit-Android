@@ -39,11 +39,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.AiGenerateButton
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.inputs.AiFitDropdown
@@ -120,6 +122,17 @@ fun TrackMealScreen(
 
     val isTextMode = mode == "text_analysis"
 
+    // Build meal type display map using string resources
+    val mealTypeDisplayMap = mapOf(
+        MealType.BREAKFAST.name to stringResource(R.string.meal_type_breakfast),
+        MealType.MID_MORNING.name to stringResource(R.string.meal_type_morning_snack),
+        MealType.LUNCH.name to stringResource(R.string.meal_type_lunch),
+        MealType.AFTERNOON_SNACK.name to stringResource(R.string.meal_type_snack),
+        MealType.DINNER.name to stringResource(R.string.meal_type_dinner),
+        MealType.PRE_WORKOUT.name to stringResource(R.string.meal_type_pre_workout),
+        MealType.POST_WORKOUT.name to stringResource(R.string.meal_type_post_workout),
+    )
+
     LaunchedEffect(Unit) {
         viewModel.resetTrackMealState()
     }
@@ -144,12 +157,12 @@ fun TrackMealScreen(
                     mealTime = String.format("%02d:%02d", timePickerState.hour, timePickerState.minute)
                     showTimePicker = false
                 }) {
-                    Text("Aceptar")
+                    Text(stringResource(R.string.common_accept))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.common_cancel))
                 }
             },
             text = {
@@ -170,7 +183,7 @@ fun TrackMealScreen(
             containerColor = Color.Transparent,
             topBar = {
                 AiFitTopBar(
-                    title = if (isTextMode) "Analizar comida" else "Registrar comida",
+                    title = if (isTextMode) stringResource(R.string.nutrition_track_title_analyze) else stringResource(R.string.nutrition_track_title_manual),
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                 )
@@ -192,9 +205,9 @@ fun TrackMealScreen(
                     selectedValue = selectedMealType,
                     options = MEAL_TYPE_OPTIONS,
                     onOptionSelected = { selectedMealType = it },
-                    label = "Tipo de comida",
+                    label = stringResource(R.string.nutrition_track_meal_type_label),
                     modifier = Modifier.fillMaxWidth(),
-                    displayMapper = { MEAL_TYPE_DISPLAY[it] ?: it },
+                    displayMapper = { mealTypeDisplayMap[it] ?: it },
                 )
 
                 // BUG-019: TimePicker en lugar de TextField
@@ -202,7 +215,7 @@ fun TrackMealScreen(
                     AiFitTextField(
                         value = mealTime,
                         onValueChange = {},
-                        label = "Hora (HH:mm)",
+                        label = stringResource(R.string.nutrition_track_time_label),
                         readOnly = true,
                         trailingIcon = Icons.Rounded.Schedule,
                         modifier = Modifier.fillMaxWidth(),
@@ -222,7 +235,7 @@ fun TrackMealScreen(
                         onValueChange = {
                             if (it.length <= 500) analysisText = it
                         },
-                        label = "Describe tu comida",
+                        label = stringResource(R.string.nutrition_track_describe_food),
                         singleLine = false,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -239,8 +252,8 @@ fun TrackMealScreen(
                     Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
                     AiGenerateButton(
-                        text = "ANALIZAR",
-                        loadingText = "Analizando comida...",
+                        text = stringResource(R.string.nutrition_track_analyze_btn),
+                        loadingText = stringResource(R.string.nutrition_track_analyzing),
                         isLoading = isAnalyzing,
                         onClick = {
                             viewModel.onAnalyzeMealFromText(
@@ -259,7 +272,7 @@ fun TrackMealScreen(
                     AiFitTextField(
                         value = mealName,
                         onValueChange = { mealName = it },
-                        label = "Nombre de la comida (opcional)",
+                        label = stringResource(R.string.nutrition_track_meal_name_label),
                         modifier = Modifier.fillMaxWidth(),
                     )
 
@@ -269,7 +282,7 @@ fun TrackMealScreen(
                     )
 
                     Text(
-                        text = "ALIMENTOS",
+                        text = stringResource(R.string.nutrition_track_food_items_header),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 1.5.sp,
@@ -294,11 +307,11 @@ fun TrackMealScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Add,
-                            contentDescription = "Añadir alimento",
+                            contentDescription = stringResource(R.string.nutrition_track_add_food_item),
                             tint = MaterialTheme.colorScheme.primaryContainer,
                         )
                         Text(
-                            text = "Añadir alimento",
+                            text = stringResource(R.string.nutrition_track_add_food_item),
                             color = MaterialTheme.colorScheme.primaryContainer,
                         )
                     }
@@ -314,12 +327,12 @@ fun TrackMealScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            text = "Total: ${totalCal} kcal",
+                            text = stringResource(R.string.nutrition_track_total_calories, totalCal),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primaryContainer,
                         )
                         Text(
-                            text = "P:${totalProt.toInt()}g C:${totalCarbs.toInt()}g F:${totalFat.toInt()}g",
+                            text = stringResource(R.string.nutrition_track_macros_summary, totalProt.toInt(), totalCarbs.toInt(), totalFat.toInt()),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -328,7 +341,7 @@ fun TrackMealScreen(
                     Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
                     PrimaryButton(
-                        text = "GUARDAR",
+                        text = stringResource(R.string.common_save),
                         isLoading = isSaving,
                         onClick = {
                             val foodItems = items.map { entry ->
@@ -372,14 +385,14 @@ private fun FoodItemForm(
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
     ) {
         Text(
-            text = "Alimento $index",
+            text = stringResource(R.string.nutrition_track_food_item_number, index),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         AiFitTextField(
             value = item.name,
             onValueChange = { onItemChanged(item.copy(name = it)) },
-            label = "Nombre",
+            label = stringResource(R.string.nutrition_track_food_name_label),
             modifier = Modifier.fillMaxWidth(),
         )
         Row(
@@ -388,14 +401,14 @@ private fun FoodItemForm(
             AiFitNumberField(
                 value = item.quantity,
                 onValueChange = { onItemChanged(item.copy(quantity = it)) },
-                label = "Cant.",
+                label = stringResource(R.string.nutrition_track_quantity_label),
                 modifier = Modifier.weight(1f),
             )
             AiFitDropdown(
                 selectedValue = item.unit,
                 options = UNIT_OPTIONS,
                 onOptionSelected = { onItemChanged(item.copy(unit = it)) },
-                label = "Unidad",
+                label = stringResource(R.string.nutrition_track_unit_label),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -405,13 +418,13 @@ private fun FoodItemForm(
             AiFitNumberField(
                 value = item.calories,
                 onValueChange = { onItemChanged(item.copy(calories = it)) },
-                label = "kcal",
+                label = stringResource(R.string.nutrition_track_kcal_label),
                 modifier = Modifier.weight(1f),
             )
             AiFitNumberField(
                 value = item.protein,
                 onValueChange = { onItemChanged(item.copy(protein = it)) },
-                label = "Prot(g)",
+                label = stringResource(R.string.nutrition_track_protein_label),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -421,13 +434,13 @@ private fun FoodItemForm(
             AiFitNumberField(
                 value = item.carbs,
                 onValueChange = { onItemChanged(item.copy(carbs = it)) },
-                label = "Carbos(g)",
+                label = stringResource(R.string.nutrition_track_carbs_label),
                 modifier = Modifier.weight(1f),
             )
             AiFitNumberField(
                 value = item.fat,
                 onValueChange = { onItemChanged(item.copy(fat = it)) },
-                label = "Grasa(g)",
+                label = stringResource(R.string.nutrition_track_fat_label),
                 modifier = Modifier.weight(1f),
             )
         }

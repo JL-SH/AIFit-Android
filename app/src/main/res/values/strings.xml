@@ -583,4 +583,165 @@
     <string name="workout_detail_set_not_completed_cd">No completada</string>
     <string name="workout_detail_reps_format">%1$d reps</string>
     <string name="workout_detail_duration_format">%1$d min</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         MEAL TYPES (reutilizable en nutrition, diet y vision)
+         ══════════════════════════════════════════════════════════ -->
+    <string name="meal_type_breakfast">Desayuno</string>
+    <string name="meal_type_morning_snack">Media mañana</string>
+    <string name="meal_type_lunch">Comida</string>
+    <string name="meal_type_snack">Merienda</string>
+    <string name="meal_type_dinner">Cena</string>
+    <string name="meal_type_pre_workout">Pre-entreno</string>
+    <string name="meal_type_post_workout">Post-entreno</string>
+    <string name="meal_type_late_snack">Snack nocturno</string>
+    <string name="meal_type_unknown">—</string>
+
+    <!-- Macros (reutilizable) -->
+    <string name="macro_calories">Calorías</string>
+    <string name="macro_protein">Proteínas</string>
+    <string name="macro_carbs">Carbohidratos</string>
+    <string name="macro_fat">Grasas</string>
+
+    <!-- Acción irreversible (reutilizable) -->
+    <string name="common_irreversible_action">Esta acción no se puede deshacer.</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         NUTRITION HUB
+         ══════════════════════════════════════════════════════════ -->
+    <string name="nutrition_hub_title">Nutrición</string>
+    <string name="nutrition_hub_tab_today">HOY</string>
+    <string name="nutrition_hub_tab_diet_plan">PLAN DIETA</string>
+    <string name="nutrition_hub_tab_shopping">COMPRA</string>
+    <string name="nutrition_hub_fab_add_meal">Añadir comida</string>
+    <string name="nutrition_hub_fab_new_plan">Nuevo plan</string>
+    <string name="nutrition_hub_no_target_title">Sin objetivos de hoy</string>
+    <string name="nutrition_hub_no_target_subtitle">Configura tu objetivo calórico para empezar</string>
+    <string name="nutrition_hub_configure">CONFIGURAR</string>
+    <string name="nutrition_hub_meals_header">COMIDAS</string>
+    <string name="nutrition_hub_no_meals_title">No has registrado comidas hoy</string>
+    <string name="nutrition_hub_no_meals_subtitle">Añade tu primera comida del día</string>
+    <string name="nutrition_hub_add_meal_btn">AÑADIR COMIDA</string>
+    <string name="nutrition_hub_delete_meal_title">Eliminar comida</string>
+    <string name="nutrition_hub_no_diet_plans_title">Sin planes de dieta</string>
+    <string name="nutrition_hub_no_diet_plans_subtitle">Genera tu primer plan de dieta con IA</string>
+    <string name="nutrition_hub_create_plan">CREAR PLAN</string>
+    <string name="nutrition_hub_delete_diet_plan_title">Eliminar plan de dieta</string>
+    <string name="nutrition_hub_activate_plan_title">Activar plan</string>
+    <string name="nutrition_hub_activate_plan_pause_message">Esto pausará el plan \"%1$s\" actualmente activo. ¿Continuar?</string>
+    <string name="nutrition_hub_activate_plan_message">El plan seleccionado pasará a ser tu plan activo.</string>
+    <string name="nutrition_hub_activating_plan">Activando plan…</string>
+    <string name="nutrition_hub_delete_plan_cd">Eliminar plan</string>
+    <string name="nutrition_hub_plan_summary">%1$d semanas • %2$d kcal/día</string>
+    <string name="nutrition_hub_activate_plan_btn">Activar plan</string>
+    <string name="nutrition_hub_shopping_error_title">Error al cargar listas</string>
+    <string name="nutrition_hub_shopping_empty_title">Genera tu primera lista de compras</string>
+    <string name="nutrition_hub_shopping_empty_subtitle">Basada en tu plan de dieta activo</string>
+    <string name="nutrition_hub_generate_list">Generar lista</string>
+    <string name="nutrition_hub_delete_list_title">Eliminar lista</string>
+    <string name="nutrition_hub_delete_list_message">¿Seguro que quieres eliminar esta lista de compras?</string>
+    <string name="nutrition_hub_delete_list_cd">Eliminar lista</string>
+    <string name="nutrition_hub_ai_generated_cd">Generado por IA</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         NUTRITION TARGET
+         ══════════════════════════════════════════════════════════ -->
+    <string name="nutrition_target_title">Objetivos de nutrición</string>
+    <string name="nutrition_target_calories_label">Objetivo calórico</string>
+    <string name="nutrition_target_protein_label">Proteínas</string>
+    <string name="nutrition_target_carbs_label">Carbohidratos</string>
+    <string name="nutrition_target_fat_label">Grasas</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         TRACK MEAL
+         ══════════════════════════════════════════════════════════ -->
+    <string name="nutrition_track_title_manual">Registrar comida</string>
+    <string name="nutrition_track_title_analyze">Analizar comida</string>
+    <string name="nutrition_track_meal_type_label">Tipo de comida</string>
+    <string name="nutrition_track_time_label">Hora (HH:mm)</string>
+    <string name="nutrition_track_describe_food">Describe tu comida</string>
+    <string name="nutrition_track_analyze_btn">ANALIZAR</string>
+    <string name="nutrition_track_analyzing">Analizando comida…</string>
+    <string name="nutrition_track_meal_name_label">Nombre de la comida (opcional)</string>
+    <string name="nutrition_track_food_items_header">ALIMENTOS</string>
+    <string name="nutrition_track_add_food_item">Añadir alimento</string>
+    <string name="nutrition_track_total_calories">Total: %1$d kcal</string>
+    <string name="nutrition_track_macros_summary">P:%1$dg C:%2$dg F:%3$dg</string>
+    <string name="nutrition_track_food_item_number">Alimento %1$d</string>
+    <string name="nutrition_track_food_name_label">Nombre</string>
+    <string name="nutrition_track_quantity_label">Cant.</string>
+    <string name="nutrition_track_unit_label">Unidad</string>
+    <string name="nutrition_track_kcal_label">kcal</string>
+    <string name="nutrition_track_protein_label">Prot(g)</string>
+    <string name="nutrition_track_carbs_label">Carbos(g)</string>
+    <string name="nutrition_track_fat_label">Grasa(g)</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         DIET DETAIL
+         ══════════════════════════════════════════════════════════ -->
+    <string name="diet_detail_topbar_fallback">Plan de dieta</string>
+    <string name="diet_detail_adaptive_plan_cd">Plan adaptativo</string>
+    <string name="diet_detail_macros_header">DISTRIBUCIÓN DE MACROS</string>
+    <string name="diet_detail_weekly_plan_header">PLAN SEMANAL</string>
+    <string name="diet_detail_kcal_label">KCAL</string>
+    <string name="diet_detail_protein_label">PROTEÍNA</string>
+    <string name="diet_detail_carbs_label">CARBOS</string>
+    <string name="diet_detail_fat_label">GRASA</string>
+    <string name="diet_detail_day_section_title">Día %1$d — %2$s</string>
+    <string name="diet_detail_info_cd">Info</string>
+    <string name="diet_detail_why_cd">¿Por qué?</string>
+    <string name="diet_detail_explain_meal_title">Explicación de la comida</string>
+    <string name="diet_detail_explain_meal_description">La IA generará una explicación detallada de esta comida de tu plan.</string>
+    <string name="diet_detail_explain_meal_confirm">Generar explicación</string>
+    <string name="diet_detail_why_meal_title">¿Por qué esta comida?</string>
+    <string name="diet_detail_why_meal_description">La IA explicará por qué esta comida fue elegida para tu plan de dieta.</string>
+    <string name="diet_detail_why_meal_confirm">Ver explicación</string>
+    <string name="diet_detail_macro_protein">Proteína</string>
+    <string name="diet_detail_macro_carbs">Carbohidratos</string>
+    <string name="diet_detail_macro_fat">Grasa</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         DIET GENERATE
+         ══════════════════════════════════════════════════════════ -->
+    <string name="diet_generate_title">Generar plan de dieta</string>
+    <string name="diet_generate_title_adaptive">Plan de dieta adaptativo</string>
+    <string name="diet_generate_duration_label">DURACIÓN</string>
+    <string name="diet_generate_meals_label">COMIDAS POR DÍA</string>
+    <string name="diet_generate_goal_label">OBJETIVO</string>
+    <string name="diet_generate_preference_label">PREFERENCIA ALIMENTARIA</string>
+    <string name="diet_generate_calories_label">Calorías diarias (opcional)</string>
+    <string name="diet_generate_allergies_label">Alergias (opcional)</string>
+    <string name="diet_generate_notes_label">Notas adicionales (opcional)</string>
+    <string name="diet_generate_btn">GENERAR PLAN</string>
+    <string name="diet_generate_loading_text">Generando tu plan…</string>
+    <string name="diet_generate_loading_timer">Generando tu plan… %1$ds</string>
+    <string name="diet_generate_hero_title">Diseñando tu plan de dieta</string>
+    <string name="diet_generate_hero_subtitle">Calculando comidas y macros personalizados</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         DIET APPROVAL
+         ══════════════════════════════════════════════════════════ -->
+    <string name="diet_approval_topbar_title">Tu Nuevo Plan</string>
+    <string name="diet_approval_weekly_plan_label">PLAN SEMANAL</string>
+    <string name="diet_approval_change_plan">Cambiar Plan</string>
+    <string name="diet_approval_accept_plan">Aceptar Plan</string>
+    <string name="diet_approval_kcal_per_day">%1$d kcal / día</string>
+    <string name="diet_approval_macros_summary">P: %1$dg · C: %2$dg · G: %3$dg</string>
+    <string name="diet_approval_weeks_preference">%1$d semanas · %2$s</string>
+    <string name="diet_approval_day_section_title">%1$s · %2$d kcal</string>
+
+    <!-- ══════════════════════════════════════════════════════════
+         VISION (escáner de comida)
+         ══════════════════════════════════════════════════════════ -->
+    <string name="vision_title">Escáner de comida</string>
+    <string name="vision_permission_title">Acceso a cámara necesario</string>
+    <string name="vision_permission_subtitle">Habilita la cámara en ajustes para escanear comida</string>
+    <string name="vision_open_settings">Abrir Ajustes</string>
+    <string name="vision_gallery_cd">Galería</string>
+    <string name="vision_capture_cd">Capturar</string>
+    <string name="vision_analyzing">Analizando imagen…</string>
+    <string name="vision_retry">Reintentar</string>
+    <string name="vision_confidence">Confianza: %1$d%%</string>
+    <string name="vision_log_meal_btn">REGISTRAR COMIDA</string>
+    <string name="vision_try_again_btn">INTENTAR DE NUEVO</string>
 </resources>

@@ -107,7 +107,7 @@ fun DietPlanApprovalScreen(
 
     ScreenScaffold<DietUiState.Success>(
         uiState = detailUiState,
-        topBar = { AiFitTopBar(title = "Tu Nuevo Plan") },
+        topBar = { AiFitTopBar(title = stringResource(R.string.diet_approval_topbar_title)) },
         onRetry = { viewModel.loadPlanDetail(planId) },
     ) { paddingValues, state ->
         val plan = state.plan
@@ -153,17 +153,17 @@ fun DietPlanApprovalScreen(
                             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
                         ) {
                             Text(
-                                text = "${plan.dailyCalories} kcal / día",
+                                text = stringResource(R.string.diet_approval_kcal_per_day, plan.dailyCalories),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = "P: ${plan.proteinGrams}g · C: ${plan.carbsGrams}g · G: ${plan.fatGrams}g",
+                                text = stringResource(R.string.diet_approval_macros_summary, plan.proteinGrams, plan.carbsGrams, plan.fatGrams),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = "${plan.durationWeeks} semanas · ${plan.preference.displayName()}",
+                                text = stringResource(R.string.diet_approval_weeks_preference, plan.durationWeeks, plan.preference.displayName()),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -185,7 +185,7 @@ fun DietPlanApprovalScreen(
                 // Weekly plan label
                 item {
                     Text(
-                        text = "PLAN SEMANAL",
+                        text = stringResource(R.string.diet_approval_weekly_plan_label),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 1.5.sp,
@@ -215,12 +215,12 @@ fun DietPlanApprovalScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     SecondaryButton(
-                        text = "Cambiar Plan",
+                        text = stringResource(R.string.diet_approval_change_plan),
                         onClick = { showFeedbackSheet = true },
                         modifier = Modifier.weight(1f),
                     )
                     PrimaryButton(
-                        text = "Aceptar Plan",
+                        text = stringResource(R.string.diet_approval_accept_plan),
                         onClick = {
                             viewModel.onApproveDietPlan(planId)
                             onAccept()
@@ -278,9 +278,18 @@ fun DietPlanApprovalScreen(
 
 @Composable
 private fun DietApprovalDaySection(day: DietDay) {
-    val dayName = DAY_NAMES_ES[day.dayNumber] ?: day.name
+    val dayName = when (day.dayNumber) {
+        1 -> stringResource(R.string.day_monday)
+        2 -> stringResource(R.string.day_tuesday)
+        3 -> stringResource(R.string.day_wednesday)
+        4 -> stringResource(R.string.day_thursday)
+        5 -> stringResource(R.string.day_friday)
+        6 -> stringResource(R.string.day_saturday)
+        7 -> stringResource(R.string.day_sunday)
+        else -> day.name
+    }
     ExpandableSection(
-        title = "$dayName · ${day.totalCalories} kcal",
+        title = stringResource(R.string.diet_approval_day_section_title, dayName, day.totalCalories),
     ) {
         Column(
             modifier = Modifier.padding(vertical = AiFitSpacing.sm),
@@ -350,13 +359,3 @@ private fun DietApprovalMealItemRow(item: MealItem) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
-
-private val DAY_NAMES_ES = mapOf(
-    1 to "Lunes",
-    2 to "Martes",
-    3 to "Miércoles",
-    4 to "Jueves",
-    5 to "Viernes",
-    6 to "Sábado",
-    7 to "Domingo",
-)

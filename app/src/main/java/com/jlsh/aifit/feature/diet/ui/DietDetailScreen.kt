@@ -36,12 +36,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.display.MacroProgressBar
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
@@ -63,6 +65,20 @@ import com.jlsh.aifit.feature.diet.ui.state.DietUiState
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.user.domain.model.DietPreference
 import java.time.LocalDateTime
+
+@Composable
+private fun mealTypeDisplay(mealType: MealType): String = stringResource(
+    when (mealType) {
+        MealType.BREAKFAST -> R.string.meal_type_breakfast
+        MealType.MID_MORNING -> R.string.meal_type_morning_snack
+        MealType.LUNCH -> R.string.meal_type_lunch
+        MealType.AFTERNOON_SNACK -> R.string.meal_type_snack
+        MealType.DINNER -> R.string.meal_type_dinner
+        MealType.PRE_WORKOUT -> R.string.meal_type_pre_workout
+        MealType.POST_WORKOUT -> R.string.meal_type_post_workout
+        else -> R.string.meal_type_unknown
+    }
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,9 +118,9 @@ fun DietDetailScreen(
     // ── Sheets ──
     if (showMealExplanationConfirmForId != null) {
         EducationConfirmSheet(
-            title = "Explicación de la comida",
-            description = "La IA generará una explicación detallada de esta comida de tu plan.",
-            confirmText = "Generar explicación",
+            title = stringResource(R.string.diet_detail_explain_meal_title),
+            description = stringResource(R.string.diet_detail_explain_meal_description),
+            confirmText = stringResource(R.string.diet_detail_explain_meal_confirm),
             onDismiss = { showMealExplanationConfirmForId = null },
             onConfirm = {
                 val mealId = showMealExplanationConfirmForId
@@ -119,9 +135,9 @@ fun DietDetailScreen(
 
     if (showWhyThisMealConfirmForId != null) {
         EducationConfirmSheet(
-            title = "¿Por qué esta comida?",
-            description = "La IA explicará por qué esta comida fue elegida para tu plan de dieta.",
-            confirmText = "Ver explicación",
+            title = stringResource(R.string.diet_detail_why_meal_title),
+            description = stringResource(R.string.diet_detail_why_meal_description),
+            confirmText = stringResource(R.string.diet_detail_why_meal_confirm),
             onDismiss = { showWhyThisMealConfirmForId = null },
             onConfirm = {
                 val mealId = showWhyThisMealConfirmForId
@@ -158,7 +174,7 @@ fun DietDetailScreen(
 
     val topBarTitle = when (val state = detailState) {
         is DietUiState.Success -> state.plan.name
-        else -> "Plan de dieta"
+        else -> stringResource(R.string.diet_detail_topbar_fallback)
     }
 
     ScreenScaffold<DietUiState.Success>(
@@ -172,7 +188,7 @@ fun DietDetailScreen(
                     IconButton(onClick = { onNavigateToGenerate(true, planId) }) {
                         Icon(
                             imageVector = Icons.Rounded.AutoAwesome,
-                            contentDescription = "Plan adaptativo",
+                            contentDescription = stringResource(R.string.diet_detail_adaptive_plan_cd),
                             tint = MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.size(24.dp),
                         )
@@ -258,25 +274,25 @@ private fun DietDetailContent(
                 ) {
                     StatCell(
                         value = "${plan.dailyCalories}",
-                        label = "KCAL",
+                        label = stringResource(R.string.diet_detail_kcal_label),
                         modifier = Modifier.weight(1f),
                     )
                     StatDivider()
                     StatCell(
                         value = "${plan.proteinGrams}g",
-                        label = "PROTEÍNA",
+                        label = stringResource(R.string.diet_detail_protein_label),
                         modifier = Modifier.weight(1f),
                     )
                     StatDivider()
                     StatCell(
                         value = "${plan.carbsGrams}g",
-                        label = "CARBOS",
+                        label = stringResource(R.string.diet_detail_carbs_label),
                         modifier = Modifier.weight(1f),
                     )
                     StatDivider()
                     StatCell(
                         value = "${plan.fatGrams}g",
-                        label = "GRASA",
+                        label = stringResource(R.string.diet_detail_fat_label),
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -294,7 +310,7 @@ private fun DietDetailContent(
 
         item(key = "macros_header") {
             Text(
-                text = "DISTRIBUCIÓN DE MACROS",
+                text = stringResource(R.string.diet_detail_macros_header),
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 1.5.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -314,19 +330,19 @@ private fun DietDetailContent(
                 verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
             ) {
                 MacroProgressBar(
-                    name = "Proteína",
+                    name = stringResource(R.string.diet_detail_macro_protein),
                     current = plan.proteinGrams.toFloat(),
                     target = plan.proteinGrams.toFloat(),
                     color = MaterialTheme.colorScheme.primaryContainer,
                 )
                 MacroProgressBar(
-                    name = "Carbohidratos",
+                    name = stringResource(R.string.diet_detail_macro_carbs),
                     current = plan.carbsGrams.toFloat(),
                     target = plan.carbsGrams.toFloat(),
                     color = MaterialTheme.colorScheme.tertiary,
                 )
                 MacroProgressBar(
-                    name = "Grasa",
+                    name = stringResource(R.string.diet_detail_macro_fat),
                     current = plan.fatGrams.toFloat(),
                     target = plan.fatGrams.toFloat(),
                     color = MaterialTheme.colorScheme.secondary,
@@ -345,7 +361,7 @@ private fun DietDetailContent(
 
         item(key = "days_header") {
             Text(
-                text = "PLAN SEMANAL",
+                text = stringResource(R.string.diet_detail_weekly_plan_header),
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 1.5.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -362,7 +378,7 @@ private fun DietDetailContent(
                 modifier = Modifier.padding(horizontal = AiFitSpacing.md),
             ) {
                 ExpandableSection(
-                    title = "Día ${day.dayNumber} — ${day.name}",
+                    title = stringResource(R.string.diet_detail_day_section_title, day.dayNumber, day.name),
                     initiallyExpanded = false,
                 ) {
                     Column(
@@ -453,6 +469,7 @@ private fun MealRow(
     onInfoClick: () -> Unit = {},
     onWhyClick: () -> Unit = {},
 ) {
+    val mealTypeLabel = mealTypeDisplay(meal.mealType)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -480,9 +497,7 @@ private fun MealRow(
                         shape = RoundedCornerShape(6.dp),
                     ) {
                         Text(
-                            text = meal.mealType.name.replace("_", " ")
-                                .lowercase()
-                                .replaceFirstChar { it.uppercase() },
+                            text = mealTypeLabel,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -509,7 +524,7 @@ private fun MealRow(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Info,
-                        contentDescription = "Info",
+                        contentDescription = stringResource(R.string.diet_detail_info_cd),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp),
                     )
@@ -520,7 +535,7 @@ private fun MealRow(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.QuestionMark,
-                        contentDescription = "¿Por qué?",
+                        contentDescription = stringResource(R.string.diet_detail_why_cd),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp),
                     )

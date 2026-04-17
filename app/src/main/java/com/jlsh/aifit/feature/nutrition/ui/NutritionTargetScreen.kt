@@ -28,10 +28,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
@@ -73,7 +75,7 @@ fun NutritionTargetScreen(
             containerColor = Color.Transparent,
             topBar = {
                 AiFitTopBar(
-                    title = "Nutrition Targets",
+                    title = stringResource(R.string.nutrition_target_title),
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                 )
@@ -136,7 +138,7 @@ private fun NutritionTargetContent(
         AiFitNumberField(
             value = calories,
             onValueChange = { calories = it },
-            label = "Calorie target",
+            label = stringResource(R.string.nutrition_target_calories_label),
             suffix = "kcal",
             modifier = Modifier.fillMaxWidth(),
         )
@@ -144,7 +146,7 @@ private fun NutritionTargetContent(
         AiFitNumberField(
             value = protein,
             onValueChange = { protein = it },
-            label = "Protein",
+            label = stringResource(R.string.nutrition_target_protein_label),
             suffix = "g",
             modifier = Modifier.fillMaxWidth(),
         )
@@ -152,7 +154,7 @@ private fun NutritionTargetContent(
         AiFitNumberField(
             value = carbs,
             onValueChange = { carbs = it },
-            label = "Carbs",
+            label = stringResource(R.string.nutrition_target_carbs_label),
             suffix = "g",
             modifier = Modifier.fillMaxWidth(),
         )
@@ -160,7 +162,7 @@ private fun NutritionTargetContent(
         AiFitNumberField(
             value = fat,
             onValueChange = { fat = it },
-            label = "Fat",
+            label = stringResource(R.string.nutrition_target_fat_label),
             suffix = "g",
             modifier = Modifier.fillMaxWidth(),
         )
@@ -168,7 +170,7 @@ private fun NutritionTargetContent(
         Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
         PrimaryButton(
-            text = "GUARDAR",
+            text = stringResource(R.string.common_save),
             isLoading = state.isSaving,
             onClick = { onSave(calories, protein, carbs, fat) },
             modifier = Modifier.fillMaxWidth(),
