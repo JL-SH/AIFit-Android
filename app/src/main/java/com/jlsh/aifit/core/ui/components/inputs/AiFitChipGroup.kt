@@ -25,7 +25,7 @@ fun AiFitChipGroup(
     onSelectionChanged: (Set<String>) -> Unit,
     modifier: Modifier = Modifier,
     multiSelect: Boolean = true,
-    displayMapper: (String) -> String = { it },
+    displayMapper: @Composable (String) -> String = { it },
 ) {
     FlowRow(
         modifier = modifier,

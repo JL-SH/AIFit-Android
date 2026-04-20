@@ -31,6 +31,16 @@ class WorkoutRepositoryImpl @Inject constructor(
     private val pendingDeleteIds: MutableSet<String> =
         Collections.synchronizedSet(mutableSetOf())
 
+    /**
+     * Incremented every time a delete is initiated.
+     * Each [getHistory] call captures this value at start; if the value changes
+     * before the network response is processed, the response is stale (it was
+     * sent before the delete) and is discarded entirely — preventing re-insertion
+     * of the deleted row even across different ViewModel instances.
+     */
+    @Volatile
+    private var deleteGeneration: Int = 0
+
     override suspend fun logSession(request: LogWorkoutSessionRequestDto): Result<WorkoutLog> {
         return when (val remote = safeApiCall { apiService.logWorkoutSession(request) }) {
             is Result.Success -> {
@@ -58,6 +68,10 @@ class WorkoutRepositoryImpl @Inject constructor(
     ): Flow<Result<List<WorkoutLog>>> = flow {
         emit(Result.Loading)
 
+        // Snapshot the generation BEFORE the network call so we can detect if a
+        // delete was triggered while we were waiting for the response.
+        val generationAtStart = deleteGeneration
+
         val fromEpochDay = from?.let { LocalDate.parse(it).toEpochDay() }
         val toEpochDay = to?.let { LocalDate.parse(it).toEpochDay() }
         val cached = dao.getAll()
@@ -76,8 +90,14 @@ class WorkoutRepositoryImpl @Inject constructor(
 
         when (val remote = safeApiCall { apiService.getWorkoutLogs(planId, from, to) }) {
             is Result.Success -> {
-                val serverIds = remote.data.map { it.id }.toSet()
-                pendingDeleteIds.removeAll { it !in serverIds }
+                // If the generation changed while we were waiting for the network response,
+                // a delete was initiated after this GET request was sent.  The response is
+                // therefore stale (it was captured before the delete) and MUST be discarded
+                // to prevent re-inserting the deleted row into Room.
+                if (deleteGeneration != generationAtStart) {
+                    Log.d("AIFIT_REPO", "getHistory: discarding stale network response (generation changed $generationAtStart → $deleteGeneration)")
+                    return@flow
+                }
                 val logs = remote.data.map { it.toDomain() }
                     .filter { it.id !in pendingDeleteIds }
                 Log.d("AIFIT_REPO", "getHistory network emission — count=${logs.size}, logs=${logs.map { "id=${it.id} isLocked=${it.isLocked} date=${it.date}" }}")
@@ -106,14 +126,20 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteLog(id: String): Result<Unit> {
+        // Increment the generation counter BEFORE adding to pendingDeleteIds.
+        // Any getHistory() flow that captured an older generation will discard its
+        // network response, preventing stale re-insertion of the deleted row.
+        deleteGeneration++
         pendingDeleteIds.add(id)
         val backup = dao.getById(id)
         dao.deleteById(id)
 
         return when (val remote = safeApiCall { apiService.deleteWorkoutLog(id) }) {
             is Result.Success -> {
-                // Keep id in pendingDeleteIds — it will be cleaned up by the next
-                // getHistory() network response confirming the server no longer returns it.
+                // Remove from pendingDeleteIds now that the server confirmed the delete.
+                // The generation counter remains incremented so any still-in-flight
+                // getHistory() responses (started before this delete) are still discarded.
+                pendingDeleteIds.remove(id)
                 dao.deleteById(id) // ensure no racing upsert left the row behind
                 Result.Success(Unit)
             }
