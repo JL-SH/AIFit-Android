@@ -664,7 +664,7 @@ private fun GeneratePlanScreenPreview() {
             ) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.sm))
                 Text(
-                    text = "FRECUENCIA SEMANAL",
+                    text = stringResource(R.string.generate_plan_weekly_freq),
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -677,7 +677,7 @@ private fun GeneratePlanScreenPreview() {
                     displayMapper = { key -> FREQUENCY_OPTIONS.firstOrNull { it.first == key }?.second ?: key },
                 )
                 Text(
-                    text = "OBJETIVO",
+                    text = stringResource(R.string.generate_plan_goal),
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -690,7 +690,7 @@ private fun GeneratePlanScreenPreview() {
                     displayMapper = { key -> GOAL_OPTIONS.firstOrNull { it.first == key }?.second ?: key },
                 )
                 AiGenerateButton(
-                    text = "GENERAR PLAN",
+                    text = stringResource(R.string.generate_plan_btn),
                     onClick = {},
                     modifier = Modifier.fillMaxWidth(),
                 )

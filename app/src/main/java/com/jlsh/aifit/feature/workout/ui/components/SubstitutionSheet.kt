@@ -24,9 +24,11 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
@@ -69,7 +71,7 @@ private fun SubstitutionSheetContent(
             .navigationBarsPadding(),
     ) {
         Text(
-            text = "Exercise Alternatives",
+            text = stringResource(R.string.workout_substitution_title),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -80,7 +82,7 @@ private fun SubstitutionSheetContent(
             is SubstitutionLoadState.Idle,
             is SubstitutionLoadState.Loading -> {
                 InlineLoadingIndicator(
-                    message = "Finding alternatives...",
+                    message = stringResource(R.string.workout_substitution_loading),
                     modifier = Modifier.padding(vertical = AiFitSpacing.lg),
                 )
             }
@@ -116,7 +118,7 @@ private fun SubstitutionSheetContent(
                         color = MaterialTheme.colorScheme.error,
                     )
                     TextButton(onClick = onDismiss) {
-                        Text(text = "Reintentar")
+                        Text(text = stringResource(R.string.common_retry))
                     }
                 }
             }

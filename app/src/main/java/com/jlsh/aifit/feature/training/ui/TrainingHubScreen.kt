@@ -478,11 +478,11 @@ private fun TrainingHubScreenEmptyPreview() {
         ) {
             EmptyStateView(
                 icon = Icons.Rounded.FitnessCenter,
-                title = "Sin planes activos",
-                subtitle = "Genera tu primer plan de entrenamiento con IA",
+                title = stringResource(R.string.training_empty_title),
+                subtitle = stringResource(R.string.training_empty_subtitle),
                 action = {
                     PrimaryButton(
-                        text = "CREAR PLAN",
+                        text = stringResource(R.string.home_create_plan_btn),
                         onClick = {},
                         modifier = Modifier.padding(horizontal = AiFitSpacing.xl),
                     )

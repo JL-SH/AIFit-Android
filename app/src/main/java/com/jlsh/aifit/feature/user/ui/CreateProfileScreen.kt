@@ -60,6 +60,8 @@ import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.user.domain.model.Gender
 import com.jlsh.aifit.feature.user.ui.state.UserUiEvent
 import com.jlsh.aifit.feature.user.ui.state.UserUiState
+import androidx.compose.ui.res.stringResource
+import com.jlsh.aifit.R
 
 private const val TOTAL_STEPS = 8
 
@@ -373,14 +375,14 @@ fun CreateProfileScreen(
                                     AiFitTextField(
                                         value = injuriesDetail,
                                         onValueChange = { injuriesDetail = it },
-                                        label = "Cuéntanos más... (opcional)",
+                                        label = stringResource(R.string.create_profile_tell_us_more),
                                         singleLine = false,
                                         modifier = Modifier.fillMaxWidth(),
                                     )
                                 }
                             }
 
-                            6 -> WizardStepLayout(title = "Datos físicos básicos") {
+                            6 -> WizardStepLayout(title = stringResource(R.string.create_profile_physical_data)) {
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
@@ -396,7 +398,7 @@ fun CreateProfileScreen(
                                         AiFitTextField(
                                             value = birthDate,
                                             onValueChange = {},
-                                            label = "Fecha de nacimiento",
+                                            label = stringResource(R.string.profile_field_birthday),
                                             error = birthDateError,
                                             enabled = false,
                                             trailingIcon = Icons.Rounded.CalendarMonth,
@@ -410,7 +412,7 @@ fun CreateProfileScreen(
                                             weight = it
                                             viewModel.onWeightChanged(it)
                                         },
-                                        label = "Peso actual",
+                                        label = stringResource(R.string.home_log_weight_current_label),
                                         suffix = "kg",
                                     )
 
@@ -420,7 +422,7 @@ fun CreateProfileScreen(
                                             height = it
                                             viewModel.onHeightChanged(it)
                                         },
-                                        label = "Altura",
+                                        label = stringResource(R.string.profile_field_height),
                                         suffix = "cm",
                                     )
 
@@ -433,7 +435,7 @@ fun CreateProfileScreen(
                                             selectedGender = it
                                             viewModel.onGenderChanged(it)
                                         },
-                                        label = "Género",
+                                        label = stringResource(R.string.profile_field_gender),
                                         displayMapper = { it.toGenderDisplay() },
                                     )
                                 }
@@ -454,7 +456,7 @@ fun CreateProfileScreen(
 
                     if (currentStep > 0) {
                         SecondaryButton(
-                            text = "Atrás",
+                            text = stringResource(R.string.common_back),
                             onClick = { currentStep -= 1 },
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -463,7 +465,7 @@ fun CreateProfileScreen(
                     }
 
                     PrimaryButton(
-                        text = if (currentStep == TOTAL_STEPS - 1) "Empezar" else "Continuar",
+                        text = if (currentStep == TOTAL_STEPS - 1) stringResource(R.string.common_start) else stringResource(R.string.common_continue),
                         onClick = ::handleContinue,
                         enabled = continueEnabled,
                         isLoading = currentStep == TOTAL_STEPS - 1 && uiState is UserUiState.Saving,

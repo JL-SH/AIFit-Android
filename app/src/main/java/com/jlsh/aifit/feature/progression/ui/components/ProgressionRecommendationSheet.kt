@@ -19,8 +19,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
@@ -49,7 +51,7 @@ fun ProgressionRecommendationSheet(
             when (state) {
                 is RecommendationState.Loading -> {
                     InlineLoadingIndicator(
-                        message = "Analizando progresión…",
+                        message = stringResource(R.string.progression_loading),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = AiFitSpacing.lg),
@@ -87,12 +89,12 @@ fun ProgressionRecommendationSheet(
                         ) {
                             Column {
                                 Text(
-                                    text = "Actual",
+                                    text = stringResource(R.string.progression_current_load_label),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Text(
-                                    text = "${rec.currentLoad} kg",
+                                    text = stringResource(R.string.progression_load_kg, rec.currentLoad.toString()),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
@@ -104,12 +106,12 @@ fun ProgressionRecommendationSheet(
                             )
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(
-                                    text = "Sugerido",
+                                    text = stringResource(R.string.progression_suggested_load_label),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Text(
-                                    text = "${rec.suggestedLoad} kg",
+                                    text = stringResource(R.string.progression_load_kg, rec.suggestedLoad.toString()),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                 )
@@ -120,7 +122,7 @@ fun ProgressionRecommendationSheet(
                     // Reps
                     if (rec.suggestedRepsMin > 0 || rec.suggestedRepsMax > 0) {
                         Text(
-                            text = "Reps: ${rec.suggestedRepsMin}–${rec.suggestedRepsMax}",
+                            text = stringResource(R.string.progression_reps_range, rec.suggestedRepsMin, rec.suggestedRepsMax),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
@@ -141,12 +143,12 @@ fun ProgressionRecommendationSheet(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            text = "Confianza: ${(rec.confidence * 100).toInt()}%",
+                            text = stringResource(R.string.progression_confidence, (rec.confidence * 100).toInt()),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            text = "Basado en ${rec.basedOnSessions} sesiones",
+                            text = stringResource(R.string.progression_based_on_sessions, rec.basedOnSessions),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -166,7 +168,7 @@ fun ProgressionRecommendationSheet(
                             color = MaterialTheme.colorScheme.error,
                         )
                         TextButton(onClick = onRetry) {
-                            Text("Reintentar")
+                            Text(stringResource(R.string.progression_retry))
                         }
                     }
                 }

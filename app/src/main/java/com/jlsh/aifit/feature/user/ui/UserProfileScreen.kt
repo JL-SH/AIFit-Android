@@ -55,6 +55,8 @@ import com.jlsh.aifit.feature.user.domain.model.ActivityLevel
 import com.jlsh.aifit.feature.user.domain.model.Gender
 import com.jlsh.aifit.feature.user.ui.state.UserUiEvent
 import com.jlsh.aifit.feature.user.ui.state.UserUiState
+import androidx.compose.ui.res.stringResource
+import com.jlsh.aifit.R
 
 @Composable
 fun UserProfileScreen(
@@ -98,7 +100,7 @@ fun UserProfileScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             AiFitTopBar(
-                title = "Editar perfil",
+                title = stringResource(R.string.profile_edit_title),
                 onBack = onNavigateBack,
             )
         },
@@ -169,7 +171,7 @@ fun UserProfileScreen(
                     AiFitTextField(
                         value = name,
                         onValueChange = viewModel::onNameChanged,
-                        label = "Nombre completo",
+                        label = stringResource(R.string.profile_field_name),
                         modifier = Modifier.fillMaxWidth(),
                     )
 
@@ -185,7 +187,7 @@ fun UserProfileScreen(
                         AiFitTextField(
                             value = if (birthDate.isNotBlank()) birthDate else "",
                             onValueChange = {},
-                            label = "Fecha de nacimiento",
+                            label = stringResource(R.string.profile_field_birthday),
                             error = birthDateError,
                             enabled = false,
                             trailingIcon = Icons.Rounded.CalendarMonth,
@@ -198,7 +200,7 @@ fun UserProfileScreen(
                         selectedValue = gender,
                         options = Gender.entries.filter { it != Gender.UNKNOWN }.map { it.name },
                         onOptionSelected = viewModel::onGenderChanged,
-                        label = "Género",
+                        label = stringResource(R.string.profile_field_gender),
                         displayMapper = { it.toGenderDisplay() },
                     )
 
@@ -206,7 +208,7 @@ fun UserProfileScreen(
                     AiFitNumberField(
                         value = height,
                         onValueChange = viewModel::onHeightChanged,
-                        label = "Altura",
+                        label = stringResource(R.string.profile_field_height),
                         suffix = "cm",
                     )
 
@@ -217,14 +219,14 @@ fun UserProfileScreen(
                             .filter { it != ActivityLevel.UNKNOWN }
                             .map { it.name },
                         onOptionSelected = viewModel::onActivityLevelChanged,
-                        label = "Nivel de actividad",
+                        label = stringResource(R.string.profile_field_activity),
                         displayMapper = { it.toActivityLevelDisplay() },
                     )
 
                     Spacer(Modifier.height(AiFitSpacing.sm))
 
                     PrimaryButton(
-                        text = "Guardar",
+                        text = stringResource(R.string.common_save),
                         onClick = viewModel::onSaveProfile,
                         isLoading = uiState is UserUiState.Saving,
                         modifier = Modifier.fillMaxWidth(),
@@ -330,7 +332,7 @@ private fun UserProfileScreenPreview() {
                     displayMapper = { it.toActivityLevelDisplay() },
                 )
                 Spacer(Modifier.height(8.dp))
-                PrimaryButton(text = "Guardar", onClick = {}, modifier = Modifier.fillMaxWidth())
+                PrimaryButton(text = stringResource(R.string.common_save), onClick = {}, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(24.dp))
             }
         }

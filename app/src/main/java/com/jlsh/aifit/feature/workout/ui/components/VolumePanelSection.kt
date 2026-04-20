@@ -13,6 +13,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.jlsh.aifit.core.ui.components.layout.ExpandableSection
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import androidx.compose.ui.res.stringResource
+import com.jlsh.aifit.R
 import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
 import java.text.NumberFormat
 import java.util.Locale
@@ -29,7 +31,7 @@ fun VolumePanelSection(
     }
 
     ExpandableSection(
-        title = "Volumen de sesión",
+        title = stringResource(R.string.workout_volume_title),
         modifier = modifier,
         initiallyExpanded = false,
     ) {

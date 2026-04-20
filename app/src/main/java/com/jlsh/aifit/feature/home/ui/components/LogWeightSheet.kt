@@ -20,7 +20,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
@@ -67,7 +69,7 @@ fun LogWeightSheet(
                 .padding(bottom = AiFitSpacing.xl),
         ) {
             Text(
-                text = "Registrar peso",
+                text = stringResource(R.string.home_log_weight_title),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -77,7 +79,7 @@ fun LogWeightSheet(
             AiFitNumberField(
                 value = weightValue,
                 onValueChange = { weightValue = it },
-                label = "Peso actual",
+                label = stringResource(R.string.home_log_weight_current_label),
                 suffix = "kg",
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -85,7 +87,7 @@ fun LogWeightSheet(
             Spacer(modifier = Modifier.height(AiFitSpacing.lg))
 
             PrimaryButton(
-                text = "GUARDAR",
+                text = stringResource(R.string.common_save),
                 onClick = {
                     parsedWeight?.let { onConfirm(it) }
                 },
@@ -97,5 +99,3 @@ fun LogWeightSheet(
         }
     }
 }
-
-

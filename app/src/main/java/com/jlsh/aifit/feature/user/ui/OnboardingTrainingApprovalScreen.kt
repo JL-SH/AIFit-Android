@@ -189,7 +189,7 @@ fun OnboardingTrainingApprovalScreen(
 
             items(sortedDays.size) { index ->
                 val day = sortedDays[index]
-                TrainingDayCard(day = day, dayLabel = "Día ${index + 1}")
+                TrainingDayCard(day = day, dayLabel = stringResource(R.string.create_profile_day_label, index + 1))
             }
 
             // Botones

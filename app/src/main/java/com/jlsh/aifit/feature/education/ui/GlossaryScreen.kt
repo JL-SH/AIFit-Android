@@ -32,7 +32,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.jlsh.aifit.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
@@ -60,9 +62,9 @@ fun GlossaryScreen(
 
     if (showConfirmSheet && searchQuery.isNotBlank()) {
         EducationConfirmSheet(
-            title = "Explicación del término",
-            description = "La IA generará una explicación detallada de este concepto de fitness.",
-            confirmText = "Generar explicación",
+            title = stringResource(R.string.education_glossary_confirm_title),
+            description = stringResource(R.string.education_glossary_confirm_description),
+            confirmText = stringResource(R.string.education_glossary_confirm_button),
             onDismiss = { showConfirmSheet = false },
             onConfirm = {
                 showConfirmSheet = false
@@ -80,7 +82,7 @@ fun GlossaryScreen(
             containerColor = Color.Transparent,
             topBar = {
                 AiFitTopBar(
-                    title = "Glosario",
+                    title = stringResource(R.string.education_glossary_title),
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                 )
@@ -96,7 +98,7 @@ fun GlossaryScreen(
                 AiFitTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    label = "Buscar término",
+                    label = stringResource(R.string.education_glossary_search_label),
                     trailingIcon = Icons.Rounded.Search,
                     onTrailingIconClick = {
                         if (searchQuery.isNotBlank()) {
@@ -112,8 +114,8 @@ fun GlossaryScreen(
                     is GlossaryState.Idle -> {
                         EmptyStateView(
                             icon = Icons.AutoMirrored.Rounded.MenuBook,
-                            title = "Busca un término de fitness",
-                            subtitle = "Escribe un término y pulsa buscar para obtener su definición",
+                            title = stringResource(R.string.education_glossary_empty_title),
+                            subtitle = stringResource(R.string.education_glossary_empty_subtitle),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = AiFitSpacing.xxl),
@@ -122,7 +124,7 @@ fun GlossaryScreen(
 
                     is GlossaryState.Loading -> {
                         InlineLoadingIndicator(
-                            message = "Buscando definición…",
+                            message = stringResource(R.string.education_glossary_loading),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = AiFitSpacing.lg),
@@ -151,10 +153,10 @@ fun GlossaryScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.error,
                             )
-                            TextButton(
+                         TextButton(
                                 onClick = { viewModel.loadGlossaryTerm(searchQuery.trim()) },
                             ) {
-                                Text("Reintentar")
+                                Text(stringResource(R.string.education_glossary_retry))
                             }
                         }
                     }
@@ -190,7 +192,7 @@ private fun GlossaryCard(
             if (definition.relatedTerms.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                 Text(
-                    text = "RELACIONADOS",
+                    text = stringResource(R.string.education_glossary_related_header),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

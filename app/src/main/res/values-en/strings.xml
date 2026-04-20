@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">AIFit</string>
 
@@ -13,7 +13,7 @@
     <string name="common_error">Error</string>
     <string name="common_continue">Continue</string>
     <string name="common_accept">Accept</string>
-    <string name="common_loading">Loading…</string>
+    <string name="common_loading">Loadingâ€¦</string>
     <string name="common_or">or</string>
     <string name="common_back">Back</string>
     <string name="common_error_generic">Something went wrong. Please try again.</string>
@@ -68,7 +68,7 @@
 
     <!-- Home -->
     <string name="home_error_profile">Could not load profile</string>
-    <string name="home_weight_saved">Weight logged ✓</string>
+    <string name="home_weight_saved">Weight logged âœ“</string>
     <string name="home_today_training">TODAY\'S WORKOUT</string>
     <string name="home_completed">Completed</string>
     <string name="home_view_detail">VIEW DETAIL</string>
@@ -99,17 +99,17 @@
     <string name="training_plan_deleted">Plan deleted</string>
     <string name="training_delete_plan_title">Delete plan</string>
     <string name="training_delete_plan_message">Are you sure you want to delete this plan? This action cannot be undone.</string>
-    <string name="training_generating_message">Generating your personalised plan…</string>
-    <string name="training_day_label">Day %1$d – %2$s</string>
-    <string name="training_rest_day">Rest day – recovery</string>
+    <string name="training_generating_message">Generating your personalised planâ€¦</string>
+    <string name="training_day_label">Day %1$d â€“ %2$s</string>
+    <string name="training_rest_day">Rest day â€“ recovery</string>
     <string name="training_start_session">START SESSION</string>
     <string name="training_rest_suffix">%1$ds rest</string>
-    <string name="training_sets_reps">%1$d sets — %2$d reps</string>
+    <string name="training_sets_reps">%1$d sets â€” %2$d reps</string>
     <string name="training_generate_plan">Generate plan</string>
     <string name="training_adaptive_plan">Adaptive plan</string>
     <string name="training_focus_areas">FOCUS AREAS</string>
     <string name="training_generate_button">GENERATE PLAN</string>
-    <string name="training_generating">Generating your plan…</string>
+    <string name="training_generating">Generating your planâ€¦</string>
 
     <!-- Nutrition -->
     <string name="nutrition_title">Nutrition</string>
@@ -142,7 +142,7 @@
 
     <!-- Chat / Coach -->
     <string name="coach_title">AI Coach</string>
-    <string name="coach_typing">AI Coach is typing…</string>
+    <string name="coach_typing">AI Coach is typingâ€¦</string>
     <string name="coach_no_sessions">No conversations</string>
     <string name="coach_no_sessions_subtitle">Start a conversation with your AI Coach</string>
     <string name="coach_delete_title">Delete session</string>
@@ -160,7 +160,7 @@
     <string name="training_hub_no_active_title">No active plans</string>
     <string name="training_hub_no_active_subtitle">Generate your first AI training plan</string>
     <string name="training_hub_create_plan">CREATE PLAN</string>
-    <string name="training_hub_activating_plan">Activating plan…</string>
+    <string name="training_hub_activating_plan">Activating planâ€¦</string>
     <string name="training_hub_activate_plan_title">Activate plan</string>
     <string name="training_hub_activate_plan_message">Only one plan can be active. The current plan will be paused.</string>
     <string name="training_hub_activate_button">Activate</string>
@@ -172,8 +172,8 @@
     <string name="training_detail_adaptive_plan_cd">Adaptive plan</string>
     <string name="training_detail_no_days_title">No training days</string>
     <string name="training_detail_no_days_subtitle">This plan has no available days. It may have been deleted or its data is unavailable.</string>
-    <string name="training_detail_day_label">Day %1$d — %2$s</string>
-    <string name="training_detail_rest_day">Rest day — recovery</string>
+    <string name="training_detail_day_label">Day %1$d â€” %2$s</string>
+    <string name="training_detail_rest_day">Rest day â€” recovery</string>
     <string name="training_detail_start_session">START SESSION</string>
     <string name="training_detail_rest_seconds">%1$ds rest</string>
     <string name="training_detail_exercise_explanation_title">Exercise explanation</string>
@@ -193,11 +193,10 @@
     <string name="training_generate_injuries_hint">Injuries (optional)</string>
     <string name="training_generate_notes_hint">Additional notes (optional)</string>
     <string name="training_generate_avoid_exercises_hint">Exercises to avoid (optional)</string>
-    <string name="training_generate_button">GENERATE PLAN</string>
-    <string name="training_generate_loading_button">Generating your plan…</string>
+    <string name="training_generate_loading_button">Generating your planâ€¦</string>
     <string name="training_generate_loading_title">Designing your training plan</string>
     <string name="training_generate_loading_subtitle">Calculating sets, reps and personalised progression</string>
-    <string name="training_generate_loading_timer">Generating your plan… %1$ds</string>
+    <string name="training_generate_loading_timer">Generating your planâ€¦ %1$ds</string>
 
     <!-- Training Approval -->
     <string name="training_approval_title">Your New Plan</string>
@@ -281,7 +280,7 @@
     <string name="meal_type_pre_workout">Pre-workout</string>
     <string name="meal_type_post_workout">Post-workout</string>
     <string name="meal_type_late_snack">Late snack</string>
-    <string name="meal_type_unknown">—</string>
+    <string name="meal_type_unknown">â€”</string>
 
     <!-- Macros -->
     <string name="macro_calories">Calories</string>
@@ -314,9 +313,9 @@
     <string name="nutrition_hub_activate_plan_title">Activate plan</string>
     <string name="nutrition_hub_activate_plan_pause_message">This will pause the plan \"%1$s\" currently active. Continue?</string>
     <string name="nutrition_hub_activate_plan_message">The selected plan will become your active plan.</string>
-    <string name="nutrition_hub_activating_plan">Activating plan…</string>
+    <string name="nutrition_hub_activating_plan">Activating planâ€¦</string>
     <string name="nutrition_hub_delete_plan_cd">Delete plan</string>
-    <string name="nutrition_hub_plan_summary">%1$d weeks • %2$d kcal/day</string>
+    <string name="nutrition_hub_plan_summary">%1$d weeks â€¢ %2$d kcal/day</string>
     <string name="nutrition_hub_activate_plan_btn">Activate plan</string>
     <string name="nutrition_hub_shopping_error_title">Error loading lists</string>
     <string name="nutrition_hub_shopping_empty_title">Generate your first shopping list</string>
@@ -341,7 +340,7 @@
     <string name="nutrition_track_time_label">Time (HH:mm)</string>
     <string name="nutrition_track_describe_food">Describe your meal</string>
     <string name="nutrition_track_analyze_btn">ANALYZE</string>
-    <string name="nutrition_track_analyzing">Analyzing meal…</string>
+    <string name="nutrition_track_analyzing">Analyzing mealâ€¦</string>
     <string name="nutrition_track_meal_name_label">Meal name (optional)</string>
     <string name="nutrition_track_food_items_header">FOOD ITEMS</string>
     <string name="nutrition_track_add_food_item">Add food item</string>
@@ -365,7 +364,7 @@
     <string name="diet_detail_protein_label">PROTEIN</string>
     <string name="diet_detail_carbs_label">CARBS</string>
     <string name="diet_detail_fat_label">FAT</string>
-    <string name="diet_detail_day_section_title">Day %1$d — %2$s</string>
+    <string name="diet_detail_day_section_title">Day %1$d â€” %2$s</string>
     <string name="diet_detail_info_cd">Info</string>
     <string name="diet_detail_why_cd">Why?</string>
     <string name="diet_detail_explain_meal_title">Meal explanation</string>
@@ -389,8 +388,8 @@
     <string name="diet_generate_allergies_label">Allergies (optional)</string>
     <string name="diet_generate_notes_label">Additional notes (optional)</string>
     <string name="diet_generate_btn">GENERATE PLAN</string>
-    <string name="diet_generate_loading_text">Generating your plan…</string>
-    <string name="diet_generate_loading_timer">Generating your plan… %1$ds</string>
+    <string name="diet_generate_loading_text">Generating your planâ€¦</string>
+    <string name="diet_generate_loading_timer">Generating your planâ€¦ %1$ds</string>
     <string name="diet_generate_hero_title">Designing your diet plan</string>
     <string name="diet_generate_hero_subtitle">Calculating personalized meals and macros</string>
 
@@ -400,9 +399,9 @@
     <string name="diet_approval_change_plan">Change Plan</string>
     <string name="diet_approval_accept_plan">Accept Plan</string>
     <string name="diet_approval_kcal_per_day">%1$d kcal / day</string>
-    <string name="diet_approval_macros_summary">P: %1$dg · C: %2$dg · F: %3$dg</string>
-    <string name="diet_approval_weeks_preference">%1$d weeks · %2$s</string>
-    <string name="diet_approval_day_section_title">%1$s · %2$d kcal</string>
+    <string name="diet_approval_macros_summary">P: %1$dg Â· C: %2$dg Â· F: %3$dg</string>
+    <string name="diet_approval_weeks_preference">%1$d weeks Â· %2$s</string>
+    <string name="diet_approval_day_section_title">%1$s Â· %2$d kcal</string>
 
     <!-- Vision -->
     <string name="vision_title">Food Scanner</string>
@@ -411,15 +410,13 @@
     <string name="vision_open_settings">Open Settings</string>
     <string name="vision_gallery_cd">Gallery</string>
     <string name="vision_capture_cd">Capture</string>
-    <string name="vision_analyzing">Analyzing image…</string>
+    <string name="vision_analyzing">Analyzing imageâ€¦</string>
     <string name="vision_retry">Retry</string>
     <string name="vision_confidence">Confidence: %1$d%%</string>
     <string name="vision_log_meal_btn">LOG MEAL</string>
     <string name="vision_try_again_btn">TRY AGAIN</string>
 
     <!-- Common (shared) -->
-    <string name="common_loading">Loading…</string>
-    <string name="common_back">Back</string>
 
     <!-- Progress Dashboard -->
     <string name="progress_dashboard_title">Progress Dashboard</string>
@@ -467,7 +464,6 @@
     <string name="progress_weekly_streak_current">current streak</string>
 
     <!-- Metabolic -->
-    <string name="metabolic_title">Metabolic Analysis</string>
     <string name="metabolic_insufficient_data_title">Insufficient data</string>
     <string name="metabolic_insufficient_data_subtitle">You need at least 2 weeks of weight and training data to receive your personalised metabolic analysis.</string>
     <string name="metabolic_no_adjustment_title">No adjustments recommended</string>
@@ -476,7 +472,7 @@
     <string name="metabolic_apply_dialog_title">Apply this adjustment?</string>
     <string name="metabolic_apply_dialog_message">New target: %1$d kcal\nProtein: %2$sg\nCarbs: %3$sg\nFat: %4$sg</string>
     <string name="metabolic_apply_btn">Apply</string>
-    <string name="metabolic_applying_btn">APPLYING…</string>
+    <string name="metabolic_applying_btn">APPLYINGâ€¦</string>
     <string name="metabolic_apply_adjustment_btn">APPLY ADJUSTMENT</string>
     <string name="metabolic_weight_trend_title">Weight trend</string>
     <string name="metabolic_avg_weekly_change">Avg weekly change</string>
@@ -531,8 +527,8 @@
     <string name="gamification_streak_type_unknown">Streak</string>
     <string name="gamification_achievement_empty_title">No achievements available</string>
     <string name="gamification_achievement_empty_subtitle">Achievements will appear as you progress</string>
-    <string name="gamification_achievement_unlocked_header">✅ Achievements unlocked (%1$d)</string>
-    <string name="gamification_achievement_locked_header">🔒 Upcoming achievements (%1$d)</string>
+    <string name="gamification_achievement_unlocked_header">âœ… Achievements unlocked (%1$d)</string>
+    <string name="gamification_achievement_locked_header">ðŸ”’ Upcoming achievements (%1$d)</string>
     <string name="gamification_achievement_how_to">How to unlock: %1$s</string>
     <string name="gamification_achievement_locked">Locked</string>
     <string name="gamification_record_empty_title">No personal records</string>
@@ -548,10 +544,10 @@
     <!-- Gamification Export -->
     <string name="gamification_export_title">Export progress</string>
     <string name="gamification_export_idle_text">Select a period to generate your progress report</string>
-    <string name="gamification_export_loading">Generating report…</string>
+    <string name="gamification_export_loading">Generating reportâ€¦</string>
     <string name="gamification_export_share_btn">SHARE</string>
     <string name="gamification_export_retry">Retry</string>
-    <string name="gamification_export_report_title">Progress report — %1$s</string>
+    <string name="gamification_export_report_title">Progress report â€” %1$s</string>
     <string name="gamification_export_period_row">Period: %1$s</string>
     <string name="gamification_export_total_workouts">Workouts completed</string>
     <string name="gamification_export_total_prs">Personal records</string>
@@ -596,6 +592,186 @@
     <string name="shopping_generate_plan_label">Diet plan</string>
     <string name="shopping_generate_plan_selector">Select plan</string>
     <string name="shopping_generate_btn">Generate list</string>
-    <string name="shopping_generate_loading">Generating…</string>
+    <string name="shopping_generate_loading">Generatingâ€¦</string>
+
+    <!-- â”€â”€ Chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="chat_title">AI Coach</string>
+    <string name="chat_archive_cd">Archive</string>
+    <string name="chat_archive_dialog_title">Archive session</string>
+    <string name="chat_archive_dialog_message">Are you sure you want to archive this conversation?</string>
+    <string name="chat_archive_confirm">Archive</string>
+    <string name="chat_welcome_message">Hello! I\'m your **AI Coach** ðŸ’ª\n\nHow can I help you today?\n\n- Create or adjust your training plan\n- Review your diet and nutrition\n- Answer your questions about exercises\n- Analyze your progress</string>
+    <string name="chat_new_cd">New chat</string>
+    <string name="chat_empty_title">No conversations</string>
+    <string name="chat_empty_subtitle">Start a conversation with your AI Coach</string>
+    <string name="chat_delete_dialog_title">Delete conversation</string>
+    <string name="chat_delete_dialog_message">Delete this conversation? This cannot be undone.</string>
+    <string name="chat_delete_confirm">DELETE</string>
+    <string name="chat_rename_dialog_title">Rename conversation</string>
+    <string name="chat_rename_name_label">Name</string>
+    <string name="chat_rename_confirm">Save</string>
+    <string name="chat_message_count">%1$d messages</string>
+    <string name="chat_rename_cd">Rename conversation</string>
+    <string name="chat_delete_cd">Delete conversation</string>
+
+    <!-- â”€â”€ Education â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="education_glossary_title">Glossary</string>
+    <string name="education_glossary_search_label">Search term</string>
+    <string name="education_glossary_empty_title">Search a fitness term</string>
+    <string name="education_glossary_empty_subtitle">Type a term and press search to get its definition</string>
+    <string name="education_glossary_loading">Searching definitionâ€¦</string>
+    <string name="education_glossary_retry">Retry</string>
+    <string name="education_glossary_related_header">RELATED</string>
+    <string name="education_glossary_confirm_title">Term explanation</string>
+    <string name="education_glossary_confirm_description">The AI will generate a detailed explanation of this fitness concept.</string>
+    <string name="education_glossary_confirm_button">Generate explanation</string>
+    <string name="education_intro_title">Fitness Glossary</string>
+    <string name="education_intro_description1">Here you will find clear definitions of the most common terms in the world of fitness and sports nutrition.</string>
+    <string name="education_intro_description2">Search any term like \"RPE\", \"caloric surplus\", \"hypertrophy\" and our AI will explain it in a simple way.</string>
+    <string name="education_intro_confirm">View glossary</string>
+    <string name="education_loading_explanation">Loading explanationâ€¦</string>
+    <string name="education_retry">Retry</string>
+    <string name="education_why_exercise_title">Why this exercise?</string>
+    <string name="education_why_meal_title">Why this meal?</string>
+
+    <!-- â”€â”€ Progression â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="progression_loading">Analyzing progressionâ€¦</string>
+    <string name="progression_retry">Retry</string>
+    <string name="progression_current_load_label">Current</string>
+    <string name="progression_suggested_load_label">Suggested</string>
+    <string name="progression_load_kg">%1$s kg</string>
+    <string name="progression_reps_range">Reps: %1$dâ€“%2$d</string>
+    <string name="progression_confidence">Confidence: %1$d%%</string>
+    <string name="progression_based_on_sessions">Based on %1$d sessions</string>
+    <string name="progression_intro_title">Load Progression</string>
+    <string name="progression_intro_description1">Load progression involves gradually increasing the weight, reps, or volume of your exercises to keep improving.</string>
+    <string name="progression_intro_description2">Our AI will analyze your training history to recommend how much weight to add to this exercise.</string>
+    <string name="progression_intro_confirm">Yes, recommend a progression</string>
+    <string name="progression_intro_not_enough">You need at least %1$d logged sessions to get recommendations. You have %2$d sessions.</string>
+    <string name="progression_intro_understood">Got it</string>
+
+    <!-- â”€â”€ Shared component strings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="status_active">ACTIVE</string>
+    <string name="status_completed">COMPLETED</string>
+    <string name="status_draft">DRAFT</string>
+    <string name="status_archived">ARCHIVED</string>
+    <string name="status_paused">PAUSED</string>
+    <string name="component_achievement_unlocked_title">Achievement unlocked!</string>
+    <string name="component_achievement_icon_cd">Achievement</string>
+    <string name="component_error_icon_cd">Error</string>
+
+    <!-- â”€â”€ Common (additional) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="common_start">Start</string>
+
+    <!-- â”€â”€ Home â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="home_training_completed">Completed</string>
+    <string name="home_view_detail_btn">VIEW DETAIL</string>
+    <string name="home_start_session_btn">START SESSION</string>
+    <string name="home_rest_day_title">Rest day today ðŸ’¤</string>
+    <string name="home_rest_day_subtitle">Rest is an essential part of progress. Rest well!</string>
+    <string name="home_view_plan_btn">VIEW PLAN</string>
+    <string name="home_create_plan_btn">CREATE PLAN</string>
+    <string name="home_log_meal_btn">LOG MEAL</string>
+    <string name="home_no_meals_today">Log your first meal of the day</string>
+    <string name="home_next_meal_label">Next meal</string>
+    <string name="home_last_achievement">Last achievement: %1$s</string>
+    <string name="home_next_achievement">Next: %1$s</string>
+    <string name="home_streaks_header">STREAKS</string>
+    <string name="home_last_weight_date">Last entry: %1$s</string>
+    <string name="home_no_weight_yet">You haven\'t logged your weight yet</string>
+    <string name="home_log_weight_title">Log weight</string>
+    <string name="home_log_weight_current_label">Current weight</string>
+    <string name="home_weekly_progress_header">WEEKLY PROGRESS</string>
+    <string name="home_workouts_label">Workouts</string>
+    <string name="home_calories_average_label">Average calories</string>
+    <string name="home_weight_trend_header">WEIGHT TREND</string>
+    <string name="home_today_training_header">TODAY\'S WORKOUT</string>
+    <string name="home_today_nutrition_header">TODAY\'S NUTRITION</string>
+    <string name="home_motivation_header">MOTIVATION</string>
+    <string name="home_weight_header">MY WEIGHT</string>
+    <string name="home_streak_training">Training</string>
+    <string name="home_streak_nutrition">Nutrition</string>
+    <string name="home_streak_combined">Combined</string>
+    <string name="home_streak_unknown">Streak</string>
+    <string name="home_macro_protein">Protein</string>
+    <string name="home_macro_carbs">Carbs</string>
+    <string name="home_macro_fat">Fat</string>
+
+    <!-- â”€â”€ Workout log â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="workout_finish_session_btn">FINISH SESSION</string>
+    <string name="workout_set_header">SET</string>
+    <string name="workout_kg_header">KG</string>
+    <string name="workout_reps_header">REPS</string>
+    <string name="workout_substitution_title">Exercise Alternatives</string>
+    <string name="workout_substitution_loading">Finding alternativesâ€¦</string>
+    <string name="workout_rest_complete">Rest complete!</string>
+
+    <!-- â”€â”€ Nutrition â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="nutrition_track_meal_title">Log meal</string>
+    <string name="nutrition_track_manual_title">Manual entry</string>
+    <string name="nutrition_track_manual_desc">Enter foods and macros manually</string>
+    <string name="nutrition_track_scan_title">Scan / Photo</string>
+    <string name="nutrition_track_scan_desc">Take a photo of your meal for the AI to analyze</string>
+    <string name="nutrition_track_text_title">Analyze text</string>
+    <string name="nutrition_track_text_desc">Describe your meal in free text</string>
+
+    <!-- â”€â”€ Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="login_tagline">Your personal AI trainer</string>
+    <string name="login_sign_in_btn">SIGN IN</string>
+    <string name="login_google_btn">CONTINUE WITH GOOGLE</string>
+    <string name="login_create_account">Create one</string>
+
+    <!-- â”€â”€ Generate Plan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="generate_plan_weekly_freq">WEEKLY FREQUENCY</string>
+    <string name="generate_plan_goal">GOAL</string>
+    <string name="generate_plan_btn">GENERATE PLAN</string>
+    <string name="generate_plan_loading">Generating your planâ€¦</string>
+
+    <!-- â”€â”€ Profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="profile_dark_mode">Dark mode</string>
+
+    <!-- â”€â”€ Profile Hub sections & stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="profile_sign_out_title">Sign out</string>
+    <string name="profile_sign_out_message">Are you sure you want to sign out?</string>
+    <string name="profile_stat_streak">Streak</string>
+    <string name="profile_stat_achievements">Achievements</string>
+    <string name="profile_stat_records">Records</string>
+    <string name="profile_section_my_account">My account</string>
+    <string name="profile_edit_label">Edit profile</string>
+    <string name="profile_sign_out_label">Sign out</string>
+    <string name="profile_menu_dashboard">Dashboard</string>
+    <string name="profile_menu_body_weight">Body weight</string>
+    <string name="profile_menu_metabolic">Metabolic analysis</string>
+    <string name="profile_menu_export">Export</string>
+    <string name="profile_menu_achievements">Achievements &amp; streaks</string>
+    <string name="profile_menu_records">Personal records</string>
+    <string name="profile_menu_glossary">Glossary</string>
+
+    <!-- â”€â”€ User Profile / Create Profile fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="profile_edit_title">Edit profile</string>
+    <string name="profile_field_name">Full name</string>
+    <string name="profile_field_birthday">Date of birth</string>
+    <string name="profile_field_gender">Gender</string>
+    <string name="profile_field_height">Height</string>
+    <string name="profile_field_activity">Activity level</string>
+    <string name="create_profile_tell_us_more">Tell us more... (optional)</string>
+    <string name="create_profile_physical_data">Basic physical data</string>
+    <string name="create_profile_day_label">Day %1$d</string>
+
+    <!-- â”€â”€ Training empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="training_empty_title">No active plans</string>
+    <string name="training_empty_subtitle">Generate your first training plan with AI</string>
+    <string name="generate_plan_title">Generate plan</string>
+    <string name="generate_diet_title">Generate diet plan</string>
+
+    <!-- â”€â”€ Workout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="workout_discard_title">Discard session?</string>
+    <string name="workout_discard_message">You will lose the logged data</string>
+    <string name="workout_volume_title">Session volume</string>
+    <string name="workout_rpe_label">RPE</string>
+
+    <!-- â”€â”€ Login fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <string name="login_email_label">Email</string>
+    <string name="login_password_label">Password</string>
 </resources>
 

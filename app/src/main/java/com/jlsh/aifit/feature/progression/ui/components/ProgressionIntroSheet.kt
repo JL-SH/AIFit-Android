@@ -19,8 +19,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
@@ -58,7 +60,7 @@ fun ProgressionIntroSheet(
             )
 
             Text(
-                text = "Progresión de carga",
+                text = stringResource(R.string.progression_intro_title),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
@@ -66,14 +68,14 @@ fun ProgressionIntroSheet(
 
             if (hasEnoughSessions) {
                 Text(
-                    text = "La progresión de carga consiste en aumentar gradualmente el peso, las repeticiones o el volumen de tus ejercicios para seguir mejorando.",
+                    text = stringResource(R.string.progression_intro_description1),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
 
                 Text(
-                    text = "Nuestra IA analizará tu historial de entrenamiento para recomendarte cuánto peso añadir en este ejercicio.",
+                    text = stringResource(R.string.progression_intro_description2),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -82,13 +84,13 @@ fun ProgressionIntroSheet(
                 Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
                 PrimaryButton(
-                    text = "Sí, recomiéndame una progresión",
+                    text = stringResource(R.string.progression_intro_confirm),
                     onClick = onConfirm,
                     modifier = Modifier.fillMaxWidth(),
                 )
             } else {
                 Text(
-                    text = "Necesitas al menos $MIN_SESSIONS_REQUIRED sesiones registradas para obtener recomendaciones. Tienes $count sesiones.",
+                    text = stringResource(R.string.progression_intro_not_enough, MIN_SESSIONS_REQUIRED, count),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -97,7 +99,7 @@ fun ProgressionIntroSheet(
                 Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
                 PrimaryButton(
-                    text = "Entendido",
+                    text = stringResource(R.string.progression_intro_understood),
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -105,4 +107,3 @@ fun ProgressionIntroSheet(
         }
     }
 }
-

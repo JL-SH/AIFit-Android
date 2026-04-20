@@ -19,8 +19,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
@@ -52,21 +54,21 @@ fun GlossaryIntroSheet(
             )
 
             Text(
-                text = "Glosario de fitness",
+                text = stringResource(R.string.education_intro_title),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
             )
 
             Text(
-                text = "Aquí encontrarás definiciones claras de los términos más comunes del mundo del fitness y la nutrición deportiva.",
+                text = stringResource(R.string.education_intro_description1),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
 
             Text(
-                text = "Busca cualquier término como \"RPE\", \"superávit calórico\", \"hipertrofia\" y nuestra IA te lo explicará de forma sencilla.",
+                text = stringResource(R.string.education_intro_description2),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -75,7 +77,7 @@ fun GlossaryIntroSheet(
             Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
             PrimaryButton(
-                text = "Ver glosario",
+                text = stringResource(R.string.education_intro_confirm),
                 onClick = onConfirm,
                 modifier = Modifier.fillMaxWidth(),
             )

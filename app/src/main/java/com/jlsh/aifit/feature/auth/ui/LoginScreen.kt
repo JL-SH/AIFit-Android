@@ -295,7 +295,7 @@ private fun LoginScreenPreview() {
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Tu entrenador de IA personal",
+                    text = stringResource(R.string.login_tagline),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -307,7 +307,7 @@ private fun LoginScreenPreview() {
                 AiFitTextField(
                     value = "usuario@ejemplo.com",
                     onValueChange = {},
-                    label = "Email",
+                    label = stringResource(R.string.login_email_label),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -316,14 +316,14 @@ private fun LoginScreenPreview() {
                 AiFitPasswordField(
                     value = "••••••••",
                     onValueChange = {},
-                    label = "Contraseña",
+                    label = stringResource(R.string.login_password_label),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 PrimaryButton(
-                    text = "INICIAR SESIÓN",
+                    text = stringResource(R.string.login_sign_in_btn),
                     onClick = {},
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -353,7 +353,7 @@ private fun LoginScreenPreview() {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 GoogleSignInButton(
-                    text = "CONTINUAR CON GOOGLE",
+                    text = stringResource(R.string.login_google_btn),
                     onClick = {},
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -370,7 +370,7 @@ private fun LoginScreenPreview() {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "Crear una",
+                        text = stringResource(R.string.login_create_account),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primaryContainer,
                     )

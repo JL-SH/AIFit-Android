@@ -28,7 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +73,7 @@ fun TrackMealSheet(
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             Text(
-                text = "Registrar comida",
+                text = stringResource(R.string.nutrition_track_meal_title),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = AiFitSpacing.md),
@@ -79,8 +81,8 @@ fun TrackMealSheet(
 
             SheetOption(
                 icon = Icons.Rounded.Edit,
-                title = "Registro manual",
-                description = "Introduce los alimentos y macros a mano",
+                title = stringResource(R.string.nutrition_track_manual_title),
+                description = stringResource(R.string.nutrition_track_manual_desc),
                 onClick = onManual,
             )
             HorizontalDivider(
@@ -89,8 +91,8 @@ fun TrackMealSheet(
             )
             SheetOption(
                 icon = Icons.Rounded.CameraAlt,
-                title = "Escanear / Foto",
-                description = "Haz una foto de tu comida para que la IA la analice",
+                title = stringResource(R.string.nutrition_track_scan_title),
+                description = stringResource(R.string.nutrition_track_scan_desc),
                 onClick = onScanPhoto,
             )
             HorizontalDivider(
@@ -99,8 +101,8 @@ fun TrackMealSheet(
             )
             SheetOption(
                 icon = Icons.Rounded.AutoAwesome,
-                title = "Analizar texto",
-                description = "Describe tu comida con texto libre",
+                title = stringResource(R.string.nutrition_track_text_title),
+                description = stringResource(R.string.nutrition_track_text_desc),
                 onClick = onAnalyzeText,
             )
         }
@@ -142,4 +144,3 @@ private fun SheetOption(
         }
     }
 }
-

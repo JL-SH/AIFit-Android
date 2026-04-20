@@ -88,6 +88,8 @@ import com.jlsh.aifit.feature.home.ui.state.TodayNutritionState
 import com.jlsh.aifit.feature.home.ui.state.TodayTrainingState
 import com.jlsh.aifit.feature.progress.domain.model.BodyWeightLog
 import com.jlsh.aifit.feature.progress.domain.model.WeeklyProgressSummary
+import com.jlsh.aifit.R
+import androidx.compose.ui.res.stringResource
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -163,7 +165,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.height(AiFitSpacing.md))
                     SecondaryButton(
-                        text = "REINTENTAR",
+                        text = stringResource(R.string.common_retry),
                         onClick = { viewModel.loadAll() },
                     )
                 }
@@ -388,7 +390,7 @@ private fun TodayTrainingCard(
             // Section header
             SectionTitle(
                 icon = Icons.Rounded.FitnessCenter,
-                title = "ENTRENAMIENTO DE HOY",
+                title = stringResource(R.string.home_today_training_header),
             )
 
             when {
@@ -462,7 +464,7 @@ private fun TodayTrainingCard(
                                 )
                                 Column {
                                     Text(
-                                        text = "Completado",
+                                    text = stringResource(R.string.home_training_completed),
                                         style = MaterialTheme.typography.titleSmall,
                                         color = MaterialTheme.colorScheme.primaryContainer,
                                     )
@@ -476,7 +478,7 @@ private fun TodayTrainingCard(
                         }
                         Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                         SecondaryButton(
-                            text = "VER DETALLE",
+                            text = stringResource(R.string.home_view_detail_btn),
                             onClick = { onViewDetail(training.planId) },
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -487,12 +489,12 @@ private fun TodayTrainingCard(
                             horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                         ) {
                             PrimaryButton(
-                                text = "COMENZAR SESIÓN",
+                                text = stringResource(R.string.home_start_session_btn),
                                 onClick = { onStartSession(training.planId) },
                                 modifier = Modifier.weight(1f),
                             )
                             SecondaryButton(
-                                text = "VER DETALLE",
+                                text = stringResource(R.string.home_view_detail_btn),
                                 onClick = { onViewDetail(training.planId) },
                                 modifier = Modifier.weight(1f),
                             )
@@ -509,18 +511,18 @@ private fun TodayTrainingCard(
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
-                        text = "Hoy toca descanso 💤",
+                        text = stringResource(R.string.home_rest_day_title),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "El descanso es parte esencial del progreso. ¡Descansa bien!",
+                        text = stringResource(R.string.home_rest_day_subtitle),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                     SecondaryButton(
-                        text = "VER PLAN",
+                        text = stringResource(R.string.home_view_plan_btn),
                         onClick = { onViewDetail(activePlan.id) },
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -530,13 +532,13 @@ private fun TodayTrainingCard(
                 else -> {
                     Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                     Text(
-                        text = "No tienes un plan de entrenamiento activo",
+                        text = stringResource(R.string.home_no_active_plan),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                     SecondaryButton(
-                        text = "CREAR PLAN",
+                        text = stringResource(R.string.home_create_plan_btn),
                         onClick = onCreatePlan,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -562,7 +564,7 @@ private fun TodayNutritionCard(
         ) {
             SectionTitle(
                 icon = Icons.Rounded.Restaurant,
-                title = "NUTRICIÓN DE HOY",
+                title = stringResource(R.string.home_today_nutrition_header),
             )
 
             if (nutrition != null && (nutrition.caloriesConsumed > 0 || nutrition.calorieTarget > 0)) {
@@ -588,19 +590,19 @@ private fun TodayNutritionCard(
 
                 Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs)) {
                     MacroProgressBar(
-                        name = "Proteína",
+                        name = stringResource(R.string.home_macro_protein),
                         current = nutrition.proteinConsumed.toFloat(),
                         target = nutrition.proteinTarget.toFloat(),
                         color = MaterialTheme.colorScheme.primaryContainer,
                     )
                     MacroProgressBar(
-                        name = "Carbos",
+                        name = stringResource(R.string.home_macro_carbs),
                         current = nutrition.carbsConsumed.toFloat(),
                         target = nutrition.carbsTarget.toFloat(),
                         color = MaterialTheme.colorScheme.tertiary,
                     )
                     MacroProgressBar(
-                        name = "Grasa",
+                        name = stringResource(R.string.home_macro_fat),
                         current = nutrition.fatConsumed.toFloat(),
                         target = nutrition.fatTarget.toFloat(),
                         color = MaterialTheme.colorScheme.secondary,
@@ -610,19 +612,19 @@ private fun TodayNutritionCard(
                 Spacer(modifier = Modifier.height(AiFitSpacing.xs))
 
                 PrimaryButton(
-                    text = "REGISTRAR COMIDA",
+                    text = stringResource(R.string.home_log_meal_btn),
                     onClick = onLogMeal,
                     modifier = Modifier.fillMaxWidth(),
                 )
             } else {
                 Text(
-                    text = "Registra tu primera comida del día",
+                    text = stringResource(R.string.home_no_meals_today),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                 PrimaryButton(
-                    text = "REGISTRAR COMIDA",
+                    text = stringResource(R.string.home_log_meal_btn),
                     onClick = onLogMeal,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -659,7 +661,7 @@ private fun NextMealCard(
                         modifier = Modifier.size(18.dp),
                     )
                     Text(
-                        text = "Próxima comida",
+                        text = stringResource(R.string.home_next_meal_label),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -714,7 +716,7 @@ private fun MotivationCard(
         ) {
             SectionTitle(
                 icon = Icons.Rounded.EmojiEvents,
-                title = "MOTIVACIÓN",
+                title = stringResource(R.string.home_motivation_header),
             )
 
             // Streak row
@@ -753,7 +755,7 @@ private fun MotivationCard(
                     )
                     Column {
                         Text(
-                            text = "Último logro: ${lastAchievement.achievement.name}",
+                            text = stringResource(R.string.home_last_achievement, lastAchievement.achievement.name),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
@@ -784,7 +786,7 @@ private fun MotivationCard(
                     )
                     Column {
                         Text(
-                            text = "Próximo: ${nextAchievement.name}",
+                            text = stringResource(R.string.home_next_achievement, nextAchievement.name),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
@@ -814,7 +816,7 @@ private fun StreaksCard(
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             Text(
-                text = "RACHAS",
+                text = stringResource(R.string.home_streaks_header),
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 1.5.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -859,7 +861,7 @@ private fun CurrentWeightCard(
         ) {
             SectionTitle(
                 icon = Icons.Rounded.MonitorWeight,
-                title = "MI PESO",
+                title = stringResource(R.string.home_weight_header),
             )
 
             if (currentWeight != null) {
@@ -911,14 +913,14 @@ private fun CurrentWeightCard(
                 val lastDate = weightEntries.lastOrNull()?.date
                 if (lastDate != null) {
                     Text(
-                        text = "Último registro: ${lastDate.format(DateTimeFormatter.ofPattern("d MMM", Locale("es")))}",
+                        text = stringResource(R.string.home_last_weight_date, lastDate.format(DateTimeFormatter.ofPattern("d MMM", Locale("es")))),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
                 Text(
-                    text = "Aún no has registrado tu peso",
+                    text = stringResource(R.string.home_no_weight_yet),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -939,7 +941,7 @@ private fun CurrentWeightCard(
                     modifier = Modifier.size(18.dp),
                 )
                 Text(
-                    text = "Registrar peso",
+                    text = stringResource(R.string.home_log_weight_title),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primaryContainer,
                 )
@@ -974,7 +976,7 @@ private fun WeeklyProgressCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "PROGRESO SEMANAL",
+                    text = stringResource(R.string.home_weekly_progress_header),
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -993,7 +995,7 @@ private fun WeeklyProgressCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "Entrenamientos",
+                    text = stringResource(R.string.home_workouts_label),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -1021,7 +1023,7 @@ private fun WeeklyProgressCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "Calorías promedio",
+                    text = stringResource(R.string.home_calories_average_label),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -1122,7 +1124,7 @@ private fun WeeklyProgressCard(
                     modifier = Modifier.size(18.dp),
                 )
                 Text(
-                    text = "Registrar peso",
+                    text = stringResource(R.string.home_log_weight_title),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primaryContainer,
                 )
@@ -1149,7 +1151,7 @@ private fun WeightTrendCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "TENDENCIA DE PESO",
+                    text = stringResource(R.string.home_weight_trend_header),
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1205,11 +1207,12 @@ private fun SectionTitle(
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+@Composable
 private fun streakLabel(type: StreakType): String = when (type) {
-    StreakType.TRAINING -> "Entrenamiento"
-    StreakType.NUTRITION -> "Nutrición"
-    StreakType.COMBINED -> "Combinada"
-    StreakType.UNKNOWN -> "Racha"
+    StreakType.TRAINING -> stringResource(R.string.home_streak_training)
+    StreakType.NUTRITION -> stringResource(R.string.home_streak_nutrition)
+    StreakType.COMBINED -> stringResource(R.string.home_streak_combined)
+    StreakType.UNKNOWN -> stringResource(R.string.home_streak_unknown)
 }
 
 private fun StreakStatus.toBadgeStatus(): BadgeStreakStatus = when (this) {

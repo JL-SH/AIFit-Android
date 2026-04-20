@@ -19,8 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
@@ -57,7 +59,7 @@ fun RestTimerBanner(
 
     val minutes = seconds / 60
     val secs = seconds % 60
-    val timeText = if (isComplete) "Rest complete!" else "%d:%02d".format(minutes, secs)
+    val timeText = if (isComplete) stringResource(R.string.workout_rest_complete) else "%d:%02d".format(minutes, secs)
 
     Row(
         modifier = modifier
@@ -75,7 +77,7 @@ fun RestTimerBanner(
             color = textColor,
         )
         Text(
-            text = "Cerrar",
+            text = stringResource(R.string.common_close),
             style = MaterialTheme.typography.labelMedium,
             color = textColor,
         )

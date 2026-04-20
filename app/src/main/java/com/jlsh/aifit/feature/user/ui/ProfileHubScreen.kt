@@ -63,6 +63,8 @@ import com.jlsh.aifit.feature.user.domain.model.GoalType
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import com.jlsh.aifit.feature.user.ui.state.UserUiEvent
 import com.jlsh.aifit.feature.user.ui.state.UserUiState
+import androidx.compose.ui.res.stringResource
+import com.jlsh.aifit.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -144,8 +146,8 @@ fun ProfileHubScreen(
 
     if (showLogoutDialog) {
         ConfirmationDialog(
-            title = "Cerrar sesión",
-            message = "¿Seguro que quieres cerrar sesión?",
+            title = stringResource(R.string.profile_sign_out_title),
+            message = stringResource(R.string.profile_sign_out_message),
             onConfirm = {
                 viewModel.onLogout()
                 showLogoutDialog = false
@@ -223,42 +225,42 @@ private fun ProfileHubContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                StatColumn(value = streakCount, label = "Racha")
-                StatColumn(value = achievementsCount, label = "Logros")
-                StatColumn(value = recordsCount, label = "Récords")
+                StatColumn(value = streakCount, label = stringResource(R.string.profile_stat_streak))
+                StatColumn(value = achievementsCount, label = stringResource(R.string.profile_stat_achievements))
+                StatColumn(value = recordsCount, label = stringResource(R.string.profile_stat_records))
             }
             Spacer(modifier = Modifier.height(AiFitSpacing.sm))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }
 
         // MI CUENTA
-        item { SectionHeader(title = "Mi cuenta") }
+        item { SectionHeader(title = stringResource(R.string.profile_section_my_account)) }
         item {
             MenuRow(
                 icon = Icons.Rounded.Person,
-                label = "Editar perfil",
+                label = stringResource(R.string.profile_edit_label),
                 onClick = onEditProfile,
             )
         }
 
         // PROGRESO
-        item { SectionHeader(title = "Progreso") }
-        item { MenuRow(Icons.AutoMirrored.Rounded.ShowChart, "Dashboard", onDashboard) }
-        item { MenuRow(Icons.Rounded.MonitorWeight, "Peso corporal", onBodyWeight) }
-        item { MenuRow(Icons.Rounded.Science, "Análisis metabólico", onMetabolic) }
-        item { MenuRow(Icons.Rounded.ImportExport, "Exportar", onExport) }
+        item { SectionHeader(title = stringResource(R.string.profile_section_progress)) }
+        item { MenuRow(Icons.AutoMirrored.Rounded.ShowChart, stringResource(R.string.profile_menu_dashboard), onDashboard) }
+        item { MenuRow(Icons.Rounded.MonitorWeight, stringResource(R.string.profile_menu_body_weight), onBodyWeight) }
+        item { MenuRow(Icons.Rounded.Science, stringResource(R.string.profile_menu_metabolic), onMetabolic) }
+        item { MenuRow(Icons.Rounded.ImportExport, stringResource(R.string.profile_menu_export), onExport) }
 
         // LOGROS
-        item { SectionHeader(title = "Logros") }
-        item { MenuRow(Icons.Rounded.EmojiEvents, "Logros y rachas", onAchievements) }
-        item { MenuRow(Icons.Rounded.FitnessCenter, "Récords personales", onRecords) }
+        item { SectionHeader(title = stringResource(R.string.profile_section_achievements)) }
+        item { MenuRow(Icons.Rounded.EmojiEvents, stringResource(R.string.profile_menu_achievements), onAchievements) }
+        item { MenuRow(Icons.Rounded.FitnessCenter, stringResource(R.string.profile_menu_records), onRecords) }
 
         // HERRAMIENTAS
-        item { SectionHeader(title = "Herramientas") }
-        item { MenuRow(Icons.AutoMirrored.Rounded.LibraryBooks, "Glosario", onGlossary) }
+        item { SectionHeader(title = stringResource(R.string.profile_section_tools)) }
+        item { MenuRow(Icons.AutoMirrored.Rounded.LibraryBooks, stringResource(R.string.profile_menu_glossary), onGlossary) }
 
         // APP
-        item { SectionHeader(title = "App") }
+        item { SectionHeader(title = stringResource(R.string.profile_section_app)) }
         item {
             Row(
                 modifier = Modifier
@@ -274,7 +276,7 @@ private fun ProfileHubContent(
                 )
                 Spacer(modifier = Modifier.width(AiFitSpacing.md))
                 Text(
-                    text = "Tema oscuro",
+                    text = stringResource(R.string.profile_dark_mode),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
@@ -292,7 +294,7 @@ private fun ProfileHubContent(
         item {
             MenuRow(
                 icon = Icons.AutoMirrored.Rounded.ExitToApp,
-                label = "Cerrar sesión",
+                label = stringResource(R.string.profile_sign_out_label),
                 onClick = onLogout,
             )
         }
@@ -387,8 +389,5 @@ private fun ProfileHubContentPreview() {
         }
     }
 }
-
-
-
 
 

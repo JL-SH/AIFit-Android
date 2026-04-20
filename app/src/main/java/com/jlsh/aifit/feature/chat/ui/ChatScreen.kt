@@ -34,7 +34,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.jlsh.aifit.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.chat.ChatBubble
@@ -91,14 +93,14 @@ fun ChatScreen(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 AiFitTopBar(
-                    title = chatState.sessionTitle.ifBlank { "Chat" },
+                    title = chatState.sessionTitle.ifBlank { stringResource(R.string.chat_title) },
                     onBack = onNavigateBack,
                     background = MaterialTheme.colorScheme.background,
                     actions = {
                         IconButton(onClick = { showArchiveDialog = true }) {
                             Icon(
                                 imageVector = Icons.Rounded.Archive,
-                                contentDescription = "Archivar",
+                                contentDescription = stringResource(R.string.chat_archive_cd),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -143,9 +145,9 @@ fun ChatScreen(
 
     if (showArchiveDialog) {
         ConfirmationDialog(
-            title = "Archivar sesión",
-            message = "¿Seguro que quieres archivar esta conversación?",
-            confirmText = "Archivar",
+            title = stringResource(R.string.chat_archive_dialog_title),
+            message = stringResource(R.string.chat_archive_dialog_message),
+            confirmText = stringResource(R.string.chat_archive_confirm),
             onConfirm = {
                 showArchiveDialog = false
                 viewModel.onArchiveCurrentSession()
@@ -218,7 +220,7 @@ private fun ChatContent(
             if (state.messages.isEmpty() && !state.isWaitingResponse) {
                 item(key = "welcome") {
                     ChatBubble(
-                        content = "¡Hola! Soy tu **AI Coach** 💪\n\n¿En qué puedo ayudarte hoy?\n\n- Crear o ajustar tu plan de entrenamiento\n- Revisar tu dieta y nutrición\n- Resolver dudas sobre ejercicios\n- Analizar tu progreso",
+                        content = stringResource(R.string.chat_welcome_message),
                         isUser = false,
                         timestamp = "",
                         isMarkdown = true,

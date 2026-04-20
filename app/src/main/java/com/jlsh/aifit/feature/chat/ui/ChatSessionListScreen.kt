@@ -35,7 +35,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.jlsh.aifit.R
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -82,7 +84,7 @@ fun ChatSessionListScreen(
         snackbarHostState = snackbarHostState,
         topBar = {
             AiFitTopBar(
-                title = "AI Coach",
+                title = stringResource(R.string.chat_title),
                 background = MaterialTheme.colorScheme.secondaryContainer,
             )
         },
@@ -92,7 +94,7 @@ fun ChatSessionListScreen(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ) {
-                Icon(imageVector = Icons.Rounded.Add, contentDescription = "Nuevo chat")
+                Icon(imageVector = Icons.Rounded.Add, contentDescription = stringResource(R.string.chat_new_cd))
             }
         },
         onRetry = viewModel::loadSessions,
@@ -100,8 +102,8 @@ fun ChatSessionListScreen(
         if (successState.sessions.isEmpty()) {
             EmptyStateView(
                 icon = Icons.Rounded.SmartToy,
-                title = "Sin conversaciones",
-                subtitle = "Inicia una conversación con tu AI Coach",
+                title = stringResource(R.string.chat_empty_title),
+                subtitle = stringResource(R.string.chat_empty_subtitle),
                 modifier = Modifier.padding(paddingValues),
             )
         } else {
@@ -134,10 +136,10 @@ fun ChatSessionListScreen(
 
     deleteDialogSessionId?.let { id ->
         ConfirmationDialog(
-            title = "Eliminar conversación",
-            message = "¿Eliminar esta conversación? No se puede deshacer.",
-            confirmText = "ELIMINAR",
-            dismissText = "CANCELAR",
+            title = stringResource(R.string.chat_delete_dialog_title),
+            message = stringResource(R.string.chat_delete_dialog_message),
+            confirmText = stringResource(R.string.chat_delete_confirm),
+            dismissText = stringResource(R.string.common_cancel),
             onConfirm = {
                 viewModel.onDeleteSession(id)
                 deleteDialogSessionId = null
@@ -195,7 +197,7 @@ private fun SessionRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "${session.messageCount} mensajes",
+                text = stringResource(R.string.chat_message_count, session.messageCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -208,7 +210,7 @@ private fun SessionRow(
             IconButton(onClick = onRename, modifier = Modifier.size(36.dp)) {
                 Icon(
                     imageVector = Icons.Rounded.DriveFileRenameOutline,
-                    contentDescription = "Renombrar conversación",
+                    contentDescription = stringResource(R.string.chat_rename_cd),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
                 )
@@ -216,7 +218,7 @@ private fun SessionRow(
             IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
                 Icon(
                     imageVector = Icons.Rounded.Delete,
-                    contentDescription = "Eliminar conversación",
+                    contentDescription = stringResource(R.string.chat_delete_cd),
                     tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                     modifier = Modifier.size(18.dp),
                 )
@@ -235,22 +237,22 @@ private fun RenameSessionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Renombrar conversación") },
+        title = { Text(stringResource(R.string.chat_rename_dialog_title)) },
         text = {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
-                label = { Text("Nombre") },
+                label = { Text(stringResource(R.string.chat_rename_name_label)) },
                 singleLine = true,
             )
         },
         confirmButton = {
             TextButton(onClick = { if (text.isNotBlank()) onConfirm(text) }) {
-                Text("Guardar")
+                Text(stringResource(R.string.chat_rename_confirm))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }

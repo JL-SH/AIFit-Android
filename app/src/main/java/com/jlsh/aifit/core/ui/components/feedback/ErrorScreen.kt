@@ -45,7 +45,7 @@ fun ErrorScreen(
         ) {
             Icon(
                 imageVector = Icons.Rounded.ErrorOutline,
-                contentDescription = "Error",
+                contentDescription = stringResource(R.string.component_error_icon_cd),
                 modifier = Modifier.size(36.dp),
                 tint = MaterialTheme.colorScheme.error,
             )

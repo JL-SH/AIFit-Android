@@ -18,8 +18,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
@@ -46,7 +48,7 @@ fun WhyThisMealSheet(
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             Text(
-                text = "¿Por qué esta comida?",
+                text = stringResource(R.string.education_why_meal_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -54,7 +56,7 @@ fun WhyThisMealSheet(
             when (state) {
                 is WhyThisState.Loading -> {
                     InlineLoadingIndicator(
-                        message = "Cargando explicación…",
+                        message = stringResource(R.string.education_loading_explanation),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = AiFitSpacing.lg),
@@ -92,7 +94,7 @@ fun WhyThisMealSheet(
                             color = MaterialTheme.colorScheme.error,
                         )
                         TextButton(onClick = onRetry) {
-                            Text("Reintentar")
+                            Text(stringResource(R.string.education_retry))
                         }
                     }
                 }

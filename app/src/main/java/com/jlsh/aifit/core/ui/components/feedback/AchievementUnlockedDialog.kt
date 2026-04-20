@@ -32,9 +32,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import kotlinx.coroutines.delay
@@ -105,13 +107,13 @@ fun AchievementUnlockedDialog(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.EmojiEvents,
-                    contentDescription = "Achievement",
+                    contentDescription = stringResource(R.string.component_achievement_icon_cd),
                     modifier = Modifier.size(48.dp),
                     tint = MaterialTheme.colorScheme.primaryContainer,
                 )
                 Spacer(modifier = Modifier.height(AiFitSpacing.md))
                 Text(
-                    text = "¡Logro desbloqueado!",
+                    text = stringResource(R.string.component_achievement_unlocked_title),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
@@ -150,4 +152,3 @@ private fun AchievementUnlockedDialogPreview() {
         )
     }
 }
-

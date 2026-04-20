@@ -41,8 +41,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jlsh.aifit.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
@@ -133,7 +135,7 @@ fun WorkoutLogScreen(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             PrimaryButton(
-                                text = "FINISH SESSION",
+                                text = stringResource(R.string.workout_finish_session_btn),
                                 onClick = { viewModel.onFinishSession() },
                                 isLoading = state.isSaving,
                                 modifier = Modifier
@@ -169,8 +171,8 @@ fun WorkoutLogScreen(
 
     if (showDiscardDialog) {
         ConfirmationDialog(
-            title = "Descartar sesión?",
-            message = "Perderás los datos registrados",
+            title = stringResource(R.string.workout_discard_title),
+            message = stringResource(R.string.workout_discard_message),
             onConfirm = {
                 showDiscardDialog = false
                 viewModel.onConfirmDiscard()
@@ -251,7 +253,7 @@ private fun WorkoutLogContent(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "SET",
+                            text = stringResource(R.string.workout_set_header),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             letterSpacing = 1.5.sp,
@@ -260,7 +262,7 @@ private fun WorkoutLogContent(
                         )
                         Spacer(modifier = Modifier.width(AiFitSpacing.sm))
                         Text(
-                            text = "KG",
+                            text = stringResource(R.string.workout_kg_header),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             letterSpacing = 1.5.sp,
@@ -269,7 +271,7 @@ private fun WorkoutLogContent(
                         )
                         Spacer(modifier = Modifier.width(AiFitSpacing.sm))
                         Text(
-                            text = "REPS",
+                            text = stringResource(R.string.workout_reps_header),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             letterSpacing = 1.5.sp,

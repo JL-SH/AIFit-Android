@@ -174,6 +174,42 @@ fun ShoppingDetailScreen(
     }
 }
 
+// ── Merge helpers ─────────────────────────────────────────────────────────────
+
+private data class MergedCategory(
+    val categoryName: String,
+    val serverItems: List<ShoppingItem>,
+    val localItems: List<ShoppingLocalItemEntity>,
+)
+
+private fun buildMergedCategories(
+    serverCategories: List<ShoppingCategoryGroup>,
+    localItems: List<ShoppingLocalItemEntity>,
+    deletedKeys: Set<String>,
+): List<MergedCategory> {
+    val localByCategory = localItems.groupBy { it.category }
+    val seenCategories = mutableSetOf<String>()
+    val result = mutableListOf<MergedCategory>()
+
+    for (group in serverCategories) {
+        val catName = group.category.name
+        seenCategories.add(catName)
+        val filteredItems = group.items.filter { item -> "$catName:${item.name}" !in deletedKeys }
+        val locals = localByCategory[catName] ?: emptyList()
+        if (filteredItems.isNotEmpty() || locals.isNotEmpty()) {
+            result.add(MergedCategory(catName, filteredItems, locals))
+        }
+    }
+
+    for ((catName, locals) in localByCategory) {
+        if (catName !in seenCategories && locals.isNotEmpty()) {
+            result.add(MergedCategory(catName, emptyList(), locals))
+        }
+    }
+
+    return result
+}
+
 @Composable
 private fun ShoppingDetailContent(
     paddingValues: PaddingValues,
@@ -188,7 +224,7 @@ private fun ShoppingDetailContent(
     val isEditing = state.isEditing
 
     // Build merged categories: server items (minus deleted) + local items
-    val mergedCategories = remember(list.categories, state.localItems, state.deletedItemKeys) {
+    val mergedCategories: List<MergedCategory> = remember(list.categories, state.localItems, state.deletedItemKeys) {
         buildMergedCategories(list.categories, state.localItems, state.deletedItemKeys)
     }
 
@@ -260,7 +296,7 @@ private fun ShoppingDetailContent(
         }
 
         // Categories (merged)
-        mergedCategories.forEach { merged ->
+        mergedCategories.forEach { merged: MergedCategory ->
             item(key = "header_${merged.categoryName}") {
                 SectionHeader(
                     title = categoryDisplayName(merged.categoryName),
@@ -454,46 +490,6 @@ private fun categoryDisplayName(key: String): String = when (key) {
     else -> key.replace("_", " ")
 }
 
-// ── Merge helpers ─────────────────────────────────────────────────────────────
-
-private data class MergedCategory(
-    val categoryName: String,
-    val serverItems: List<ShoppingItem>,
-    val localItems: List<ShoppingLocalItemEntity>,
-)
-
-private fun buildMergedCategories(
-    serverCategories: List<ShoppingCategoryGroup>,
-    localItems: List<ShoppingLocalItemEntity>,
-    deletedKeys: Set<String>,
-): List<MergedCategory> {
-    val localByCategory = localItems.groupBy { it.category }
-    val seenCategories = mutableSetOf<String>()
-
-    val result = mutableListOf<MergedCategory>()
-
-    // Server categories first
-    for (group in serverCategories) {
-        val catName = group.category.name
-        seenCategories.add(catName)
-        val filteredItems = group.items.filter { item ->
-            "$catName:${item.name}" !in deletedKeys
-        }
-        val locals = localByCategory[catName] ?: emptyList()
-        if (filteredItems.isNotEmpty() || locals.isNotEmpty()) {
-            result.add(MergedCategory(catName, filteredItems, locals))
-        }
-    }
-
-    // Categories that only have local items
-    for ((catName, locals) in localByCategory) {
-        if (catName !in seenCategories && locals.isNotEmpty()) {
-            result.add(MergedCategory(catName, emptyList(), locals))
-        }
-    }
-
-    return result
-}
 
 @Preview(
     showBackground = true,
