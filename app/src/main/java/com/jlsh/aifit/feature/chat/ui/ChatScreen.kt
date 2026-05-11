@@ -236,6 +236,7 @@ private fun ChatContent(
             onValueChange = onInputChanged,
             onSend = onSend,
             isLoading = state.isWaitingResponse,
+            placeholder = stringResource(R.string.chat_input_placeholder),
             pendingImageBytes = state.pendingImageBytes,
             onAttachImage = onAttachImage,
             onRemoveImage = onRemoveImage,

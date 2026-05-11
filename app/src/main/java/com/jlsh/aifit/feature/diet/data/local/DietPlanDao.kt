@@ -21,5 +21,15 @@ interface DietPlanDao {
 
     @Query("DELETE FROM diet_plans WHERE userId = :userId")
     suspend fun deleteAllByUserId(userId: String)
+
+    /**
+     * Reconciliation query: removes every row for the given user whose id is NOT in the
+     * provided network-response set. Mirrors TrainingPlanDao.deleteAllNotInIds().
+     */
+    @Query("DELETE FROM diet_plans WHERE userId = :userId AND id NOT IN (:ids)")
+    suspend fun deleteAllNotInIds(userId: String, ids: List<String>)
+
+    @Query("DELETE FROM diet_plans")
+    suspend fun deleteAll()
 }
 

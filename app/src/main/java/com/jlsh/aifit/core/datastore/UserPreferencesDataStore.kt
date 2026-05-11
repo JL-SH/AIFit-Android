@@ -46,4 +46,3 @@ class UserPreferencesDataStore @Inject constructor(
         }
     }
 }
-

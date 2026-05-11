@@ -82,7 +82,6 @@ fun ProfileHubScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showGlossaryIntro by remember { mutableStateOf(false) }
-
     val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle(initialValue = true)
     val streakCount by viewModel.streakCount.collectAsStateWithLifecycle()
     val achievementsCount by viewModel.achievementsCount.collectAsStateWithLifecycle()
@@ -108,7 +107,7 @@ fun ProfileHubScreen(
         snackbarHostState = snackbarHostState,
         topBar = {
             AiFitTopBar(
-                title = "Yo",
+                title = stringResource(R.string.profile_title),
                 background = MaterialTheme.colorScheme.secondaryContainer,
             )
         },
@@ -155,6 +154,7 @@ fun ProfileHubScreen(
             onDismiss = { showLogoutDialog = false },
         )
     }
+
 }
 
 @Composable
@@ -389,5 +389,3 @@ private fun ProfileHubContentPreview() {
         }
     }
 }
-
-

@@ -82,6 +82,7 @@ import com.jlsh.aifit.feature.shopping.ui.components.GenerateShoppingListSheet
 import com.jlsh.aifit.feature.shopping.ui.state.ShoppingListUiState
 import com.jlsh.aifit.feature.shopping.ui.state.ShoppingUiEvent
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
+import com.jlsh.aifit.feature.user.ui.toStringRes
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -563,13 +564,6 @@ private fun DietPlanTab(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     PlanStatusBadge(status = plan.status.name)
-                                    IconButton(onClick = { planToDelete = plan.id }) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.DeleteOutline,
-                                            contentDescription = stringResource(R.string.nutrition_hub_delete_plan_cd),
-                                            tint = MaterialTheme.colorScheme.error,
-                                        )
-                                    }
                                 }
                                 Text(
                                     text = plan.name,
@@ -630,12 +624,14 @@ private fun DietPlanTab(
                                 modifier = Modifier.weight(1f),
                             )
                             PlanStatusBadge(status = plan.status.name)
-                            IconButton(onClick = { planToDelete = plan.id }) {
-                                Icon(
-                                    imageVector = Icons.Rounded.DeleteOutline,
-                                    contentDescription = stringResource(R.string.nutrition_hub_delete_plan_cd),
-                                    tint = MaterialTheme.colorScheme.error,
-                                )
+                            if (plan.status != PlanStatus.ACTIVE) {
+                                IconButton(onClick = { planToDelete = plan.id }) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.DeleteOutline,
+                                        contentDescription = stringResource(R.string.nutrition_hub_delete_plan_cd),
+                                        tint = MaterialTheme.colorScheme.error,
+                                    )
+                                }
                             }
                         }
                         Text(
@@ -792,7 +788,7 @@ private fun ShoppingTab(
                                     ) {
                                         Column {
                                             PlanStatusBadge(
-                                                status = shoppingList.period.name.replace("_", " "),
+                                                status = stringResource(shoppingList.period.toStringRes()),
                                             )
                                             Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                                             Text(
@@ -951,4 +947,3 @@ private fun NutritionHubShoppingPreview() {
         }
     }
 }
-

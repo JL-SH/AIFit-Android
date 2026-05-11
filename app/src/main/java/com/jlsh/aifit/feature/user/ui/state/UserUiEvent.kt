@@ -7,4 +7,3 @@ sealed class UserUiEvent {
     data class ShowSnackbar(val message: String) : UserUiEvent()
     data object Logout : UserUiEvent()
 }
-

@@ -14,7 +14,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.jlsh.aifit.R
 import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
@@ -40,7 +42,7 @@ fun AiFitTopBar(
                 IconButton(onClick = onBack) {
                     Icon(
                         imageVector = Icons.Rounded.ArrowBackIosNew,
-                        contentDescription = "Back",
+                        contentDescription = stringResource(R.string.common_back),
                         modifier = Modifier.size(20.dp),
                     )
                 }

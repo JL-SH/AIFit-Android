@@ -356,7 +356,7 @@ private fun WorkoutLogCard(
     onClick: () -> Unit,
 ) {
     val dayLabel = log.date.dayOfWeek
-        .getDisplayName(TextStyle.FULL, Locale("es"))
+        .getDisplayName(TextStyle.FULL, java.util.Locale.getDefault())
         .replaceFirstChar { it.uppercase() }
 
     AiFitCard(onClick = onClick) {
@@ -422,7 +422,7 @@ private fun WorkoutLogCard(
                 }
                 log.perceivedExertion?.let { rpe ->
                     Text(
-                        text = "RPE $rpe",
+                        text = stringResource(R.string.common_rpe_format, rpe.toString()),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primaryContainer,
                     )
@@ -522,4 +522,3 @@ private fun WorkoutHistoryScreenLightPreview() {
         }
     }
 }
-

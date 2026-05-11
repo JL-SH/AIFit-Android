@@ -223,7 +223,7 @@ class WorkoutViewModel @Inject constructor(
                         } else {
                             result.data
                         }
-                        val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es"))
+                        val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.getDefault())
                         val grouped = filtered
                             .sortedByDescending { it.date }
                             .groupBy { it.date.format(monthFormatter).replaceFirstChar { c -> c.uppercase() } }
@@ -372,4 +372,3 @@ class WorkoutViewModel @Inject constructor(
         viewModelScope.launch { _events.send(event) }
     }
 }
-

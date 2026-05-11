@@ -26,6 +26,7 @@ import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.education.ui.state.WhyThisState
+import com.jlsh.aifit.feature.user.ui.toStringRes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,7 +76,7 @@ fun WhyThisMealSheet(
                         shape = MaterialTheme.shapes.small,
                     ) {
                         Text(
-                            text = state.data.knowledgeLevel.name,
+                            text = stringResource(state.data.knowledgeLevel.toStringRes()),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -123,4 +124,3 @@ private fun WhyThisMealSheetPreview() {
         }
     }
 }
-

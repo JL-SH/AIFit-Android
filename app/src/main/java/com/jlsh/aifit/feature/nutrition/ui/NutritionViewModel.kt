@@ -307,7 +307,16 @@ class NutritionViewModel @Inject constructor(
 
     fun onDeleteDietPlan(planId: String) {
         val current = _hubState.value as? NutritionHubUiState.Success ?: return
-        // Optimistic remove
+        val plan = current.dietPlans.firstOrNull { it.id == planId } ?: return
+
+        // Do not allow deleting an ACTIVE plan
+        if (plan.status == com.jlsh.aifit.feature.training.domain.model.PlanStatus.ACTIVE) {
+            emitEvent(NutritionUiEvent.ShowSnackbar("No puedes eliminar un plan activo. Activa otro plan primero."))
+            return
+        }
+
+        // Cancel hubLoadJob to prevent stale reactive re-emission racing with the delete
+        hubLoadJob?.cancel()
         _hubState.value = current.copy(dietPlans = current.dietPlans.filter { it.id != planId })
 
         viewModelScope.launch {
@@ -319,6 +328,7 @@ class NutritionViewModel @Inject constructor(
                 is Result.Error -> {
                     // Roll back
                     _hubState.value = current
+                    loadHubData()
                     emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
                 else -> Unit

@@ -33,6 +33,9 @@ interface DietApiService {
     @PATCH("diet-plans/{id}/activate")
     suspend fun activateDietPlan(@Path("id") planId: String): ApiResponse<DietPlanResponseDto>
 
+    @PATCH("diet-plans/{id}/pause")
+    suspend fun pauseDietPlan(@Path("id") planId: String): ApiResponse<DietPlanResponseDto>
+
     @DELETE("diet-plans/{id}")
     suspend fun deleteDietPlan(@Path("id") id: String): ApiResponse<Unit>
 }

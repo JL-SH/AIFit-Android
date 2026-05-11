@@ -158,7 +158,7 @@ fun UserProfileScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.PhotoCamera,
-                                contentDescription = "Cambiar foto de perfil",
+                                contentDescription = stringResource(R.string.user_profile_change_photo),
                                 tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(13.dp),
                             )
@@ -338,4 +338,3 @@ private fun UserProfileScreenPreview() {
         }
     }
 }
-

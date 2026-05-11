@@ -66,6 +66,7 @@ import com.jlsh.aifit.feature.shopping.domain.model.ShoppingList
 import com.jlsh.aifit.feature.shopping.domain.model.ShoppingListPeriod
 import com.jlsh.aifit.feature.shopping.ui.state.ShoppingDetailState
 import com.jlsh.aifit.feature.shopping.ui.state.ShoppingUiEvent
+import com.jlsh.aifit.feature.user.ui.toStringRes
 
 @Composable
 fun ShoppingDetailScreen(
@@ -240,7 +241,7 @@ private fun ShoppingDetailContent(
     ) {
         // Period badge
         item(key = "period") {
-            PlanStatusBadge(status = list.period.name.replace("_", " "))
+            PlanStatusBadge(status = stringResource(list.period.toStringRes()))
         }
 
         // Edit mode banner
@@ -534,4 +535,3 @@ private fun ShoppingDetailPreview() {
         )
     }
 }
-

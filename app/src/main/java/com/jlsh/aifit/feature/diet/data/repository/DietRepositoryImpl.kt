@@ -41,6 +41,13 @@ class DietRepositoryImpl @Inject constructor(
             is Result.Success -> {
                 val plans = remote.data.map { it.toDomain() }
                 dao.upsertAll(plans.map { it.toEntity(userId) })
+                // Reconciliation: remove any cached row that the server no longer returns.
+                val networkIds = plans.map { it.id }
+                if (networkIds.isEmpty()) {
+                    dao.deleteAllByUserId(userId)
+                } else {
+                    dao.deleteAllNotInIds(userId, networkIds)
+                }
                 emit(Result.Success(plans))
             }
             is Result.Error -> {
@@ -93,17 +100,21 @@ class DietRepositoryImpl @Inject constructor(
     override suspend fun setActiveDietPlan(planId: String): Result<DietPlan> {
         val userId = sessionManager.getUserId()
             ?: return Result.Error(AppException.UnknownException("No active session"))
+
+        // Read the plan that is currently ACTIVE (and is not the one being activated)
+        // so we can demote it to PAUSED in the local cache after the API call succeeds.
+        val previouslyActivePlan = dao.getAllByUserId(userId)
+            .firstOrNull { it.status.equals("ACTIVE", ignoreCase = true) && it.id != planId }
+
         return when (val remote = safeApiCall { apiService.activateDietPlan(planId) }) {
             is Result.Success -> {
-                // Update activated plan and clear ACTIVE from others in local cache
                 val activatedPlan = remote.data.toDomain()
-                val existing = dao.getAllByUserId(userId)
-                val updated = existing.map { entity ->
-                    if (entity.id == planId) activatedPlan.toEntity(userId)
-                    else if (entity.status == "ACTIVE") entity.copy(status = "PAUSED")
-                    else entity
+                // (1) Demote the old active plan to PAUSED before upserting the new one
+                if (previouslyActivePlan != null) {
+                    dao.upsertAll(listOf(previouslyActivePlan.copy(status = "PAUSED")))
                 }
-                dao.upsertAll(updated)
+                // (2) Upsert the newly activated plan
+                dao.upsertAll(listOf(activatedPlan.toEntity(userId)))
                 Result.Success(activatedPlan)
             }
             is Result.Error -> remote
@@ -111,13 +122,37 @@ class DietRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun pauseDietPlan(planId: String): Result<DietPlan> {
+        val userId = sessionManager.getUserId()
+            ?: return Result.Error(AppException.UnknownException("No active session"))
+        return when (val remote = safeApiCall { apiService.pauseDietPlan(planId) }) {
+            is Result.Success -> {
+                val pausedPlan = remote.data.toDomain()
+                val existing = dao.getAllByUserId(userId)
+                val updated = existing.map { entity ->
+                    if (entity.id == planId) pausedPlan.toEntity(userId)
+                    else entity
+                }
+                dao.upsertAll(updated)
+                Result.Success(pausedPlan)
+            }
+            is Result.Error -> remote
+            else -> Result.Loading
+        }
+    }
+
     override suspend fun deleteDietPlan(planId: String): Result<Unit> {
+        // Delete from Room FIRST so any concurrent getDietPlans() cache emission
+        // does not re-surface the deleted item. Rollback if the API call fails.
+        val backup = dao.getById(planId)
+        dao.deleteById(planId)
         return try {
             val response = apiService.deleteDietPlan(planId)
             if (response.success) {
-                dao.deleteById(planId)
                 Result.Success(Unit)
             } else {
+                // Rollback local delete
+                if (backup != null) dao.upsertAll(listOf(backup))
                 Result.Error(
                     AppException.UnknownException(
                         response.message ?: "Error al eliminar plan"
@@ -125,6 +160,8 @@ class DietRepositoryImpl @Inject constructor(
                 )
             }
         } catch (e: Exception) {
+            // Rollback local delete
+            if (backup != null) dao.upsertAll(listOf(backup))
             Result.Error(com.jlsh.aifit.core.network.NetworkErrorMapper.map(e))
         }
     }

@@ -64,18 +64,15 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-/** Mapa de MealType → etiqueta en español para el dropdown */
-private val MEAL_TYPE_DISPLAY = mapOf(
-    MealType.BREAKFAST.name to "Desayuno",
-    MealType.MID_MORNING.name to "Media mañana",
-    MealType.LUNCH.name to "Comida",
-    MealType.AFTERNOON_SNACK.name to "Merienda",
-    MealType.DINNER.name to "Cena",
-    MealType.PRE_WORKOUT.name to "Pre-entreno",
-    MealType.POST_WORKOUT.name to "Post-entreno",
+private val MEAL_TYPE_OPTIONS = listOf(
+    MealType.BREAKFAST.name,
+    MealType.MID_MORNING.name,
+    MealType.LUNCH.name,
+    MealType.AFTERNOON_SNACK.name,
+    MealType.DINNER.name,
+    MealType.PRE_WORKOUT.name,
+    MealType.POST_WORKOUT.name,
 )
-
-private val MEAL_TYPE_OPTIONS = MEAL_TYPE_DISPLAY.keys.toList()
 
 private val UNIT_OPTIONS = listOf("g", "ml", "unit", "slice", "cup", "tbsp", "tsp")
 
@@ -474,4 +471,3 @@ private fun TrackMealScreenPreview() {
         }
     }
 }
-

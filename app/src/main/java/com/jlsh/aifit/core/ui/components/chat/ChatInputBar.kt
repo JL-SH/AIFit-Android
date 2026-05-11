@@ -29,6 +29,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import androidx.compose.ui.res.stringResource
+import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
@@ -39,7 +41,7 @@ fun ChatInputBar(
     onSend: () -> Unit,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
-    placeholder: String = "Escribe un mensaje...",
+    placeholder: String = "",
     pendingImageBytes: ByteArray? = null,
     onAttachImage: (() -> Unit)? = null,
     onRemoveImage: (() -> Unit)? = null,
@@ -59,7 +61,7 @@ fun ChatInputBar(
             ) {
                 AsyncImage(
                     model = pendingImageBytes,
-                    contentDescription = "Imagen adjunta",
+                    contentDescription = stringResource(R.string.chat_input_image_attached),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(72.dp)
@@ -81,7 +83,7 @@ fun ChatInputBar(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Close,
-                        contentDescription = "Eliminar imagen",
+                        contentDescription = stringResource(R.string.chat_input_remove_image),
                         tint = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.size(14.dp),
                     )
@@ -103,7 +105,7 @@ fun ChatInputBar(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.AttachFile,
-                        contentDescription = "Adjuntar imagen",
+                        contentDescription = stringResource(R.string.chat_input_attach_image),
                         tint = if (!isLoading) MaterialTheme.colorScheme.onSurfaceVariant
                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                     )
@@ -148,7 +150,7 @@ fun ChatInputBar(
                 } else {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.Send,
-                        contentDescription = "Enviar",
+                        contentDescription = stringResource(R.string.chat_input_send),
                         tint = if (isSendEnabled) MaterialTheme.colorScheme.primaryContainer
                                else MaterialTheme.colorScheme.onSurfaceVariant,
                     )

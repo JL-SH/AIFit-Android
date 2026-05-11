@@ -46,7 +46,7 @@ private fun statusDisplayName(status: String): String {
         "DRAFT" -> stringResource(R.string.status_draft)
         "ARCHIVED" -> stringResource(R.string.status_archived)
         "PAUSED" -> stringResource(R.string.status_paused)
-        else -> status.uppercase()
+        else -> status
     }
 }
 

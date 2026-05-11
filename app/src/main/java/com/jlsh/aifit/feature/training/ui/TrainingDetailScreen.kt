@@ -67,6 +67,7 @@ import com.jlsh.aifit.feature.training.domain.model.TrainingExercise
 import com.jlsh.aifit.feature.training.ui.state.TrainingDayItem
 import com.jlsh.aifit.feature.training.ui.state.TrainingDetailUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingUiEvent
+import com.jlsh.aifit.feature.user.ui.toStringRes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -334,10 +335,7 @@ private fun TrainingDayCard(
                         shape = RoundedCornerShape(6.dp),
                     ) {
                         Text(
-                            text = muscle.name
-                                .replace("_", " ")
-                                .lowercase()
-                                .replaceFirstChar { it.uppercase() },
+                            text = stringResource(muscle.toStringRes()),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = AiFitSpacing.sm, vertical = AiFitSpacing.xs),
@@ -409,7 +407,7 @@ private fun ExerciseRow(
                 )
                 if (exercise.targetRpe != null) {
                     Text(
-                        text = "RPE ${exercise.targetRpe}",
+                        text = stringResource(R.string.common_rpe_format, exercise.targetRpe.toString()),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

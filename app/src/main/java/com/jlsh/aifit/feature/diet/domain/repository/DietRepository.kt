@@ -12,6 +12,7 @@ interface DietRepository {
     suspend fun generateDietPlan(request: GenerateDietPlanRequestDto): Result<DietPlan>
     suspend fun generateAdaptiveDietPlan(request: GenerateAdaptiveDietPlanRequestDto): Result<DietPlan>
     suspend fun setActiveDietPlan(planId: String): Result<DietPlan>
+    suspend fun pauseDietPlan(planId: String): Result<DietPlan>
     suspend fun deleteDietPlan(planId: String): Result<Unit>
 }
 

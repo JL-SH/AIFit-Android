@@ -55,6 +55,7 @@ import com.jlsh.aifit.feature.gamification.domain.model.StreakType
 import com.jlsh.aifit.feature.gamification.domain.model.UserAchievement
 import com.jlsh.aifit.feature.gamification.ui.state.GamificationUiEvent
 import com.jlsh.aifit.feature.gamification.ui.state.GamificationUiState
+import com.jlsh.aifit.feature.user.ui.toStringRes
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import com.jlsh.aifit.core.ui.components.display.StreakStatus as BadgeStreakStatus
@@ -365,7 +366,7 @@ private fun AchievementCard(
                             .padding(horizontal = 8.dp, vertical = 2.dp),
                     ) {
                         Text(
-                            text = definition.rarity.name,
+                            text = stringResource(definition.rarity.toStringRes()),
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isUnlocked) MaterialTheme.colorScheme.onSurface
                             else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -521,7 +522,3 @@ private fun GamificationScreenPreview() {
         }
     }
 }
-
-
-
-

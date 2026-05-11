@@ -27,6 +27,7 @@ import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.progression.ui.RecommendationState
+import com.jlsh.aifit.feature.user.ui.toStringRes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +74,7 @@ fun ProgressionRecommendationSheet(
                         shape = MaterialTheme.shapes.small,
                     ) {
                         Text(
-                            text = rec.type.name.replace("_", " "),
+                            text = stringResource(rec.type.toStringRes()),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -202,4 +203,3 @@ private fun ProgressionSheetPreview() {
         }
     }
 }
-

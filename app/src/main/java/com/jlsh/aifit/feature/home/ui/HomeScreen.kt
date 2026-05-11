@@ -51,6 +51,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -328,15 +329,20 @@ private fun HomeContent(
 
 // ── 1. Greeting ──────────────────────────────────────────────────────────────
 
-private val dateFormatter: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", Locale("es"))
-
 @Composable
 private fun GreetingHeader(
     userName: String,
     avatarUrl: String?,
     onProfileClick: () -> Unit,
 ) {
+    val currentLocale = LocalConfiguration.current.locales[0]
+    val dateFormatter = remember(currentLocale) {
+        if (currentLocale.language == "es") {
+            DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", currentLocale)
+        } else {
+            DateTimeFormatter.ofPattern("EEEE, MMMM d", currentLocale)
+        }
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -913,7 +919,7 @@ private fun CurrentWeightCard(
                 val lastDate = weightEntries.lastOrNull()?.date
                 if (lastDate != null) {
                     Text(
-                        text = stringResource(R.string.home_last_weight_date, lastDate.format(DateTimeFormatter.ofPattern("d MMM", Locale("es")))),
+                        text = stringResource(R.string.home_last_weight_date, lastDate.format(DateTimeFormatter.ofPattern("d MMM", java.util.Locale.getDefault()))),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1323,6 +1329,3 @@ private fun HomeScreenPreview() {
         }
     }
 }
-
-
-

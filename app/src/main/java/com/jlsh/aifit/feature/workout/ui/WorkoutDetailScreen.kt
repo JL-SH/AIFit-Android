@@ -217,7 +217,7 @@ private fun WorkoutDetailContent(
                 // Fecha — título dominante
                 Text(
                     text = log.date.format(
-                        DateTimeFormatter.ofPattern("EEEE, dd MMM yyyy", Locale("es"))
+                        DateTimeFormatter.ofPattern("EEEE, dd MMM yyyy", java.util.Locale.getDefault())
                     ).replaceFirstChar { it.uppercase() },
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -451,7 +451,7 @@ private fun WorkoutDetailContent(
                                 modifier = Modifier.weight(0.18f),
                             )
                             Text(
-                                text = "RPE",
+                                text = stringResource(R.string.workout_detail_col_rpe),
                                 style = MaterialTheme.typography.labelSmall,
                                 letterSpacing = 1.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -459,7 +459,7 @@ private fun WorkoutDetailContent(
                                 modifier = Modifier.weight(0.18f),
                             )
                             Text(
-                                text = "1RM",
+                                text = stringResource(R.string.workout_detail_col_1rm),
                                 style = MaterialTheme.typography.labelSmall,
                                 letterSpacing = 1.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -840,5 +840,3 @@ private fun WorkoutDetailScreenLightPreview() {
         }
     }
 }
-
-

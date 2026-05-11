@@ -32,6 +32,7 @@ turbine = "1.2.0"
 robolectric = "4.12.1"
 roborazzi = "1.6.0"
 androidx-test-core = "1.6.1"
+appcompat = "1.7.1"
 
 [libraries]
 # Core
@@ -115,6 +116,7 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidx-test-core" }
 roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
