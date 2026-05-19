@@ -415,6 +415,12 @@ class TrainingViewModel @Inject constructor(
                     emitEvent(TrainingUiEvent.ShowSnackbar("Plan eliminado"))
                     emitEvent(TrainingUiEvent.PlanDeleted)
                     fetchPlans()
+                    // Keep isDeletingPlan=true until the post-delete sync job finishes.
+                    // Without this join(), isDeletingPlan resets to false while the new
+                    // fetchPlans Job is still running, letting lifecycle-triggered onRefresh
+                    // calls fire concurrent network fetches that can race with the server
+                    // delete commit and reinsert the plan.
+                    fetchPlansJob?.join()
                 }
                 is Result.Error -> {
                     // TODO: remove diagnostic log below

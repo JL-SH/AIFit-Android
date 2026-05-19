@@ -5,11 +5,15 @@ import com.jlsh.aifit.feature.user.data.dto.CreateUserProfileRequestDto
 import com.jlsh.aifit.feature.user.data.dto.OnboardingFeedbackRequestDto
 import com.jlsh.aifit.feature.user.data.dto.OnboardingResultDto
 import com.jlsh.aifit.feature.user.data.dto.UpdateUserProfileRequestDto
+import com.jlsh.aifit.feature.user.data.dto.UploadProfilePhotoResponseDto
 import com.jlsh.aifit.feature.user.data.dto.UserProfileResponseDto
+import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 
 interface UserApiService {
 
@@ -30,5 +34,10 @@ interface UserApiService {
     suspend fun completeOnboarding(
         @Body request: OnboardingFeedbackRequestDto? = null,
     ): ApiResponse<OnboardingResultDto>
-}
 
+    @Multipart
+    @POST("users/me/photo")
+    suspend fun uploadProfilePhoto(
+        @Part photo: MultipartBody.Part,
+    ): ApiResponse<UploadProfilePhotoResponseDto>
+}

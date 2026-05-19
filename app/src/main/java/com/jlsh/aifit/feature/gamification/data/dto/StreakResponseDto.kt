@@ -4,11 +4,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class StreakResponseDto(
-    val type: String,
-    val status: String,
-    val currentCount: Int,
-    val longestCount: Int,
-    val lastActivityDate: String,
-    val startedAt: String,
+    val type: String = "UNKNOWN",
+    val status: String = "UNKNOWN",
+    val currentCount: Int = 0,
+    val longestCount: Int = 0,
+    val lastActivityDate: String = "",
+    val startedAt: String = "",
 )
-

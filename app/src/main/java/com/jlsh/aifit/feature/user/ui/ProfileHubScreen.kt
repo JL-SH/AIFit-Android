@@ -42,6 +42,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -86,9 +89,14 @@ fun ProfileHubScreen(
     val streakCount by viewModel.streakCount.collectAsStateWithLifecycle()
     val achievementsCount by viewModel.achievementsCount.collectAsStateWithLifecycle()
     val recordsCount by viewModel.recordsCount.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    LaunchedEffect(Unit) {
-        viewModel.onRefresh()
+    // Re-fetch the profile every time this screen comes back into focus so that
+    // a photo uploaded on UserProfileScreen is immediately reflected here.
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.onRefresh()
+        }
     }
 
     LaunchedEffect(Unit) {

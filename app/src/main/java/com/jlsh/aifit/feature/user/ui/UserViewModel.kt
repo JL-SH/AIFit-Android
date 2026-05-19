@@ -25,6 +25,7 @@ import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import com.jlsh.aifit.feature.user.domain.usecase.CreateUserProfileUseCase
 import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import com.jlsh.aifit.feature.user.domain.usecase.UpdateUserProfileUseCase
+import com.jlsh.aifit.feature.user.domain.usecase.UploadProfilePhotoUseCase
 import com.jlsh.aifit.feature.progress.data.dto.LogBodyWeightRequestDto
 import com.jlsh.aifit.feature.progress.domain.usecase.LogBodyWeightUseCase
 import com.jlsh.aifit.feature.user.ui.state.UserUiEvent
@@ -47,6 +48,7 @@ class UserViewModel @Inject constructor(
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val createUserProfileUseCase: CreateUserProfileUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
+    private val uploadProfilePhotoUseCase: UploadProfilePhotoUseCase,
     private val getUserStreaksUseCase: GetUserStreaksUseCase,
     private val getUserAchievementsUseCase: GetUserAchievementsUseCase,
     private val getPersonalRecordsUseCase: GetPersonalRecordsUseCase,
@@ -84,6 +86,9 @@ class UserViewModel @Inject constructor(
     /** URI of a photo selected locally but not yet uploaded to the server. */
     private val _pendingPhotoUri = MutableStateFlow<Uri?>(null)
     val pendingPhotoUri: StateFlow<Uri?> = _pendingPhotoUri.asStateFlow()
+
+    private val _isUploadingPhoto = MutableStateFlow(false)
+    val isUploadingPhoto: StateFlow<Boolean> = _isUploadingPhoto.asStateFlow()
 
     // 3. FORM FIELDS
     private val _name = MutableStateFlow("")
@@ -180,7 +185,9 @@ class UserViewModel @Inject constructor(
     }
 
     fun onProfilePictureSelected(uri: Uri?) {
+        if (uri == null) return
         _pendingPhotoUri.value = uri
+        uploadPhoto(uri)
     }
 
     fun onToggleTheme() {
@@ -397,12 +404,8 @@ class UserViewModel @Inject constructor(
                 when (val result = updateUserProfileUseCase(buildUpdateRequest())) {
                     is Result.Success -> {
                         _uiState.value = UserUiState.Success(result.data)
-                        val hadPendingPhoto = _pendingPhotoUri.value != null
                         _pendingPhotoUri.value = null
-                        val message = if (hadPendingPhoto)
-                            "Perfil actualizado. La foto se guardará cuando el servidor la soporte."
-                        else "Perfil actualizado"
-                        emitEvent(UserUiEvent.ShowSnackbar(message))
+                        emitEvent(UserUiEvent.ShowSnackbar("Perfil actualizado"))
                         emitEvent(UserUiEvent.NavigateBack)
                     }
                     is Result.Error -> {
@@ -417,6 +420,42 @@ class UserViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = UserUiState.Idle
                 emitEvent(UserUiEvent.ShowSnackbar(e.message ?: "Error al actualizar el perfil"))
+            }
+        }
+    }
+
+    private fun uploadPhoto(uri: Uri) {
+        viewModelScope.launch {
+            _isUploadingPhoto.value = true
+            try {
+                when (val result = uploadProfilePhotoUseCase(uri)) {
+                    is Result.Success -> {
+                        val newUrl = result.data.profilePictureUrl
+                        _profilePictureUrl.value = newUrl
+                        // Only clear the pending local URI once we have a server URL to
+                        // display; if the follow-up getProfile() lost a race with the
+                        // Cloudinary commit, keep the local thumbnail visible.
+                        if (newUrl != null) {
+                            _pendingPhotoUri.value = null
+                        }
+                        // Keep _uiState in sync so any consumer of successState.profile
+                        // (e.g. ProfileHubScreen) also sees the new URL.
+                        val current = _uiState.value
+                        if (current is UserUiState.Success) {
+                            _uiState.value = UserUiState.Success(result.data)
+                        }
+                    }
+                    is Result.Error -> {
+                        _pendingPhotoUri.value = null
+                        emitEvent(UserUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    }
+                    is Result.Loading -> Unit
+                }
+            } catch (e: Exception) {
+                _pendingPhotoUri.value = null
+                emitEvent(UserUiEvent.ShowSnackbar(e.message ?: "Error al subir la foto"))
+            } finally {
+                _isUploadingPhoto.value = false
             }
         }
     }

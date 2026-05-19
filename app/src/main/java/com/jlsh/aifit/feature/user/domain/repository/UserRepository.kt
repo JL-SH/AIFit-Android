@@ -1,5 +1,6 @@
 package com.jlsh.aifit.feature.user.domain.repository
 
+import android.net.Uri
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.user.domain.model.CreateUserProfileRequest
 import com.jlsh.aifit.feature.user.domain.model.OnboardingResult
@@ -12,5 +13,5 @@ interface UserRepository {
     suspend fun createProfile(request: CreateUserProfileRequest): Result<UserProfile>
     suspend fun updateProfile(request: UpdateUserProfileRequest): Result<UserProfile>
     suspend fun completeOnboarding(feedback: String? = null): Result<OnboardingResult>
+    suspend fun uploadProfilePhoto(uri: Uri): Result<UserProfile>
 }
-

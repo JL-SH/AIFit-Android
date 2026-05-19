@@ -42,6 +42,7 @@ import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.gamification.domain.model.ExportPeriod
 import com.jlsh.aifit.feature.gamification.domain.model.ProgressExport
+import com.jlsh.aifit.feature.gamification.domain.model.toExportPeriodDisplayString
 import com.jlsh.aifit.feature.gamification.ui.state.ExportUiState
 
 @Composable
@@ -55,25 +56,20 @@ fun ProgressExportScreen(
 
     var selectedPeriod by remember { mutableStateOf(ExportPeriod.LAST_MONTH) }
 
-    // Auto-trigger export with pre-selected period on first composition
+    // Auto-trigger export with the pre-selected period on first composition.
     LaunchedEffect(Unit) {
         viewModel.loadExport(selectedPeriod)
     }
 
-    val periodOptions = ExportPeriod.entries.map { it.name }
-    val lastWeekLabel = stringResource(R.string.export_period_last_week)
-    val lastMonthLabel = stringResource(R.string.export_period_last_month)
-    val last3MonthsLabel = stringResource(R.string.export_period_last_3_months)
-    val allTimeLabel = stringResource(R.string.export_period_all_time)
-    val periodDisplayMapper: (String) -> String = { key ->
-        when (key) {
-            "LAST_WEEK" -> lastWeekLabel
-            "LAST_MONTH" -> lastMonthLabel
-            "LAST_THREE_MONTHS" -> last3MonthsLabel
-            "ALL_TIME" -> allTimeLabel
-            else -> key
-        }
-    }
+    // Build localized labels for each period using string resources.
+    // These are the values passed directly to AiFitChipGroup so that no raw enum
+    // names (e.g. "LAST_THREE_MONTHS") are ever visible in the chip UI.
+    val periodLabels: Map<ExportPeriod, String> = mapOf(
+        ExportPeriod.LAST_WEEK         to stringResource(R.string.export_period_last_week),
+        ExportPeriod.LAST_MONTH        to stringResource(R.string.export_period_last_month),
+        ExportPeriod.LAST_THREE_MONTHS to stringResource(R.string.export_period_last_3_months),
+        ExportPeriod.ALL_TIME          to stringResource(R.string.export_period_all_time),
+    )
 
     Box(
         modifier = Modifier
@@ -99,17 +95,21 @@ fun ProgressExportScreen(
             ) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.md))
 
+                // Options and selected are already-localized strings; no displayMapper needed.
+                // This avoids passing a lambda with stringResource captures into a chip slot,
+                // which can violate Compose's composable-context rules and cause a crash.
                 AiFitChipGroup(
-                    options = periodOptions,
-                    selected = setOf(selectedPeriod.name),
-                    onSelectionChanged = { selected ->
-                        val periodName = selected.firstOrNull() ?: return@AiFitChipGroup
-                        val period = ExportPeriod.entries.find { it.name == periodName } ?: return@AiFitChipGroup
+                    options = ExportPeriod.entries.map { periodLabels.getValue(it) },
+                    selected = setOf(periodLabels.getValue(selectedPeriod)),
+                    onSelectionChanged = { selectedLabels ->
+                        val label = selectedLabels.firstOrNull() ?: return@AiFitChipGroup
+                        val period = periodLabels.entries
+                            .firstOrNull { it.value == label }?.key
+                            ?: return@AiFitChipGroup
                         selectedPeriod = period
                         viewModel.loadExport(period)
                     },
                     multiSelect = false,
-                    displayMapper = periodDisplayMapper,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -136,12 +136,12 @@ fun ProgressExportScreen(
                     is ExportUiState.Success -> {
                         ExportSummaryCard(
                             export = state.export,
-                            periodDisplayMapper = periodDisplayMapper,
+                            periodLabels = periodLabels,
                         )
                         Spacer(modifier = Modifier.height(AiFitSpacing.lg))
                         PrimaryButton(
                             text = stringResource(R.string.gamification_export_share_btn),
-                            onClick = { shareExport(context, state.export, periodDisplayMapper) },
+                            onClick = { shareExport(context, state.export, periodLabels) },
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
@@ -170,8 +170,16 @@ fun ProgressExportScreen(
 @Composable
 private fun ExportSummaryCard(
     export: ProgressExport,
-    periodDisplayMapper: (String) -> String,
+    periodLabels: Map<ExportPeriod, String>,
 ) {
+    // Resolve the backend period string → localized label.
+    // Falls back to toExportPeriodDisplayString() for unknown period values that the
+    // server might add in the future before the app is updated.
+    val periodDisplay = ExportPeriod.entries
+        .firstOrNull { it.apiValue == export.period }
+        ?.let { periodLabels[it] }
+        ?: export.period.toExportPeriodDisplayString()
+
     AiFitCard {
         Column(
             modifier = Modifier.padding(AiFitSpacing.md),
@@ -183,7 +191,7 @@ private fun ExportSummaryCard(
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = stringResource(R.string.gamification_export_period_row, periodDisplayMapper(export.period)),
+                text = stringResource(R.string.gamification_export_period_row, periodDisplay),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -192,10 +200,16 @@ private fun ExportSummaryCard(
 
             ExportStatRow(stringResource(R.string.gamification_export_total_workouts), "${export.totalWorkouts}")
             ExportStatRow(stringResource(R.string.gamification_export_total_prs), "${export.totalPRs}")
-            ExportStatRow(stringResource(R.string.gamification_export_current_streak), stringResource(R.string.gamification_export_streak_days, export.currentStreak))
+            ExportStatRow(
+                stringResource(R.string.gamification_export_current_streak),
+                stringResource(R.string.gamification_export_streak_days, export.currentStreak),
+            )
             ExportStatRow(stringResource(R.string.gamification_export_achievements), "${export.achievementsUnlocked}")
             export.weightChange?.let {
-                ExportStatRow(stringResource(R.string.gamification_export_weight_change), "${"%.1f".format(it)} kg")
+                ExportStatRow(
+                    stringResource(R.string.gamification_export_weight_change),
+                    "${"%.1f".format(it)} kg",
+                )
             }
 
             if (export.topExercises.isNotEmpty()) {
@@ -219,9 +233,7 @@ private fun ExportSummaryCard(
 
 @Composable
 private fun ExportStatRow(label: String, value: String) {
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    Box(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
@@ -237,10 +249,26 @@ private fun ExportStatRow(label: String, value: String) {
     }
 }
 
-private fun shareExport(context: Context, export: ProgressExport, periodDisplay: (String) -> String) {
+/**
+ * Builds the plain-text share payload.
+ *
+ * [periodLabels] is captured from the composable scope so the period label is already
+ * localized without needing a Context or stringResource inside this non-composable function.
+ * Falls back to [toExportPeriodDisplayString] for unknown period values.
+ */
+private fun shareExport(
+    context: Context,
+    export: ProgressExport,
+    periodLabels: Map<ExportPeriod, String>,
+) {
+    val periodDisplay = ExportPeriod.entries
+        .firstOrNull { it.apiValue == export.period }
+        ?.let { periodLabels[it] }
+        ?: export.period.toExportPeriodDisplayString()
+
     val text = buildString {
         appendLine("AIFit — Informe de progreso — ${export.userName}")
-        appendLine("Período: ${periodDisplay(export.period)}")
+        appendLine("Período: $periodDisplay")
         appendLine()
         appendLine("Entrenamientos completados: ${export.totalWorkouts}")
         appendLine("Récords personales: ${export.totalPRs}")
@@ -288,7 +316,9 @@ private fun ProgressExportScreenPreview() {
                     weightChange = -1.5,
                     topExercises = listOf("Bench Press: +15%", "Squat: +10%"),
                 ),
-                periodDisplayMapper = { it },
+                // In previews stringResource isn't available; the fallback in ExportSummaryCard
+                // will use toExportPeriodDisplayString() when the map doesn't contain the period.
+                periodLabels = emptyMap(),
             )
         }
     }

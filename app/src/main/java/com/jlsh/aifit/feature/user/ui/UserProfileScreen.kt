@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -72,6 +73,7 @@ fun UserProfileScreen(
     val activityLevel by viewModel.activityLevel.collectAsStateWithLifecycle()
     val profilePictureUrl by viewModel.profilePictureUrl.collectAsStateWithLifecycle()
     val pendingPhotoUri by viewModel.pendingPhotoUri.collectAsStateWithLifecycle()
+    val isUploadingPhoto by viewModel.isUploadingPhoto.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -129,6 +131,7 @@ fun UserProfileScreen(
                         modifier = Modifier
                             .size(AvatarSize.LARGE.size)
                             .clickable(
+                                enabled = !isUploadingPhoto,
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() },
                             ) {
@@ -145,23 +148,42 @@ fun UserProfileScreen(
                             imageUrl = displayImageUrl,
                             size = AvatarSize.LARGE,
                         )
-                        // Camera badge — overlaps the bottom-right corner of the avatar circle
-                        Box(
-                            modifier = Modifier
-                                .size(22.dp)
-                                .align(Alignment.BottomEnd)
-                                .background(
+                        if (isUploadingPhoto) {
+                            // Loading overlay while the photo is being uploaded
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .background(
+                                        color = MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
+                                        shape = CircleShape,
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(28.dp),
+                                    strokeWidth = 2.5.dp,
                                     color = MaterialTheme.colorScheme.primary,
-                                    shape = CircleShape,
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.PhotoCamera,
-                                contentDescription = stringResource(R.string.user_profile_change_photo),
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(13.dp),
-                            )
+                                )
+                            }
+                        } else {
+                            // Camera badge — overlaps the bottom-right corner of the avatar circle
+                            Box(
+                                modifier = Modifier
+                                    .size(22.dp)
+                                    .align(Alignment.BottomEnd)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        shape = CircleShape,
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.PhotoCamera,
+                                    contentDescription = stringResource(R.string.user_profile_change_photo),
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(13.dp),
+                                )
+                            }
                         }
                     }
 

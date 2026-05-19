@@ -4,9 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserAchievementResponseDto(
-    val id: String,
-    val achievement: AchievementDefinitionResponseDto,
-    val unlockedAt: String,
-    val triggerDescription: String,
+    val id: String = "",
+    val achievement: AchievementDefinitionResponseDto = AchievementDefinitionResponseDto(),
+    val unlockedAt: String = "",
+    val triggerDescription: String = "",
 )
-

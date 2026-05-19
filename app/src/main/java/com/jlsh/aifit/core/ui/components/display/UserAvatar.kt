@@ -8,6 +8,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +35,9 @@ fun UserAvatar(
     imageUrl: String? = null,
     size: AvatarSize = AvatarSize.DEFAULT,
 ) {
+    // Reset the error flag whenever the URL changes so a fresh load is attempted.
+    var coilFailed by remember(imageUrl) { mutableStateOf(false) }
+
     Box(
         modifier = modifier
             .size(size.size)
@@ -38,7 +45,7 @@ fun UserAvatar(
             .background(MaterialTheme.colorScheme.secondaryContainer),
         contentAlignment = Alignment.Center,
     ) {
-        if (!imageUrl.isNullOrBlank()) {
+        if (!imageUrl.isNullOrBlank() && !coilFailed) {
             AsyncImage(
                 model = imageUrl,
                 contentDescription = name,
@@ -46,6 +53,9 @@ fun UserAvatar(
                     .size(size.size)
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop,
+                // When Coil fails to load (any reason: network, bad URL, timeout…)
+                // show initials as fallback instead of an empty circle.
+                onError = { coilFailed = true },
             )
         } else {
             Text(
@@ -96,4 +106,3 @@ private fun UserAvatarSmallPreview() {
         )
     }
 }
-

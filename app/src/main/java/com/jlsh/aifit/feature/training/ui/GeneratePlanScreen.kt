@@ -172,6 +172,11 @@ fun GeneratePlanScreen(
 
     val isLoading = generateState is GeneratePlanUiState.Loading
 
+    // Success es un estado transitorio puro (emitido justo antes de navegar).
+    // Mantener la pantalla de carga visible evita que el formulario flashee ~1 s
+    // durante el tiempo que tarda el evento de navegación en ser consumido.
+    val showLoadingScreen = isLoading || generateState is GeneratePlanUiState.Success
+
     // Gestionar animación mientras carga
     LaunchedEffect(isLoading) {
         if (isLoading) {
@@ -224,12 +229,12 @@ fun GeneratePlanScreen(
         topBar = {
             AiFitTopBar(
                 title = if (adaptive) stringResource(R.string.training_generate_adaptive_title) else stringResource(R.string.training_generate_title),
-                onBack = if (isLoading) null else onNavigateBack,
+                onBack = if (showLoadingScreen) null else onNavigateBack,
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
-        if (isLoading) {
+        if (showLoadingScreen) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -742,8 +747,3 @@ private fun GeneratePlanScreenLoadingPreview() {
         }
     }
 }
-
-
-
-
-

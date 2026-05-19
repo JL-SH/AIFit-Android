@@ -98,17 +98,32 @@ class WorkoutRepositoryImpl @Inject constructor(
                     Log.d("AIFIT_REPO", "getHistory: discarding stale network response (generation changed $generationAtStart → $deleteGeneration)")
                     return@flow
                 }
+
+                // ─── FIX: do NOT call pendingDeleteIds.removeAll { it !in serverIds } ───
+                //
+                // That line caused a race condition with HomeViewModel.loadTodayWorkoutHistory(),
+                // which calls getHistory(from = today, to = today).  A date-filtered response
+                // never contains workouts from other days, so removeAll treated every past-day
+                // ID as "server-confirmed deleted" and wiped it from pendingDeleteIds.  A
+                // concurrent unfiltered getHistory() call (from WorkoutHistoryScreen) then
+                // received a stale response still containing the deleted item; finding the ID
+                // absent from pendingDeleteIds, it passed the filter and re-inserted the row
+                // into Room — making the deleted session reappear.
+                //
+                // IDs in pendingDeleteIds are intentionally kept until process restart (they
+                // accumulate but are few and negligible in memory).  Once the server fully
+                // propagates the delete, future responses stop returning the ID, so the filter
+                // below becomes a no-op for old deleted IDs.
+
                 val logs = remote.data.map { it.toDomain() }
                     .filter { it.id !in pendingDeleteIds }
-                Log.d("AIFIT_REPO", "getHistory network emission — count=${logs.size}, logs=${logs.map { "id=${it.id} isLocked=${it.isLocked} date=${it.date}" }}")
-                // Only upsert items NOT pending deletion (re-check at upsert time to
-                // close the race window where deleteLog adds an ID between filter and upsert).
-                val safeToUpsert = logs.filter { it.id !in pendingDeleteIds }
-                dao.upsertAll(safeToUpsert.map { it.toEntity() })
-                // Also remove any pending-delete items that may have been re-inserted
-                // by a prior racing upsert.
-                pendingDeleteIds.forEach { id -> dao.deleteById(id) }
-                emit(Result.Success(logs.filter { it.id !in pendingDeleteIds }))
+                Log.d("AIFIT_REPO", "getHistory network emission — count=${logs.size}, pendingDeletes=${pendingDeleteIds.size}")
+
+                // Only upsert items NOT pending deletion; then evict any that a racing
+                // upsert may have already written.
+                dao.upsertAll(logs.map { it.toEntity() })
+                pendingDeleteIds.forEach { pendingId -> dao.deleteById(pendingId) }
+                emit(Result.Success(logs))
             }
             is Result.Error -> {
                 if (cached.isEmpty()) emit(remote)
@@ -136,10 +151,8 @@ class WorkoutRepositoryImpl @Inject constructor(
 
         return when (val remote = safeApiCall { apiService.deleteWorkoutLog(id) }) {
             is Result.Success -> {
-                // Remove from pendingDeleteIds now that the server confirmed the delete.
-                // The generation counter remains incremented so any still-in-flight
-                // getHistory() responses (started before this delete) are still discarded.
-                pendingDeleteIds.remove(id)
+                // Do NOT remove id from pendingDeleteIds here.
+                // See the FIX comment in getHistory() for the full explanation.
                 dao.deleteById(id) // ensure no racing upsert left the row behind
                 Result.Success(Unit)
             }
@@ -187,4 +200,3 @@ class WorkoutRepositoryImpl @Inject constructor(
         }
     }
 }
-

@@ -4,12 +4,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AchievementDefinitionResponseDto(
-    val id: String,
-    val code: String,
-    val type: String,
-    val name: String,
-    val description: String,
-    val rarity: String,
-    val iconKey: String,
+    val id: String = "",
+    val code: String = "",
+    val type: String = "UNKNOWN",
+    val name: String = "",
+    val description: String = "",
+    val rarity: String = "UNKNOWN",
+    val iconKey: String = "",
 )
-

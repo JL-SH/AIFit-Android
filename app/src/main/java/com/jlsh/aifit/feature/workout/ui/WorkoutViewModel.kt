@@ -298,9 +298,6 @@ class WorkoutViewModel @Inject constructor(
 
     fun onDeleteLog(logId: String) {
         // Cancel any in-flight loadHistory coroutine BEFORE the delete.
-        // Without this cancellation, the stale network response from the ongoing
-        // loadHistory flow (which arrives ~4-6s later) would overwrite the
-        // optimistic UI update with the full list — making the deleted item reappear.
         historyJob?.cancel()
         historyJob = null
 
@@ -319,9 +316,12 @@ class WorkoutViewModel @Inject constructor(
                 is Result.Success -> {
                     emitEvent(WorkoutUiEvent.ShowSnackbar("Sesión eliminada"))
                     emitEvent(WorkoutUiEvent.NavigateBack)
-                    // Reload history after navigating back so the list is fresh
-                    // and the deleted item cannot reappear from a stale response.
-                    loadHistory()
+                    // No loadHistory() here — it would be redundant and dangerous:
+                    // the optimistic update already removed the item from _historyState,
+                    // and when the user lands back on WorkoutHistoryScreen its
+                    // LaunchedEffect(Unit) will call loadHistory() fresh.  Starting a
+                    // loadHistory() here races against that LaunchedEffect call and would
+                    // be immediately cancelled by it anyway.
                 }
                 is Result.Error -> {
                     // Rollback the optimistic UI update and reload fresh data

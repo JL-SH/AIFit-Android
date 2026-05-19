@@ -4,10 +4,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ProgressExportResponseDto(
-    val userId: String,
-    val userName: String,
-    val period: String,
-    val generatedAt: String,
+    val userId: String = "",
+    val userName: String = "",
+    val period: String = "",
+    val generatedAt: String = "",
     val weightSummary: WeightSummaryExportDto? = null,
     val personalRecords: List<PersonalRecordResponseDto> = emptyList(),
     val weeklyAdherenceSummary: List<WeeklyAdherenceExportDto> = emptyList(),
@@ -18,39 +18,38 @@ data class ProgressExportResponseDto(
 
 @Serializable
 data class WeightSummaryExportDto(
-    val initialWeight: Double,
-    val currentWeight: Double,
-    val change: Double,
+    val initialWeight: Double = 0.0,
+    val currentWeight: Double = 0.0,
+    val change: Double = 0.0,
 )
 
 @Serializable
 data class WeeklyAdherenceExportDto(
-    val weekStart: String,
-    val trainingDaysCompleted: Int,
-    val trainingDaysPlanned: Int,
-    val nutritionDaysTracked: Int,
+    val weekStart: String = "",
+    val trainingDaysCompleted: Int = 0,
+    val trainingDaysPlanned: Int = 0,
+    val nutritionDaysTracked: Int = 0,
 )
 
 @Serializable
 data class StreakExportSummaryDto(
-    val type: String,
-    val currentCount: Int,
-    val longestCount: Int,
-    val status: String,
+    val type: String = "UNKNOWN",
+    val currentCount: Int = 0,
+    val longestCount: Int = 0,
+    val status: String = "UNKNOWN",
 )
 
 @Serializable
 data class AchievementExportEntryDto(
-    val name: String,
-    val rarity: String,
-    val unlockedAt: String,
+    val name: String = "",
+    val rarity: String = "UNKNOWN",
+    val unlockedAt: String = "",
 )
 
 @Serializable
 data class ExerciseProgressionExportDto(
-    val exerciseName: String,
-    val initialBestWeightKg: Double,
-    val currentBestWeightKg: Double,
-    val progressionPercentage: Double,
+    val exerciseName: String = "",
+    val initialBestWeightKg: Double = 0.0,
+    val currentBestWeightKg: Double = 0.0,
+    val progressionPercentage: Double = 0.0,
 )
-

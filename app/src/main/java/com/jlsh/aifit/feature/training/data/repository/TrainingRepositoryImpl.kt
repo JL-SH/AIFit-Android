@@ -26,6 +26,18 @@ class TrainingRepositoryImpl @Inject constructor(
     private val sessionManager: SessionManager,
 ) : BaseRemoteDataSource(), TrainingRepository {
 
+    /**
+     * Plan IDs that have been locally deleted but whose server-side delete may still be
+     * in-flight. While a plan ID is present here:
+     *  - getTrainingPlans() skips it when upserting network results → prevents race-condition
+     *    reinjection during the API call window (~1–4 s).
+     *  - The guard auto-lifts the first time getTrainingPlans() receives a network response
+     *    that no longer contains the plan (server has committed the delete).
+     * @Volatile ensures the reference is always fresh across coroutines/threads.
+     */
+    @Volatile
+    private var recentlyDeletedIds = emptySet<String>()
+
     override fun getTrainingPlans(): Flow<Result<List<TrainingPlan>>> = flow {
         emit(Result.Loading)
 
@@ -50,7 +62,17 @@ class TrainingRepositoryImpl @Inject constructor(
 
         when (val remote = safeApiCall { apiService.getTrainingPlans() }) {
             is Result.Success -> {
-                val plans = remote.data.map { it.toDomain() }
+                val allNetworkPlans = remote.data.map { it.toDomain() }
+                val serverPlanIds = allNetworkPlans.map { it.id }.toSet()
+
+                // Lift the guard for any plan the server has confirmed is gone
+                // (absent from this response means delete was committed server-side).
+                recentlyDeletedIds = recentlyDeletedIds intersect serverPlanIds
+
+                // Filter out locally-deleted plans that the server might still echo back
+                // during the delete API call window (race condition).
+                val plans = allNetworkPlans.filter { it.id !in recentlyDeletedIds }
+
                 dao.upsertAll(plans.map { it.toEntity(userId) })
                 // Reconciliation: remove any cached row that the server no longer returns.
                 // This eliminates ghost plans (soft-deleted server-side but still in Room),
@@ -135,18 +157,22 @@ class TrainingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteTrainingPlan(planId: String): Result<Unit> {
+        // 1. Snapshot for rollback if the network call fails.
+        val planSnapshot = dao.getById(planId)
+
+        // 2. Register in guard set — prevents any concurrent getTrainingPlans() emission
+        //    from reinserting this plan via upsertAll while the delete API is in-flight.
+        recentlyDeletedIds = recentlyDeletedIds + planId
+
+
+        // 4. Confirm deletion with the server.
         return when (val remote = safeEmptyApiCall { apiService.deleteTrainingPlan(planId) }) {
             is Result.Success -> {
-                // TODO: remove diagnostic logs below
-                Log.d("AIFIT_DELETE", "API delete SUCCESS — planId=$planId")
-                Log.d("AIFIT_DELETE", "dao.deleteById BEFORE — planId=$planId")
-                dao.deleteById(planId)
-                Log.d("AIFIT_DELETE", "dao.deleteById AFTER — planId=$planId")
                 Result.Success(Unit)
             }
             is Result.Error -> {
-                // TODO: remove diagnostic log below
-                Log.d("AIFIT_DELETE", "API delete ERROR — $planId — ${remote.exception.message}")
+                planSnapshot?.let { dao.upsertAll(listOf(it)) }
+                recentlyDeletedIds = recentlyDeletedIds - planId
                 remote
             }
             else -> Result.Loading

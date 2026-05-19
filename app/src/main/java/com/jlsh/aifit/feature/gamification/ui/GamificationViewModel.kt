@@ -14,6 +14,7 @@ import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserStreaksUseCase
 import com.jlsh.aifit.feature.gamification.ui.state.ExportUiState
 import com.jlsh.aifit.feature.gamification.ui.state.GamificationUiEvent
 import com.jlsh.aifit.feature.gamification.ui.state.GamificationUiState
+import android.util.Log
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -56,29 +57,33 @@ class GamificationViewModel @Inject constructor(
     fun loadAll() {
         viewModelScope.launch {
             _uiState.value = GamificationUiState.Loading
+            try {
+                val streaksDeferred = async { getUserStreaksUseCase() }
+                val achievementsDeferred = async { getUserAchievementsUseCase() }
+                val definitionsDeferred = async { getAllDefinitionsUseCase() }
+                val recordsDeferred = async { getPersonalRecordsUseCase() }
 
-            val streaksDeferred = async { getUserStreaksUseCase() }
-            val achievementsDeferred = async { getUserAchievementsUseCase() }
-            val definitionsDeferred = async { getAllDefinitionsUseCase() }
-            val recordsDeferred = async { getPersonalRecordsUseCase() }
+                val streaksResult = streaksDeferred.await()
+                val achievementsResult = achievementsDeferred.await()
+                val definitionsResult = definitionsDeferred.await()
+                val recordsResult = recordsDeferred.await()
 
-            val streaksResult = streaksDeferred.await()
-            val achievementsResult = achievementsDeferred.await()
-            val definitionsResult = definitionsDeferred.await()
-            val recordsResult = recordsDeferred.await()
+                if (streaksResult is Result.Error) {
+                    _uiState.value = GamificationUiState.Error(streaksResult.exception.toMessage())
+                    return@launch
+                }
 
-            if (streaksResult is Result.Error) {
-                _uiState.value = GamificationUiState.Error(streaksResult.exception.toMessage())
-                return@launch
+                _uiState.value = GamificationUiState.Success(
+                    streaks = (streaksResult as? Result.Success)?.data.orEmpty(),
+                    achievements = (achievementsResult as? Result.Success)?.data.orEmpty(),
+                    allDefinitions = (definitionsResult as? Result.Success)?.data.orEmpty(),
+                    personalRecords = (recordsResult as? Result.Success)?.data.orEmpty(),
+                    selectedTabIndex = initialTab,
+                )
+            } catch (e: Exception) {
+                Log.e("AIFIT_DEBUG", "loadAll: unexpected exception — ${e.javaClass.simpleName}: ${e.message}", e)
+                _uiState.value = GamificationUiState.Error(e.message ?: "Error al cargar la gamificación")
             }
-
-            _uiState.value = GamificationUiState.Success(
-                streaks = (streaksResult as? Result.Success)?.data.orEmpty(),
-                achievements = (achievementsResult as? Result.Success)?.data.orEmpty(),
-                allDefinitions = (definitionsResult as? Result.Success)?.data.orEmpty(),
-                personalRecords = (recordsResult as? Result.Success)?.data.orEmpty(),
-                selectedTabIndex = initialTab,
-            )
         }
     }
 
@@ -98,12 +103,16 @@ class GamificationViewModel @Inject constructor(
     fun loadExport(period: ExportPeriod) {
         viewModelScope.launch {
             _exportState.value = ExportUiState.Loading
-            when (val result = getProgressExportUseCase(period.apiValue)) {
-                is Result.Success -> _exportState.value = ExportUiState.Success(result.data)
-                is Result.Error -> _exportState.value = ExportUiState.Error(result.exception.toMessage())
-                else -> Unit
+            try {
+                when (val result = getProgressExportUseCase(period.apiValue)) {
+                    is Result.Success -> _exportState.value = ExportUiState.Success(result.data)
+                    is Result.Error -> _exportState.value = ExportUiState.Error(result.exception.toMessage())
+                    else -> Unit
+                }
+            } catch (e: Exception) {
+                Log.e("AIFIT_DEBUG", "loadExport: unexpected exception — ${e.javaClass.simpleName}: ${e.message}", e)
+                _exportState.value = ExportUiState.Error(e.message ?: "Error al generar el informe")
             }
         }
     }
 }
-

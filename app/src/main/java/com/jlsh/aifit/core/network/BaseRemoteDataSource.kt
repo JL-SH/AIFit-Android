@@ -8,7 +8,7 @@ import retrofit2.Response
 
 @Serializable
 data class ApiResponse<T>(
-    val success: Boolean,
+    val success: Boolean = false,
     val data: T? = null,
     val message: String? = null
 )
@@ -46,4 +46,3 @@ open class BaseRemoteDataSource {
         }
     }
 }
-
