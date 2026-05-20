@@ -36,6 +36,7 @@
     <string name="nav_profile">Yo</string>
 
     <!-- Auth -->
+    <string name="app_logo_desc">Logotipo de AIFit</string>
     <string name="auth_tagline">Tu entrenador de IA personal</string>
     <string name="auth_email_label">Email</string>
     <string name="auth_password_label">Contraseña</string>

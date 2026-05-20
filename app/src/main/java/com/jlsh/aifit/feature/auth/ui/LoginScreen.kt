@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
@@ -49,9 +48,9 @@ import com.jlsh.aifit.BuildConfig
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.GoogleSignInButton
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
-import com.jlsh.aifit.core.ui.components.display.AiFitLogoSplit
 import com.jlsh.aifit.core.ui.components.inputs.AiFitPasswordField
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
+import com.jlsh.aifit.core.ui.components.layout.AuthHeroHeader
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.feature.auth.ui.state.AuthUiEvent
 import com.jlsh.aifit.feature.auth.ui.state.AuthUiState
@@ -125,19 +124,7 @@ fun LoginScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(modifier = Modifier.height(48.dp))
-
-                AiFitLogoSplit()
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = stringResource(R.string.auth_tagline),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                AuthHeroHeader(title = stringResource(R.string.auth_tagline))
 
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -288,19 +275,7 @@ private fun LoginScreenPreview() {
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(modifier = Modifier.height(48.dp))
-
-                AiFitLogoSplit()
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = stringResource(R.string.login_tagline),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                AuthHeroHeader(title = stringResource(R.string.auth_tagline))
 
                 Spacer(modifier = Modifier.height(32.dp))
 
