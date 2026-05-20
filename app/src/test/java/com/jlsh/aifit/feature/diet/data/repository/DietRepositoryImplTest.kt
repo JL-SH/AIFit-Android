@@ -173,23 +173,26 @@ class DietRepositoryImplTest {
     // ─── deleteDietPlan ────────────────────────────────────────────────────────
 
     @Test
-    fun `deletePlan elimina de cache y retorna Success`() = runTest {
+    fun `deletePlan retorna Success sin borrar Room de forma optimista`() = runTest {
         coEvery { apiService.deleteDietPlan("dp-1") } returns
             ApiResponse(success = true, data = Unit)
 
         val result = sut.deleteDietPlan("dp-1")
 
         assertTrue(result is Result.Success)
-        coVerify { dao.deleteById("dp-1") }
+        coVerify(exactly = 0) { dao.deleteById(any()) }
     }
 
     @Test
-    fun `deletePlan retorna Error cuando API falla`() = runTest {
+    fun `deletePlan restaura snapshot en Room cuando API falla`() = runTest {
+        val backup = fakeDietPlanEntity(id = "dp-1")
+        coEvery { dao.getById("dp-1") } returns backup
         coEvery { apiService.deleteDietPlan(any()) } throws IOException("fail")
 
         val result = sut.deleteDietPlan("dp-1")
 
         assertTrue(result is Result.Error)
+        coVerify { dao.upsertAll(listOf(backup)) }
         coVerify(exactly = 0) { dao.deleteById(any()) }
     }
 }

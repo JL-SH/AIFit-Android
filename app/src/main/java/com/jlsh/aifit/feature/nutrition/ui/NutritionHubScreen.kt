@@ -50,7 +50,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
@@ -86,11 +89,10 @@ import com.jlsh.aifit.feature.user.ui.toStringRes
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-private val DIET_STATUS_KEYS = listOf("all", "active", "draft", "paused", "completed")
+private val DIET_STATUS_KEYS = listOf("all", "active", "completed", "paused")
 
 private fun dietKeyToStatus(key: String): PlanStatus? = when (key) {
     "active" -> PlanStatus.ACTIVE
-    "draft" -> PlanStatus.DRAFT
     "paused" -> PlanStatus.PAUSED
     "completed" -> PlanStatus.COMPLETED
     else -> null
@@ -98,7 +100,6 @@ private fun dietKeyToStatus(key: String): PlanStatus? = when (key) {
 
 private fun dietStatusToKey(status: PlanStatus?): String = when (status) {
     PlanStatus.ACTIVE -> "active"
-    PlanStatus.DRAFT -> "draft"
     PlanStatus.PAUSED -> "paused"
     PlanStatus.COMPLETED -> "completed"
     else -> "all"
@@ -108,7 +109,6 @@ private fun dietStatusToKey(status: PlanStatus?): String = when (status) {
 private fun dietKeyDisplayName(key: String): String = stringResource(
     when (key) {
         "active" -> R.string.plan_status_active
-        "draft" -> R.string.plan_status_draft
         "paused" -> R.string.plan_status_paused
         "completed" -> R.string.plan_status_completed
         else -> R.string.plan_status_all
@@ -143,11 +143,18 @@ fun NutritionHubScreen(
     val hubState by viewModel.hubState.collectAsStateWithLifecycle()
     val selectedTabIndex by viewModel.selectedTabIndex.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val lifecycleOwner = LocalLifecycleOwner.current
     var showSheet by remember { mutableStateOf(false) }
     var mealToDeleteId by remember { mutableStateOf<String?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.onRefresh()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -639,8 +646,7 @@ private fun DietPlanTab(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        // Activate button for DRAFT or PAUSED plans
-                        if (plan.status == PlanStatus.DRAFT || plan.status == PlanStatus.PAUSED) {
+                        if (plan.status != PlanStatus.ACTIVE && plan.status != PlanStatus.COMPLETED) {
                             Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                             PrimaryButton(
                                 text = stringResource(R.string.nutrition_hub_activate_plan_btn),

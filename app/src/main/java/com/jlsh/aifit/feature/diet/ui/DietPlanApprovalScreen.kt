@@ -70,11 +70,12 @@ fun DietPlanApprovalScreen(
 
     LaunchedEffect(planId) { viewModel.loadPlanDetail(planId) }
 
-    // Collect navigation events for regeneration
+    // Collect navigation events for regeneration and approval
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is DietUiEvent.NavigateToDietApproval -> onNavigateToApproval(event.planId)
+                is DietUiEvent.NavigateBack -> onAccept()
                 else -> Unit
             }
         }
@@ -221,10 +222,8 @@ fun DietPlanApprovalScreen(
                     )
                     PrimaryButton(
                         text = stringResource(R.string.diet_approval_accept_plan),
-                        onClick = {
-                            viewModel.onApproveDietPlan(planId)
-                            onAccept()
-                        },
+                        onClick = { viewModel.onApproveDietPlan(planId) },
+                        enabled = detailUiState !is DietUiState.Loading,
                         modifier = Modifier.weight(1f),
                     )
                 }

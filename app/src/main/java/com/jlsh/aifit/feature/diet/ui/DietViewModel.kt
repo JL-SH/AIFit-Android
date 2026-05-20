@@ -13,6 +13,7 @@ import com.jlsh.aifit.feature.diet.domain.usecase.SetActiveDietPlanUseCase
 import com.jlsh.aifit.feature.diet.ui.state.DietUiEvent
 import com.jlsh.aifit.feature.diet.ui.state.DietUiState
 import com.jlsh.aifit.feature.diet.ui.state.GenerateDietUiState
+import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -62,6 +63,11 @@ class DietViewModel @Inject constructor(
     }
 
     fun onDeletePlan(planId: String) {
+        val current = _detailUiState.value
+        if (current is DietUiState.Success && current.plan.status == PlanStatus.ACTIVE) {
+            emitEvent(DietUiEvent.ShowSnackbar("No puedes eliminar un plan activo. Activa otro plan primero."))
+            return
+        }
         viewModelScope.launch {
             when (val result = deleteDietPlanUseCase(planId)) {
                 is Result.Success -> {
@@ -81,7 +87,7 @@ class DietViewModel @Inject constructor(
             _detailUiState.value = DietUiState.Loading
             when (val result = setActiveDietPlanUseCase(planId)) {
                 is Result.Success -> {
-                    // Navigation to hub is handled by the screen callback (onAccept)
+                    emitEvent(DietUiEvent.NavigateBack)
                 }
                 is Result.Error -> {
                     _detailUiState.value = DietUiState.Error(result.exception.toMessage())
@@ -110,8 +116,14 @@ class DietViewModel @Inject constructor(
         viewModelScope.launch {
             _detailUiState.value = DietUiState.Regenerating
 
-            // Delete old plan silently
-            deleteDietPlanUseCase(currentPlanId)
+            when (val deleteResult = deleteDietPlanUseCase(currentPlanId)) {
+                is Result.Error -> {
+                    _detailUiState.value = DietUiState.Error(deleteResult.exception.toMessage())
+                    emitEvent(DietUiEvent.ShowSnackbar(deleteResult.exception.toMessage()))
+                    return@launch
+                }
+                else -> Unit
+            }
 
             // Get user profile to build adaptive request
             when (val profileResult = getUserProfileUseCase().first { it !is Result.Loading }) {

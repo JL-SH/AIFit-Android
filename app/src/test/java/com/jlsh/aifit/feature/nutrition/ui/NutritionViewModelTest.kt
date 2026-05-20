@@ -4,7 +4,10 @@ import app.cash.turbine.test
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
+import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
+import com.jlsh.aifit.feature.diet.domain.usecase.SetActiveDietPlanUseCase
+import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.usecase.AnalyzeMealFromTextUseCase
@@ -43,6 +46,8 @@ class NutritionViewModelTest {
     private val analyzeMealFromTextUseCase: AnalyzeMealFromTextUseCase = mockk()
     private val deleteMealLogUseCase: DeleteMealLogUseCase = mockk()
     private val updateNutritionTargetUseCase: UpdateNutritionTargetUseCase = mockk()
+    private val setActiveDietPlanUseCase: SetActiveDietPlanUseCase = mockk()
+    private val deleteDietPlanUseCase: DeleteDietPlanUseCase = mockk()
 
     private fun createViewModel(
         logFlow: Flow<Result<NutritionLog>> = flowOf(Result.Success(fakeNutritionLog())),
@@ -60,6 +65,8 @@ class NutritionViewModelTest {
             analyzeMealFromTextUseCase,
             deleteMealLogUseCase,
             updateNutritionTargetUseCase,
+            setActiveDietPlanUseCase,
+            deleteDietPlanUseCase,
         )
     }
 
@@ -360,6 +367,60 @@ class NutritionViewModelTest {
 
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    // ─── Diet plan management ──────────────────────────────────────────────────
+
+    @Test
+    fun `onDeleteDietPlan no llama use case cuando plan es ACTIVE`() = runTest {
+        val activePlan = fakeDietPlan(id = "dp-active", status = PlanStatus.ACTIVE)
+        val vm = createViewModel(dietPlansFlow = flowOf(Result.Success(listOf(activePlan))))
+        advanceUntilIdle()
+
+        vm.events.test {
+            vm.onDeleteDietPlan("dp-active")
+            advanceUntilIdle()
+
+            val event = awaitItem()
+            assertTrue(event is NutritionUiEvent.ShowSnackbar)
+            coVerify(exactly = 0) { deleteDietPlanUseCase(any()) }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onDeleteDietPlan elimina optimistamente y emite snackbar en éxito`() = runTest {
+        val draftPlan = fakeDietPlan(id = "dp-draft", status = PlanStatus.DRAFT)
+        val vm = createViewModel(dietPlansFlow = flowOf(Result.Success(listOf(draftPlan))))
+        advanceUntilIdle()
+        coEvery { deleteDietPlanUseCase("dp-draft") } returns Result.Success(Unit)
+
+        vm.events.test {
+            vm.onDeleteDietPlan("dp-draft")
+            advanceUntilIdle()
+
+            val event = awaitItem()
+            assertTrue(event is NutritionUiEvent.ShowSnackbar)
+            assertEquals("Plan eliminado", (event as NutritionUiEvent.ShowSnackbar).message)
+            coVerify { deleteDietPlanUseCase("dp-draft") }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onActivateDietPlan actualiza optimistamente planes antes de confirmar red`() = runTest {
+        val active = fakeDietPlan(id = "dp-1", status = PlanStatus.ACTIVE)
+        val draft = fakeDietPlan(id = "dp-2", status = PlanStatus.DRAFT)
+        val vm = createViewModel(dietPlansFlow = flowOf(Result.Success(listOf(active, draft))))
+        advanceUntilIdle()
+        coEvery { setActiveDietPlanUseCase("dp-2") } coAnswers { awaitCancellation() }
+
+        vm.onActivateDietPlan("dp-2")
+
+        val state = vm.hubState.value as NutritionHubUiState.Success
+        assertEquals(PlanStatus.PAUSED, state.dietPlans.first { it.id == "dp-1" }.status)
+        assertEquals(PlanStatus.ACTIVE, state.dietPlans.first { it.id == "dp-2" }.status)
+        assertTrue(state.isActivatingPlan)
     }
 
     // ─── Navigation events ─────────────────────────────────────────────────────

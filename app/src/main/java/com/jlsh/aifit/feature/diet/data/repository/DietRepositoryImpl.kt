@@ -23,6 +23,13 @@ class DietRepositoryImpl @Inject constructor(
     private val sessionManager: SessionManager,
 ) : BaseRemoteDataSource(), DietRepository {
 
+    /**
+     * Plan IDs locally deleted while the server delete may still be in-flight.
+     * Prevents race-condition reinjection during concurrent [getDietPlans] emissions.
+     */
+    @Volatile
+    private var recentlyDeletedIds = emptySet<String>()
+
     override fun getDietPlans(): Flow<Result<List<DietPlan>>> = flow {
         emit(Result.Loading)
 
@@ -39,9 +46,14 @@ class DietRepositoryImpl @Inject constructor(
 
         when (val remote = safeApiCall { apiService.getDietPlans() }) {
             is Result.Success -> {
-                val plans = remote.data.map { it.toDomain() }
+                val allNetworkPlans = remote.data.map { it.toDomain() }
+                val serverPlanIds = allNetworkPlans.map { it.id }.toSet()
+
+                recentlyDeletedIds = recentlyDeletedIds intersect serverPlanIds
+
+                val plans = allNetworkPlans.filter { it.id !in recentlyDeletedIds }
+
                 dao.upsertAll(plans.map { it.toEntity(userId) })
-                // Reconciliation: remove any cached row that the server no longer returns.
                 val networkIds = plans.map { it.id }
                 if (networkIds.isEmpty()) {
                     dao.deleteAllByUserId(userId)
@@ -59,7 +71,14 @@ class DietRepositoryImpl @Inject constructor(
 
     override suspend fun getDietPlanDetail(planId: String): Result<DietPlan> {
         return when (val remote = safeApiCall { apiService.getDietPlanById(planId) }) {
-            is Result.Success -> Result.Success(remote.data.toDomain())
+            is Result.Success -> {
+                val plan = remote.data.toDomain()
+                val userId = sessionManager.getUserId()
+                if (userId != null) {
+                    dao.upsertAll(listOf(plan.toEntity(userId)))
+                }
+                Result.Success(plan)
+            }
             is Result.Error -> remote
             else -> Result.Loading
         }
@@ -101,19 +120,15 @@ class DietRepositoryImpl @Inject constructor(
         val userId = sessionManager.getUserId()
             ?: return Result.Error(AppException.UnknownException("No active session"))
 
-        // Read the plan that is currently ACTIVE (and is not the one being activated)
-        // so we can demote it to PAUSED in the local cache after the API call succeeds.
         val previouslyActivePlan = dao.getAllByUserId(userId)
             .firstOrNull { it.status.equals("ACTIVE", ignoreCase = true) && it.id != planId }
 
         return when (val remote = safeApiCall { apiService.activateDietPlan(planId) }) {
             is Result.Success -> {
                 val activatedPlan = remote.data.toDomain()
-                // (1) Demote the old active plan to PAUSED before upserting the new one
                 if (previouslyActivePlan != null) {
                     dao.upsertAll(listOf(previouslyActivePlan.copy(status = "PAUSED")))
                 }
-                // (2) Upsert the newly activated plan
                 dao.upsertAll(listOf(activatedPlan.toEntity(userId)))
                 Result.Success(activatedPlan)
             }
@@ -142,28 +157,35 @@ class DietRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteDietPlan(planId: String): Result<Unit> {
-        // Delete from Room FIRST so any concurrent getDietPlans() cache emission
-        // does not re-surface the deleted item. Rollback if the API call fails.
-        val backup = dao.getById(planId)
-        dao.deleteById(planId)
+        val planSnapshot = dao.getById(planId)
+
+        recentlyDeletedIds = recentlyDeletedIds + planId
+
+        return when (val remote = safeUnitApiCall { apiService.deleteDietPlan(planId) }) {
+            is Result.Success -> Result.Success(Unit)
+            is Result.Error -> {
+                planSnapshot?.let { dao.upsertAll(listOf(it)) }
+                recentlyDeletedIds = recentlyDeletedIds - planId
+                remote
+            }
+            else -> Result.Loading
+        }
+    }
+
+    private suspend fun safeUnitApiCall(apiCall: suspend () -> com.jlsh.aifit.core.network.ApiResponse<Unit>): Result<Unit> {
         return try {
-            val response = apiService.deleteDietPlan(planId)
+            val response = apiCall()
             if (response.success) {
                 Result.Success(Unit)
             } else {
-                // Rollback local delete
-                if (backup != null) dao.upsertAll(listOf(backup))
                 Result.Error(
                     AppException.UnknownException(
-                        response.message ?: "Error al eliminar plan"
+                        response.message ?: "Unknown server error"
                     )
                 )
             }
         } catch (e: Exception) {
-            // Rollback local delete
-            if (backup != null) dao.upsertAll(listOf(backup))
             Result.Error(com.jlsh.aifit.core.network.NetworkErrorMapper.map(e))
         }
     }
 }
-

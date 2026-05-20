@@ -6,9 +6,11 @@ import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GenerateDietPlanUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
+import com.jlsh.aifit.feature.diet.domain.usecase.SetActiveDietPlanUseCase
 import com.jlsh.aifit.feature.diet.ui.state.DietUiEvent
 import com.jlsh.aifit.feature.diet.ui.state.DietUiState
 import com.jlsh.aifit.feature.diet.ui.state.GenerateDietUiState
+import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import com.jlsh.aifit.testutil.*
 import io.mockk.*
@@ -29,6 +31,7 @@ class DietViewModelTest {
     private val getDietPlanDetailUseCase: GetDietPlanDetailUseCase = mockk()
     private val generateDietPlanUseCase: GenerateDietPlanUseCase = mockk()
     private val deleteDietPlanUseCase: DeleteDietPlanUseCase = mockk()
+    private val setActiveDietPlanUseCase: SetActiveDietPlanUseCase = mockk()
     private val getUserProfileUseCase: GetUserProfileUseCase = mockk()
 
     private lateinit var viewModel: DietViewModel
@@ -39,6 +42,7 @@ class DietViewModelTest {
             getDietPlanDetailUseCase,
             generateDietPlanUseCase,
             deleteDietPlanUseCase,
+            setActiveDietPlanUseCase,
             getUserProfileUseCase,
         )
     }
@@ -97,6 +101,24 @@ class DietViewModelTest {
 
             assertTrue(events.any { it is DietUiEvent.ShowSnackbar })
             assertTrue(events.any { it is DietUiEvent.NavigateBack })
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onDeletePlan no llama use case cuando plan es ACTIVE`() = runTest {
+        val activePlan = fakeDietPlan(id = "dp-active", status = PlanStatus.ACTIVE)
+        coEvery { getDietPlanDetailUseCase("dp-active") } returns Result.Success(activePlan)
+        viewModel.loadPlanDetail("dp-active")
+        advanceUntilIdle()
+
+        viewModel.events.test {
+            viewModel.onDeletePlan("dp-active")
+            advanceUntilIdle()
+
+            val event = awaitItem()
+            assertTrue(event is DietUiEvent.ShowSnackbar)
+            coVerify(exactly = 0) { deleteDietPlanUseCase(any()) }
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -229,10 +251,28 @@ class DietViewModelTest {
     // ─── onApproveDietPlan ─────────────────────────────────────────────────────
 
     @Test
-    fun `onApproveDietPlan resetea detailUiState a Loading`() {
-        viewModel.onApproveDietPlan()
+    fun `onApproveDietPlan emite NavigateBack en éxito`() = runTest {
+        coEvery { setActiveDietPlanUseCase("dp-1") } returns Result.Success(fakeDietPlan(id = "dp-1"))
 
-        assertTrue(viewModel.detailUiState.value is DietUiState.Loading)
+        viewModel.events.test {
+            viewModel.onApproveDietPlan("dp-1")
+            advanceUntilIdle()
+
+            val event = awaitItem()
+            assertTrue(event is DietUiEvent.NavigateBack)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onApproveDietPlan emite Error y ShowSnackbar cuando falla`() = runTest {
+        coEvery { setActiveDietPlanUseCase(any()) } returns
+            Result.Error(AppException.ServerException)
+
+        viewModel.onApproveDietPlan("dp-1")
+        advanceUntilIdle()
+
+        assertTrue(viewModel.detailUiState.value is DietUiState.Error)
     }
 }
 

@@ -22,14 +22,18 @@ import com.jlsh.aifit.feature.nutrition.ui.state.NutritionTargetUiState
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionUiEvent
 import com.jlsh.aifit.feature.nutrition.ui.state.TodayState
 import com.jlsh.aifit.feature.nutrition.ui.state.TrackMealUiState
+import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -37,6 +41,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class NutritionViewModel @Inject constructor(
     private val getNutritionLogUseCase: GetNutritionLogUseCase,
@@ -66,9 +71,17 @@ class NutritionViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     private var hubLoadJob: Job? = null
+    private var isDeletingPlan = false
+
+    private val _refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     init {
         loadHubData()
+        viewModelScope.launch {
+            _refreshTrigger
+                .debounce(500L)
+                .collect { loadHubData() }
+        }
     }
 
     // ===== HUB =====
@@ -139,7 +152,8 @@ class NutritionViewModel @Inject constructor(
     }
 
     fun onRefresh() {
-        loadHubData()
+        if (isDeletingPlan) return
+        _refreshTrigger.tryEmit(Unit)
     }
 
     fun onDeleteMeal(mealId: String) {
@@ -277,12 +291,8 @@ class NutritionViewModel @Inject constructor(
         // Optimistic UI update
         val optimisticPlans = previousPlans.map { plan ->
             when {
-                plan.id == planId -> plan.copy(
-                    status = com.jlsh.aifit.feature.training.domain.model.PlanStatus.ACTIVE
-                )
-                plan.status == com.jlsh.aifit.feature.training.domain.model.PlanStatus.ACTIVE -> plan.copy(
-                    status = com.jlsh.aifit.feature.training.domain.model.PlanStatus.PAUSED
-                )
+                plan.id == planId -> plan.copy(status = PlanStatus.ACTIVE)
+                plan.status == PlanStatus.ACTIVE -> plan.copy(status = PlanStatus.PAUSED)
                 else -> plan
             }
         }
@@ -310,12 +320,12 @@ class NutritionViewModel @Inject constructor(
         val plan = current.dietPlans.firstOrNull { it.id == planId } ?: return
 
         // Do not allow deleting an ACTIVE plan
-        if (plan.status == com.jlsh.aifit.feature.training.domain.model.PlanStatus.ACTIVE) {
+        if (plan.status == PlanStatus.ACTIVE) {
             emitEvent(NutritionUiEvent.ShowSnackbar("No puedes eliminar un plan activo. Activa otro plan primero."))
             return
         }
 
-        // Cancel hubLoadJob to prevent stale reactive re-emission racing with the delete
+        isDeletingPlan = true
         hubLoadJob?.cancel()
         _hubState.value = current.copy(dietPlans = current.dietPlans.filter { it.id != planId })
 
@@ -324,11 +334,12 @@ class NutritionViewModel @Inject constructor(
                 is Result.Success -> {
                     emitEvent(NutritionUiEvent.ShowSnackbar("Plan eliminado"))
                     loadHubData()
+                    isDeletingPlan = false
                 }
                 is Result.Error -> {
-                    // Roll back
                     _hubState.value = current
                     loadHubData()
+                    isDeletingPlan = false
                     emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
                 else -> Unit

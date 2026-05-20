@@ -50,6 +50,8 @@ class NutritionScreenshotTest {
             analyzeMealFromTextUseCase = mockk(),
             deleteMealLogUseCase = mockk(),
             updateNutritionTargetUseCase = mockk(),
+            setActiveDietPlanUseCase = mockk(),
+            deleteDietPlanUseCase = mockk(),
         )
     }
 
@@ -93,6 +95,8 @@ class NutritionScreenshotTest {
             analyzeMealFromTextUseCase = mockk(),
             deleteMealLogUseCase = mockk(),
             updateNutritionTargetUseCase = mockk(),
+            setActiveDietPlanUseCase = mockk(),
+            deleteDietPlanUseCase = mockk(),
         )
 
         composeTestRule.setContent {

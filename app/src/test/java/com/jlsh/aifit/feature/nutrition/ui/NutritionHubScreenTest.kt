@@ -59,6 +59,8 @@ class NutritionHubScreenTest {
             analyzeMealFromTextUseCase = mockk(),
             deleteMealLogUseCase = mockk(),
             updateNutritionTargetUseCase = mockk(),
+            setActiveDietPlanUseCase = mockk(),
+            deleteDietPlanUseCase = mockk(),
         )
     }
 
