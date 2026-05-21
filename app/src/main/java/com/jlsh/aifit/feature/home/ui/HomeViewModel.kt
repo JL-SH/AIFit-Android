@@ -235,6 +235,7 @@ class HomeViewModel @Inject constructor(
             }
 
             kotlinx.coroutines.coroutineScope {
+                launch { refreshUserProfileOnResume() }
                 launch { syncTrainingPlansOnResume() }
                 launch { syncDietPlansOnResume() }
             }
@@ -511,10 +512,24 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadProfile(): UserProfile? =
-        getUserProfileUseCase()
-            .first { it !is Result.Loading }
-            .let { r -> if (r is Result.Success) r.data else null }
+    private suspend fun loadProfile(): UserProfile? {
+        var profile: UserProfile? = null
+        getUserProfileUseCase().collect { result ->
+            if (result is Result.Success) profile = result.data
+        }
+        return profile
+    }
+
+    /** Refreshes name and avatar after returning from profile (e.g. photo upload). */
+    private suspend fun refreshUserProfileOnResume() {
+        val profile = loadProfile() ?: return
+        Log.d("AIFIT_HOME", "refreshUserProfileOnResume avatarUrl=${profile.profilePictureUrl}")
+        _uiState.update { cur ->
+            if (cur is HomeUiState.Success) {
+                cur.copy(userName = profile.name, avatarUrl = profile.profilePictureUrl)
+            } else cur
+        }
+    }
 
 
     private suspend fun loadPlanDetail(planId: String): TrainingPlan? =

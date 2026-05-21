@@ -22,12 +22,40 @@ import java.time.LocalDate
 
 object UserMapper {
 
-    fun UserProfileResponseDto.toDomain(): UserProfile = UserProfile(
+    /**
+     * Picks the best avatar URL among several candidates.
+     * Uploaded photos (Cloudinary) always beat the default Google avatar from OAuth.
+     */
+    fun pickBestProfilePictureUrl(vararg candidates: String?): String? {
+        val valid = candidates.mapNotNull { it?.trim()?.takeIf { s -> s.isNotEmpty() } }
+        return valid.firstOrNull { isUploadedProfilePhoto(it) }
+            ?: valid.firstOrNull { !isDefaultGoogleAvatar(it) }
+            ?: valid.firstOrNull()
+    }
+
+    fun isUploadedProfilePhoto(url: String): Boolean =
+        url.contains("cloudinary.com", ignoreCase = true)
+
+    fun isDefaultGoogleAvatar(url: String): Boolean =
+        url.contains("googleusercontent.com", ignoreCase = true) ||
+            url.contains("ggpht.com", ignoreCase = true)
+
+    fun resolveProfilePictureUrl(
+        profilePictureUrl: String?,
+        profileImageUrl: String?,
+        fallback: String? = null,
+    ): String? = pickBestProfilePictureUrl(profilePictureUrl, profileImageUrl, fallback)
+
+    fun UserProfileResponseDto.toDomain(fallbackPictureUrl: String? = null): UserProfile = UserProfile(
         id = id,
         name = name,
         email = email,
         authProvider = authProvider,
-        profilePictureUrl = profilePictureUrl,
+        profilePictureUrl = pickBestProfilePictureUrl(
+            profilePictureUrl,
+            profileImageUrl,
+            fallbackPictureUrl,
+        ),
         birthDate = birthDate?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
         gender = Gender.fromString(gender),
         height = height,

@@ -150,6 +150,47 @@ class UserMapperTest {
         assertNull(domain.birthDate)
     }
 
+    @Test
+    fun `toDomain usa profileImageUrl cuando profilePictureUrl es null`() {
+        val cloudinaryUrl = "https://res.cloudinary.com/demo/aifit/profile-photos/user.jpg"
+        val dto = fakeUserProfileResponseDto(
+            profilePictureUrl = null,
+            profileImageUrl = cloudinaryUrl,
+        )
+
+        val domain = dto.toDomain()
+
+        assertEquals(cloudinaryUrl, domain.profilePictureUrl)
+    }
+
+    @Test
+    fun `pickBestProfilePictureUrl prefiere Cloudinary sobre avatar de Google`() {
+        val cloudinary = "https://res.cloudinary.com/demo/photo.jpg"
+        val google = "https://lh3.googleusercontent.com/a/abc=s96-c"
+
+        val best = com.jlsh.aifit.feature.user.data.mapper.UserMapper.pickBestProfilePictureUrl(
+            google,
+            cloudinary,
+            null,
+        )
+
+        assertEquals(cloudinary, best)
+    }
+
+    @Test
+    fun `toDomain prefiere profilePictureUrl sobre profileImageUrl`() {
+        val legacyUrl = "https://example.com/legacy.jpg"
+        val cloudinaryUrl = "https://res.cloudinary.com/demo/new.jpg"
+        val dto = fakeUserProfileResponseDto(
+            profilePictureUrl = legacyUrl,
+            profileImageUrl = cloudinaryUrl,
+        )
+
+        val domain = dto.toDomain()
+
+        assertEquals(legacyUrl, domain.profilePictureUrl)
+    }
+
     // ─── UserProfile.toEntity() ───────────────────────────────────────────────
 
     @Test

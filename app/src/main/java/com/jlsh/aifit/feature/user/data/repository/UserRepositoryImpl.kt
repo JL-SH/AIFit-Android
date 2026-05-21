@@ -9,7 +9,9 @@ import com.jlsh.aifit.core.datastore.AuthDataStore
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.feature.user.data.api.UserApiService
 import com.jlsh.aifit.feature.user.data.dto.OnboardingFeedbackRequestDto
+import com.jlsh.aifit.feature.user.data.dto.UserProfileResponseDto
 import com.jlsh.aifit.feature.user.data.local.UserProfileDao
+import com.jlsh.aifit.feature.user.data.mapper.UserMapper.pickBestProfilePictureUrl
 import com.jlsh.aifit.feature.user.data.mapper.UserMapper.toDomain
 import com.jlsh.aifit.feature.user.data.mapper.UserMapper.toDto
 import com.jlsh.aifit.feature.user.data.mapper.UserMapper.toEntity
@@ -36,22 +38,42 @@ class UserRepositoryImpl @Inject constructor(
     override fun getProfile(): Flow<Result<UserProfile>> = flow {
         emit(Result.Loading)
 
-        // BUG-008 fix: use the real userId from AuthDataStore for cache lookup,
-        // because entities are stored with the actual UUID, not "me".
         val userId = authDataStore.getUserId()
         val cached = if (userId != null) dao.getById(userId) else null
+        val persistedAvatarUrl = authDataStore.getAvatarUrl(userId)
+        val cachedPictureUrl = cached?.profilePictureUrl?.takeIf { it.isNotBlank() }
+
         if (cached != null) {
-            Log.d("AIFIT_DEBUG", "getProfile: cache HIT for userId=$userId")
-            emit(Result.Success(cached.toDomain()))
+            val cachedProfile = cached.toDomain().copy(
+                profilePictureUrl = pickBestProfilePictureUrl(
+                    cached.profilePictureUrl,
+                    cachedPictureUrl,
+                    persistedAvatarUrl,
+                ),
+            )
+            Log.d(
+                "AIFIT_DEBUG",
+                "getProfile: cache HIT for userId=$userId avatarUrl=${cachedProfile.profilePictureUrl}",
+            )
+            emit(Result.Success(cachedProfile))
         } else {
             Log.d("AIFIT_DEBUG", "getProfile: cache MISS (userId=$userId)")
         }
 
         when (val remote = safeApiCall { apiService.getProfile() }) {
             is Result.Success -> {
-                val profile = remote.data.toDomain()
+                val profile = mergeProfileFromApi(
+                    dto = remote.data,
+                    cachedPictureUrl = cachedPictureUrl,
+                    persistedAvatarUrl = persistedAvatarUrl,
+                )
+                persistAvatarUrlIfBetter(userId, profile.profilePictureUrl)
                 dao.upsert(profile.toEntity())
-                Log.d("AIFIT_DEBUG", "getProfile: API success, profile=${profile.id}")
+                Log.d(
+                    "AIFIT_DEBUG",
+                    "getProfile: API success, profile=${profile.id} avatarUrl=${profile.profilePictureUrl}" +
+                        " dtoPicture=${remote.data.profilePictureUrl} dtoImage=${remote.data.profileImageUrl}",
+                )
                 emit(Result.Success(profile))
             }
             is Result.Error -> {
@@ -65,8 +87,13 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun createProfile(request: CreateUserProfileRequest): Result<UserProfile> {
         return when (val result = safeApiCall { apiService.createProfile(request.toDto()) }) {
             is Result.Success -> {
-                val profile = result.data.toDomain()
-                dao.upsert(profile.toEntity())
+                val userId = authDataStore.getUserId()
+                val profile = mergeProfileFromApi(
+                    dto = result.data,
+                    cachedPictureUrl = userId?.let { dao.getById(it)?.profilePictureUrl },
+                    persistedAvatarUrl = authDataStore.getAvatarUrl(userId),
+                )
+                persistProfile(profile)
                 Result.Success(profile)
             }
             is Result.Error -> result
@@ -77,8 +104,12 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun updateProfile(request: UpdateUserProfileRequest): Result<UserProfile> {
         return when (val result = safeApiCall { apiService.updateProfile(request.toDto()) }) {
             is Result.Success -> {
-                val profile = result.data.toDomain()
-                dao.upsert(profile.toEntity())
+                val profile = mergeProfileFromApi(
+                    dto = result.data,
+                    cachedPictureUrl = authDataStore.getUserId()?.let { dao.getById(it)?.profilePictureUrl },
+                    persistedAvatarUrl = authDataStore.getAvatarUrl(authDataStore.getUserId()),
+                )
+                persistProfile(profile)
                 Result.Success(profile)
             }
             is Result.Error -> result
@@ -110,67 +141,64 @@ class UserRepositoryImpl @Inject constructor(
 
         return when (val uploadResult = safeApiCall { apiService.uploadProfilePhoto(part) }) {
             is Result.Success -> {
-                // The upload endpoint returns a partial payload whose URL field name is
-                // unknown — it varies across backend implementations and cannot be
-                // reliably mapped without risking silent data loss (ignoreUnknownKeys
-                // discards any field not present in the DTO).
-                //
-                // Strategy: after a successful upload, immediately call getProfile() to
-                // obtain the authoritative full profile (including the new URL) and
-                // persist it to Room. This is resilient to any field-name mismatch.
                 Log.d("AIFIT_DEBUG", "uploadProfilePhoto: upload OK — refreshing full profile")
+                val uploadUrl = uploadResult.data.profilePictureUrl
+                    ?: uploadResult.data.profileImageUrl
                 when (val profileResult = safeApiCall { apiService.getProfile() }) {
                     is Result.Success -> {
-                        val freshProfile = profileResult.data.toDomain()
-                        // Guard against server-side timing race: if the backend hasn't
-                        // committed the Cloudinary URL to its DB yet, getProfile() may
-                        // return profilePictureUrl=null even though the upload succeeded.
-                        // Prefer the URL from the upload DTO over null so Room and the
-                        // ViewModel never lose a URL they just successfully uploaded.
-                        val uploadUrl = uploadResult.data.profilePictureUrl
-                            ?: uploadResult.data.profileImageUrl
-                        val profile = if (freshProfile.profilePictureUrl == null && uploadUrl != null) {
-                            Log.d("AIFIT_DEBUG", "uploadProfilePhoto: GET returned null URL, patching with upload DTO url=$uploadUrl")
-                            freshProfile.copy(profilePictureUrl = uploadUrl)
-                        } else {
-                            freshProfile
+                        val userId = authDataStore.getUserId()
+                        val cached = if (userId != null) dao.getById(userId) else null
+                        val profile = mergeProfileFromApi(
+                            dto = profileResult.data,
+                            cachedPictureUrl = cached?.profilePictureUrl,
+                            persistedAvatarUrl = authDataStore.getAvatarUrl(userId),
+                            uploadUrl = uploadUrl,
+                        )
+                        if (profile.profilePictureUrl == null && uploadUrl != null) {
+                            Log.d(
+                                "AIFIT_DEBUG",
+                                "uploadProfilePhoto: GET returned null URL, patching with upload DTO url=$uploadUrl",
+                            )
                         }
-                        dao.upsert(profile.toEntity())
+                        persistProfile(profile)
                         Log.d("AIFIT_DEBUG", "uploadProfilePhoto: profile refreshed, url=${profile.profilePictureUrl}")
                         Result.Success(profile)
                     }
                     is Result.Error -> {
-                        // getProfile failed (e.g. offline) — try the partial URL from
-                        // the upload response as a best-effort fallback.
-                        val fallbackUrl = uploadResult.data.profilePictureUrl
-                            ?: uploadResult.data.profileImageUrl
-                        Log.w("AIFIT_DEBUG", "uploadProfilePhoto: getProfile failed, fallback url=$fallbackUrl, cause=${profileResult.exception.message}")
+                        val fallbackUrl = uploadUrl
+                        Log.w(
+                            "AIFIT_DEBUG",
+                            "uploadProfilePhoto: getProfile failed, fallback url=$fallbackUrl, cause=${profileResult.exception.message}",
+                        )
                         if (fallbackUrl != null) {
                             val userId = authDataStore.getUserId()
                             if (userId != null) {
                                 val cached = dao.getById(userId)
                                 if (cached != null) {
-                                    val updated = cached.copy(profilePictureUrl = fallbackUrl)
-                                    dao.upsert(updated)
-                                    Result.Success(updated.toDomain())
-                                } else {
-                                    Result.Success(
-                                        UserProfile(
-                                            id = userId,
-                                            name = "",
-                                            email = "",
-                                            authProvider = "",
-                                            profilePictureUrl = fallbackUrl,
-                                        )
+                                    val profile = cached.toDomain().copy(
+                                        profilePictureUrl = pickBestProfilePictureUrl(
+                                            fallbackUrl,
+                                            cached.profilePictureUrl,
+                                            authDataStore.getAvatarUrl(userId),
+                                        ),
                                     )
+                                    persistProfile(profile)
+                                    Result.Success(profile)
+                                } else {
+                                    val profile = UserProfile(
+                                        id = userId,
+                                        name = authDataStore.getName().orEmpty(),
+                                        email = authDataStore.getEmail().orEmpty(),
+                                        authProvider = "",
+                                        profilePictureUrl = fallbackUrl,
+                                    )
+                                    persistProfile(profile)
+                                    Result.Success(profile)
                                 }
                             } else {
                                 profileResult
                             }
                         } else {
-                            // Neither the follow-up profile fetch nor the upload payload
-                            // yielded a URL — surface the getProfile error so the user
-                            // knows the photo may not have applied.
                             profileResult
                         }
                     }
@@ -183,5 +211,38 @@ class UserRepositoryImpl @Inject constructor(
             }
             is Result.Loading -> Result.Loading
         }
+    }
+
+    private fun mergeProfileFromApi(
+        dto: UserProfileResponseDto,
+        cachedPictureUrl: String?,
+        persistedAvatarUrl: String?,
+        uploadUrl: String? = null,
+    ): UserProfile {
+        val base = dto.toDomain()
+        val bestUrl = pickBestProfilePictureUrl(
+            uploadUrl,
+            persistedAvatarUrl,
+            cachedPictureUrl,
+            dto.profileImageUrl,
+            dto.profilePictureUrl,
+        )
+        return base.copy(profilePictureUrl = bestUrl)
+    }
+
+    private suspend fun persistProfile(profile: UserProfile) {
+        dao.upsert(profile.toEntity())
+        persistAvatarUrlIfBetter(authDataStore.getUserId() ?: profile.id, profile.profilePictureUrl)
+    }
+
+    /**
+     * Stores the avatar locally only when it is an improvement (e.g. keep Cloudinary over Google OAuth default).
+     */
+    private fun persistAvatarUrlIfBetter(userId: String?, url: String?) {
+        if (userId == null || url.isNullOrBlank()) return
+        val existing = authDataStore.getAvatarUrl(userId)
+        val best = pickBestProfilePictureUrl(url, existing) ?: return
+        if (existing == best) return
+        authDataStore.saveAvatarUrl(userId, best)
     }
 }

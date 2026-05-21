@@ -47,6 +47,10 @@ class SessionManager @Inject constructor(
         profileComplete: Boolean,
     ) {
         invalidating.set(false)
+        val previousUserId = authDataStore.getUserId()
+        if (previousUserId != null && previousUserId != userId) {
+            authDataStore.clearAvatarForUser(previousUserId)
+        }
         authDataStore.saveToken(token)
         authDataStore.saveUserInfo(userId, email, name)
         authDataStore.saveProfileComplete(profileComplete)

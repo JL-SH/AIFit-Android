@@ -19,6 +19,8 @@ class AuthDataStore @Inject constructor(
         private const val KEY_EMAIL = "email"
         private const val KEY_NAME = "name"
         private const val KEY_PROFILE_COMPLETE = "profile_complete"
+        private const val KEY_AVATAR_URL = "avatar_url"
+        private const val KEY_AVATAR_USER_ID = "avatar_user_id"
     }
 
     private val prefs: SharedPreferences = createPrefs()
@@ -70,9 +72,42 @@ class AuthDataStore @Inject constructor(
 
     fun isProfileComplete(): Boolean = prefs.getBoolean(KEY_PROFILE_COMPLETE, false)
 
+    /** Last known avatar URL for [userId]; survives logout so re-login can show it if GET lags. */
+    fun saveAvatarUrl(userId: String, url: String) {
+        if (url.isBlank()) return
+        prefs.edit()
+            .putString(KEY_AVATAR_URL, url)
+            .putString(KEY_AVATAR_USER_ID, userId)
+            .apply()
+    }
+
+    fun getAvatarUrl(userId: String?): String? {
+        if (userId == null || prefs.getString(KEY_AVATAR_USER_ID, null) != userId) return null
+        return prefs.getString(KEY_AVATAR_URL, null)?.takeIf { it.isNotBlank() }
+    }
+
     fun hasToken(): Boolean = getToken() != null
 
     fun clear() {
+        // Preserve avatar URL keyed by userId so the same user sees their photo immediately
+        // after re-login while GET /users/me is in flight (cleared when a different user signs in).
+        val avatarUrl = prefs.getString(KEY_AVATAR_URL, null)
+        val avatarUserId = prefs.getString(KEY_AVATAR_USER_ID, null)
         prefs.edit().clear().apply()
+        if (!avatarUrl.isNullOrBlank() && !avatarUserId.isNullOrBlank()) {
+            prefs.edit()
+                .putString(KEY_AVATAR_URL, avatarUrl)
+                .putString(KEY_AVATAR_USER_ID, avatarUserId)
+                .apply()
+        }
+    }
+
+    fun clearAvatarForUser(userId: String) {
+        if (prefs.getString(KEY_AVATAR_USER_ID, null) == userId) {
+            prefs.edit()
+                .remove(KEY_AVATAR_URL)
+                .remove(KEY_AVATAR_USER_ID)
+                .apply()
+        }
     }
 }

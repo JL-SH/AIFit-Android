@@ -9,6 +9,8 @@ data class UserProfileResponseDto(
     val email: String,
     val authProvider: String,
     val profilePictureUrl: String? = null,
+    /** Canonical Cloudinary URL from backend; coalesced into profilePictureUrl in UserMapper. */
+    val profileImageUrl: String? = null,
     val birthDate: String? = null,
     val gender: String? = null,
     val height: Float? = null,

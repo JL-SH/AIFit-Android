@@ -848,6 +848,24 @@ class HomeViewModelTest {
         assertEquals("María", state.userName)
         assertEquals("https://img.url/avatar.png", state.avatarUrl)
     }
+
+    @Test
+    fun `loadAll usa ultimo Success del perfil cuando cache no tiene URL`() = runTest {
+        val cloudinaryUrl = "https://res.cloudinary.com/demo/photo.jpg"
+        val cachedProfile = fakeUserProfile(profilePictureUrl = null)
+        val apiProfile = fakeUserProfile(profilePictureUrl = cloudinaryUrl)
+        val vm = createViewModel(
+            profileFlow = flowOf(
+                Result.Loading,
+                Result.Success(cachedProfile),
+                Result.Success(apiProfile),
+            ),
+        )
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as HomeUiState.Success
+        assertEquals(cloudinaryUrl, state.avatarUrl)
+    }
 }
 
 

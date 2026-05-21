@@ -253,8 +253,9 @@ class UserViewModel @Inject constructor(
                 getUserProfileUseCase().collect { result ->
                     when (result) {
                         is Result.Success -> {
-                            populateForm(result.data)
-                            _uiState.value = UserUiState.Success(result.data)
+                            val merged = mergeProfilePicture(result.data)
+                            populateForm(merged)
+                            _uiState.value = UserUiState.Success(merged)
                         }
                         is Result.Error -> {
                             _uiState.value = UserUiState.Error(result.exception.toMessage())
@@ -267,6 +268,17 @@ class UserViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = UserUiState.Error(e.message ?: "Error al cargar el perfil")
             }
+        }
+    }
+
+    private fun mergeProfilePicture(incoming: UserProfile): UserProfile {
+        val existingUrl = _profilePictureUrl.value
+            ?: (uiState.value as? UserUiState.Success)?.profile?.profilePictureUrl
+        val mergedUrl = incoming.profilePictureUrl?.takeIf { it.isNotBlank() } ?: existingUrl
+        return if (mergedUrl != incoming.profilePictureUrl) {
+            incoming.copy(profilePictureUrl = mergedUrl)
+        } else {
+            incoming
         }
     }
 
@@ -430,7 +442,8 @@ class UserViewModel @Inject constructor(
             try {
                 when (val result = uploadProfilePhotoUseCase(uri)) {
                     is Result.Success -> {
-                        val newUrl = result.data.profilePictureUrl
+                        val merged = mergeProfilePicture(result.data)
+                        val newUrl = merged.profilePictureUrl
                         _profilePictureUrl.value = newUrl
                         // Only clear the pending local URI once we have a server URL to
                         // display; if the follow-up getProfile() lost a race with the
@@ -442,7 +455,7 @@ class UserViewModel @Inject constructor(
                         // (e.g. ProfileHubScreen) also sees the new URL.
                         val current = _uiState.value
                         if (current is UserUiState.Success) {
-                            _uiState.value = UserUiState.Success(result.data)
+                            _uiState.value = UserUiState.Success(merged)
                         }
                     }
                     is Result.Error -> {
