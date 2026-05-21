@@ -95,6 +95,7 @@ object TrainingMapper {
         notes = notes,
         order = order,
         targetRpe = targetRpe,
+        requiresExternalWeight = requiresExternalWeight,
     )
 
     fun TrainingPlan.toEntity(userId: String): TrainingPlanEntity = TrainingPlanEntity(

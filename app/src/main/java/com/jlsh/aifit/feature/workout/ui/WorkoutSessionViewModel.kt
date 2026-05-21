@@ -22,6 +22,7 @@ import com.jlsh.aifit.feature.workout.domain.usecase.FinalizeWorkoutSessionUseCa
 import com.jlsh.aifit.feature.workout.domain.usecase.GetPreviousSessionForDayUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.GetWorkoutHistoryUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.LogWorkoutSessionUseCase
+import com.jlsh.aifit.feature.workout.domain.util.areAllExercisesComplete
 import com.jlsh.aifit.feature.workout.domain.util.calculateAccumulatedVolume
 import com.jlsh.aifit.feature.workout.domain.util.calculateAutoregulatedWeight
 import com.jlsh.aifit.feature.workout.domain.util.calculateOneRepMax
@@ -130,6 +131,7 @@ class WorkoutSessionViewModel @Inject constructor(
                     targetRpe = exercise.targetRpe,
                     restSeconds = exercise.restSeconds,
                     completedSets = 0,
+                    requiresExternalWeight = exercise.requiresExternalWeight,
                 )
             }
 
@@ -224,7 +226,7 @@ class WorkoutSessionViewModel @Inject constructor(
         // Backend log is created on the first registerSet() call (if backendLogId is still null).
     }
 
-    fun registerSet(exerciseId: String, weightKg: Double, reps: Int, rpe: Int? = null) {
+    fun registerSet(exerciseId: String, weightKg: Double?, reps: Int, rpe: Int? = null) {
         val currentState = _uiState.value
         if (currentState !is WorkoutSessionUiState.SessionActive) return
 
@@ -235,10 +237,16 @@ class WorkoutSessionViewModel @Inject constructor(
         // Capture BEFORE any async work so the first-set branch is stable.
         val isFirstSet = backendLogId == null && !backendLogCreationInFlight
 
-        val estimatedOneRepMax = calculateOneRepMax(weightKg, reps)
+        val effectiveWeight = if (exercise.requiresExternalWeight) weightKg else null
 
-        val autoregulatedWeight = exercise.targetRpe?.let { targetRpe ->
-            rpe?.let { calculateAutoregulatedWeight(weightKg, it, targetRpe) }
+        val estimatedOneRepMax = effectiveWeight?.let { calculateOneRepMax(it, reps) }
+
+        val autoregulatedWeight = if (effectiveWeight != null) {
+            exercise.targetRpe?.let { targetRpe ->
+                rpe?.let { calculateAutoregulatedWeight(effectiveWeight, it, targetRpe) }
+            }
+        } else {
+            null
         }
 
         val setLog = WorkoutSetLog(
@@ -247,7 +255,7 @@ class WorkoutSessionViewModel @Inject constructor(
             exerciseName = exercise.name,
             exerciseSetNumber = exercise.completedSets + 1,
             repsCompleted = reps,
-            weightUsed = weightKg,
+            weightUsed = effectiveWeight,
             durationSeconds = null,
             completed = true,
             estimatedOneRepMax = estimatedOneRepMax,
@@ -363,6 +371,12 @@ class WorkoutSessionViewModel @Inject constructor(
             }
             // If backendLogId is still null (creation in flight), the set is registered
             // locally in the UI. finalizeSession() will upload all accumulated sets.
+        }
+
+        if (areAllExercisesComplete(updatedExercises)) {
+            viewModelScope.launch {
+                _events.send(WorkoutSessionUiEvent.RequestFinalizeSession)
+            }
         }
     }
 

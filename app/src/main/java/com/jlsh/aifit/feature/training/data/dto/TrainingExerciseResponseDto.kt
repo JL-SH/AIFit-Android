@@ -16,5 +16,6 @@ data class TrainingExerciseResponseDto(
     val notes: String? = null,
     val order: Int,
     val targetRpe: Int? = null,
+    val requiresExternalWeight: Boolean = true,
 )
 

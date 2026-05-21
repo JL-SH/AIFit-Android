@@ -9,5 +9,7 @@ sealed interface WorkoutSessionUiEvent {
     data class ShowSnackbar(val message: String) : WorkoutSessionUiEvent
 
     data object SessionAlreadyLocked : WorkoutSessionUiEvent
+
+    data object RequestFinalizeSession : WorkoutSessionUiEvent
 }
 

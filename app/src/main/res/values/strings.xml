@@ -529,6 +529,7 @@
     <string name="workout_session_weight_error">Peso &gt; 0</string>
     <string name="workout_session_reps_error">Reps &gt; 0</string>
     <string name="workout_session_rpe_error">RPE entre 1 y 10</string>
+    <string name="workout_session_reps_only">%1$d reps</string>
 
     <!-- ══════════════════════════════════════════════════════════
          WORKOUT HISTORY

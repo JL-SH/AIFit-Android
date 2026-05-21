@@ -2,6 +2,7 @@ package com.jlsh.aifit.feature.workout.domain.util
 
 import com.jlsh.aifit.feature.training.domain.model.MuscleGroup
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutSetLog
+import com.jlsh.aifit.feature.workout.ui.state.SessionExercise
 import kotlin.math.abs
 
 fun calculateOneRepMax(weight: Double, reps: Int): Double {
@@ -23,6 +24,9 @@ fun calculateAutoregulatedWeight(
 
 fun isExerciseComplete(completedSets: Int, targetSets: Int): Boolean =
     completedSets >= targetSets
+
+fun areAllExercisesComplete(exercises: List<SessionExercise>): Boolean =
+    exercises.isNotEmpty() && exercises.all { it.isComplete }
 
 /**
  * Index of the first exercise with remaining sets, or the last exercise if all are complete.

@@ -115,6 +115,11 @@ fun WorkoutSessionScreen(
                     snackbarHostState.showSnackbar(event.message)
                 }
                 is WorkoutSessionUiEvent.SessionAlreadyLocked -> onNavigateBack()
+                is WorkoutSessionUiEvent.RequestFinalizeSession -> {
+                    if (!showFinalizeSheet) {
+                        showFinalizeSheet = true
+                    }
+                }
             }
         }
     }
@@ -207,7 +212,7 @@ fun WorkoutSessionScreen(
 @Composable
 private fun WorkoutSessionContent(
     sessionData: WorkoutSessionData,
-    onRegisterSet: (exerciseId: String, weightKg: Double, reps: Int, rpe: Int?) -> Unit,
+    onRegisterSet: (exerciseId: String, weightKg: Double?, reps: Int, rpe: Int?) -> Unit,
     onFinalize: () -> Unit,
     onAbandon: () -> Unit,
     restTimerSeconds: Int? = null,
@@ -358,7 +363,7 @@ private fun ExercisePage(
     registeredSets: List<WorkoutSetLog>,
     autoregulationSuggestion: Double?,
     volumeByMuscleGroup: Map<MuscleGroup, Double>,
-    onRegisterSet: (weightKg: Double, reps: Int, rpe: Int?) -> Unit,
+    onRegisterSet: (weightKg: Double?, reps: Int, rpe: Int?) -> Unit,
     onRequestSubstitution: () -> Unit,
 ) {
     LazyColumn(
@@ -428,7 +433,10 @@ private fun ExercisePage(
             }
         } else {
             item(key = "form") {
-                SetRegistrationForm(onRegisterSet = onRegisterSet)
+                SetRegistrationForm(
+                    requiresExternalWeight = exercise.requiresExternalWeight,
+                    onRegisterSet = onRegisterSet,
+                )
             }
         }
 
@@ -523,7 +531,7 @@ private fun GhostSetRow(set: WorkoutSetLog) {
             color = mutedColor,
         )
         Text(
-            text = "${set.weightUsed ?: "-"} kg × ${set.repsCompleted ?: "-"} reps",
+            text = formatSetSummary(set),
             style = MaterialTheme.typography.bodySmall,
             color = mutedColor,
         )
@@ -549,7 +557,7 @@ private fun RegisteredSetRow(set: WorkoutSetLog) {
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = "${set.weightUsed ?: "-"} kg × ${set.repsCompleted ?: "-"} reps",
+            text = formatSetSummary(set),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -558,11 +566,23 @@ private fun RegisteredSetRow(set: WorkoutSetLog) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
-        Text(
-            text = "1RM: ${"%.1f".format(set.estimatedOneRepMax ?: 0.0)}",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        if (set.weightUsed != null && set.estimatedOneRepMax != null) {
+            Text(
+                text = stringResource(R.string.workout_session_1rm, "%.1f".format(set.estimatedOneRepMax)),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun formatSetSummary(set: WorkoutSetLog): String {
+    val reps = set.repsCompleted ?: return "-"
+    return if (set.weightUsed != null) {
+        "${set.weightUsed} kg × $reps reps"
+    } else {
+        stringResource(R.string.workout_session_reps_only, reps)
     }
 }
 
@@ -601,7 +621,8 @@ private fun AutoregulationChip(suggestion: Double) {
 
 @Composable
 private fun SetRegistrationForm(
-    onRegisterSet: (weightKg: Double, reps: Int, rpe: Int?) -> Unit,
+    requiresExternalWeight: Boolean,
+    onRegisterSet: (weightKg: Double?, reps: Int, rpe: Int?) -> Unit,
 ) {
     var weight by remember { mutableStateOf("") }
     var reps by remember { mutableStateOf("") }
@@ -622,17 +643,19 @@ private fun SetRegistrationForm(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
-            AiFitNumberField(
-                value = weight,
-                onValueChange = {
-                    weight = it
-                    weightError = null
-                },
-                label = stringResource(R.string.workout_session_weight_label),
-                suffix = "kg",
-                error = weightError,
-                modifier = Modifier.weight(1f),
-            )
+            if (requiresExternalWeight) {
+                AiFitNumberField(
+                    value = weight,
+                    onValueChange = {
+                        weight = it
+                        weightError = null
+                    },
+                    label = stringResource(R.string.workout_session_weight_label),
+                    suffix = "kg",
+                    error = weightError,
+                    modifier = Modifier.weight(1f),
+                )
+            }
             AiFitNumberField(
                 value = reps,
                 onValueChange = {
@@ -666,7 +689,7 @@ private fun SetRegistrationForm(
 
                 var hasError = false
 
-                if (weightVal == null || weightVal <= 0) {
+                if (requiresExternalWeight && (weightVal == null || weightVal <= 0)) {
                     weightError = weightErrorStr
                     hasError = true
                 }
@@ -680,7 +703,7 @@ private fun SetRegistrationForm(
                 }
 
                 if (!hasError) {
-                    onRegisterSet(weightVal!!, repsVal!!, rpeVal)
+                    onRegisterSet(if (requiresExternalWeight) weightVal else null, repsVal!!, rpeVal)
                     weight = ""
                     reps = ""
                     rpe = ""

@@ -11,6 +11,7 @@ data class SessionExercise(
     val targetRpe: Int?,
     val restSeconds: Int,
     val completedSets: Int,
+    val requiresExternalWeight: Boolean = true,
 ) {
     val isComplete: Boolean get() = completedSets >= targetSets
 }
