@@ -38,30 +38,20 @@ This repository is part of the author's **Final Degree Project (TFG)**: it demon
   &nbsp;&nbsp;
   <img src="docs/img/screenshot-profile.png" width="220" alt="Profile" />
 </p>
-
-Drop your PNG or WebP files into **`docs/img/`** using exactly the filenames below. The README will render them automatically once the files exist.
-
-| File | Screen to capture | What must be visible |
-|------|-------------------|----------------------|
-| `docs/img/screenshot-home.png` | **Home** (main tab, logged-in user) | Today's workout card, quick actions, and bottom navigation |
-| `docs/img/screenshot-training-session.png` | **Active workout session** | Exercise name, set counter, rest timer, and primary action buttons |
-| `docs/img/screenshot-nutrition.png` | **Nutrition hub — Today** | Daily macro rings or bars, meal list, and calorie target |
-| `docs/img/screenshot-ai-coach.png` | **AI Coach chat** | At least one user message and one assistant reply in an open session |
-| `docs/img/screenshot-progress.png` | **Progress dashboard** | Charts or summary cards (adherence, volume, or weekly overview) |
-| `docs/img/screenshot-profile.png` | **User profile** | Profile photo, stats, and gamification section (streaks or achievements) |
-
-**Optional extras** (not shown in the grid above; add more rows to the README if you use them):
-
-| File | Screen to capture | What must be visible |
-|------|-------------------|----------------------|
-| `docs/img/screenshot-login.png` | **Login** | Email/password fields and Google Sign-In button |
-| `docs/img/screenshot-onboarding.png` | **Onboarding** | Profile questionnaire or plan-generation loading state |
-| `docs/img/screenshot-food-vision.png` | **Food photo analysis** | Camera or preview with detected food and estimated macros |
-| `docs/img/screenshot-training-plan.png` | **Training plan detail** | Weekly schedule and at least one training day expanded |
-| `docs/img/screenshot-diet-plan.png` | **Diet plan detail** | Daily meals with macro breakdown |
-| `docs/img/screenshot-metabolic.png` | **Metabolic analysis** | Status insight and recommended caloric adjustment |
-
-> **Tips:** use a light theme, hide the status bar clock if possible, and capture at **1080×2400** or similar (9:16). Prefer PNG for crisp UI text.
+<p align="center">
+  <img src="docs/img/screenshot-login.png" width="220" alt="AI Coach" />
+  &nbsp;&nbsp;
+  <img src="img/screenshot-onboarding.png" width="220" alt="Progress" />
+  &nbsp;&nbsp;
+  <img src="screenshot-food-vision.png" width="220" alt="Profile" />
+</p>
+<p align="center">
+  <img src="docs/img/screenshot-training-plan.png" width="220" alt="AI Coach" />
+  &nbsp;&nbsp;
+  <img src="docs/img/screenshot-diet-plan.png" width="220" alt="Progress" />
+  &nbsp;&nbsp;
+  <img src="docs/img/screenshot-gamification.png" width="220" alt="Profile" />
+</p>
 
 ---
 
@@ -75,8 +65,6 @@ Extended project documentation lives under **`docs/`**. Each guide is published 
 | [`docs/FEATURES.md`](docs/FEATURES.md) | [`docs/FEATURES.es.md`](docs/FEATURES.es.md) | Feature modules, use cases, and API integration per domain |
 | [`docs/SETUP.md`](docs/SETUP.md) | [`docs/SETUP.es.md`](docs/SETUP.es.md) | Environment setup, backend URL, Google Sign-In, and build variants |
 | [`docs/UI_COMPONENTS.md`](docs/UI_COMPONENTS.md) | [`docs/UI_COMPONENTS.es.md`](docs/UI_COMPONENTS.es.md) | Shared Compose components, theme tokens, and design conventions |
-
-Until those files are published, this README and the source code remain the primary references.
 
 ---
 

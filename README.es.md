@@ -39,30 +39,20 @@ Este repositorio forma parte del **Trabajo de Fin de Grado (TFG)** del autor: de
   &nbsp;&nbsp;
   <img src="docs/img/screenshot-profile.png" width="220" alt="Perfil" />
 </p>
-
-Coloca tus archivos PNG o WebP en **`docs/img/`** con exactamente los nombres indicados abajo. El README las mostrará automáticamente en cuanto existan.
-
-| Archivo | Pantalla a capturar | Qué debe verse |
-|---------|---------------------|----------------|
-| `docs/img/screenshot-home.png` | **Inicio** (pestaña principal, usuario logueado) | Tarjeta del entreno de hoy, accesos rápidos y barra de navegación inferior |
-| `docs/img/screenshot-training-session.png` | **Sesión de entrenamiento activa** | Nombre del ejercicio, contador de series, temporizador de descanso y botones principales |
-| `docs/img/screenshot-nutrition.png` | **Hub de nutrición — Hoy** | Anillos o barras de macros del día, listado de comidas y objetivo calórico |
-| `docs/img/screenshot-ai-coach.png` | **Chat del AI Coach** | Al menos un mensaje del usuario y una respuesta del asistente en una sesión abierta |
-| `docs/img/screenshot-progress.png` | **Panel de progreso** | Gráficas o tarjetas resumen (adherencia, volumen o vista semanal) |
-| `docs/img/screenshot-profile.png` | **Perfil de usuario** | Foto de perfil, estadísticas y sección de gamificación (rachas o logros) |
-
-**Capturas opcionales** (no aparecen en la cuadrícula superior; puedes añadir filas al README si las usas):
-
-| Archivo | Pantalla a capturar | Qué debe verse |
-|---------|---------------------|----------------|
-| `docs/img/screenshot-login.png` | **Inicio de sesión** | Campos email/contraseña y botón de Google Sign-In |
-| `docs/img/screenshot-onboarding.png` | **Onboarding** | Cuestionario de perfil o pantalla de generación de planes |
-| `docs/img/screenshot-food-vision.png` | **Análisis de comida por foto** | Cámara o vista previa con alimento detectado y macros estimados |
-| `docs/img/screenshot-training-plan.png` | **Detalle del plan de entrenamiento** | Calendario semanal y al menos un día expandido |
-| `docs/img/screenshot-diet-plan.png` | **Detalle del plan de dieta** | Comidas del día con desglose de macros |
-| `docs/img/screenshot-metabolic.png` | **Análisis metabólico** | Insight de estado y recomendación de ajuste calórico |
-
-> **Consejos:** usa tema claro, oculta la hora de la barra de estado si puedes y captura a **1080×2400** o similar (9:16). Prefiere PNG para texto nítido.
+<p align="center">
+  <img src="docs/img/screenshot-login.png" width="220" alt="AI Coach" />
+  &nbsp;&nbsp;
+  <img src="img/screenshot-onboarding.png" width="220" alt="Progress" />
+  &nbsp;&nbsp;
+  <img src="screenshot-food-vision.png" width="220" alt="Profile" />
+</p>
+<p align="center">
+  <img src="docs/img/screenshot-training-plan.png" width="220" alt="AI Coach" />
+  &nbsp;&nbsp;
+  <img src="docs/img/screenshot-diet-plan.png" width="220" alt="Progress" />
+  &nbsp;&nbsp;
+  <img src="docs/img/screenshot-metabolic.png" width="220" alt="Profile" />
+</p>
 
 ---
 
@@ -76,8 +66,6 @@ La documentación ampliada del proyecto está en **`docs/`**. Cada guía se publ
 | [`docs/FEATURES.md`](docs/FEATURES.md) | [`docs/FEATURES.es.md`](docs/FEATURES.es.md) | Módulos por feature, casos de uso e integración con la API |
 | [`docs/SETUP.md`](docs/SETUP.md) | [`docs/SETUP.es.md`](docs/SETUP.es.md) | Entorno, URL del backend, Google Sign-In y variantes de build |
 | [`docs/UI_COMPONENTS.md`](docs/UI_COMPONENTS.md) | [`docs/UI_COMPONENTS.es.md`](docs/UI_COMPONENTS.es.md) | Componentes Compose compartidos, tema y convenciones de diseño |
-
-Hasta que esos ficheros estén publicados, este README y el código fuente son las referencias principales.
 
 ---
 
