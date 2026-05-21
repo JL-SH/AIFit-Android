@@ -76,6 +76,8 @@ import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.gamification.domain.model.AchievementDefinition
+import com.jlsh.aifit.feature.gamification.ui.localizedDescription
+import com.jlsh.aifit.feature.gamification.ui.localizedName
 import com.jlsh.aifit.feature.gamification.domain.model.Streak
 import com.jlsh.aifit.feature.gamification.domain.model.StreakStatus
 import com.jlsh.aifit.feature.gamification.domain.model.StreakType
@@ -337,11 +339,7 @@ private fun GreetingHeader(
 ) {
     val currentLocale = LocalConfiguration.current.locales[0]
     val dateFormatter = remember(currentLocale) {
-        if (currentLocale.language == "es") {
-            DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", currentLocale)
-        } else {
-            DateTimeFormatter.ofPattern("EEEE, MMMM d", currentLocale)
-        }
+        DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", currentLocale)
     }
     Row(
         modifier = Modifier
@@ -761,7 +759,10 @@ private fun MotivationCard(
                     )
                     Column {
                         Text(
-                            text = stringResource(R.string.home_last_achievement, lastAchievement.achievement.name),
+                            text = stringResource(
+                                R.string.home_last_achievement,
+                                lastAchievement.achievement.localizedName(),
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
@@ -792,12 +793,12 @@ private fun MotivationCard(
                     )
                     Column {
                         Text(
-                            text = stringResource(R.string.home_next_achievement, nextAchievement.name),
+                            text = stringResource(R.string.home_next_achievement, nextAchievement.localizedName()),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = nextAchievement.description,
+                            text = nextAchievement.localizedDescription(),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 2,

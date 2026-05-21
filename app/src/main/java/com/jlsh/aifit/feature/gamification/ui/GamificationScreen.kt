@@ -342,14 +342,21 @@ private fun AchievementCard(
                 verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
             ) {
                 Text(
-                    text = definition.name,
+                    text = definition.localizedName(),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                 )
 
                 Text(
-                    text = if (isUnlocked) definition.description else stringResource(R.string.gamification_achievement_how_to, definition.description),
+                    text = if (isUnlocked) {
+                        definition.localizedDescription()
+                    } else {
+                        stringResource(
+                            R.string.gamification_achievement_how_to,
+                            definition.localizedDescription(),
+                        )
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 3,

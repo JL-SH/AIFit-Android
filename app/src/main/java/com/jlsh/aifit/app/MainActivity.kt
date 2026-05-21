@@ -1,7 +1,9 @@
 package com.jlsh.aifit.app
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import com.jlsh.aifit.core.util.wrapWithAppLocale
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
@@ -17,6 +19,10 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var userPreferencesDataStore: UserPreferencesDataStore
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(newBase.wrapWithAppLocale())
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

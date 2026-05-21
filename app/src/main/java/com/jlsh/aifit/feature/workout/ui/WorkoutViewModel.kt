@@ -177,7 +177,13 @@ class WorkoutViewModel @Inject constructor(
                     val gamResult = log.gamificationResult
                     if (gamResult != null && gamResult.unlockedAchievements.isNotEmpty()) {
                         val first = gamResult.unlockedAchievements.first()
-                        emitEvent(WorkoutUiEvent.ShowAchievementDialog(first.name, first.description))
+                        emitEvent(
+                            WorkoutUiEvent.ShowAchievementDialog(
+                                code = first.code,
+                                fallbackName = first.name,
+                                fallbackDescription = first.description,
+                            ),
+                        )
                     }
                     emitEvent(WorkoutUiEvent.SessionSaved(gamResult))
                     emitEvent(WorkoutUiEvent.NavigateToDetail(log.id))

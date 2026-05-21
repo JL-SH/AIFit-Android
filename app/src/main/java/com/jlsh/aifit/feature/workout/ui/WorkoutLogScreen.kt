@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +50,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.feedback.AchievementUnlockedDialog
+import com.jlsh.aifit.feature.gamification.ui.localizedAchievementDescription
+import com.jlsh.aifit.feature.gamification.ui.localizedAchievementName
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
@@ -70,6 +73,7 @@ fun WorkoutLogScreen(
 ) {
     val loggingState by viewModel.loggingState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
     var showDiscardDialog by remember { mutableStateOf(false) }
     var achievementDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
     var pendingLogId by remember { mutableStateOf<String?>(null) }
@@ -89,7 +93,13 @@ fun WorkoutLogScreen(
                     }
                 }
                 is WorkoutUiEvent.ShowAchievementDialog -> {
-                    achievementDialog = event.name to event.description
+                    achievementDialog = context.localizedAchievementName(
+                        event.code,
+                        event.fallbackName,
+                    ) to context.localizedAchievementDescription(
+                        event.code,
+                        event.fallbackDescription,
+                    )
                 }
                 is WorkoutUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
                 is WorkoutUiEvent.DiscardConfirmation -> showDiscardDialog = true

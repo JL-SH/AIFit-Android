@@ -1173,6 +1173,60 @@
     <!-- === PERFIL === -->
     <string name="user_profile_change_photo">Cambiar foto de perfil</string>
 
+    <!-- === LOGROS (por código) === -->
+    <string name="achievement_first_workout_name">Primer entrenamiento</string>
+    <string name="achievement_first_workout_desc">Completa tu primera sesión de entrenamiento.</string>
+    <string name="achievement_streak_7_training_name">Racha de 7 días (entreno)</string>
+    <string name="achievement_streak_7_training_desc">Entrena 7 días consecutivos.</string>
+    <string name="achievement_streak_30_training_name">Racha de 30 días (entreno)</string>
+    <string name="achievement_streak_30_training_desc">Entrena 30 días consecutivos.</string>
+    <string name="achievement_streak_7_nutrition_name">Racha de 7 días (nutrición)</string>
+    <string name="achievement_streak_7_nutrition_desc">Registra tu nutrición 7 días seguidos.</string>
+    <string name="achievement_streak_30_nutrition_name">Racha de 30 días (nutrición)</string>
+    <string name="achievement_streak_30_nutrition_desc">Registra tu nutrición 30 días seguidos.</string>
+    <string name="achievement_bench_60kg_name">Press banca 60 kg</string>
+    <string name="achievement_bench_60kg_desc">Levanta 60 kg o más en press de banca.</string>
+    <string name="achievement_bench_100kg_name">Press banca 100 kg</string>
+    <string name="achievement_bench_100kg_desc">Levanta 100 kg o más en press de banca.</string>
+    <string name="achievement_squat_100kg_name">Sentadilla 100 kg</string>
+    <string name="achievement_squat_100kg_desc">Levanta 100 kg o más en sentadilla.</string>
+    <string name="achievement_deadlift_140kg_name">Peso muerto 140 kg</string>
+    <string name="achievement_deadlift_140kg_desc">Levanta 140 kg o más en peso muerto.</string>
+    <string name="achievement_first_pr_name">Primer récord personal</string>
+    <string name="achievement_first_pr_desc">Supera tu marca personal en cualquier ejercicio.</string>
+    <string name="achievement_consecutive_4_weeks_name">4 semanas seguidas</string>
+    <string name="achievement_consecutive_4_weeks_desc">Entrena al menos una vez por semana durante 4 semanas consecutivas.</string>
+    <string name="achievement_consecutive_12_weeks_name">12 semanas seguidas</string>
+    <string name="achievement_consecutive_12_weeks_desc">Entrena al menos una vez por semana durante 12 semanas consecutivas.</string>
+    <string name="achievement_weight_goal_reached_name">Objetivo de peso alcanzado</string>
+    <string name="achievement_weight_goal_reached_desc">Alcanza el peso objetivo de tu perfil.</string>
+    <string name="achievement_knowledge_intermediate_name">Conocimiento intermedio</string>
+    <string name="achievement_knowledge_intermediate_desc">Alcanza el nivel de conocimiento intermedio.</string>
+    <string name="achievement_knowledge_advanced_name">Conocimiento avanzado</string>
+    <string name="achievement_knowledge_advanced_desc">Alcanza el nivel de conocimiento avanzado.</string>
+    <string name="achievement_first_training_plan_name">Plan de entrenamiento creado</string>
+    <string name="achievement_first_training_plan_desc">Genera tu primer plan de entrenamiento personalizado.</string>
+    <string name="achievement_first_diet_plan_name">Primer plan de dieta</string>
+    <string name="achievement_first_diet_plan_desc">Genera tu primer plan de dieta personalizado.</string>
+    <string name="achievement_streak_7_name">Semana de fuego</string>
+    <string name="achievement_streak_7_desc">Entrena 7 días consecutivos sin saltarte ninguno.</string>
+    <string name="achievement_streak_30_name">Mes de hierro</string>
+    <string name="achievement_streak_30_desc">Entrena 30 días consecutivos.</string>
+    <string name="achievement_nutrition_7_name">Constancia nutricional</string>
+    <string name="achievement_nutrition_7_desc">Sigue tu plan de nutrición 7 días seguidos.</string>
+    <string name="achievement_knowledge_first_name">Alumno aventajado</string>
+    <string name="achievement_knowledge_first_desc">Consulta tu primer análisis de IA sobre tu progreso.</string>
+    <string name="achievement_first_plan_complete_name">Plan completado</string>
+    <string name="achievement_first_plan_complete_desc">Finaliza un plan de entrenamiento de principio a fin.</string>
+    <string name="achievement_pr_5_name">Coleccionista de récords</string>
+    <string name="achievement_pr_5_desc">Establece récords personales en 5 ejercicios diferentes.</string>
+    <string name="achievement_weight_goal_progress_name">En el buen camino</string>
+    <string name="achievement_weight_goal_progress_desc">Registra progreso de peso constante durante 4 semanas.</string>
+    <string name="achievement_streak_100_name">Centenario de acero</string>
+    <string name="achievement_streak_100_desc">Entrena 100 días consecutivos.</string>
+    <string name="achievement_strength_master_name">Maestro de la fuerza</string>
+    <string name="achievement_strength_master_desc">Alcanza nivel avanzado de fuerza en 3 ejercicios compuestos.</string>
+
     <!-- === RAREZA DE LOGROS === -->
     <string name="achievement_rarity_common">Común</string>
     <string name="achievement_rarity_uncommon">Poco común</string>
