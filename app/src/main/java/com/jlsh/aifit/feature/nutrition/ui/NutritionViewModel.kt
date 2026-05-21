@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
+import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.SetActiveDietPlanUseCase
@@ -34,9 +35,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
@@ -70,26 +71,25 @@ class NutritionViewModel @Inject constructor(
     private val _events = Channel<NutritionUiEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
-    private var hubLoadJob: Job? = null
+    private var fetchDietPlansJob: Job? = null
     private var isDeletingPlan = false
 
     private val _refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     init {
-        loadHubData()
+        fetchHubData()
         viewModelScope.launch {
             _refreshTrigger
                 .debounce(500L)
-                .collect { loadHubData() }
+                .collect { fetchHubData() }
         }
     }
 
     // ===== HUB =====
 
-    private fun loadHubData() {
-        hubLoadJob?.cancel()
-        hubLoadJob = viewModelScope.launch {
-            // Step 1: Load log and target as one-shot values in parallel
+    private fun fetchHubData() {
+        fetchDietPlansJob?.cancel()
+        fetchDietPlansJob = viewModelScope.launch {
             val logDeferred = async {
                 getNutritionLogUseCase(LocalDate.now())
                     .first { it !is Result.Loading }
@@ -100,40 +100,50 @@ class NutritionViewModel @Inject constructor(
                     .first { it !is Result.Loading }
                     .let { r -> if (r is Result.Success) r.data else null }
             }
-            // Get the first non-Loading diet plans emission in parallel
-            val dietPlansDeferred = async {
-                getDietPlansUseCase()
-                    .first { it !is Result.Loading }
-                    .let { r -> if (r is Result.Success) r.data else emptyList() }
-            }
 
             val log = logDeferred.await()
             val target = targetDeferred.await()
-            val initialDietPlans = dietPlansDeferred.await()
 
-            // AIFIT_DEBUG — BUG-A: confirmar qué devuelven las llamadas
-            Log.d("AIFIT_DEBUG", "[NutritionVM] loadHubData: log=${if (log != null) "id=${log.id} cal=${log.totalCalories} meals=${log.meals.size}" else "NULL"}")
-            Log.d("AIFIT_DEBUG", "[NutritionVM] loadHubData: target=${if (target != null) "id=${target.id} cal=${target.calorieTarget} setBy=${target.setBy}" else "NULL"}")
-            Log.d("AIFIT_DEBUG", "[NutritionVM] loadHubData: dietPlans=${initialDietPlans.size}")
+            if (_hubState.value is NutritionHubUiState.Loading) {
+                _hubState.value = NutritionHubUiState.Loading
+            }
 
-            // Step 2: Emit initial Success state with all data available
-            _hubState.value = NutritionHubUiState.Success(
-                todayState = TodayState(nutritionLog = log, target = target),
-                dietPlans = initialDietPlans,
-                selectedTabIndex = _selectedTabIndex.value,
-            )
-
-            // Step 3: Reactively update dietPlans from subsequent emissions
-            launch {
-                getDietPlansUseCase().drop(1).collect { result ->
-                    if (result !is Result.Success) return@collect
-                    val current = _hubState.value
-                    if (current is NutritionHubUiState.Success) {
-                        _hubState.value = current.copy(dietPlans = result.data)
+            getDietPlansUseCase().collect { result ->
+                when (result) {
+                    is Result.Success -> {
+                        val plans = sortDietPlans(result.data)
+                        Log.d("AIFIT_DEBUG", "[NutritionVM] fetchHubData: dietPlans=${plans.size}")
+                        val current = _hubState.value
+                        val filter = (current as? NutritionHubUiState.Success)?.selectedDietPlanFilter
+                        _hubState.value = NutritionHubUiState.Success(
+                            todayState = TodayState(nutritionLog = log, target = target),
+                            dietPlans = plans,
+                            selectedTabIndex = _selectedTabIndex.value,
+                            selectedDietPlanFilter = filter,
+                            isActivatingPlan = (current as? NutritionHubUiState.Success)?.isActivatingPlan == true,
+                        )
+                    }
+                    is Result.Error -> {
+                        if (_hubState.value is NutritionHubUiState.Loading) {
+                            _hubState.value = NutritionHubUiState.Error(result.exception.toMessage())
+                        }
+                    }
+                    is Result.Loading -> {
+                        if (_hubState.value !is NutritionHubUiState.Success) {
+                            _hubState.value = NutritionHubUiState.Loading
+                        }
                     }
                 }
             }
         }
+    }
+
+    private fun sortDietPlans(plans: List<DietPlan>): List<DietPlan> =
+        plans.sortedByDescending { it.createdAt }
+
+    fun hasActiveDietPlan(): Boolean {
+        val state = _hubState.value as? NutritionHubUiState.Success ?: return false
+        return state.dietPlans.any { it.status == PlanStatus.ACTIVE }
     }
 
     fun onTabSelected(index: Int) {
@@ -144,7 +154,7 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
-    fun onDietPlanFilterChanged(status: com.jlsh.aifit.feature.training.domain.model.PlanStatus?) {
+    fun onDietPlanFilterChanged(status: PlanStatus?) {
         val current = _hubState.value
         if (current is NutritionHubUiState.Success) {
             _hubState.value = current.copy(selectedDietPlanFilter = status)
@@ -162,7 +172,7 @@ class NutritionViewModel @Inject constructor(
                 is Result.Success -> {
                     emitEvent(NutritionUiEvent.MealDeleted)
                     emitEvent(NutritionUiEvent.ShowSnackbar("Comida eliminada"))
-                    loadHubData()
+                    fetchHubData()
                 }
                 is Result.Error -> emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
                 else -> Unit
@@ -256,10 +266,7 @@ class NutritionViewModel @Inject constructor(
 
             when (val result = updateNutritionTargetUseCase(request)) {
                 is Result.Success -> {
-                    loadHubData()
-                    // NavigateBack MUST be emitted before ShowSnackbar because
-                    // showSnackbar() is a suspending call that blocks the UI
-                    // collect-loop, preventing subsequent events from being processed.
+                    fetchHubData()
                     emitEvent(NutritionUiEvent.NavigateBack)
                     emitEvent(NutritionUiEvent.ShowSnackbar("Objetivos actualizados"))
                 }
@@ -286,28 +293,32 @@ class NutritionViewModel @Inject constructor(
 
     fun onActivateDietPlan(planId: String) {
         val current = _hubState.value as? NutritionHubUiState.Success ?: return
-        val previousPlans = current.dietPlans
+        val previousState = current
 
-        // Optimistic UI update
-        val optimisticPlans = previousPlans.map { plan ->
-            when {
-                plan.id == planId -> plan.copy(status = PlanStatus.ACTIVE)
-                plan.status == PlanStatus.ACTIVE -> plan.copy(status = PlanStatus.PAUSED)
-                else -> plan
-            }
-        }
+        val optimisticPlans = sortDietPlans(
+            current.dietPlans.map { plan ->
+                when {
+                    plan.id == planId -> plan.copy(status = PlanStatus.ACTIVE)
+                    plan.status == PlanStatus.ACTIVE -> plan.copy(status = PlanStatus.PAUSED)
+                    else -> plan
+                }
+            },
+        )
         _hubState.value = current.copy(dietPlans = optimisticPlans, isActivatingPlan = true)
 
         viewModelScope.launch {
             when (val result = setActiveDietPlanUseCase(planId)) {
                 is Result.Success -> {
-                    loadHubData()
-                    _hubState.value = (_hubState.value as? NutritionHubUiState.Success)
-                        ?.copy(isActivatingPlan = false) ?: _hubState.value
+                    fetchHubData()
+                    fetchDietPlansJob?.join()
+                    _hubState.update { state ->
+                        if (state is NutritionHubUiState.Success) {
+                            state.copy(isActivatingPlan = false)
+                        } else state
+                    }
                 }
                 is Result.Error -> {
-                    // Roll back
-                    _hubState.value = current.copy(isActivatingPlan = false)
+                    _hubState.value = previousState.copy(isActivatingPlan = false)
                     emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
                 else -> Unit
@@ -319,26 +330,26 @@ class NutritionViewModel @Inject constructor(
         val current = _hubState.value as? NutritionHubUiState.Success ?: return
         val plan = current.dietPlans.firstOrNull { it.id == planId } ?: return
 
-        // Do not allow deleting an ACTIVE plan
         if (plan.status == PlanStatus.ACTIVE) {
             emitEvent(NutritionUiEvent.ShowSnackbar("No puedes eliminar un plan activo. Activa otro plan primero."))
             return
         }
 
         isDeletingPlan = true
-        hubLoadJob?.cancel()
+        fetchDietPlansJob?.cancel()
         _hubState.value = current.copy(dietPlans = current.dietPlans.filter { it.id != planId })
 
         viewModelScope.launch {
             when (val result = deleteDietPlanUseCase(planId)) {
                 is Result.Success -> {
                     emitEvent(NutritionUiEvent.ShowSnackbar("Plan eliminado"))
-                    loadHubData()
+                    fetchHubData()
+                    fetchDietPlansJob?.join()
                     isDeletingPlan = false
                 }
                 is Result.Error -> {
                     _hubState.value = current
-                    loadHubData()
+                    fetchHubData()
                     isDeletingPlan = false
                     emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
@@ -372,4 +383,3 @@ class NutritionViewModel @Inject constructor(
         private const val MIN_ANIMATION_DURATION = 2000L
     }
 }
-

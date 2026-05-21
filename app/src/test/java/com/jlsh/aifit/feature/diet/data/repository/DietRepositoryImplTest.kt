@@ -173,14 +173,14 @@ class DietRepositoryImplTest {
     // ─── deleteDietPlan ────────────────────────────────────────────────────────
 
     @Test
-    fun `deletePlan retorna Success sin borrar Room de forma optimista`() = runTest {
+    fun `deletePlan retorna Success y borra de Room inmediatamente`() = runTest {
         coEvery { apiService.deleteDietPlan("dp-1") } returns
             ApiResponse(success = true, data = Unit)
 
         val result = sut.deleteDietPlan("dp-1")
 
         assertTrue(result is Result.Success)
-        coVerify(exactly = 0) { dao.deleteById(any()) }
+        coVerify { dao.deleteById("dp-1") }
     }
 
     @Test

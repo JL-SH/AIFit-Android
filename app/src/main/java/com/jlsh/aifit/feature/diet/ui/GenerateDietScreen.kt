@@ -81,7 +81,6 @@ private val GOAL_OPTIONS = listOf(
     "LOSE_WEIGHT" to "Perder grasa",
     "GAIN_MUSCLE" to "Ganar músculo",
     "MAINTAIN" to "Mantener peso",
-    "IMPROVE_ENDURANCE" to "Ganar resistencia",
 )
 
 private val PREFERENCE_OPTIONS = listOf(

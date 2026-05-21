@@ -162,7 +162,10 @@ class DietRepositoryImpl @Inject constructor(
         recentlyDeletedIds = recentlyDeletedIds + planId
 
         return when (val remote = safeUnitApiCall { apiService.deleteDietPlan(planId) }) {
-            is Result.Success -> Result.Success(Unit)
+            is Result.Success -> {
+                dao.deleteById(planId)
+                Result.Success(Unit)
+            }
             is Result.Error -> {
                 planSnapshot?.let { dao.upsertAll(listOf(it)) }
                 recentlyDeletedIds = recentlyDeletedIds - planId

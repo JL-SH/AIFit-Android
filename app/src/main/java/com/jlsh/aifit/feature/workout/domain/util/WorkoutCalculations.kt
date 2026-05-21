@@ -21,6 +21,38 @@ fun calculateAutoregulatedWeight(
     return estimated1RM / (1 + targetRIR / 30.0)
 }
 
+fun isExerciseComplete(completedSets: Int, targetSets: Int): Boolean =
+    completedSets >= targetSets
+
+/**
+ * Index of the first exercise with remaining sets, or the last exercise if all are complete.
+ */
+fun resolveCurrentExerciseIndex(
+    completedSets: List<Int>,
+    targetSets: List<Int>,
+): Int {
+    require(completedSets.size == targetSets.size)
+    if (completedSets.isEmpty()) return 0
+    return completedSets.indices.firstOrNull { i ->
+        !isExerciseComplete(completedSets[i], targetSets[i])
+    } ?: completedSets.lastIndex
+}
+
+/**
+ * Returns the index of the next exercise with remaining sets after [justCompletedIndex],
+ * or null if every exercise from that point onward is complete.
+ */
+fun resolveNextExerciseIndexAfterCompletion(
+    completedSets: List<Int>,
+    targetSets: List<Int>,
+    justCompletedIndex: Int,
+): Int? {
+    require(completedSets.size == targetSets.size)
+    return (justCompletedIndex + 1 until completedSets.size).firstOrNull { i ->
+        !isExerciseComplete(completedSets[i], targetSets[i])
+    }
+}
+
 fun calculateAccumulatedVolume(
     setLogs: List<WorkoutSetLog>,
     muscleGroup: MuscleGroup,

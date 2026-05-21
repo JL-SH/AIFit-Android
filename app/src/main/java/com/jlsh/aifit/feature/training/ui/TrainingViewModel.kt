@@ -298,6 +298,7 @@ class TrainingViewModel @Inject constructor(
                     Log.d("AIFIT_DETAIL", "loadPlanDetail SUCCESS — planName=${plan.name} daysCount=${days.size}")
                     _detailUiState.value = TrainingDetailUiState.Ready(
                         planName = plan.name,
+                        planStatus = plan.status.name,
                         days = days,
                     )
                 }

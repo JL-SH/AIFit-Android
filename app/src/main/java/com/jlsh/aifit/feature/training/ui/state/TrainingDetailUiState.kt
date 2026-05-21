@@ -6,6 +6,10 @@ sealed interface TrainingDetailUiState {
     data object Loading : TrainingDetailUiState, UiStateHost.Loading
     data object Regenerating : TrainingDetailUiState
     data class Error(override val message: String) : TrainingDetailUiState, UiStateHost.Error
-    data class Ready(val planName: String, val days: List<TrainingDayItem>) : TrainingDetailUiState, UiStateHost.Success
+    data class Ready(
+        val planName: String,
+        val planStatus: String,
+        val days: List<TrainingDayItem>,
+    ) : TrainingDetailUiState, UiStateHost.Success
 }
 

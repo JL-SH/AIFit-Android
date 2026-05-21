@@ -795,6 +795,45 @@ class HomeViewModelTest {
         assertEquals("New Plan", stateAfter.activePlan?.name)
     }
 
+    @Test
+    fun `onResumed detecta cambio de plan de dieta activo y actualiza nextMeal`() = runTest {
+        val chickenMeal = fakeMeal(name = "Pollo con lentejas")
+        val veganMeal = fakeMeal(name = "Ensalada vegana")
+        val planChicken = fakeDietPlan(
+            id = "diet-1",
+            name = "Plan pollo",
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeDietDay(meals = listOf(chickenMeal))),
+        )
+        val planVegan = fakeDietPlan(
+            id = "diet-2",
+            name = "Plan vegano",
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeDietDay(meals = listOf(veganMeal))),
+        )
+
+        val vm = createViewModel(
+            dietPlansFlow = flowOf(Result.Success(listOf(planChicken))),
+            dietPlanDetailResult = Result.Success(planChicken),
+            plansFlow = flowOf(Result.Success(emptyList())),
+        )
+        advanceUntilIdle()
+
+        every { getDietPlansUseCase() } returns flowOf(
+            Result.Success(listOf(planChicken.copy(status = PlanStatus.PAUSED), planVegan)),
+        )
+        coEvery { getDietPlanDetailUseCase("diet-2") } returns Result.Success(planVegan)
+        every { getTrainingPlansUseCase() } returns flowOf(Result.Success(emptyList()))
+
+        vm.onResumed()
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as HomeUiState.Success
+        val upcoming = state.nextMeal as? NextMealState.Upcoming
+        assertNotNull(upcoming)
+        assertEquals("Ensalada vegana", upcoming?.mealName)
+    }
+
     // ── userName y avatarUrl ────────────────────────────────────────────────────
 
     @Test

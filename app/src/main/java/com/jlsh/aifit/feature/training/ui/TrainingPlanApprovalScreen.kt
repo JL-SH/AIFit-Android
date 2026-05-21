@@ -139,7 +139,7 @@ fun TrainingPlanApprovalScreen(
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f),
                         )
-                        PlanStatusBadge(status = "ACTIVE")
+                        PlanStatusBadge(status = state.planStatus)
                     }
                 }
 

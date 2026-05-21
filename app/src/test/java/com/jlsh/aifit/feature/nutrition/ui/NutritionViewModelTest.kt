@@ -408,6 +408,28 @@ class NutritionViewModelTest {
     }
 
     @Test
+    fun `fetchHubData ordena dietPlans por createdAt descendente`() = runTest {
+        val older = fakeDietPlan(
+            id = "dp-old",
+            name = "Plan antiguo",
+            createdAt = java.time.LocalDateTime.of(2026, 1, 1, 10, 0),
+        )
+        val newer = fakeDietPlan(
+            id = "dp-new",
+            name = "Plan nuevo",
+            createdAt = java.time.LocalDateTime.of(2026, 5, 1, 10, 0),
+        )
+        val vm = createViewModel(
+            dietPlansFlow = flowOf(Result.Success(listOf(older, newer))),
+        )
+        advanceUntilIdle()
+
+        val state = vm.hubState.value as NutritionHubUiState.Success
+        assertEquals("dp-new", state.dietPlans.first().id)
+        assertEquals("dp-old", state.dietPlans.last().id)
+    }
+
+    @Test
     fun `onActivateDietPlan actualiza optimistamente planes antes de confirmar red`() = runTest {
         val active = fakeDietPlan(id = "dp-1", status = PlanStatus.ACTIVE)
         val draft = fakeDietPlan(id = "dp-2", status = PlanStatus.DRAFT)

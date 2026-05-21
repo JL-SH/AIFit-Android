@@ -44,12 +44,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
-import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
+import com.jlsh.aifit.core.ui.components.plans.PlanFilterChipGroup
+import com.jlsh.aifit.core.ui.components.plans.PlanHubActiveCard
+import com.jlsh.aifit.core.ui.components.plans.PlanSummaryCard
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
-import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
@@ -67,22 +68,6 @@ import java.time.format.DateTimeFormatter
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-
-private val FILTER_CHIPS = listOf("Todos", "Activo", "Completado", "Pausado")
-
-private fun chipToStatus(chip: String): PlanStatus? = when (chip) {
-    "Activo" -> PlanStatus.ACTIVE
-    "Completado" -> PlanStatus.COMPLETED
-    "Pausado" -> PlanStatus.PAUSED
-    else -> null
-}
-
-private fun statusToChip(status: PlanStatus?): String = when (status) {
-    PlanStatus.ACTIVE -> "Activo"
-    PlanStatus.COMPLETED -> "Completado"
-    PlanStatus.PAUSED -> "Pausado"
-    else -> "Todos"
-}
 
 @Composable
 fun TrainingHubScreen(
@@ -153,8 +138,9 @@ fun TrainingHubScreen(
     ) { paddingValues ->
         val isActivating = (uiState as? TrainingUiState.Success)?.isActivatingPlan == true
 
-        Box(modifier = Modifier.fillMaxSize()) {
-        when (val state = hubState) {
+        if (isActivating) {
+            LoadingScreen(modifier = Modifier.padding(paddingValues))
+        } else when (val state = hubState) {
             is TrainingHubUiState.Loading -> LoadingScreen(
                 modifier = Modifier.padding(paddingValues),
             )
@@ -200,31 +186,6 @@ fun TrainingHubScreen(
                 )
             }
         }
-
-            // ── Activation overlay ──
-            if (isActivating) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
-                    ) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Text(
-                            text = stringResource(R.string.training_hub_activating_plan),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.inverseOnSurface,
-                        )
-                    }
-                }
-            }
-        } // Box
     }
 }
 
@@ -270,8 +231,6 @@ private fun ActivePlanContent(
         state.allPlans.filter { it.status == state.selectedFilter }
     }
 
-    val selectedChip = statusToChip(state.selectedFilter)
-
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -284,114 +243,39 @@ private fun ActivePlanContent(
     ) {
         // ── Top section: Active plan card ──
         item(key = "active_plan_card") {
-            AiFitCard(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            PlanHubActiveCard(
+                planName = state.plan.name,
+                status = state.plan.status,
+                primarySubtitle = stringResource(
+                    R.string.training_hub_week_of,
+                    state.currentWeek,
+                    state.plan.durationWeeks,
+                ),
+                secondarySubtitle = state.nextDay?.let {
+                    stringResource(R.string.training_hub_next_day, it.name)
+                },
                 onClick = onActivePlanClicked,
-            ) {
-                Column(
-                    modifier = Modifier.padding(AiFitSpacing.md),
-                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-                ) {
-                    Text(
-                        text = state.plan.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-
-                    Text(
-                        text = stringResource(R.string.training_hub_week_of, state.currentWeek, state.plan.durationWeeks),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
-                    if (state.nextDay != null) {
-                        Text(
-                            text = stringResource(R.string.training_hub_next_day, state.nextDay.name),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                        )
-                    }
-                }
-            }
+            )
         }
 
-        // ── Bottom section: Filter chips ──
         item(key = "filter_chips") {
             Spacer(modifier = Modifier.height(AiFitSpacing.sm))
-            AiFitChipGroup(
-                options = FILTER_CHIPS,
-                selected = setOf(selectedChip),
-                onSelectionChanged = { selection ->
-                    val chip = selection.firstOrNull() ?: "All"
-                    onFilterChanged(chipToStatus(chip))
-                },
-                multiSelect = false,
+            PlanFilterChipGroup(
+                selectedFilter = state.selectedFilter,
+                onFilterChanged = onFilterChanged,
             )
             Spacer(modifier = Modifier.height(AiFitSpacing.xs))
         }
 
-        // ── Bottom section: Plan list ──
         items(filteredPlans, key = { it.id }) { plan ->
-            PlanSummaryItem(
-                plan = plan,
+            PlanSummaryCard(
+                name = plan.name,
+                status = plan.status,
+                subtitle = plan.createdAt.format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
                 onClick = { onPlanClicked(plan.id) },
                 onActivate = { planToActivate = plan.id },
                 onDelete = { planToDelete = plan.id },
             )
-        }
-    }
-}
-
-@Composable
-private fun PlanSummaryItem(
-    plan: TrainingPlan,
-    onClick: () -> Unit,
-    onActivate: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    AiFitCard(onClick = onClick) {
-        Column(
-            modifier = Modifier.padding(AiFitSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = plan.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f),
-                )
-                if (plan.status != PlanStatus.ACTIVE) {
-                    IconButton(onClick = onDelete) {
-                        Icon(
-                            imageVector = Icons.Rounded.DeleteOutline,
-                            contentDescription = stringResource(R.string.common_delete),
-                            tint = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                }
-                PlanStatusBadge(status = plan.status.name)
-            }
-
-            Text(
-                text = plan.createdAt.format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            if (plan.status != PlanStatus.ACTIVE && plan.status != PlanStatus.COMPLETED) {
-                TextButton(onClick = onActivate) {
-                    Text(
-                        text = stringResource(R.string.training_hub_activate_button),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                    )
-                }
-            }
         }
     }
 }

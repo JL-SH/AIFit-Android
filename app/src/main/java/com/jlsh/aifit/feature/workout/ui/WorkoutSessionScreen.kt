@@ -222,6 +222,12 @@ private fun WorkoutSessionContent(
     )
     val hasRegisteredSets = sessionData.registeredSets.isNotEmpty()
 
+    LaunchedEffect(sessionData.currentExerciseIndex) {
+        if (pagerState.currentPage != sessionData.currentExerciseIndex) {
+            pagerState.animateScrollToPage(sessionData.currentExerciseIndex)
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
@@ -411,8 +417,19 @@ private fun ExercisePage(
             )
         }
 
-        item(key = "form") {
-            SetRegistrationForm(onRegisterSet = onRegisterSet)
+        if (exercise.isComplete) {
+            item(key = "completed") {
+                Text(
+                    text = stringResource(R.string.workout_session_exercise_complete),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(vertical = AiFitSpacing.sm),
+                )
+            }
+        } else {
+            item(key = "form") {
+                SetRegistrationForm(onRegisterSet = onRegisterSet)
+            }
         }
 
         item(key = "volume_panel") {

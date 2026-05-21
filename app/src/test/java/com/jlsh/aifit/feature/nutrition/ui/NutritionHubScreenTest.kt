@@ -9,6 +9,7 @@ import androidx.compose.ui.test.performScrollTo
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
+import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
@@ -188,6 +189,26 @@ class NutritionHubScreenTest {
 
         composeTestRule.onNodeWithText("DIET PLAN").performClick()
         composeTestRule.onNodeWithText("Sin planes de dieta").assertIsDisplayed()
+    }
+
+    @Test
+    fun `muestra empty sin activo cuando solo hay planes DRAFT`() {
+        val draftOnly = fakeDietPlan(status = PlanStatus.DRAFT)
+        val vm = createViewModel(dietPlansFlow = flowOf(Result.Success(listOf(draftOnly))))
+        setScreen(vm)
+
+        composeTestRule.onNodeWithText("DIET PLAN").performClick()
+        composeTestRule.onNodeWithText("Sin planes activos").assertIsDisplayed()
+    }
+
+    @Test
+    fun `muestra chips de filtro en tab DIET PLAN con plan activo`() {
+        val vm = createViewModel()
+        setScreen(vm)
+
+        composeTestRule.onNodeWithText("DIET PLAN").performClick()
+        composeTestRule.onNodeWithText("Todos").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Activo").assertIsDisplayed()
     }
 
     // Note: Tab SHOPPING test skipped because ShoppingTab uses hiltViewModel() internally

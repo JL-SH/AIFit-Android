@@ -25,8 +25,10 @@ sealed class HomeUiState {
         val lastAchievement: UserAchievement? = null,
         val nextAchievement: AchievementDefinition? = null,
         val trainingStreakDays: Int = 0,
-        /** True while onResumed() is re-fetching the active plan from the server. */
+        /** True while onResumed() is re-fetching the active training plan from the server. */
         val isRefreshingPlan: Boolean = false,
+        /** True while onResumed() is re-fetching the active diet plan / next meal. */
+        val isRefreshingMeal: Boolean = false,
     ) : HomeUiState()
 }
 

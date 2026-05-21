@@ -26,6 +26,9 @@ import com.jlsh.aifit.feature.workout.domain.util.calculateAccumulatedVolume
 import com.jlsh.aifit.feature.workout.domain.util.calculateAutoregulatedWeight
 import com.jlsh.aifit.feature.workout.domain.util.calculateOneRepMax
 import com.jlsh.aifit.feature.workout.domain.util.calculateRestSeconds
+import com.jlsh.aifit.feature.workout.domain.util.isExerciseComplete
+import com.jlsh.aifit.feature.workout.domain.util.resolveCurrentExerciseIndex
+import com.jlsh.aifit.feature.workout.domain.util.resolveNextExerciseIndexAfterCompletion
 import com.jlsh.aifit.feature.workout.ui.state.SessionExercise
 import com.jlsh.aifit.feature.workout.ui.state.SubstitutionLoadState
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionData
@@ -170,10 +173,14 @@ class WorkoutSessionViewModel @Inject constructor(
                         val alreadyDone = existingBackendSets.count { it.trainingExerciseId == exercise.exerciseId }
                         exercise.copy(completedSets = alreadyDone)
                     }
+                    val startIndex = resolveCurrentExerciseIndex(
+                        exercisesWithProgress.map { it.completedSets },
+                        exercisesWithProgress.map { it.targetSets },
+                    )
                     _uiState.value = WorkoutSessionUiState.SessionActive(
                         WorkoutSessionData(
                             exercises = exercisesWithProgress,
-                            currentExerciseIndex = 0,
+                            currentExerciseIndex = startIndex,
                             registeredSets = existingBackendSets,
                             autoregulationSuggestion = null,
                             restTimerSeconds = null,
@@ -196,11 +203,15 @@ class WorkoutSessionViewModel @Inject constructor(
             val alreadyDone = existingBackendSets.count { it.trainingExerciseId == exercise.exerciseId }
             exercise.copy(completedSets = alreadyDone)
         }
+        val startIndex = resolveCurrentExerciseIndex(
+            exercisesWithProgress.map { it.completedSets },
+            exercisesWithProgress.map { it.targetSets },
+        )
 
         _uiState.value = WorkoutSessionUiState.SessionActive(
             WorkoutSessionData(
                 exercises = exercisesWithProgress,
-                currentExerciseIndex = 0,
+                currentExerciseIndex = startIndex,
                 registeredSets = existingBackendSets,
                 autoregulationSuggestion = null,
                 restTimerSeconds = null,
@@ -219,6 +230,7 @@ class WorkoutSessionViewModel @Inject constructor(
 
         val sessionData = currentState.sessionData
         val exercise = sessionData.exercises.find { it.exerciseId == exerciseId } ?: return
+        if (isExerciseComplete(exercise.completedSets, exercise.targetSets)) return
 
         // Capture BEFORE any async work so the first-set branch is stable.
         val isFirstSet = backendLogId == null && !backendLogCreationInFlight
@@ -251,6 +263,23 @@ class WorkoutSessionViewModel @Inject constructor(
             } else it
         }
 
+        val completedSetsList = updatedExercises.map { it.completedSets }
+        val targetSetsList = updatedExercises.map { it.targetSets }
+        val completedExerciseIndex = updatedExercises.indexOfFirst { it.exerciseId == exerciseId }
+        val exerciseJustCompleted = isExerciseComplete(
+            completedSetsList[completedExerciseIndex],
+            targetSetsList[completedExerciseIndex],
+        )
+        val updatedCurrentIndex = if (exerciseJustCompleted) {
+            resolveNextExerciseIndexAfterCompletion(
+                completedSetsList,
+                targetSetsList,
+                completedExerciseIndex,
+            ) ?: resolveCurrentExerciseIndex(completedSetsList, targetSetsList)
+        } else {
+            sessionData.currentExerciseIndex
+        }
+
         val exerciseMuscleMap = sessionData.exercises.associate { it.exerciseId to it.primaryMuscle }
         val affectedMuscleGroups = exerciseMuscleMap.values.toSet()
         val updatedVolume = affectedMuscleGroups.associateWith { muscleGroup ->
@@ -278,6 +307,7 @@ class WorkoutSessionViewModel @Inject constructor(
             _uiState.value = WorkoutSessionUiState.SessionActive(
                 sessionData.copy(
                     exercises = updatedExercises,
+                    currentExerciseIndex = updatedCurrentIndex,
                     registeredSets = updatedSets,
                     autoregulationSuggestion = autoregulatedWeight,
                     restTimerSeconds = restSeconds,
@@ -313,6 +343,7 @@ class WorkoutSessionViewModel @Inject constructor(
             _uiState.value = WorkoutSessionUiState.SessionActive(
                 sessionData.copy(
                     exercises = updatedExercises,
+                    currentExerciseIndex = updatedCurrentIndex,
                     registeredSets = updatedSets,
                     autoregulationSuggestion = autoregulatedWeight,
                     restTimerSeconds = restSeconds,

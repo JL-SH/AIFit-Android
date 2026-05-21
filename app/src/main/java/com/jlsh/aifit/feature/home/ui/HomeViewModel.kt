@@ -45,13 +45,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
@@ -85,7 +86,8 @@ class HomeViewModel @Inject constructor(
     private var cachedActivePlanId: String? = null       // Fix 2: survives a null cachedActivePlanDetail
     private var cachedActivePlanSummary: ActivePlanSummary? = null
     private var cachedWeeklySummary: WeeklyProgressSummary? = null
-    private var cachedActiveDietDetail: DietPlan? = null  // BUG-B: cache diet for nextMeal refresh
+    private var cachedActiveDietDetail: DietPlan? = null
+    private var cachedActiveDietId: String? = null
 
     init {
         loadAll()
@@ -175,8 +177,9 @@ class HomeViewModel @Inject constructor(
 
             // Derive initial diet/meal state
             val initialActiveDiet = initialDietPlans.find { it.status == PlanStatus.ACTIVE }
+            cachedActiveDietId = initialActiveDiet?.id
             val initialActiveDietDetail = initialActiveDiet?.let { loadDietPlanDetail(it.id) }
-            cachedActiveDietDetail = initialActiveDietDetail  // BUG-B: cache for onResumed refresh
+            cachedActiveDietDetail = initialActiveDietDetail
             val initialNextMeal = deriveNextMeal(initialActiveDietDetail)
 
             // ── Derive motivation data (BUG-026) ──
@@ -289,85 +292,113 @@ class HomeViewModel @Inject constructor(
 
     fun onResumed() {
         Log.d("AIFIT_HOME", "onResumed called")
-        // BUG-B fix: always recalculate nextMeal with the current time
-        refreshNextMeal()
         viewModelScope.launch {
-            // Signal to the UI that we are re-checking the active plan
             _uiState.update { cur ->
-                if (cur is HomeUiState.Success) cur.copy(isRefreshingPlan = true) else cur
+                if (cur is HomeUiState.Success) {
+                    cur.copy(isRefreshingPlan = true, isRefreshingMeal = true)
+                } else cur
             }
 
-            // Re-query plans to detect any activation that happened while away.
-            // Process each emission (cache then network) immediately so the UI
-            // reflects the change as soon as Room is read — without waiting for
-            // the network round-trip that previously caused a multi-second delay.
-            getTrainingPlansUseCase().collect { result ->
-                if (result !is Result.Success) return@collect
+            kotlinx.coroutines.coroutineScope {
+                launch { syncTrainingPlansOnResume() }
+                launch { syncDietPlansOnResume() }
+            }
 
-                val resolvedActivePlan = result.data.find { it.status == PlanStatus.ACTIVE }
+            _uiState.update { cur ->
+                if (cur is HomeUiState.Success) {
+                    cur.copy(isRefreshingPlan = false, isRefreshingMeal = false)
+                } else cur
+            }
+        }
+    }
 
-                when {
-                    resolvedActivePlan != null && resolvedActivePlan.id != cachedActivePlanId -> {
-                        Log.d("AIFIT_HOME",
-                            "onResumed — new active plan id=${resolvedActivePlan.id}")
-                        cachedActivePlanSummary = ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
-                        cachedActivePlanId = resolvedActivePlan.id
-                        cachedActivePlanDetail = null
-                        _uiState.update { cur ->
-                            if (cur is HomeUiState.Success) cur.copy(
+    private suspend fun syncTrainingPlansOnResume() {
+        getTrainingPlansUseCase().collect { result ->
+            if (result !is Result.Success) return@collect
+
+            val resolvedActivePlan = result.data.find { it.status == PlanStatus.ACTIVE }
+
+            when {
+                resolvedActivePlan != null && resolvedActivePlan.id != cachedActivePlanId -> {
+                    Log.d("AIFIT_HOME", "onResumed — new active training plan id=${resolvedActivePlan.id}")
+                    cachedActivePlanSummary = ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
+                    cachedActivePlanId = resolvedActivePlan.id
+                    cachedActivePlanDetail = null
+                    _uiState.update { cur ->
+                        if (cur is HomeUiState.Success) {
+                            cur.copy(
                                 activePlan = cachedActivePlanSummary,
-                                todayTraining = null, // clear old plan's exercises immediately
-                                isRefreshingPlan = true,
-                            ) else cur
-                        }
-                        // Now load full detail (days + exercises) in the background
-                        val detail = loadPlanDetail(resolvedActivePlan.id)
-                        if (detail != null) {
-                            cachedActivePlanDetail = detail
-                        }
-                        refreshWorkoutStatus()
-                    }
-                    resolvedActivePlan != null && cachedActivePlanDetail == null -> {
-                        // Same plan but detail was never loaded — show plan name first, retry detail
-                        Log.d("AIFIT_HOME", "onResumed — same plan, retrying detail load")
-                        cachedActivePlanSummary = ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
-                        _uiState.update { cur ->
-                            if (cur is HomeUiState.Success) cur.copy(
-                                activePlan = cachedActivePlanSummary,
-                                isRefreshingPlan = true,
-                            ) else cur
-                        }
-                        val detail = loadPlanDetail(resolvedActivePlan.id)
-                        if (detail != null) {
-                            cachedActivePlanDetail = detail
-                        }
-                        refreshWorkoutStatus()
-                    }
-                    resolvedActivePlan == null && cachedActivePlanId != null -> {
-                        // Active plan was deactivated while away — clear cached state
-                        Log.d("AIFIT_HOME", "onResumed — active plan cleared")
-                        cachedActivePlanDetail = null
-                        cachedActivePlanId = null
-                        cachedActivePlanSummary = null
-                        _uiState.update { current ->
-                            if (current is HomeUiState.Success) current.copy(
                                 todayTraining = null,
-                                activePlan = null,
-                                isRefreshingPlan = false,
-                            ) else current
-                        }
+                                isRefreshingPlan = true,
+                            )
+                        } else cur
                     }
-                    else -> {
-                        // Same plan (or still no plan) — just refresh workout status
-                        Log.d("AIFIT_HOME", "onResumed — same plan, refreshing")
-                        refreshWorkoutStatus()
+                    val detail = loadPlanDetail(resolvedActivePlan.id)
+                    if (detail != null) {
+                        cachedActivePlanDetail = detail
+                    }
+                    refreshWorkoutStatus()
+                }
+                resolvedActivePlan != null && cachedActivePlanDetail == null -> {
+                    Log.d("AIFIT_HOME", "onResumed — same training plan, retrying detail load")
+                    cachedActivePlanSummary = ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
+                    _uiState.update { cur ->
+                        if (cur is HomeUiState.Success) {
+                            cur.copy(activePlan = cachedActivePlanSummary, isRefreshingPlan = true)
+                        } else cur
+                    }
+                    val detail = loadPlanDetail(resolvedActivePlan.id)
+                    if (detail != null) {
+                        cachedActivePlanDetail = detail
+                    }
+                    refreshWorkoutStatus()
+                }
+                resolvedActivePlan == null && cachedActivePlanId != null -> {
+                    Log.d("AIFIT_HOME", "onResumed — active training plan cleared")
+                    cachedActivePlanDetail = null
+                    cachedActivePlanId = null
+                    cachedActivePlanSummary = null
+                    _uiState.update { current ->
+                        if (current is HomeUiState.Success) {
+                            current.copy(todayTraining = null, activePlan = null)
+                        } else current
                     }
                 }
+                else -> refreshWorkoutStatus()
             }
+        }
+    }
 
-            // All emissions processed — refresh complete
-            _uiState.update { cur ->
-                if (cur is HomeUiState.Success) cur.copy(isRefreshingPlan = false) else cur
+    private suspend fun syncDietPlansOnResume() {
+        getDietPlansUseCase().collect { result ->
+            if (result !is Result.Success) return@collect
+
+            val resolvedActiveDiet = result.data.find { it.status == PlanStatus.ACTIVE }
+
+            when {
+                resolvedActiveDiet != null && resolvedActiveDiet.id != cachedActiveDietId -> {
+                    Log.d("AIFIT_HOME", "onResumed — new active diet plan id=${resolvedActiveDiet.id}")
+                    cachedActiveDietId = resolvedActiveDiet.id
+                    cachedActiveDietDetail = loadDietPlanDetail(resolvedActiveDiet.id)
+                    refreshNextMeal()
+                }
+                resolvedActiveDiet != null && cachedActiveDietDetail == null -> {
+                    Log.d("AIFIT_HOME", "onResumed — same diet plan, reloading detail")
+                    cachedActiveDietId = resolvedActiveDiet.id
+                    cachedActiveDietDetail = loadDietPlanDetail(resolvedActiveDiet.id)
+                    refreshNextMeal()
+                }
+                resolvedActiveDiet == null && cachedActiveDietId != null -> {
+                    Log.d("AIFIT_HOME", "onResumed — active diet plan cleared")
+                    cachedActiveDietId = null
+                    cachedActiveDietDetail = null
+                    _uiState.update { cur ->
+                        if (cur is HomeUiState.Success) {
+                            cur.copy(nextMeal = NextMealState.NoPlan)
+                        } else cur
+                    }
+                }
+                else -> refreshNextMeal()
             }
         }
     }

@@ -524,6 +524,7 @@
     <string name="workout_session_substitute_exercise">Sustituir ejercicio</string>
     <string name="workout_session_options_cd">Opciones</string>
     <string name="workout_session_sets_progress">%1$d/%2$d series</string>
+    <string name="workout_session_exercise_complete">Ejercicio completado</string>
     <string name="workout_session_dismiss_cd">Descartar</string>
     <string name="workout_session_weight_error">Peso &gt; 0</string>
     <string name="workout_session_reps_error">Reps &gt; 0</string>
