@@ -3,6 +3,7 @@ package com.jlsh.aifit.feature.training.di
 import com.jlsh.aifit.core.local.AiFitDatabase
 import com.jlsh.aifit.feature.training.data.api.TrainingApiService
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanDao
+import com.jlsh.aifit.feature.training.data.local.TrainingPlanDetailCacheDao
 import com.jlsh.aifit.feature.training.data.repository.TrainingRepositoryImpl
 import com.jlsh.aifit.feature.training.domain.repository.TrainingRepository
 import dagger.Binds
@@ -32,6 +33,11 @@ abstract class TrainingModule {
         @Singleton
         fun provideTrainingPlanDao(database: AiFitDatabase): TrainingPlanDao =
             database.trainingPlanDao()
+
+        @Provides
+        @Singleton
+        fun provideTrainingPlanDetailCacheDao(database: AiFitDatabase): TrainingPlanDetailCacheDao =
+            database.trainingPlanDetailCacheDao()
     }
 }
 

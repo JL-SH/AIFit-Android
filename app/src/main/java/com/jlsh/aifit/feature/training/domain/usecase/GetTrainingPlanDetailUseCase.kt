@@ -10,5 +10,8 @@ class GetTrainingPlanDetailUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(planId: String): Result<TrainingPlan> =
         repository.getTrainingPlanDetail(planId)
+
+    suspend fun fromCache(planId: String): TrainingPlan? =
+        repository.getCachedTrainingPlanDetail(planId)
 }
 

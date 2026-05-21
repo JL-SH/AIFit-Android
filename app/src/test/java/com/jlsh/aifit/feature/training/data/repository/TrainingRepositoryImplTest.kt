@@ -7,6 +7,7 @@ import com.jlsh.aifit.core.network.ApiResponse
 import com.jlsh.aifit.core.session.SessionManager
 import com.jlsh.aifit.feature.training.data.api.TrainingApiService
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanDao
+import com.jlsh.aifit.feature.training.data.local.TrainingPlanDetailCacheDao
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.testutil.*
 import io.mockk.*
@@ -22,6 +23,7 @@ class TrainingRepositoryImplTest {
 
     private val apiService: TrainingApiService = mockk()
     private val dao: TrainingPlanDao = mockk(relaxUnitFun = true)
+    private val detailCacheDao: TrainingPlanDetailCacheDao = mockk(relaxUnitFun = true)
     private val sessionManager: SessionManager = mockk()
     private lateinit var sut: TrainingRepositoryImpl
 
@@ -31,7 +33,7 @@ class TrainingRepositoryImplTest {
         every { Log.d(any(), any()) } returns 0
         every { Log.e(any(), any()) } returns 0
 
-        sut = TrainingRepositoryImpl(apiService, dao, sessionManager)
+        sut = TrainingRepositoryImpl(apiService, dao, detailCacheDao, sessionManager)
     }
 
     @After

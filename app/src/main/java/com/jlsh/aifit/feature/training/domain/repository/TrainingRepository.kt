@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface TrainingRepository {
     fun getTrainingPlans(): Flow<Result<List<TrainingPlan>>>
     suspend fun getTrainingPlanDetail(planId: String): Result<TrainingPlan>
+    suspend fun getCachedTrainingPlanDetail(planId: String): TrainingPlan?
     suspend fun generateTrainingPlan(request: GenerateTrainingPlanRequestDto): Result<TrainingPlan>
     suspend fun generateAdaptiveTrainingPlan(request: GenerateAdaptiveTrainingPlanRequestDto): Result<TrainingPlan>
     suspend fun deleteTrainingPlan(planId: String): Result<Unit>

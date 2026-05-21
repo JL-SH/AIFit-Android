@@ -98,36 +98,25 @@ class HomeViewModel @Inject constructor(
         loadJob = viewModelScope.launch {
             _uiState.value = HomeUiState.Loading
 
-            // ── Phase 1: Load ALL data in parallel ──
-            // awaitFreshPlans/awaitFreshDietPlans collect the full flow (cache + network)
-            // so initialTrainingPlans/initialDietPlans always contain fresh server IDs,
-            // not just the Room-cached ones.
-            val profileDeferred = async { loadProfile() }
-            val nutritionDeferred = async { loadNutrition() }
-            val weeklyDeferred = async { loadWeeklySummary() }
-            val streaksDeferred = async { loadStreaks() }
-            val weightDeferred = async { loadWeightHistory() }
-            val workoutHistoryDeferred = async { loadTodayWorkoutHistory() }
-            val trainingPlansDeferred = async { awaitFreshPlans() }
-            val dietPlansDeferred = async { awaitFreshDietPlans() }
-            val achievementsDeferred = async { loadUserAchievements() }
-            val definitionsDeferred = async { loadAchievementDefinitions() }
+            // ── Critical path: cache-first, parallel ──
+            val profile: UserProfile?
+            val nutritionPair: Pair<NutritionLog?, NutritionTarget?>
+            val weightEntries: List<BodyWeightLog>
+            val cachedTrainingPlans: List<TrainingPlan>
+            val cachedDietPlans: List<DietPlan>
 
-            val profile = profileDeferred.await()
-            val nutritionPair = nutritionDeferred.await()
-            val weeklySummary = weeklyDeferred.await()
-            val streaks = streaksDeferred.await()
-            val weightEntries = weightDeferred.await()
-            val todayWorkoutLogs = workoutHistoryDeferred.await()
-            val initialTrainingPlans = trainingPlansDeferred.await()
-            val initialDietPlans = dietPlansDeferred.await()
-            val userAchievements = achievementsDeferred.await()
-            val allDefinitions = definitionsDeferred.await()
+            coroutineScope {
+                val profileDeferred = async { loadProfile() }
+                val nutritionDeferred = async { loadNutrition() }
+                val weightDeferred = async { loadWeightHistory() }
+                val trainingPlansDeferred = async { firstSuccessTrainingPlans() }
+                val dietPlansDeferred = async { firstSuccessDietPlans() }
 
-            // AIFIT_DEBUG ── checkpoint 1: qué devolvió awaitFreshPlans
-            Log.d("AIFIT_DEBUG", "[VM][loadAll] awaitFreshPlans count=${initialTrainingPlans.size}")
-            initialTrainingPlans.forEach { p ->
-                Log.d("AIFIT_DEBUG", "[VM][loadAll]   plan id=${p.id} status=${p.status}")
+                profile = profileDeferred.await()
+                nutritionPair = nutritionDeferred.await()
+                weightEntries = weightDeferred.await()
+                cachedTrainingPlans = trainingPlansDeferred.await()
+                cachedDietPlans = dietPlansDeferred.await()
             }
 
             if (profile == null) {
@@ -136,96 +125,38 @@ class HomeViewModel @Inject constructor(
             }
 
             val todayNutrition = deriveNutrition(nutritionPair.first, nutritionPair.second)
+            val initialActivePlan = cachedTrainingPlans.find { it.status == PlanStatus.ACTIVE }
+            val initialActiveDiet = cachedDietPlans.find { it.status == PlanStatus.ACTIVE }
 
-            // Derive initial training state — IDs are guaranteed fresh from network
-            val initialActivePlan = initialTrainingPlans.find { it.status == PlanStatus.ACTIVE }
-            // AIFIT_DEBUG ── checkpoint 2: ¿se encontró un plan ACTIVE?
-            if (initialActivePlan == null) {
-                Log.w("AIFIT_DEBUG", "[VM][loadAll] initialActivePlan = NULL — ningún plan tiene status=ACTIVE en la lista de ${initialTrainingPlans.size} planes")
-            } else {
-                Log.d("AIFIT_DEBUG", "[VM][loadAll] initialActivePlan FOUND id=${initialActivePlan.id} status=${initialActivePlan.status}")
-            }
-
-            val initialActivePlanDetail = initialActivePlan?.let {
-                val detail = loadPlanDetail(it.id)
-                // AIFIT_DEBUG ── checkpoint 3: ¿loadPlanDetail tuvo éxito?
-                if (detail == null) {
-                    Log.w("AIFIT_HOME",
-                        "loadAll — loadPlanDetail returned null for planId=${it.id}. " +
-                        "API unavailable or stale ID. UI will show null training; onResumed() will retry.")
-                } else {
-                    Log.d("AIFIT_DEBUG", "[VM][loadAll] loadPlanDetail OK planId=${detail.id} days=${detail.days.size} exercises=${detail.days.sumOf { d -> d.exercises.size }}")
-                }
-                detail
-            }
-            cachedActivePlanDetail = initialActivePlanDetail
             cachedActivePlanId = initialActivePlan?.id
-            cachedWeeklySummary = weeklySummary
-            val initialTodayTraining = deriveTodayTraining(
-                initialActivePlanDetail, weeklySummary, todayWorkoutLogs,
-            )
-
-            // Build ActivePlanSummary so the UI can distinguish "rest day" from "no plan"
-            val activePlanSummary = when {
-                initialActivePlanDetail != null ->
-                    ActivePlanSummary(id = initialActivePlanDetail.id, name = initialActivePlanDetail.name)
-                initialActivePlan != null ->
-                    ActivePlanSummary(id = initialActivePlan.id, name = initialActivePlan.name)
-                else -> null
+            cachedActivePlanSummary = initialActivePlan?.let {
+                ActivePlanSummary(id = it.id, name = it.name)
             }
-            cachedActivePlanSummary = activePlanSummary
-
-            // Derive initial diet/meal state
-            val initialActiveDiet = initialDietPlans.find { it.status == PlanStatus.ACTIVE }
             cachedActiveDietId = initialActiveDiet?.id
-            val initialActiveDietDetail = initialActiveDiet?.let { loadDietPlanDetail(it.id) }
-            cachedActiveDietDetail = initialActiveDietDetail
-            val initialNextMeal = deriveNextMeal(initialActiveDietDetail)
 
-            // ── Derive motivation data (BUG-026) ──
-            val motivation = deriveMotivation(userAchievements, allDefinitions, streaks)
+            Log.d("AIFIT_DEBUG", "[VM][loadAll] cache-first Success — plans=${cachedTrainingPlans.size} activePlan=${initialActivePlan?.id}")
 
-            // ── Phase 2: Emit initial state with real plan data ──
+            // ── First paint: skeleton from Room / first flow emissions ──
             _uiState.value = HomeUiState.Success(
                 userName = profile.name,
                 avatarUrl = profile.profilePictureUrl,
-                activePlan = activePlanSummary,
-                todayTraining = initialTodayTraining,
+                activePlan = cachedActivePlanSummary,
+                todayTraining = null,
                 todayNutrition = todayNutrition,
-                nextMeal = initialNextMeal,
-                streaks = streaks,
-                weeklySummary = weeklySummary,
+                nextMeal = NextMealState.NoPlan,
+                streaks = emptyList(),
+                weeklySummary = null,
                 weightEntries = weightEntries,
-                lastAchievement = motivation.lastAchievement,
-                nextAchievement = motivation.nextAchievement,
-                trainingStreakDays = motivation.trainingStreakDays,
+                isRefreshingPlan = initialActivePlan != null,
+                isRefreshingMeal = initialActiveDiet != null,
             )
-            // AIFIT_DEBUG ── checkpoint 4: estado final emitido
-            Log.d("AIFIT_DEBUG", "[VM][loadAll] _uiState = Success — todayTraining=${
-                if (initialTodayTraining == null) "NULL"
-                else "planId=${initialTodayTraining.planId} dayId=${initialTodayTraining.dayId} exercises=${initialTodayTraining.exerciseCount}"
-            }")
-
-            // ── Phase 3: Diet-only background sync ──
-            // Training plans are NOT re-collected here: awaitFreshPlans() in Phase 1
-            // already waited for the network response, so cachedActivePlanId is already
-            // the fresh server ID. Re-collecting would only duplicate the API call.
-            // Diet plans are still re-collected to catch server-side changes that could
-            // have raced with the Phase 1 collection.
+            // ── Background: network reconciliation, then secondary cards (avoids state races) ──
             launch {
-                var latestDietPlans = initialDietPlans
-                getDietPlansUseCase().collect { result ->
-                    if (result is Result.Success) latestDietPlans = result.data
-                }
-                val freshActiveDiet = latestDietPlans.find { it.status == PlanStatus.ACTIVE }
-                if (freshActiveDiet != null && freshActiveDiet.id != initialActiveDiet?.id) {
-                    val detail = loadDietPlanDetail(freshActiveDiet.id)
-                    cachedActiveDietDetail = detail  // BUG-B: keep cache in sync
-                    val nextMeal = deriveNextMeal(detail)
-                    _uiState.update { cur ->
-                        if (cur is HomeUiState.Success) cur.copy(nextMeal = nextMeal) else cur
-                    }
-                }
+                enrichTrainingAndDietFromNetwork(
+                    cachedTrainingPlans = cachedTrainingPlans,
+                    cachedDietPlans = cachedDietPlans,
+                )
+                loadSecondaryHomeData()
             }
         }
     }
@@ -291,6 +222,10 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onResumed() {
+        if (loadJob?.isActive == true) {
+            Log.d("AIFIT_HOME", "onResumed skipped — initial load in progress")
+            return
+        }
         Log.d("AIFIT_HOME", "onResumed called")
         viewModelScope.launch {
             _uiState.update { cur ->
@@ -418,9 +353,138 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Reconciles training/diet lists with the server, loads plan details in parallel,
+     * and refreshes today's workout history. Runs after the cache-first [Success].
+     */
+    private suspend fun enrichTrainingAndDietFromNetwork(
+        cachedTrainingPlans: List<TrainingPlan>,
+        cachedDietPlans: List<DietPlan>,
+    ) {
+        val freshTrainingPlans: List<TrainingPlan>
+        val freshDietPlans: List<DietPlan>
+        var todayWorkoutLogs: List<WorkoutLog>
+
+        coroutineScope {
+            val trainingDeferred = async { awaitFreshPlans() }
+            val dietDeferred = async { awaitFreshDietPlans() }
+            val workoutDeferred = async { loadTodayWorkoutHistoryFresh() }
+            freshTrainingPlans = trainingDeferred.await()
+            freshDietPlans = dietDeferred.await()
+            todayWorkoutLogs = workoutDeferred.await()
+        }
+
+        val resolvedActivePlan = freshTrainingPlans.find { it.status == PlanStatus.ACTIVE }
+            ?: cachedTrainingPlans.find { it.status == PlanStatus.ACTIVE }
+        val resolvedActiveDiet = freshDietPlans.find { it.status == PlanStatus.ACTIVE }
+            ?: cachedDietPlans.find { it.status == PlanStatus.ACTIVE }
+
+        // Stale-while-revalidate: show cached plan detail before network GET
+        resolvedActivePlan?.let { plan ->
+            getTrainingPlanDetailUseCase.fromCache(plan.id)?.let { cachedDetail ->
+                cachedActivePlanDetail = cachedDetail
+                cachedActivePlanSummary = ActivePlanSummary(cachedDetail.id, cachedDetail.name)
+                val cachedTraining = deriveTodayTraining(
+                    cachedDetail, cachedWeeklySummary, todayWorkoutLogs,
+                )
+                _uiState.update { cur ->
+                    if (cur is HomeUiState.Success) {
+                        cur.copy(
+                            activePlan = cachedActivePlanSummary,
+                            todayTraining = cachedTraining,
+                            isRefreshingPlan = true,
+                        )
+                    } else cur
+                }
+            }
+        }
+
+        val planDetail: TrainingPlan?
+        val dietDetail: DietPlan?
+
+        coroutineScope {
+            val planDetailDeferred = resolvedActivePlan?.let { plan ->
+                async { loadPlanDetail(plan.id) }
+            }
+            val dietDetailDeferred = resolvedActiveDiet?.let { diet ->
+                async { loadDietPlanDetail(diet.id) }
+            }
+            planDetail = planDetailDeferred?.await()
+            dietDetail = dietDetailDeferred?.await()
+        }
+
+        cachedActivePlanId = resolvedActivePlan?.id
+        cachedActivePlanDetail = planDetail
+        cachedActivePlanSummary = when {
+            planDetail != null -> ActivePlanSummary(planDetail.id, planDetail.name)
+            resolvedActivePlan != null -> ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
+            else -> null
+        }
+        cachedActiveDietId = resolvedActiveDiet?.id
+        cachedActiveDietDetail = dietDetail
+
+        val todayTraining = deriveTodayTraining(
+            planDetail, cachedWeeklySummary, todayWorkoutLogs,
+        )
+        val nextMeal = deriveNextMeal(dietDetail)
+
+        Log.d("AIFIT_DEBUG", "[VM][enrich] todayTraining=${todayTraining?.planId} nextMeal=${nextMeal::class.simpleName}")
+
+        _uiState.update { cur ->
+            if (cur is HomeUiState.Success) {
+                cur.copy(
+                    activePlan = cachedActivePlanSummary,
+                    todayTraining = todayTraining,
+                    nextMeal = nextMeal,
+                    isRefreshingPlan = false,
+                    isRefreshingMeal = false,
+                )
+            } else cur
+        }
+    }
+
+    /** Loads gamification and weekly summary off the critical path (after [enrichTrainingAndDietFromNetwork]). */
+    private suspend fun loadSecondaryHomeData() {
+        val weeklySummary: WeeklyProgressSummary?
+        val streaks: List<Streak>
+        val userAchievements: List<UserAchievement>
+        val allDefinitions: List<AchievementDefinition>
+
+        coroutineScope {
+            val weeklyDeferred = async { loadWeeklySummary() }
+            val streaksDeferred = async { loadStreaks() }
+            val achievementsDeferred = async { loadUserAchievements() }
+            val definitionsDeferred = async { loadAchievementDefinitions() }
+            weeklySummary = weeklyDeferred.await()
+            streaks = streaksDeferred.await()
+            userAchievements = achievementsDeferred.await()
+            allDefinitions = definitionsDeferred.await()
+        }
+
+        cachedWeeklySummary = weeklySummary
+        val motivation = deriveMotivation(userAchievements, allDefinitions, streaks)
+        val workoutLogs = loadTodayWorkoutHistoryCached()
+        val todayTraining = deriveTodayTraining(
+            cachedActivePlanDetail, weeklySummary, workoutLogs,
+        )
+
+        _uiState.update { cur ->
+            if (cur is HomeUiState.Success) {
+                cur.copy(
+                    weeklySummary = weeklySummary,
+                    streaks = streaks,
+                    lastAchievement = motivation.lastAchievement,
+                    nextAchievement = motivation.nextAchievement,
+                    trainingStreakDays = motivation.trainingStreakDays,
+                    todayTraining = todayTraining ?: cur.todayTraining,
+                )
+            } else cur
+        }
+    }
+
     private suspend fun refreshWorkoutStatus() {
         if (_uiState.value !is HomeUiState.Success) return
-        val freshWorkoutLogs = loadTodayWorkoutHistory()
+        val freshWorkoutLogs = loadTodayWorkoutHistoryFresh()
         // AIFIT_DEBUG ── checkpoint 6: estado del caché al hacer refresh
         Log.d("AIFIT_DEBUG", "[VM][refresh] cachedActivePlanDetail=${
             if (cachedActivePlanDetail == null) "NULL"
@@ -459,11 +523,33 @@ class HomeViewModel @Inject constructor(
             else -> null
         }
 
+    /** First [Result.Success] from the plans flow (Room cache when available); does not wait for network. */
+    private suspend fun firstSuccessTrainingPlans(): List<TrainingPlan> {
+        var latest = emptyList<TrainingPlan>()
+        getTrainingPlansUseCase().collect { result ->
+            if (result is Result.Success) {
+                latest = result.data
+                return@collect
+            }
+        }
+        return latest
+    }
+
+    /** First [Result.Success] from the diet plans flow (Room cache when available); does not wait for network. */
+    private suspend fun firstSuccessDietPlans(): List<DietPlan> {
+        var latest = emptyList<DietPlan>()
+        getDietPlansUseCase().collect { result ->
+            if (result is Result.Success) {
+                latest = result.data
+                return@collect
+            }
+        }
+        return latest
+    }
+
     /**
      * Collects the full getTrainingPlansUseCase() flow (cache emission + network emission)
      * and returns the last [Result.Success] data, or an empty list if every emission failed.
-     * Using this instead of .first { it !is Result.Loading } guarantees that the returned
-     * list always contains the fresh server IDs, not the potentially stale Room-cached ones.
      */
     private suspend fun awaitFreshPlans(): List<TrainingPlan> {
         var latest = emptyList<TrainingPlan>()
@@ -490,15 +576,19 @@ class HomeViewModel @Inject constructor(
             else -> null
         }
 
-    private suspend fun loadNutrition(): Pair<NutritionLog?, NutritionTarget?> {
+    private suspend fun loadNutrition(): Pair<NutritionLog?, NutritionTarget?> = coroutineScope {
         val today = LocalDate.now()
-        val log = getNutritionLogUseCase(today)
-            .first { it !is Result.Loading }
-            .let { r -> if (r is Result.Success) r.data else null }
-        val target = getCurrentNutritionTargetUseCase()
-            .first { it !is Result.Loading }
-            .let { r -> if (r is Result.Success) r.data else null }
-        return log to target
+        val logDeferred = async {
+            getNutritionLogUseCase(today)
+                .first { it !is Result.Loading }
+                .let { r -> if (r is Result.Success) r.data else null }
+        }
+        val targetDeferred = async {
+            getCurrentNutritionTargetUseCase()
+                .first { it !is Result.Loading }
+                .let { r -> if (r is Result.Success) r.data else null }
+        }
+        logDeferred.await() to targetDeferred.await()
     }
 
     private suspend fun loadWeeklySummary(): WeeklyProgressSummary? =
@@ -523,13 +613,26 @@ class HomeViewModel @Inject constructor(
             .let { r -> if (r is Result.Success) r.data.takeLast(7) else emptyList() }
     }
 
-    private suspend fun loadTodayWorkoutHistory(): List<WorkoutLog> {
+    /** Cache-first: first successful emission (Room before network); does not wait for network. */
+    private suspend fun loadTodayWorkoutHistoryCached(): List<WorkoutLog> {
+        val today = LocalDate.now().toString()
+        var latest = emptyList<WorkoutLog>()
+        getWorkoutHistoryUseCase(from = today, to = today).collect { result ->
+            if (result is Result.Success) {
+                latest = result.data
+                return@collect
+            }
+        }
+        return latest
+    }
+
+    /** Waits for cache + network so completion / isLocked reflect the server. */
+    private suspend fun loadTodayWorkoutHistoryFresh(): List<WorkoutLog> {
         val today = LocalDate.now().toString()
         var result = emptyList<WorkoutLog>()
         getWorkoutHistoryUseCase(from = today, to = today)
             .collect { r ->
-                // TODO: remove diagnostic log below
-                Log.d("AIFIT_HOME", "loadTodayWorkoutHistory emission — ${r::class.simpleName} data=${if (r is Result.Success) r.data.map { "id=${it.id} isLocked=${it.isLocked}" } else "N/A"}")
+                Log.d("AIFIT_HOME", "loadTodayWorkoutHistoryFresh — ${r::class.simpleName}")
                 if (r is Result.Success) result = r.data
             }
         return result

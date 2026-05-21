@@ -8,9 +8,14 @@ import com.jlsh.aifit.core.session.SessionManager
 import com.jlsh.aifit.feature.training.data.api.TrainingApiService
 import com.jlsh.aifit.feature.training.data.dto.GenerateAdaptiveTrainingPlanRequestDto
 import com.jlsh.aifit.feature.training.data.dto.GenerateTrainingPlanRequestDto
+import com.jlsh.aifit.feature.training.data.dto.TrainingPlanResponseDto
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanDao
+import com.jlsh.aifit.feature.training.data.local.TrainingPlanDetailCacheDao
+import com.jlsh.aifit.feature.training.data.local.TrainingPlanDetailCacheEntity
 import com.jlsh.aifit.feature.training.data.mapper.TrainingMapper.toDomain
 import com.jlsh.aifit.feature.training.data.mapper.TrainingMapper.toEntity
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import com.jlsh.aifit.feature.training.domain.model.ExerciseSubstitution
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
@@ -23,8 +28,11 @@ import javax.inject.Inject
 class TrainingRepositoryImpl @Inject constructor(
     private val apiService: TrainingApiService,
     private val dao: TrainingPlanDao,
+    private val detailCacheDao: TrainingPlanDetailCacheDao,
     private val sessionManager: SessionManager,
 ) : BaseRemoteDataSource(), TrainingRepository {
+
+    private val detailJson = Json { ignoreUnknownKeys = true }
 
     /**
      * Plan IDs that have been locally deleted but whose server-side delete may still be
@@ -101,13 +109,28 @@ class TrainingRepositoryImpl @Inject constructor(
         }
     }.distinctUntilChanged()
 
+    override suspend fun getCachedTrainingPlanDetail(planId: String): TrainingPlan? =
+        detailCacheDao.getById(planId)?.let { entity ->
+            runCatching {
+                detailJson.decodeFromString<TrainingPlanResponseDto>(entity.detailJson).toDomain()
+            }.getOrNull()
+        }
+
     override suspend fun getTrainingPlanDetail(planId: String): Result<TrainingPlan> {
         Log.d("AIFIT_DEBUG", "[REPO][DETAIL] START planId=$planId")
+        val cached = getCachedTrainingPlanDetail(planId)
         return when (val remote = safeApiCall { apiService.getTrainingPlanById(planId) }) {
             is Result.Success -> {
-                val plan = remote.data.toDomain()
+                val dto = remote.data
+                val plan = dto.toDomain()
+                detailCacheDao.upsert(
+                    TrainingPlanDetailCacheEntity(
+                        planId = planId,
+                        detailJson = detailJson.encodeToString(dto),
+                        cachedAt = System.currentTimeMillis(),
+                    ),
+                )
                 Log.d("AIFIT_DEBUG", "[REPO][DETAIL] OK planId=${plan.id} status=${plan.status} days=${plan.days.size} totalExercises=${plan.days.sumOf { it.exercises.size }}")
-                // Persist detail so future cache fallbacks include this plan
                 val userId = sessionManager.getUserId()
                 if (userId != null) {
                     dao.upsertAll(listOf(plan.toEntity(userId)))
@@ -116,11 +139,12 @@ class TrainingRepositoryImpl @Inject constructor(
             }
             is Result.Error -> {
                 Log.e("AIFIT_DEBUG", "[REPO][DETAIL] ERROR planId=$planId — ${remote.exception.message}")
-                // Room entity never stores days, so returning the cached entity
-                // as a "success" would give the caller a plan with days=emptyList(),
-                // which silently breaks deriveTodayTraining(). Propagate the error
-                // so the caller can retry or fall back gracefully.
-                remote
+                if (cached != null) {
+                    Log.d("AIFIT_DEBUG", "[REPO][DETAIL] using detail cache for planId=$planId")
+                    Result.Success(cached)
+                } else {
+                    remote
+                }
             }
             else -> Result.Loading
         }

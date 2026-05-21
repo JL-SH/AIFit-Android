@@ -4,6 +4,9 @@ import app.cash.turbine.test
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.ApiResponse
 import com.jlsh.aifit.feature.nutrition.data.api.NutritionTargetApiService
+import com.jlsh.aifit.feature.nutrition.data.local.NutritionTargetDao
+import com.jlsh.aifit.feature.nutrition.data.mapper.NutritionMapper.toDomain
+import com.jlsh.aifit.feature.nutrition.data.mapper.NutritionMapper.toEntity
 import com.jlsh.aifit.testutil.*
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -14,17 +17,19 @@ import org.junit.Test
 class NutritionTargetRepositoryImplTest {
 
     private val apiService: NutritionTargetApiService = mockk()
+    private val dao: NutritionTargetDao = mockk(relaxUnitFun = true)
     private lateinit var sut: NutritionTargetRepositoryImpl
 
     @Before
     fun setUp() {
-        sut = NutritionTargetRepositoryImpl(apiService)
+        sut = NutritionTargetRepositoryImpl(apiService, dao)
     }
 
     // ─── getCurrentTarget ──────────────────────────────────────────────────────
 
     @Test
     fun `getCurrentTarget emite Loading y luego Success con target`() = runTest {
+        coEvery { dao.getCurrent() } returns null
         coEvery { apiService.getCurrentTarget() } returns ApiResponse(
             success = true, data = fakeNutritionTargetResponseDto(),
         )
@@ -38,6 +43,22 @@ class NutritionTargetRepositoryImplTest {
             assertEquals("target-1", (success as Result.Success).data.id)
             assertEquals(2200, success.data.calorieTarget)
 
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `getCurrentTarget emite cache antes de red cuando hay dato en Room`() = runTest {
+        val cached = fakeNutritionTargetResponseDto().toDomain().toEntity()
+        coEvery { dao.getCurrent() } returns cached
+        coEvery { apiService.getCurrentTarget() } returns ApiResponse(
+            success = true, data = fakeNutritionTargetResponseDto(),
+        )
+
+        sut.getCurrentTarget().test {
+            assertTrue(awaitItem() is Result.Loading)
+            assertTrue(awaitItem() is Result.Success)
+            assertTrue(awaitItem() is Result.Success)
             awaitComplete()
         }
     }

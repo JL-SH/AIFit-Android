@@ -221,7 +221,7 @@ private fun HomeContent(
     Column(modifier = Modifier.fillMaxSize()) {
         // Subtle progress bar shown while the active plan is being re-fetched on resume
         AnimatedVisibility(
-            visible = state.isRefreshingPlan,
+            visible = state.isRefreshingPlan || state.isRefreshingMeal,
             enter = fadeIn(tween(200)),
             exit = fadeOut(tween(300)),
         ) {

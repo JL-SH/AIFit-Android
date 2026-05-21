@@ -10,6 +10,8 @@ import com.jlsh.aifit.feature.diet.data.local.DietPlanDao
 import com.jlsh.aifit.feature.diet.data.local.DietPlanEntity
 import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogDao
 import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogEntity
+import com.jlsh.aifit.feature.nutrition.data.local.NutritionTargetDao
+import com.jlsh.aifit.feature.nutrition.data.local.NutritionTargetEntity
 import com.jlsh.aifit.feature.progress.data.local.BodyWeightDao
 import com.jlsh.aifit.feature.progress.data.local.BodyWeightEntity
 import com.jlsh.aifit.feature.shopping.data.local.ShoppingDao
@@ -18,6 +20,8 @@ import com.jlsh.aifit.feature.shopping.data.local.ShoppingItemCheckEntity
 import com.jlsh.aifit.feature.shopping.data.local.ShoppingListEntity
 import com.jlsh.aifit.feature.shopping.data.local.ShoppingLocalItemEntity
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanDao
+import com.jlsh.aifit.feature.training.data.local.TrainingPlanDetailCacheDao
+import com.jlsh.aifit.feature.training.data.local.TrainingPlanDetailCacheEntity
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanEntity
 import com.jlsh.aifit.feature.user.data.local.UserProfileDao
 import com.jlsh.aifit.feature.user.data.local.UserProfileEntity
@@ -31,6 +35,8 @@ import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
         DietPlanEntity::class,
         WorkoutLogEntity::class,
         NutritionLogEntity::class,
+        NutritionTargetEntity::class,
+        TrainingPlanDetailCacheEntity::class,
         BodyWeightEntity::class,
         ChatSessionEntity::class,
         ChatMessageEntity::class,
@@ -39,7 +45,7 @@ import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
         ShoppingLocalItemEntity::class,
         ShoppingDeletedItemEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -49,6 +55,8 @@ abstract class AiFitDatabase : RoomDatabase() {
     abstract fun dietPlanDao(): DietPlanDao
     abstract fun workoutLogDao(): WorkoutLogDao
     abstract fun nutritionLogDao(): NutritionLogDao
+    abstract fun nutritionTargetDao(): NutritionTargetDao
+    abstract fun trainingPlanDetailCacheDao(): TrainingPlanDetailCacheDao
     abstract fun bodyWeightDao(): BodyWeightDao
     abstract fun chatDao(): ChatDao
     abstract fun shoppingDao(): ShoppingDao

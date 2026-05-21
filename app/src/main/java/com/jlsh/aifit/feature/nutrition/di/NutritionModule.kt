@@ -4,6 +4,7 @@ import com.jlsh.aifit.core.local.AiFitDatabase
 import com.jlsh.aifit.feature.nutrition.data.api.NutritionLogApiService
 import com.jlsh.aifit.feature.nutrition.data.api.NutritionTargetApiService
 import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogDao
+import com.jlsh.aifit.feature.nutrition.data.local.NutritionTargetDao
 import com.jlsh.aifit.feature.nutrition.data.repository.NutritionLogRepositoryImpl
 import com.jlsh.aifit.feature.nutrition.data.repository.NutritionTargetRepositoryImpl
 import com.jlsh.aifit.feature.nutrition.domain.repository.NutritionLogRepository
@@ -44,6 +45,11 @@ abstract class NutritionModule {
         @Singleton
         fun provideNutritionLogDao(database: AiFitDatabase): NutritionLogDao =
             database.nutritionLogDao()
+
+        @Provides
+        @Singleton
+        fun provideNutritionTargetDao(database: AiFitDatabase): NutritionTargetDao =
+            database.nutritionTargetDao()
     }
 }
 

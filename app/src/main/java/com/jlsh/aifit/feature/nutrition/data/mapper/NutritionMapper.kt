@@ -6,6 +6,7 @@ import com.jlsh.aifit.feature.nutrition.data.dto.MealLogResponseDto
 import com.jlsh.aifit.feature.nutrition.data.dto.NutritionLogResponseDto
 import com.jlsh.aifit.feature.nutrition.data.dto.NutritionTargetResponseDto
 import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogEntity
+import com.jlsh.aifit.feature.nutrition.data.local.NutritionTargetEntity
 import com.jlsh.aifit.feature.nutrition.domain.model.FoodItemLog
 import com.jlsh.aifit.feature.nutrition.domain.model.MealLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
@@ -79,6 +80,26 @@ object NutritionMapper {
         totalProteinGrams = totalProteinGrams,
         totalCarbsGrams = totalCarbsGrams,
         totalFatGrams = totalFatGrams,
+    )
+
+    fun NutritionTarget.toEntity(): NutritionTargetEntity = NutritionTargetEntity(
+        id = id,
+        calorieTarget = calorieTarget,
+        proteinTarget = proteinTarget,
+        carbsTarget = carbsTarget,
+        fatTarget = fatTarget,
+        effectiveFrom = effectiveFrom.toEpochDay(),
+        setBy = setBy.name,
+    )
+
+    fun NutritionTargetEntity.toDomain(): NutritionTarget = NutritionTarget(
+        id = id,
+        calorieTarget = calorieTarget,
+        proteinTarget = proteinTarget,
+        carbsTarget = carbsTarget,
+        fatTarget = fatTarget,
+        effectiveFrom = LocalDate.ofEpochDay(effectiveFrom),
+        setBy = TargetSource.fromString(setBy),
     )
 
     private fun parseDate(raw: String): LocalDate =
