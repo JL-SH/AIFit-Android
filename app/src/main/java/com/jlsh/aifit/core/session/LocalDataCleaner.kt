@@ -6,6 +6,14 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Singleton responsible for wiping all locally cached data stored in the
+ * Room database.
+ *
+ * Used by [SessionManager] during voluntary logout and session-invalidation
+ * flows to ensure no stale data from a previous session is ever visible
+ * to the next user or after re-login.
+ */
 @Singleton
 class LocalDataCleaner @Inject constructor(
     private val database: AiFitDatabase,
@@ -23,4 +31,3 @@ class LocalDataCleaner @Inject constructor(
         }
     }
 }
-

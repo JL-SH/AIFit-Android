@@ -16,15 +16,41 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Application-wide singleton that owns the authentication state and
+ * coordinates the session lifecycle.
+ *
+ * Consumers observe [isLoggedIn] to react to login/logout transitions and
+ * [logoutEvent] to receive the optional human-readable message emitted when
+ * a session is invalidated due to token expiry.
+ *
+ * All session-clearing work ([LocalDataCleaner], [AuthDataStore.clear]) is
+ * executed on [Dispatchers.IO] via an internal supervisor scope so the
+ * main thread is never blocked.
+ */
 @Singleton
 class SessionManager @Inject constructor(
     private val authDataStore: AuthDataStore,
     private val localDataCleaner: LocalDataCleaner,
 ) {
     private val _isLoggedIn = MutableStateFlow(authDataStore.hasToken())
+
+    /**
+     * Hot flow that tracks whether the user is currently logged in.
+     * Emits `true` immediately after a successful login and `false`
+     * after any logout or session invalidation.
+     */
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
     private val _logoutEvent = MutableSharedFlow<String?>(extraBufferCapacity = 1)
+
+    /**
+     * One-shot events emitted when the session ends.
+     *
+     * `null` indicates a voluntary logout; a non-null [String] contains the
+     * human-readable reason (e.g. "Tu sesión ha caducado…") to display as a
+     * Snackbar on the login screen.
+     */
     val logoutEvent: SharedFlow<String?> = _logoutEvent.asSharedFlow()
 
     /**
@@ -39,6 +65,19 @@ class SessionManager @Inject constructor(
      */
     private val invalidating = AtomicBoolean(false)
 
+    /**
+     * Persists credentials and user metadata after a successful authentication
+     * and marks the session as active.
+     *
+     * If a **different** user was previously logged in, that user's cached
+     * avatar is cleared before saving the new data.
+     *
+     * @param token The JWT to attach to subsequent API requests.
+     * @param userId Unique identifier of the authenticated user.
+     * @param email Email address of the authenticated user.
+     * @param name Display name of the authenticated user.
+     * @param profileComplete Whether the user has completed the onboarding profile.
+     */
     fun onLoginSuccess(
         token: String,
         userId: String,
@@ -57,10 +96,21 @@ class SessionManager @Inject constructor(
         _isLoggedIn.value = true
     }
 
+    /**
+     * Updates the profile-completion flag stored in [AuthDataStore].
+     *
+     * Called after the user finishes the create-profile onboarding step.
+     *
+     * @param value `true` if the user's profile is fully configured.
+     */
     fun setProfileComplete(value: Boolean) {
         authDataStore.saveProfileComplete(value)
     }
 
+    /**
+     * Returns `true` if the currently authenticated user has completed
+     * the onboarding profile step.
+     */
     fun isProfileComplete(): Boolean = authDataStore.isProfileComplete()
 
     /**
@@ -104,9 +154,20 @@ class SessionManager @Inject constructor(
         _isLoggedIn.value = false
     }
 
+    /**
+     * Returns the currently stored JWT, or `null` if the user is not logged in.
+     */
     fun getToken(): String? = authDataStore.getToken()
 
+    /**
+     * Returns the unique identifier of the authenticated user, or `null`
+     * if no session is active.
+     */
     fun getUserId(): String? = authDataStore.getUserId()
 
+    /**
+     * Returns the display name of the authenticated user, or `null`
+     * if no session is active.
+     */
     fun getUserName(): String? = authDataStore.getName()
 }

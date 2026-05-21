@@ -9,11 +9,29 @@ import okhttp3.Route
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * OkHttp [Authenticator] that handles HTTP 401 Unauthorized responses.
+ *
+ * Because the backend has no refresh-token endpoint, any 401 means the JWT
+ * has expired irrecoverably. This authenticator delegates to [SessionManager]
+ * to clear all local data and emit a logout event with a human-readable
+ * message, then returns `null` so OkHttp does **not** retry the request.
+ */
 @Singleton
 class TokenAuthenticator @Inject constructor(
     private val sessionManager: SessionManager,
 ) : Authenticator {
 
+    /**
+     * Invoked automatically by OkHttp on every 401 response.
+     *
+     * Logs the offending URL, triggers [SessionManager.invalidateSession],
+     * and returns `null` to cancel any retry attempt.
+     *
+     * @param route The route to the origin server, or `null` if unknown.
+     * @param response The 401 HTTP response received from the server.
+     * @return Always `null`, instructing OkHttp not to retry the request.
+     */
     override fun authenticate(route: Route?, response: Response): Request? {
         // The backend has no refresh-token endpoint.
         // A 401 means the JWT has expired irrecoverably.
@@ -25,4 +43,3 @@ class TokenAuthenticator @Inject constructor(
         return null
     }
 }
-

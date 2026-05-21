@@ -7,10 +7,27 @@ import kotlinx.serialization.json.jsonPrimitive
 import retrofit2.HttpException
 import java.io.IOException
 
+/**
+ * Converts raw [Throwable] values from the network layer into typed
+ * [AppException] subclasses that domain and UI code can handle without
+ * depending directly on OkHttp or Retrofit types.
+ */
 object NetworkErrorMapper {
 
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Maps a [Throwable] caught during a network call to a typed [AppException].
+     *
+     * | Input type      | Result                               |
+     * |-----------------|--------------------------------------|
+     * | [IOException]   | [AppException.NetworkException]      |
+     * | [HttpException] | HTTP-status-specific subclass        |
+     * | Anything else   | [AppException.UnknownException]      |
+     *
+     * @param throwable The raw exception thrown by Retrofit or OkHttp.
+     * @return A typed [AppException] suitable for the domain and UI layers.
+     */
     fun map(throwable: Throwable): AppException = when (throwable) {
         is IOException -> AppException.NetworkException
         is HttpException -> mapHttpException(throwable)
@@ -40,4 +57,3 @@ object NetworkErrorMapper {
         }
     }
 }
-
