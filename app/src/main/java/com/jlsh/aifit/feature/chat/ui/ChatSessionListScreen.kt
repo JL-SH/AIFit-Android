@@ -3,10 +3,12 @@ package com.jlsh.aifit.feature.chat.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -100,12 +102,18 @@ fun ChatSessionListScreen(
         onRetry = viewModel::loadSessions,
     ) { paddingValues, successState ->
         if (successState.sessions.isEmpty()) {
-            EmptyStateView(
-                icon = Icons.Rounded.SmartToy,
-                title = stringResource(R.string.chat_empty_title),
-                subtitle = stringResource(R.string.chat_empty_subtitle),
-                modifier = Modifier.padding(paddingValues),
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center,
+            ) {
+                EmptyStateView(
+                    icon = Icons.Rounded.SmartToy,
+                    title = stringResource(R.string.chat_empty_title),
+                    subtitle = stringResource(R.string.chat_empty_subtitle),
+                )
+            }
         } else {
             LazyColumn(
                 contentPadding = PaddingValues(
