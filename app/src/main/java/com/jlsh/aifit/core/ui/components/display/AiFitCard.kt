@@ -71,3 +71,26 @@ private fun AiFitCardPreview() {
         }
     }
 }
+
+@Preview(
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
+    name = "Light - secondaryContainer"
+)
+@Composable
+private fun AiFitCardLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        AiFitCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+            Text(
+                text = "Nutrición de hoy",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = "300 kcal registradas",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}

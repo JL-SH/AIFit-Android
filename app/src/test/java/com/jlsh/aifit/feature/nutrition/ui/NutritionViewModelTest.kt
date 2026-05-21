@@ -100,6 +100,27 @@ class NutritionViewModelTest {
     }
 
     @Test
+    fun `hubState usa ultimo Success del log cuando cache no incluye comidas`() = runTest {
+        val cachedLog = fakeNutritionLog(totalCalories = 300, meals = emptyList())
+        val freshLog = fakeNutritionLog(
+            totalCalories = 300,
+            meals = listOf(fakeMealLog(id = "meal-2", name = "Desayuno")),
+        )
+        val vm = createViewModel(
+            logFlow = flow {
+                emit(Result.Loading)
+                emit(Result.Success(cachedLog))
+                emit(Result.Success(freshLog))
+            },
+        )
+        advanceUntilIdle()
+
+        val state = vm.hubState.value as NutritionHubUiState.Success
+        assertEquals(1, state.todayState.nutritionLog?.meals?.size)
+        assertEquals("Desayuno", state.todayState.nutritionLog?.meals?.first()?.name)
+    }
+
+    @Test
     fun `hubState Success con nutritionLog null cuando log falla`() = runTest {
         val vm = createViewModel(
             logFlow = flowOf(Result.Error(AppException.NetworkException)),

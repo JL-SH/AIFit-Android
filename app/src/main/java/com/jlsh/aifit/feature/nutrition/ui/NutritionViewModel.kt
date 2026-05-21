@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
+import com.jlsh.aifit.core.common.lastSuccessOrNull
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
@@ -114,9 +115,7 @@ class NutritionViewModel @Inject constructor(
         fetchDietPlansJob?.cancel()
         fetchDietPlansJob = viewModelScope.launch {
             val logDeferred = async {
-                getNutritionLogUseCase(LocalDate.now())
-                    .first { it !is Result.Loading }
-                    .let { r -> if (r is Result.Success) r.data else null }
+                getNutritionLogUseCase(LocalDate.now()).lastSuccessOrNull()
             }
             val targetDeferred = async {
                 getCurrentNutritionTargetUseCase()
@@ -237,6 +236,7 @@ class NutritionViewModel @Inject constructor(
             when (val result = trackMealUseCase(request)) {
                 is Result.Success -> {
                     _trackMealState.value = TrackMealUiState.Saved
+                    fetchHubData()
                     emitEvent(NutritionUiEvent.NavigateToHome)
                 }
                 is Result.Error -> {
@@ -262,6 +262,7 @@ class NutritionViewModel @Inject constructor(
                 is Result.Success -> {
                     ensureMinAnimationDuration(startTime)
                     _trackMealState.value = TrackMealUiState.Saved
+                    fetchHubData()
                     emitEvent(NutritionUiEvent.NavigateToHome)
                 }
                 is Result.Error -> {

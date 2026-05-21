@@ -666,6 +666,31 @@ class HomeViewModelTest {
     // ── onResumed ──────────────────────────────────────────────────────────────
 
     @Test
+    fun `onResumed actualiza todayNutrition con ultimo Success del log`() = runTest {
+        val cachedLog = fakeNutritionLog(totalCalories = 100, meals = emptyList())
+        val freshLog = fakeNutritionLog(totalCalories = 300, meals = listOf(fakeMealLog()))
+        val vm = createViewModel(
+            nutritionLogFlow = flowOf(Result.Success(cachedLog)),
+        )
+        advanceUntilIdle()
+
+        val before = vm.uiState.value as HomeUiState.Success
+        assertEquals(100, before.todayNutrition?.caloriesConsumed)
+
+        every { getNutritionLogUseCase(any()) } returns flow {
+            emit(Result.Loading)
+            emit(Result.Success(cachedLog))
+            emit(Result.Success(freshLog))
+        }
+
+        vm.onResumed()
+        advanceUntilIdle()
+
+        val after = vm.uiState.value as HomeUiState.Success
+        assertEquals(300, after.todayNutrition?.caloriesConsumed)
+    }
+
+    @Test
     fun `onResumed detecta plan activo nuevo y actualiza el estado`() = runTest {
         // Initial: no active plan
         val vm = createViewModel(

@@ -124,3 +124,18 @@ private fun PrimaryButtonDisabledPreview() {
         )
     }
 }
+
+@Preview(
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
+    name = "Light"
+)
+@Composable
+private fun PrimaryButtonLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        PrimaryButton(
+            text = "Registrar comida",
+            onClick = {},
+        )
+    }
+}

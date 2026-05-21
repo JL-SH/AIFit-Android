@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.util.Log
 import com.jlsh.aifit.core.common.Result
+import com.jlsh.aifit.core.common.lastSuccessOrNull
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.model.MealType
@@ -293,6 +294,7 @@ class HomeViewModel @Inject constructor(
                 launch { refreshUserProfileOnResume() }
                 launch { syncTrainingPlansOnResume() }
                 launch { syncDietPlansOnResume() }
+                launch { syncNutritionOnResume() }
             }
 
             _uiState.update { cur ->
@@ -357,6 +359,15 @@ class HomeViewModel @Inject constructor(
                 }
                 else -> refreshWorkoutStatus()
             }
+        }
+    }
+
+    private suspend fun syncNutritionOnResume() {
+        val nutritionPair = loadNutrition()
+        val todayNutrition = deriveNutrition(nutritionPair.first, nutritionPair.second)
+        Log.d("AIFIT_HOME", "syncNutritionOnResume calories=${todayNutrition?.caloriesConsumed}")
+        _uiState.update { cur ->
+            if (cur is HomeUiState.Success) cur.copy(todayNutrition = todayNutrition) else cur
         }
     }
 
@@ -649,9 +660,7 @@ class HomeViewModel @Inject constructor(
     private suspend fun loadNutrition(): Pair<NutritionLog?, NutritionTarget?> = coroutineScope {
         val today = LocalDate.now()
         val logDeferred = async {
-            getNutritionLogUseCase(today)
-                .first { it !is Result.Loading }
-                .let { r -> if (r is Result.Success) r.data else null }
+            getNutritionLogUseCase(today).lastSuccessOrNull()
         }
         val targetDeferred = async {
             getCurrentNutritionTargetUseCase()
