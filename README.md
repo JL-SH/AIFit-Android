@@ -41,9 +41,9 @@ This repository is part of the author's **Final Degree Project (TFG)**: it demon
 <p align="center">
   <img src="docs/img/screenshot-login.png" width="220" alt="AI Coach" />
   &nbsp;&nbsp;
-  <img src="img/screenshot-onboarding.png" width="220" alt="Progress" />
+  <img src="docs/img/screenshot-onboarding.png" width="220" alt="Progress" />
   &nbsp;&nbsp;
-  <img src="screenshot-food-vision.png" width="220" alt="Profile" />
+  <img src="docs/img/screenshot-food-vision.png" width="220" alt="Profile" />
 </p>
 <p align="center">
   <img src="docs/img/screenshot-training-plan.png" width="220" alt="AI Coach" />

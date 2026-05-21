@@ -26,32 +26,32 @@ Este repositorio forma parte del **Trabajo de Fin de Grado (TFG)** del autor: de
 ## Capturas de pantalla
 
 <p align="center">
-  <img src="docs/img/screenshot-home.png" width="220" alt="Inicio" />
+  <img src="docs/img/screenshot-home.png" width="220" alt="Home" />
   &nbsp;&nbsp;
-  <img src="docs/img/screenshot-training-session.png" width="220" alt="Sesión de entreno" />
+  <img src="docs/img/screenshot-training-session.png" width="220" alt="Workout session" />
   &nbsp;&nbsp;
-  <img src="docs/img/screenshot-nutrition.png" width="220" alt="Nutrición" />
+  <img src="docs/img/screenshot-nutrition.png" width="220" alt="Nutrition" />
 </p>
 <p align="center">
   <img src="docs/img/screenshot-ai-coach.png" width="220" alt="AI Coach" />
   &nbsp;&nbsp;
-  <img src="docs/img/screenshot-progress.png" width="220" alt="Progreso" />
+  <img src="docs/img/screenshot-progress.png" width="220" alt="Progress" />
   &nbsp;&nbsp;
-  <img src="docs/img/screenshot-profile.png" width="220" alt="Perfil" />
+  <img src="docs/img/screenshot-profile.png" width="220" alt="Profile" />
 </p>
 <p align="center">
   <img src="docs/img/screenshot-login.png" width="220" alt="AI Coach" />
   &nbsp;&nbsp;
-  <img src="img/screenshot-onboarding.png" width="220" alt="Progress" />
+  <img src="docs/img/screenshot-onboarding.png" width="220" alt="Progress" />
   &nbsp;&nbsp;
-  <img src="screenshot-food-vision.png" width="220" alt="Profile" />
+  <img src="docs/img/screenshot-food-vision.png" width="220" alt="Profile" />
 </p>
 <p align="center">
   <img src="docs/img/screenshot-training-plan.png" width="220" alt="AI Coach" />
   &nbsp;&nbsp;
   <img src="docs/img/screenshot-diet-plan.png" width="220" alt="Progress" />
   &nbsp;&nbsp;
-  <img src="docs/img/screenshot-metabolic.png" width="220" alt="Profile" />
+  <img src="docs/img/screenshot-gamification.png" width="220" alt="Profile" />
 </p>
 
 ---
