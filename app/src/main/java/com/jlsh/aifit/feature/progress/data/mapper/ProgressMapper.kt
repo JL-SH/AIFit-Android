@@ -30,7 +30,7 @@ object ProgressMapper {
         workoutAdherence = workoutAdherence.toDomain(),
         weightProgress = weightProgress.toDomain(),
         nutritionAdherence = nutritionAdherence.toDomain(),
-        strengthProgress = strengthProgress.map { it.toDomain() },
+        strengthProgress = strengthProgress.mapNotNull { it.toDomain() },
     )
 
     fun WorkoutAdherenceResponseDto.toDomain(): WorkoutAdherence = WorkoutAdherence(
@@ -56,12 +56,16 @@ object ProgressMapper {
         adherencePercentage = calorieAdherencePercentage,
     )
 
-    fun StrengthProgressResponseDto.toDomain(): StrengthProgress = StrengthProgress(
-        exerciseName = exerciseName,
-        startMax = bestSetStart.weight,
-        currentMax = bestSetEnd.weight,
-        changePercentage = progressionPercentage,
-    )
+    fun StrengthProgressResponseDto.toDomain(): StrengthProgress? {
+        val start = bestSetStart?.weight ?: return null
+        val end = bestSetEnd?.weight ?: return null
+        return StrengthProgress(
+            exerciseName = exerciseName,
+            startMax = start,
+            currentMax = end,
+            changePercentage = progressionPercentage ?: 0.0,
+        )
+    }
 
     fun WeeklyProgressSummaryResponseDto.toDomain(): WeeklyProgressSummary = WeeklyProgressSummary(
         workoutsThisWeek = workoutsThisWeek,

@@ -6,8 +6,8 @@ import kotlinx.serialization.Serializable
 data class StrengthProgressResponseDto(
     val exerciseName: String,
     val trainingExerciseId: String,
-    val bestSetStart: BestSetResponseDto,
-    val bestSetEnd: BestSetResponseDto,
-    val progressionPercentage: Double,
-    val trend: String,
+    val bestSetStart: BestSetResponseDto? = null,
+    val bestSetEnd: BestSetResponseDto? = null,
+    val progressionPercentage: Double? = null,
+    val trend: String? = null,
 )

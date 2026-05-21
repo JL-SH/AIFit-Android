@@ -1,10 +1,13 @@
 package com.jlsh.aifit.feature.progress.data.mapper
 
 import com.jlsh.aifit.feature.progress.data.dto.BestSetResponseDto
+import com.jlsh.aifit.feature.progress.data.dto.ProgressDashboardResponseDto
+import com.jlsh.aifit.feature.progress.data.dto.StrengthProgressResponseDto
 import com.jlsh.aifit.feature.progress.data.mapper.ProgressMapper.toDomain
 import com.jlsh.aifit.feature.progress.data.mapper.ProgressMapper.toEntity
 import com.jlsh.aifit.feature.progress.domain.model.WeightTrend
 import com.jlsh.aifit.testutil.*
+import kotlinx.serialization.json.Json
 import org.junit.Assert.*
 import org.junit.Test
 import java.time.LocalDate
@@ -22,8 +25,8 @@ class ProgressMapperTest {
         assertEquals(LocalDate.of(2026, 3, 31), result.periodTo)
         assertEquals(12, result.workoutAdherence.plannedSessions)
         assertEquals(10, result.workoutAdherence.completedSessions)
-        assertEquals(80.0, result.weightProgress.startWeight, 0.01)
-        assertEquals(78.5, result.weightProgress.currentWeight, 0.01)
+        assertEquals(80.0, result.weightProgress.startWeight!!, 0.01)
+        assertEquals(78.5, result.weightProgress.currentWeight!!, 0.01)
         assertEquals(2100.0, result.nutritionAdherence.averageCalories, 0.01)
         assertEquals(1, result.strengthProgress.size)
     }
@@ -49,10 +52,10 @@ class ProgressMapperTest {
         val dto = fakeWeightProgressResponseDto(initialWeight = 85.0)
         val result = dto.toDomain()
 
-        assertEquals(85.0, result.startWeight, 0.01)
-        assertEquals(78.5, result.currentWeight, 0.01)
-        assertEquals(75.0, result.targetWeight, 0.01)
-        assertEquals(-1.5, result.change, 0.01)
+        assertEquals(85.0, result.startWeight!!, 0.01)
+        assertEquals(78.5, result.currentWeight!!, 0.01)
+        assertEquals(75.0, result.targetWeight!!, 0.01)
+        assertEquals(-1.5, result.change!!, 0.01)
         assertEquals(WeightTrend.LOSING, result.trend)
         assertEquals(2, result.entries.size)
     }
@@ -91,12 +94,107 @@ class ProgressMapperTest {
             bestSetEnd = BestSetResponseDto(date = "2026-03-30", reps = 8, weight = 65.0),
             progressionPercentage = 30.0,
         )
-        val result = dto.toDomain()
+        val result = requireNotNull(dto.toDomain())
 
         assertEquals("Bench Press", result.exerciseName)
         assertEquals(50.0, result.startMax, 0.01)
         assertEquals(65.0, result.currentMax, 0.01)
         assertEquals(30.0, result.changePercentage, 0.01)
+    }
+
+    @Test
+    fun `StrengthProgressResponseDto toDomain retorna null cuando weight es null`() {
+        val dto = fakeStrengthProgressResponseDto(
+            bestSetStart = BestSetResponseDto(date = "2026-01-01", reps = 12, weight = null),
+            bestSetEnd = BestSetResponseDto(date = "2026-01-15", reps = 12, weight = null),
+        )
+
+        assertNull(dto.toDomain())
+    }
+
+    @Test
+    fun `StrengthProgressResponseDto toDomain retorna null cuando bestSetStart o bestSetEnd son null`() {
+        val dto = StrengthProgressResponseDto(
+            exerciseName = "Pull-ups",
+            trainingExerciseId = "exercise-2",
+            bestSetStart = null,
+            bestSetEnd = null,
+            progressionPercentage = null,
+            trend = "INSUFFICIENT_DATA",
+        )
+
+        assertNull(dto.toDomain())
+    }
+
+    @Test
+    fun `ProgressDashboardResponseDto toDomain omite strengthProgress sin peso comparable`() {
+        val dto = fakeProgressDashboardResponseDto(
+            strengthProgress = listOf(
+                fakeStrengthProgressResponseDto(),
+                fakeStrengthProgressResponseDto(
+                    exerciseName = "Pull-ups",
+                    bestSetStart = BestSetResponseDto(date = "2026-01-01", reps = 10, weight = null),
+                    bestSetEnd = BestSetResponseDto(date = "2026-01-15", reps = 12, weight = null),
+                ),
+            ),
+        )
+
+        val result = dto.toDomain()
+
+        assertEquals(1, result.strengthProgress.size)
+        assertEquals("Bench Press", result.strengthProgress.first().exerciseName)
+    }
+
+    @Test
+    fun `deserializa strengthProgress con weight null sin lanzar excepción`() {
+        val json = Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+            isLenient = true
+        }
+        val payload = """
+            {
+              "period": {"from": "2026-03-01", "to": "2026-03-31"},
+              "workoutAdherence": {
+                "plannedSessions": 12,
+                "completedSessions": 10,
+                "adherencePercentage": 83.3,
+                "currentStreak": 5,
+                "longestStreak": 8
+              },
+              "weightProgress": {
+                "initialWeight": 80.0,
+                "currentWeight": 78.5,
+                "targetWeight": 75.0,
+                "change": -1.5,
+                "trend": "LOSING",
+                "entries": []
+              },
+              "nutritionAdherence": {
+                "targetCalories": 2200,
+                "averageCaloriesConsumed": 2100.0,
+                "calorieAdherencePercentage": 95.5,
+                "targetProtein": 150.0,
+                "averageProteinConsumed": 140.0,
+                "proteinAdherencePercentage": 93.3,
+                "daysTracked": 20
+              },
+              "strengthProgress": [{
+                "exerciseName": "Pull-ups",
+                "trainingExerciseId": "exercise-2",
+                "bestSetStart": {"date": "2026-01-01", "reps": 12, "weight": null},
+                "bestSetEnd": {"date": "2026-01-15", "reps": 12, "weight": null},
+                "progressionPercentage": null,
+                "trend": "INSUFFICIENT_DATA"
+              }],
+              "generatedAt": "2026-03-31T23:59:59"
+            }
+        """.trimIndent()
+
+        val dto = json.decodeFromString<ProgressDashboardResponseDto>(payload)
+        val result = dto.toDomain()
+
+        assertTrue(result.strengthProgress.isEmpty())
     }
 
     // ─── WeeklyProgressSummaryResponseDto.toDomain() ───────────────────────────

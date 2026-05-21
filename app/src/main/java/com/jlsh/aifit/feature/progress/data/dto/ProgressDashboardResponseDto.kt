@@ -26,7 +26,7 @@ data class WeightEntryDto(
 data class BestSetResponseDto(
     val date: String,
     val reps: Int,
-    val weight: Double,
+    val weight: Double? = null,
 )
 
 @Serializable
