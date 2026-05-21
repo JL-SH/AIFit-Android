@@ -16,6 +16,18 @@ import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Small colored pill badge that renders a localised label for a plan status value.
+ *
+ * Background and text colors are drawn from the Material color scheme and vary
+ * per status: active uses primary, completed uses tertiary, and draft/archived
+ * use surface variants. Unknown status values are displayed as-is with surface
+ * variant colors.
+ *
+ * @param status Backend status string (e.g. `"ACTIVE"`, `"COMPLETED"`, `"DRAFT"`,
+ *   `"ARCHIVED"`, `"PAUSED"`). Comparison is case-insensitive.
+ * @param modifier Modifier applied to the outer [Surface].
+ */
 @Composable
 fun PlanStatusBadge(
     status: String,

@@ -18,10 +18,18 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+/**
+ * Convierte DTOs de red y entidades Room del módulo de dieta al modelo de dominio y viceversa.
+ */
 object DietMapper {
 
     private val isoFormatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
 
+    /**
+     * Mapea un resumen de plan de la API a [DietPlan] sin días (listados).
+     *
+     * @return Plan de dominio con [DietPlan.days] vacío.
+     */
     fun DietPlanSummaryResponseDto.toDomain(): DietPlan = DietPlan(
         id = id,
         name = name,
@@ -38,6 +46,11 @@ object DietMapper {
         days = emptyList(),
     )
 
+    /**
+     * Mapea el detalle completo de un plan de la API, incluyendo días y comidas ordenados.
+     *
+     * @return Plan de dominio con [DietPlan.days] poblados.
+     */
     fun DietPlanResponseDto.toDomain(): DietPlan = DietPlan(
         id = id,
         name = name,
@@ -54,6 +67,9 @@ object DietMapper {
         days = days.map { it.toDomain() }.sortedBy { it.dayNumber },
     )
 
+    /**
+     * Mapea un día de dieta de la API al modelo de dominio.
+     */
     fun DietDayResponseDto.toDomain(): DietDay = DietDay(
         id = id,
         dayNumber = dayNumber,
@@ -62,6 +78,9 @@ object DietMapper {
         meals = meals.map { it.toDomain() },
     )
 
+    /**
+     * Mapea una comida planificada de la API al modelo de dominio.
+     */
     fun MealResponseDto.toDomain(): Meal = Meal(
         id = id,
         mealType = MealType.fromString(mealType),
@@ -74,6 +93,9 @@ object DietMapper {
         items = items.map { it.toDomain() },
     )
 
+    /**
+     * Mapea un alimento dentro de una comida planificada al modelo de dominio.
+     */
     fun MealItemResponseDto.toDomain(): MealItem = MealItem(
         id = id,
         name = name,
@@ -85,6 +107,11 @@ object DietMapper {
         fatGrams = fatGrams,
     )
 
+    /**
+     * Persiste un plan de dominio en Room asociado al [userId].
+     *
+     * @param userId Identificador del usuario propietario del plan.
+     */
     fun DietPlan.toEntity(userId: String): DietPlanEntity = DietPlanEntity(
         id = id,
         userId = userId,
@@ -101,6 +128,9 @@ object DietMapper {
         createdAt = createdAt.toInstant(ZoneOffset.UTC).toEpochMilli(),
     )
 
+    /**
+     * Restaura un plan desde Room; los días no se almacenan en la entidad de resumen.
+     */
     fun DietPlanEntity.toDomain(): DietPlan = DietPlan(
         id = id,
         name = name,
@@ -121,4 +151,3 @@ object DietMapper {
         runCatching { LocalDateTime.parse(raw, isoFormatter) }
             .getOrDefault(LocalDateTime.now())
 }
-

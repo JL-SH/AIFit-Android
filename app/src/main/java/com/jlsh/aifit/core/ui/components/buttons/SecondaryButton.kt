@@ -20,6 +20,19 @@ import androidx.compose.ui.unit.sp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.FullShape
 
+/**
+ * Full-width outlined ghost button for secondary actions.
+ *
+ * Uses a transparent background with a 1 dp [MaterialTheme.colorScheme.outline] border.
+ * The label is rendered in uppercase. When [isLoading] is `true`, the label is replaced
+ * by a [CircularProgressIndicator] and interaction is disabled.
+ *
+ * @param text Label displayed inside the button (automatically uppercased).
+ * @param onClick Lambda invoked when the button is tapped.
+ * @param modifier Modifier applied to the outer [OutlinedButton].
+ * @param isLoading When `true`, hides the label and shows a spinner; also disables taps.
+ * @param enabled When `false`, renders the button in its disabled visual state.
+ */
 @Composable
 fun SecondaryButton(
     text: String,

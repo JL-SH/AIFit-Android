@@ -19,6 +19,26 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel compartido por login y registro.
+ *
+ * **UiState expuesto** ([uiState] — [AuthUiState]):
+ * - [AuthUiState.Idle]: formulario listo, sin petición en curso.
+ * - [AuthUiState.Loading]: login, registro o Google en progreso.
+ * - [AuthUiState.Success]: autenticación correcta; incluye [com.jlsh.aifit.feature.auth.domain.model.AuthToken].
+ * - [AuthUiState.Error]: mensaje de error (poco usado; los fallos suelen ir por eventos).
+ *
+ * **Eventos emitidos** ([events] — [AuthUiEvent]):
+ * - [AuthUiEvent.NavigateToMain]: perfil completo → pantalla principal.
+ * - [AuthUiEvent.NavigateToCreateProfile]: falta onboarding de perfil.
+ * - [AuthUiEvent.NavigateToRegister]: ir al registro desde login.
+ * - [AuthUiEvent.NavigateBack]: volver desde registro.
+ * - [AuthUiEvent.ShowSnackbar]: mostrar mensaje de error al usuario.
+ *
+ * @param loginUseCase Autenticación con email/contraseña.
+ * @param registerUseCase Alta de cuenta nueva.
+ * @param googleLoginUseCase Autenticación con token de Google.
+ */
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
@@ -28,65 +48,106 @@ class AuthViewModel @Inject constructor(
 
     // 1. UI STATE
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
+
+    /** Estado de la operación de autenticación (carga, éxito, error). */
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     // 2. EVENTS CHANNEL
     private val _events = Channel<AuthUiEvent>(Channel.BUFFERED)
+
+    /** Flujo único de navegación y snackbars; consumir una vez por pantalla. */
     val events = _events.receiveAsFlow()
 
     // 3. FORM STATE
     private val _email = MutableStateFlow("")
+
+    /** Email introducido en el formulario. */
     val email: StateFlow<String> = _email.asStateFlow()
 
     private val _password = MutableStateFlow("")
+
+    /** Contraseña introducida en el formulario. */
     val password: StateFlow<String> = _password.asStateFlow()
 
     private val _name = MutableStateFlow("")
+
+    /** Nombre (solo pantalla de registro). */
     val name: StateFlow<String> = _name.asStateFlow()
 
     private val _emailError = MutableStateFlow<String?>(null)
+
+    /** Mensaje de validación del email, o `null` si es válido. */
     val emailError: StateFlow<String?> = _emailError.asStateFlow()
 
     private val _passwordError = MutableStateFlow<String?>(null)
+
+    /** Mensaje de validación de la contraseña, o `null` si es válida. */
     val passwordError: StateFlow<String?> = _passwordError.asStateFlow()
 
     private val _nameError = MutableStateFlow<String?>(null)
+
+    /** Mensaje de validación del nombre, o `null` si es válido. */
     val nameError: StateFlow<String?> = _nameError.asStateFlow()
 
     // 5. PUBLIC FUNCTIONS
+
+    /**
+     * Actualiza el email y limpia el error asociado.
+     *
+     * @param value Nuevo texto del campo.
+     */
     fun onEmailChanged(value: String) {
         _email.value = value
         _emailError.value = null
     }
 
+    /**
+     * Actualiza la contraseña y limpia el error asociado.
+     *
+     * @param value Nuevo texto del campo.
+     */
     fun onPasswordChanged(value: String) {
         _password.value = value
         _passwordError.value = null
     }
 
+    /**
+     * Actualiza el nombre y limpia el error asociado.
+     *
+     * @param value Nuevo texto del campo.
+     */
     fun onNameChanged(value: String) {
         _name.value = value
         _nameError.value = null
     }
 
+    /** Valida el formulario de login y lanza la petición si es correcto. */
     fun onLoginClicked() {
         if (!validateLoginFields()) return
         performLogin()
     }
 
+    /** Valida el formulario de registro y lanza la petición si es correcto. */
     fun onRegisterClicked() {
         if (!validateRegisterFields()) return
         performRegister()
     }
 
+    /**
+     * Procesa el ID token devuelto por Google Sign-In.
+     *
+     * @param idToken Token JWT de Google.
+     */
     fun onGoogleLoginResult(idToken: String) {
         performGoogleLogin(idToken)
     }
 
+    /** Emite [AuthUiEvent.NavigateToRegister]. */
     fun onNavigateToRegister() {
         emitEvent(AuthUiEvent.NavigateToRegister)
     }
 
+    /** Emite [AuthUiEvent.NavigateBack]. */
     fun onNavigateBack() {
         emitEvent(AuthUiEvent.NavigateBack)
     }

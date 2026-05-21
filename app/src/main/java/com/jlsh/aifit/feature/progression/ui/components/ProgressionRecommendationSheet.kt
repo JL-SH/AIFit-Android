@@ -29,6 +29,17 @@ import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.progression.ui.RecommendationState
 import com.jlsh.aifit.feature.user.ui.toStringRes
 
+/**
+ * Hoja inferior modal con la recomendación de progresión de un ejercicio.
+ *
+ * Muestra indicador de carga, detalle de éxito (nombre, tipo, carga actual → sugerida,
+ * repeticiones, justificación y confianza) o mensaje de error con botón de reintento.
+ *
+ * @param state Estado actual de la recomendación ([RecommendationState]).
+ * @param onDismiss Callback al cerrar la hoja (deslizar o fuera del área).
+ * @param onRetry Reintenta la carga cuando [state] es [RecommendationState.Error].
+ * @param sheetState Estado de animación de la [ModalBottomSheet]; por defecto expandida.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgressionRecommendationSheet(

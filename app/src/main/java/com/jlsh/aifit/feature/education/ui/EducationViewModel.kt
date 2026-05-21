@@ -20,6 +20,35 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel compartido por las pantallas de contenido educativo contextual.
+ *
+ * **UiState expuesto** ([explanationState] — [ExplanationState]):
+ * - [ExplanationState.Idle]: sin explicación cargada.
+ * - [ExplanationState.Loading]: cargando explicación de ejercicio o comida.
+ * - [ExplanationState.Success]: explicación contextual lista.
+ * - [ExplanationState.Error]: mensaje de error.
+ *
+ * **UiState expuesto** ([whyThisState] — [WhyThisState]):
+ * - [WhyThisState.Idle]: sin explicación "por qué esto".
+ * - [WhyThisState.Loading]: cargando justificación.
+ * - [WhyThisState.Success]: explicación lista.
+ * - [WhyThisState.Error]: mensaje de error.
+ *
+ * **UiState expuesto** ([glossaryState] — [GlossaryState]):
+ * - [GlossaryState.Idle]: glosario sin búsqueda activa.
+ * - [GlossaryState.Loading]: consultando término.
+ * - [GlossaryState.Success]: definición del término lista.
+ * - [GlossaryState.Error]: mensaje de error.
+ *
+ * No emite eventos de navegación; las pantallas reaccionan directamente al [StateFlow].
+ *
+ * @param getExerciseExplanationUseCase Explicación de un ejercicio del plan.
+ * @param getMealExplanationUseCase Explicación de una comida del plan.
+ * @param getWhyThisExerciseUseCase Justificación de por qué está ese ejercicio.
+ * @param getWhyThisMealUseCase Justificación de por qué está esa comida.
+ * @param getGlossaryTermUseCase Definición de un término del glosario.
+ */
 @HiltViewModel
 class EducationViewModel @Inject constructor(
     private val getExerciseExplanationUseCase: GetExerciseExplanationUseCase,
@@ -30,14 +59,25 @@ class EducationViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _explanationState = MutableStateFlow<ExplanationState>(ExplanationState.Idle)
+
+    /** Estado de la explicación contextual de ejercicio o comida. */
     val explanationState: StateFlow<ExplanationState> = _explanationState.asStateFlow()
 
     private val _whyThisState = MutableStateFlow<WhyThisState>(WhyThisState.Idle)
+
+    /** Estado de la explicación "por qué este ejercicio/comida". */
     val whyThisState: StateFlow<WhyThisState> = _whyThisState.asStateFlow()
 
     private val _glossaryState = MutableStateFlow<GlossaryState>(GlossaryState.Idle)
+
+    /** Estado de la búsqueda en el glosario. */
     val glossaryState: StateFlow<GlossaryState> = _glossaryState.asStateFlow()
 
+    /**
+     * Carga la explicación educativa de un ejercicio.
+     *
+     * @param exerciseId Identificador del ejercicio en el plan.
+     */
     fun loadExerciseExplanation(exerciseId: String) {
         viewModelScope.launch {
             Log.d("AIFIT_DEBUG", "education: llamando exerciseExplanation id=$exerciseId")
@@ -56,6 +96,11 @@ class EducationViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Carga la explicación educativa de una comida.
+     *
+     * @param mealId Identificador de la comida en el plan.
+     */
     fun loadMealExplanation(mealId: String) {
         viewModelScope.launch {
             Log.d("AIFIT_DEBUG", "education: llamando mealExplanation id=$mealId")
@@ -74,6 +119,11 @@ class EducationViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Carga la justificación de por qué el plan incluye ese ejercicio.
+     *
+     * @param exerciseId Identificador del ejercicio en el plan.
+     */
     fun loadWhyThisExercise(exerciseId: String) {
         viewModelScope.launch {
             Log.d("AIFIT_DEBUG", "education: llamando whyThisExercise id=$exerciseId")
@@ -92,6 +142,11 @@ class EducationViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Carga la justificación de por qué el plan incluye esa comida.
+     *
+     * @param mealId Identificador de la comida en el plan.
+     */
     fun loadWhyThisMeal(mealId: String) {
         viewModelScope.launch {
             Log.d("AIFIT_DEBUG", "education: llamando whyThisMeal id=$mealId")
@@ -110,6 +165,11 @@ class EducationViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Consulta la definición de un término en el glosario.
+     *
+     * @param term Término a buscar (se recomienda texto ya recortado).
+     */
     fun loadGlossaryTerm(term: String) {
         viewModelScope.launch {
             Log.d("AIFIT_DEBUG", "education: llamando glossary term=$term")
@@ -128,14 +188,17 @@ class EducationViewModel @Inject constructor(
         }
     }
 
+    /** Restablece [explanationState] a [ExplanationState.Idle]. */
     fun resetExplanationState() {
         _explanationState.value = ExplanationState.Idle
     }
 
+    /** Restablece [whyThisState] a [WhyThisState.Idle]. */
     fun resetWhyThisState() {
         _whyThisState.value = WhyThisState.Idle
     }
 
+    /** Restablece [glossaryState] a [GlossaryState.Idle]. */
     fun resetGlossaryState() {
         _glossaryState.value = GlossaryState.Idle
     }

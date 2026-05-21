@@ -56,6 +56,16 @@ import com.jlsh.aifit.feature.chat.domain.model.ChatSessionStatus
 import com.jlsh.aifit.feature.chat.ui.state.ChatListUiState
 import com.jlsh.aifit.feature.chat.ui.state.ChatUiEvent
 
+/**
+ * Pantalla de listado de conversaciones con el AI Coach.
+ *
+ * Muestra sesiones con deslizar para archivar/eliminar, FAB para nuevo chat, diálogos de
+ * confirmación de borrado y renombrado. Reacciona a [ChatUiEvent] para navegación y snackbars.
+ *
+ * @param onNavigateToChat Abre una sesión existente por su identificador.
+ * @param onNavigateToNewChat Abre un chat vacío sin crear sesión en backend hasta el primer envío.
+ * @param viewModel ViewModel de chat inyectado por Hilt.
+ */
 @Composable
 fun ChatSessionListScreen(
     onNavigateToChat: (sessionId: String) -> Unit,

@@ -17,6 +17,24 @@ import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
+/**
+ * A [FlowRow] of [FilterChip]s that supports single or multi-item selection.
+ *
+ * Selected chips use [MaterialTheme.colorScheme.primaryContainer] as background;
+ * unselected chips use [MaterialTheme.colorScheme.surfaceVariant] with a subtle
+ * outline. Chips wrap naturally into multiple rows when the available width
+ * is exhausted.
+ *
+ * @param options Complete list of selectable option keys displayed as chips.
+ * @param selected Set of option keys that are currently selected.
+ * @param onSelectionChanged Callback invoked with the updated [Set] whenever
+ *   a chip is toggled.
+ * @param modifier Modifier applied to the outer [FlowRow].
+ * @param multiSelect When `true`, multiple chips can be active simultaneously.
+ *   When `false`, selecting a chip deselects all others (radio behavior).
+ * @param displayMapper Composable function mapping a raw option key to its
+ *   display label. Defaults to the key itself.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AiFitChipGroup(
@@ -104,4 +122,3 @@ private fun AiFitChipGroupMultiSelectPreview() {
         )
     }
 }
-

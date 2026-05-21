@@ -26,10 +26,18 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+/**
+ * Mapeos entre DTOs de red, entidades Room y modelos de dominio del módulo training.
+ */
 object TrainingMapper {
 
     private val isoFormatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
 
+    /**
+     * Convierte un resumen de plan del API a dominio (sin días detallados).
+     *
+     * @return [TrainingPlan] con [TrainingPlan.days] vacío.
+     */
     fun TrainingPlanSummaryResponseDto.toDomain(): TrainingPlan = TrainingPlan(
         id = id,
         name = name,
@@ -45,6 +53,9 @@ object TrainingMapper {
         days = emptyList(),
     )
 
+    /**
+     * Convierte la respuesta completa del plan, incluyendo días y ejercicios.
+     */
     fun TrainingPlanResponseDto.toDomain(): TrainingPlan = TrainingPlan(
         id = id,
         name = name,
@@ -60,6 +71,7 @@ object TrainingMapper {
         days = days.map { it.toDomain() },
     )
 
+    /** Mapea un día de entrenamiento del DTO al modelo de dominio. */
     fun TrainingDayResponseDto.toDomain(): TrainingDay = TrainingDay(
         id = id,
         dayNumber = dayNumber,
@@ -82,6 +94,7 @@ object TrainingMapper {
         } ?: TrainingDayType.TRAINING,
     )
 
+    /** Mapea un ejercicio prescrito del DTO al modelo de dominio. */
     fun TrainingExerciseResponseDto.toDomain(): TrainingExercise = TrainingExercise(
         id = id,
         name = name,
@@ -98,6 +111,11 @@ object TrainingMapper {
         requiresExternalWeight = requiresExternalWeight,
     )
 
+    /**
+     * Persiste un plan de dominio como entidad Room para el usuario dado.
+     *
+     * @param userId Identificador del usuario propietario del plan.
+     */
     fun TrainingPlan.toEntity(userId: String): TrainingPlanEntity = TrainingPlanEntity(
         id = id,
         userId = userId,
@@ -113,6 +131,9 @@ object TrainingMapper {
         createdAt = createdAt.toInstant(ZoneOffset.UTC).toEpochMilli(),
     )
 
+    /**
+     * Restaura un plan desde caché local (sin días detallados).
+     */
     fun TrainingPlanEntity.toDomain(): TrainingPlan = TrainingPlan(
         id = id,
         name = name,
@@ -128,12 +149,14 @@ object TrainingMapper {
         days = emptyList(),
     )
 
+    /** Mapea el protocolo de calentamiento del API al dominio. */
     fun WarmUpProtocolResponseDto.toDomain(): WarmUpProtocol = WarmUpProtocol(
         trainingDayId = trainingDayId,
         estimatedTotalLoad = estimatedTotalLoad,
         exercises = exercises.map { it.toDomain() },
     )
 
+    /** Mapea un ejercicio individual del calentamiento. */
     fun WarmUpExerciseResponseDto.toDomain(): WarmUpExercise = WarmUpExercise(
         name = name,
         description = description,
@@ -142,6 +165,7 @@ object TrainingMapper {
         durationSeconds = durationSeconds,
     )
 
+    /** Mapea una alternativa de ejercicio sugerida por el backend. */
     fun ExerciseSubstitutionResponseDto.toDomain(): ExerciseSubstitution = ExerciseSubstitution(
         name = name,
         primaryMuscle = MuscleGroup.fromString(primaryMuscle),

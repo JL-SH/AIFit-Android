@@ -60,6 +60,16 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import com.jlsh.aifit.core.ui.components.display.StreakStatus as BadgeStreakStatus
 
+/**
+ * Pantalla de gamificación con rachas, logros desbloqueados/bloqueados y récords personales.
+ *
+ * Muestra barra superior con acceso a exportación, pestañas (rachas, logros, récords) y estados
+ * de carga o error. Reacciona a [GamificationUiEvent] para navegar al informe de progreso.
+ *
+ * @param onNavigateBack Vuelve a la pantalla anterior.
+ * @param onNavigateToExport Abre la pantalla de exportación de progreso.
+ * @param viewModel ViewModel de gamificación inyectado por Hilt.
+ */
 @Composable
 fun GamificationScreen(
     onNavigateBack: () -> Unit,

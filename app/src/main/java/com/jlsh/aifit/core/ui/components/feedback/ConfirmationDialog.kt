@@ -16,6 +16,22 @@ import com.jlsh.aifit.core.ui.components.buttons.DestructiveButton
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
+/**
+ * [AlertDialog] that requires the user to explicitly confirm or cancel before
+ * a potentially destructive action is executed.
+ *
+ * The confirm button uses [PrimaryButton] and the cancel button uses
+ * [DestructiveButton] to give the cancel path visual prominence. Tapping
+ * confirm also auto-dismisses the dialog.
+ *
+ * @param title Text displayed in the dialog header.
+ * @param message Body text describing the action that requires confirmation.
+ * @param onConfirm Lambda invoked when the user taps the confirm button.
+ * @param onDismiss Lambda invoked when the user cancels or taps outside the dialog.
+ * @param modifier Modifier applied to the [AlertDialog].
+ * @param confirmText Label for the confirm button. Defaults to [R.string.common_confirm].
+ * @param dismissText Label for the cancel button. Defaults to [R.string.common_cancel].
+ */
 @Composable
 fun ConfirmationDialog(
     title: String,

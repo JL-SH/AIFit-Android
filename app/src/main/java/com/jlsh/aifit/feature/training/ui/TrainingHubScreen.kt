@@ -69,6 +69,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 
+/**
+ * Pantalla hub de entrenamiento: plan activo destacado, listado filtrable y acceso a historial.
+ *
+ * Muestra estados de carga, error, vacío (sin plan activo) o contenido con tarjeta del plan
+ * activo, chips de filtro y tarjetas resumen. Incluye FAB para crear plan e icono de historial.
+ *
+ * @param onNavigateToDetail Navegación al detalle de un plan.
+ * @param onNavigateToGenerate Navegación al flujo de generación (`adaptive`, `basePlanId` opcional).
+ * @param onNavigateToWorkoutLog Navegación al registro de sesión de un plan.
+ * @param onNavigateToWorkoutDetail Navegación al detalle de un log (no usado en esta pantalla).
+ * @param onNavigateToWorkoutHistory Navegación al historial de workouts.
+ * @param viewModel ViewModel que provee [TrainingHubUiState] y eventos de navegación.
+ */
 @Composable
 fun TrainingHubScreen(
     onNavigateToDetail: (planId: String) -> Unit,

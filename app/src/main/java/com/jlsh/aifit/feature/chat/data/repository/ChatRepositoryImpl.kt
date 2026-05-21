@@ -17,11 +17,21 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
+/**
+ * Implementación de [ChatRepository] con estrategia caché primero (Room) y sincronización con la API.
+ *
+ * Emite datos locales de inmediato cuando existen; actualiza desde red y persiste en Room.
+ * Si la red falla y no hay caché, propaga el error.
+ *
+ * @param apiService Cliente HTTP de sesiones y mensajes de chat.
+ * @param chatDao Acceso local a sesiones y mensajes.
+ */
 class ChatRepositoryImpl @Inject constructor(
     private val apiService: ChatApiService,
     private val chatDao: ChatDao,
 ) : BaseRemoteDataSource(), ChatRepository {
 
+    /** {@inheritDoc} */
     override fun getSessions(): Flow<Result<List<ChatSession>>> = flow {
         emit(Result.Loading)
 
@@ -46,6 +56,7 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
+    /** {@inheritDoc} */
     override fun getSession(id: String): Flow<Result<ChatSession>> = flow {
         emit(Result.Loading)
 
@@ -73,6 +84,7 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
+    /** {@inheritDoc} */
     override suspend fun startSession(title: String?): Result<ChatSession> {
         val request = StartChatSessionRequestDto(title = title)
         return when (val r = safeApiCall { apiService.startSession(request) }) {
@@ -89,6 +101,7 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
+    /** {@inheritDoc} */
     override suspend fun sendMessage(sessionId: String, content: String, imageBase64: String?): Result<ChatMessage> {
         Log.d("AIFIT_DEBUG", "ChatRepo.sendMessage: inicio — sessionId=$sessionId, hasImage=${imageBase64 != null}, content='${content.take(50)}…'")
         val request = SendChatMessageRequestDto(content = content, imageBase64 = imageBase64)
@@ -111,6 +124,7 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
+    /** {@inheritDoc} */
     override suspend fun archiveSession(id: String): Result<Unit> {
         return try {
             val response = apiService.archiveSession(id)
@@ -132,6 +146,7 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
+    /** {@inheritDoc} */
     override suspend fun deleteSession(id: String): Result<Unit> =
         when (val r = safeEmptyApiCall { apiService.deleteSession(id) }) {
             is Result.Success -> {
@@ -143,6 +158,7 @@ class ChatRepositoryImpl @Inject constructor(
             else -> Result.Loading
         }
 
+    /** {@inheritDoc} */
     override suspend fun renameSession(id: String, title: String): Result<Unit> {
         val request = RenameChatSessionRequestDto(title = title)
         return when (val r = safeApiCall { apiService.renameSession(id, request) }) {
@@ -156,6 +172,7 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
+    /** {@inheritDoc} */
     override suspend fun generateSessionTitle(id: String): Result<String> =
         when (val r = safeApiCall { apiService.generateTitle(id) }) {
             is Result.Success -> {

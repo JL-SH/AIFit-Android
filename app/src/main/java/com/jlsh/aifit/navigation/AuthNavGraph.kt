@@ -14,6 +14,14 @@ import com.jlsh.aifit.feature.user.ui.OnboardingNutritionApprovalScreen
 import com.jlsh.aifit.feature.user.ui.OnboardingTrainingApprovalScreen
 import com.jlsh.aifit.feature.user.ui.OnboardingViewModel
 
+/**
+ * Registra el subgrafo de autenticación: login, registro, perfil y onboarding.
+ *
+ * @param navController Controlador del [NavHost] raíz.
+ * @param startDestination Ruta inicial dentro del grafo (`login` o `create_profile`).
+ * @param sessionExpiredMessage Mensaje de sesión expirada para mostrar en login, o null.
+ * @param onSessionExpiredMessageShown Callback al consumir el mensaje en login.
+ */
 fun NavGraphBuilder.authNavGraph(
     navController: NavController,
     startDestination: String = AuthRoutes.LOGIN,

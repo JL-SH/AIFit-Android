@@ -24,6 +24,28 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel del listado y detalle de listas de la compra.
+ *
+ * **UiState del listado** ([listState] — [ShoppingListUiState]):
+ * - [ShoppingListUiState.Loading]: cargando listas.
+ * - [ShoppingListUiState.Success]: listas disponibles.
+ * - [ShoppingListUiState.Error]: mensaje de error.
+ *
+ * **UiState del detalle** ([detailState] — [ShoppingDetailState]):
+ * - Lista cargada, estados de check, artículos locales y claves borradas.
+ * - [ShoppingDetailState.isLoading]: carga del detalle.
+ * - [ShoppingDetailState.isEditing]: modo edición con altas/bajas.
+ * - [ShoppingDetailState.error]: error al cargar.
+ *
+ * **Eventos emitidos** ([events] — [ShoppingUiEvent]):
+ * - [ShoppingUiEvent.NavigateToDetail]: abrir detalle de lista generada.
+ * - [ShoppingUiEvent.NavigateBack]: volver tras eliminar la lista actual.
+ * - [ShoppingUiEvent.ShowSnackbar]: mensaje al usuario.
+ * - [ShoppingUiEvent.ListGenerated]: lista creada correctamente (navegación al detalle).
+ *
+ * @param savedStateHandle Lee `listId` de la ruta; si está presente carga detalle, si no, listado.
+ */
 @HiltViewModel
 class ShoppingViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -35,12 +57,18 @@ class ShoppingViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _listState = MutableStateFlow<ShoppingListUiState>(ShoppingListUiState.Loading)
+
+    /** Estado del listado de listas de la compra. */
     val listState: StateFlow<ShoppingListUiState> = _listState.asStateFlow()
 
     private val _detailState = MutableStateFlow(ShoppingDetailState())
+
+    /** Estado del detalle de una lista (ítems, checks, edición). */
     val detailState: StateFlow<ShoppingDetailState> = _detailState.asStateFlow()
 
     private val _events = Channel<ShoppingUiEvent>(Channel.BUFFERED)
+
+    /** Flujo de navegación y snackbars; consumir una vez por pantalla. */
     val events = _events.receiveAsFlow()
 
     private val listId: String? = savedStateHandle.get<String>("listId")
@@ -55,6 +83,7 @@ class ShoppingViewModel @Inject constructor(
 
     // ── Lists ────────────────────────────────────────────────────────────────
 
+    /** Recarga el listado de listas de la compra desde el repositorio. */
     fun loadLists() {
         viewModelScope.launch {
             getShoppingListsUseCase().collect { result ->
@@ -67,6 +96,11 @@ class ShoppingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Elimina una lista del listado y muestra confirmación por snackbar.
+     *
+     * @param id Identificador de la lista a eliminar.
+     */
     fun onDeleteList(id: String) {
         viewModelScope.launch {
             when (val r = deleteShoppingListUseCase(id)) {
@@ -80,6 +114,12 @@ class ShoppingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Genera una nueva lista de la compra y emite [ShoppingUiEvent.ListGenerated].
+     *
+     * @param dietPlanId Plan de dieta asociado, o `null` para generación genérica.
+     * @param period Período temporal (valor API, p. ej. `ONE_WEEK`).
+     */
     fun onGenerateList(dietPlanId: String?, period: String) {
         viewModelScope.launch {
             val request = GenerateShoppingListRequestDto(dietPlanId = dietPlanId, period = period)
@@ -95,6 +135,11 @@ class ShoppingViewModel @Inject constructor(
 
     // ── Detail ───────────────────────────────────────────────────────────────
 
+    /**
+     * Carga el detalle de una lista y sus flujos locales (checks, ítems, borrados).
+     *
+     * @param id Identificador de la lista de la compra.
+     */
     fun loadDetail(id: String) {
         viewModelScope.launch {
             _detailState.update { it.copy(isLoading = true, error = null) }
@@ -128,6 +173,13 @@ class ShoppingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Marca o desmarca un artículo como comprado.
+     *
+     * @param listId Identificador de la lista.
+     * @param itemName Nombre del artículo.
+     * @param category Categoría del artículo.
+     */
     fun onToggleCheck(listId: String, itemName: String, category: String) {
         val key = "$category:$itemName"
         val current = _detailState.value.checkStates[key] ?: false
@@ -136,10 +188,19 @@ class ShoppingViewModel @Inject constructor(
         }
     }
 
+    /** Alterna el modo edición del detalle ([ShoppingDetailState.isEditing]). */
     fun onToggleEditMode() {
         _detailState.update { it.copy(isEditing = !it.isEditing) }
     }
 
+    /**
+     * Añade un artículo local a la lista actual (solo en modo edición).
+     *
+     * @param name Nombre del producto.
+     * @param category Categoría (clave API).
+     * @param quantity Cantidad numérica.
+     * @param unit Unidad de medida (p. ej. "kg", "unidades").
+     */
     fun onAddItem(name: String, category: String, quantity: Double, unit: String) {
         val id = listId ?: return
         viewModelScope.launch {
@@ -148,12 +209,23 @@ class ShoppingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Elimina un artículo añadido localmente.
+     *
+     * @param localId Identificador local del artículo en Room.
+     */
     fun onRemoveLocalItem(localId: Long) {
         viewModelScope.launch {
             shoppingRepository.deleteLocalItem(localId)
         }
     }
 
+    /**
+     * Oculta un artículo del servidor marcándolo como borrado localmente.
+     *
+     * @param itemName Nombre del artículo.
+     * @param category Categoría del artículo.
+     */
     fun onDeleteServerItem(itemName: String, category: String) {
         val id = listId ?: return
         viewModelScope.launch {
@@ -161,6 +233,12 @@ class ShoppingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Restaura un artículo del servidor previamente oculto.
+     *
+     * @param itemName Nombre del artículo.
+     * @param category Categoría del artículo.
+     */
     fun onRestoreServerItem(itemName: String, category: String) {
         val id = listId ?: return
         viewModelScope.launch {
@@ -168,6 +246,7 @@ class ShoppingViewModel @Inject constructor(
         }
     }
 
+    /** Elimina la lista del detalle actual y emite [ShoppingUiEvent.NavigateBack] si tiene éxito. */
     fun onDeleteCurrentList() {
         val id = listId ?: return
         viewModelScope.launch {

@@ -20,6 +20,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
+/**
+ * Centred empty-state illustration shown when a list or section has no content.
+ *
+ * Renders a large icon, a bold [title] and an optional [subtitle] in a vertical
+ * column. An optional composable [action] slot (e.g. a [PrimaryButton]) appears
+ * below the subtitle to guide the user toward the next step.
+ *
+ * @param icon Icon displayed at the top of the empty state (decorative, no content description).
+ * @param title Primary message rendered in [MaterialTheme.typography.titleSmall].
+ * @param modifier Modifier applied to the outer [Column].
+ * @param subtitle Optional secondary message with additional context, capped at 3 lines.
+ * @param action Optional composable slot for a call-to-action (e.g. a create button).
+ */
 @Composable
 fun EmptyStateView(
     icon: ImageVector,

@@ -80,6 +80,17 @@ private fun mealTypeDisplay(mealType: MealType): String = stringResource(
     }
 )
 
+/**
+ * Pantalla de detalle de un plan de dieta: resumen de macros, días expandibles y acciones por comida.
+ *
+ * Muestra estado de carga/error mediante [ScreenScaffold] y hojas educativas (explicar / por qué esta comida).
+ *
+ * @param planId Identificador del plan a cargar.
+ * @param onNavigateBack Callback al pulsar atrás o tras eventos de navegación.
+ * @param onNavigateToGenerate Abre el flujo de generación adaptativa desde la barra superior.
+ * @param viewModel ViewModel de dieta con [DietUiState] y [DietUiEvent].
+ * @param educationViewModel ViewModel para explicaciones de comidas.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DietDetailScreen(

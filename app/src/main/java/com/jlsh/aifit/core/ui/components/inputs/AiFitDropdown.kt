@@ -26,6 +26,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
+/**
+ * Themed [ExposedDropdownMenuBox] styled to match the AIFit design system.
+ *
+ * Renders a read-only [OutlinedTextField] with an animated chevron icon that
+ * rotates 180° when the menu is open. The currently selected item is highlighted
+ * with [MaterialTheme.colorScheme.primaryContainer] in the dropdown list.
+ *
+ * @param selectedValue The currently selected option key shown in the field.
+ * @param options Complete list of selectable option keys.
+ * @param onOptionSelected Callback invoked with the key of the option tapped by
+ *   the user; the menu closes automatically.
+ * @param label Floating label rendered above the field.
+ * @param modifier Modifier applied to the [ExposedDropdownMenuBox].
+ * @param displayMapper Function that converts a raw option key to a human-readable
+ *   display label. Defaults to the key itself.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiFitDropdown(

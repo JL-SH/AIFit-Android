@@ -43,6 +43,25 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
+/**
+ * ViewModel del perfil de usuario, hub y formulario de creación/edición.
+ *
+ * **UiState expuesto** ([uiState] — [UserUiState]):
+ * - [UserUiState.Idle]: sin carga activa (creación de perfil o tras error de guardado).
+ * - [UserUiState.Loading]: cargando perfil desde repositorio.
+ * - [UserUiState.Success]: perfil listo; [UserUiState.Success.profile] para la UI.
+ * - [UserUiState.Error]: fallo al cargar; mensaje en [UserUiState.Error.message].
+ * - [UserUiState.Saving]: creación o actualización en curso.
+ *
+ * **Eventos emitidos** ([events] — [UserUiEvent]):
+ * - [UserUiEvent.NavigateToEditProfile]: abrir edición desde el hub.
+ * - [UserUiEvent.NavigateBack]: volver tras guardar en modo edición.
+ * - [UserUiEvent.ProfileSaved]: perfil creado o ya existente → continuar flujo.
+ * - [UserUiEvent.ShowSnackbar]: feedback de error o éxito.
+ * - [UserUiEvent.Logout]: cierre de sesión (gestionado por [SessionManager]).
+ *
+ * El modo edición se activa con el argumento de navegación `mode=edit` en [SavedStateHandle].
+ */
 @HiltViewModel
 class UserViewModel @Inject constructor(
     private val getUserProfileUseCase: GetUserProfileUseCase,
@@ -60,85 +79,135 @@ class UserViewModel @Inject constructor(
 
     // 1. UI STATE
     private val _uiState = MutableStateFlow<UserUiState>(UserUiState.Idle)
+
+    /** Estado principal del perfil (ver documentación de la clase). */
     val uiState: StateFlow<UserUiState> = _uiState.asStateFlow()
 
     // 2. EVENTS CHANNEL
     private val _events = Channel<UserUiEvent>(Channel.BUFFERED)
+
+    /** Eventos de navegación y snackbar; consumir una vez por pantalla. */
     val events = _events.receiveAsFlow()
 
     // 2b. THEME
+
+    /** Preferencia de tema oscuro persistida en DataStore. */
     val isDarkTheme = userPreferencesDataStore.isDarkTheme
 
     // 2c. GAMIFICATION STATS
     private val _streakCount = MutableStateFlow<String>("—")
+
+    /** Racha actual formateada para el hub, o "—" si no hay datos. */
     val streakCount: StateFlow<String> = _streakCount.asStateFlow()
 
     private val _achievementsCount = MutableStateFlow<String>("—")
+
+    /** Número de logros desbloqueados para el hub. */
     val achievementsCount: StateFlow<String> = _achievementsCount.asStateFlow()
 
     private val _recordsCount = MutableStateFlow<String>("—")
+
+    /** Número de récords personales para el hub. */
     val recordsCount: StateFlow<String> = _recordsCount.asStateFlow()
 
     // 2d. PROFILE PICTURE
     private val _profilePictureUrl = MutableStateFlow<String?>(null)
+
+    /** URL del avatar en servidor, tras fusión con caché. */
     val profilePictureUrl: StateFlow<String?> = _profilePictureUrl.asStateFlow()
 
-    /** URI of a photo selected locally but not yet uploaded to the server. */
     private val _pendingPhotoUri = MutableStateFlow<Uri?>(null)
+
+    /** URI local de una foto seleccionada aún no confirmada por el servidor. */
     val pendingPhotoUri: StateFlow<Uri?> = _pendingPhotoUri.asStateFlow()
 
     private val _isUploadingPhoto = MutableStateFlow(false)
+
+    /** `true` mientras se sube la foto de perfil. */
     val isUploadingPhoto: StateFlow<Boolean> = _isUploadingPhoto.asStateFlow()
 
     // 3. FORM FIELDS
     private val _name = MutableStateFlow("")
+
+    /** Nombre en el formulario (texto). */
     val name: StateFlow<String> = _name.asStateFlow()
 
     private val _birthDate = MutableStateFlow("")
+
+    /** Fecha de nacimiento en formato ISO `yyyy-MM-dd`. */
     val birthDate: StateFlow<String> = _birthDate.asStateFlow()
 
     private val _gender = MutableStateFlow("")
+
+    /** Género seleccionado ([Gender.name]). */
     val gender: StateFlow<String> = _gender.asStateFlow()
 
     private val _height = MutableStateFlow("")
+
+    /** Altura en cm como texto. */
     val height: StateFlow<String> = _height.asStateFlow()
 
     private val _weight = MutableStateFlow("")
+
+    /** Peso en kg como texto. */
     val weight: StateFlow<String> = _weight.asStateFlow()
 
     private val _targetWeight = MutableStateFlow("")
+
+    /** Peso objetivo en kg como texto. */
     val targetWeight: StateFlow<String> = _targetWeight.asStateFlow()
 
     private val _goalType = MutableStateFlow("")
+
+    /** Objetivo ([GoalType.name]). */
     val goalType: StateFlow<String> = _goalType.asStateFlow()
 
     private val _activityLevel = MutableStateFlow("")
+
+    /** Nivel de actividad ([ActivityLevel.name]). */
     val activityLevel: StateFlow<String> = _activityLevel.asStateFlow()
 
     private val _fitnessLevel = MutableStateFlow("")
+
+    /** Nivel de fitness ([FitnessLevel.name]). */
     val fitnessLevel: StateFlow<String> = _fitnessLevel.asStateFlow()
 
     private val _preferredLocation = MutableStateFlow("")
+
+    /** Ubicación de entreno ([WorkoutLocation.name]). */
     val preferredLocation: StateFlow<String> = _preferredLocation.asStateFlow()
 
     private val _dietPreference = MutableStateFlow("")
+
+    /** Preferencia dietética ([DietPreference.name]). */
     val dietPreference: StateFlow<String> = _dietPreference.asStateFlow()
 
     private val _weeklyWorkoutDays = MutableStateFlow("")
+
+    /** Días de entreno semanales como texto. */
     val weeklyWorkoutDays: StateFlow<String> = _weeklyWorkoutDays.asStateFlow()
 
     private val _availableMinutes = MutableStateFlow("")
+
+    /** Minutos por sesión como texto. */
     val availableMinutes: StateFlow<String> = _availableMinutes.asStateFlow()
 
     private val _injuries = MutableStateFlow("")
+
+    /** Lesiones o notas libres. */
     val injuries: StateFlow<String> = _injuries.asStateFlow()
 
     private val _calorieTarget = MutableStateFlow("")
+
+    /** Objetivo calórico en kcal como texto. */
     val calorieTarget: StateFlow<String> = _calorieTarget.asStateFlow()
 
     private val _birthDateError = MutableStateFlow<String?>(null)
+
+    /** Error de validación de fecha de nacimiento. */
     val birthDateError: StateFlow<String?> = _birthDateError.asStateFlow()
 
+    /** `true` si la pantalla se abrió en modo edición (`mode=edit`). */
     val isEditMode: Boolean = savedStateHandle.get<String>("mode") == "edit"
 
     // 4. INIT
@@ -151,45 +220,84 @@ class UserViewModel @Inject constructor(
     }
 
     // 5. PUBLIC FUNCTIONS
+
+    /** @param value Nuevo nombre. */
     fun onNameChanged(value: String) { _name.value = value }
+
+    /** @param value Nueva fecha ISO; limpia [birthDateError]. */
     fun onBirthDateChanged(value: String) {
         _birthDate.value = value
         _birthDateError.value = null
     }
+
+    /** @param value Nuevo [Gender.name]. */
     fun onGenderChanged(value: String) { _gender.value = value }
+
+    /** @param value Nueva altura (texto). */
     fun onHeightChanged(value: String) { _height.value = value }
+
+    /** @param value Nuevo peso (texto). */
     fun onWeightChanged(value: String) { _weight.value = value }
+
+    /** @param value Nuevo peso objetivo (texto). */
     fun onTargetWeightChanged(value: String) { _targetWeight.value = value }
+
+    /** @param value Nuevo [GoalType.name]. */
     fun onGoalTypeChanged(value: String) { _goalType.value = value }
+
+    /** @param value Nuevo [ActivityLevel.name]. */
     fun onActivityLevelChanged(value: String) { _activityLevel.value = value }
+
+    /** @param value Nuevo [FitnessLevel.name]. */
     fun onFitnessLevelChanged(value: String) { _fitnessLevel.value = value }
+
+    /** @param value Nueva [WorkoutLocation.name]. */
     fun onPreferredLocationChanged(value: String) { _preferredLocation.value = value }
+
+    /** @param value Nueva [DietPreference.name]. */
     fun onDietPreferenceChanged(value: String) { _dietPreference.value = value }
+
+    /** @param value Días de entreno semanales (texto). */
     fun onWeeklyWorkoutDaysChanged(value: String) { _weeklyWorkoutDays.value = value }
+
+    /** @param value Minutos por sesión (texto). */
     fun onAvailableMinutesChanged(value: String) { _availableMinutes.value = value }
+
+    /** @param value Texto de lesiones. */
     fun onInjuriesChanged(value: String) { _injuries.value = value }
+
+    /** @param value Objetivo calórico (texto). */
     fun onCalorieTargetChanged(value: String) { _calorieTarget.value = value }
 
+    /** Valida el formulario y crea o actualiza el perfil según [isEditMode]. */
     fun onSaveProfile() {
         if (!validateForm()) return
         if (isEditMode) updateProfile() else createProfile()
     }
 
+    /** Recarga perfil y estadísticas de gamificación (p. ej. al volver al hub). */
     fun onRefresh() {
         loadProfile()
         loadGamificationStats()
     }
 
+    /** Cierra la sesión local y remota vía [SessionManager]. */
     fun onLogout() {
         sessionManager.logout()
     }
 
+    /**
+     * Inicia la subida de una foto elegida en el dispositivo.
+     *
+     * @param uri URI `content://` de la imagen, o `null` para ignorar.
+     */
     fun onProfilePictureSelected(uri: Uri?) {
         if (uri == null) return
         _pendingPhotoUri.value = uri
         uploadPhoto(uri)
     }
 
+    /** Alterna entre tema claro y oscuro en preferencias. */
     fun onToggleTheme() {
         viewModelScope.launch {
             val current = userPreferencesDataStore.isDarkTheme.first()
@@ -197,6 +305,7 @@ class UserViewModel @Inject constructor(
         }
     }
 
+    /** Emite [UserUiEvent.NavigateToEditProfile]. */
     fun onNavigateToEditProfile() {
         emitEvent(UserUiEvent.NavigateToEditProfile)
     }

@@ -25,11 +25,27 @@ import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.common.Fill
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
+/**
+ * A single data point for [LineChartView].
+ *
+ * @property label Text identifying this point on the x-axis (e.g. a date or weekday).
+ * @property value Numeric value plotted on the y-axis.
+ */
 data class ChartEntry(
     val label: String,
     val value: Float,
 )
 
+/**
+ * Vico-powered line chart for rendering time-series data (e.g. body weight over time).
+ *
+ * Renders nothing when fewer than 2 [entries] are provided, since a single point
+ * cannot form a meaningful line. The chart fills the available width and has a
+ * fixed height of 200 dp.
+ *
+ * @param entries List of [ChartEntry] values to plot in order.
+ * @param modifier Modifier applied to the [CartesianChartHost].
+ */
 @Composable
 fun LineChartView(
     entries: List<ChartEntry>,

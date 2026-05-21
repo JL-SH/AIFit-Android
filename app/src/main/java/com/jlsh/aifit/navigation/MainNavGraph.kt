@@ -59,6 +59,11 @@ private val tabRouteToGraphRoute = mapOf(
     "profile" to ProfileRoutes.GRAPH,
 )
 
+/**
+ * Registra el grafo principal de la app autenticada (bottom navigation y pestañas).
+ *
+ * @param navController Controlador del [NavHost] raíz; usado para saltos entre auth y main.
+ */
 fun NavGraphBuilder.mainNavGraph(navController: NavController) {
     composable(MainRoutes.GRAPH) {
         MainNavScreen()

@@ -25,6 +25,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
+/**
+ * Implementación de [TrainingRepository] con caché Room, sincronización de red
+ * y protección ante condiciones de carrera en borrados locales.
+ */
 class TrainingRepositoryImpl @Inject constructor(
     private val apiService: TrainingApiService,
     private val dao: TrainingPlanDao,
@@ -46,6 +50,12 @@ class TrainingRepositoryImpl @Inject constructor(
     @Volatile
     private var recentlyDeletedIds = emptySet<String>()
 
+    /**
+     * Emite la lista de planes del usuario: primero caché local y luego reconciliación con red.
+     *
+     * @return Flujo que emite [Result.Loading], luego caché si existe, y finalmente datos de red
+     *   o error si no hay caché.
+     */
     override fun getTrainingPlans(): Flow<Result<List<TrainingPlan>>> = flow {
         emit(Result.Loading)
 
@@ -109,6 +119,12 @@ class TrainingRepositoryImpl @Inject constructor(
         }
     }.distinctUntilChanged()
 
+    /**
+     * Obtiene el detalle de un plan desde la caché de detalle JSON, sin llamada de red.
+     *
+     * @param planId Identificador del plan.
+     * @return Plan de dominio o null si no hay entrada en caché o el JSON es inválido.
+     */
     override suspend fun getCachedTrainingPlanDetail(planId: String): TrainingPlan? =
         detailCacheDao.getById(planId)?.let { entity ->
             runCatching {
@@ -116,6 +132,12 @@ class TrainingRepositoryImpl @Inject constructor(
             }.getOrNull()
         }
 
+    /**
+     * Carga el detalle completo del plan desde red y actualiza caché y resumen en Room.
+     *
+     * @param planId Identificador del plan.
+     * @return [Result.Success] con días y ejercicios, caché en error de red, o [Result.Error].
+     */
     override suspend fun getTrainingPlanDetail(planId: String): Result<TrainingPlan> {
         Log.d("AIFIT_DEBUG", "[REPO][DETAIL] START planId=$planId")
         val cached = getCachedTrainingPlanDetail(planId)
@@ -150,6 +172,12 @@ class TrainingRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Genera un plan estándar vía API y lo persiste en Room.
+     *
+     * @param request Parámetros de generación.
+     * @return [Result.Error] si no hay sesión activa o falla la petición.
+     */
     override suspend fun generateTrainingPlan(
         request: GenerateTrainingPlanRequestDto,
     ): Result<TrainingPlan> {
@@ -166,6 +194,12 @@ class TrainingRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Genera un plan adaptativo vía API y lo persiste en Room.
+     *
+     * @param request Parámetros adaptativos.
+     * @return [Result.Error] si no hay sesión activa o falla la petición.
+     */
     override suspend fun generateAdaptiveTrainingPlan(
         request: GenerateAdaptiveTrainingPlanRequestDto,
     ): Result<TrainingPlan> {
@@ -182,6 +216,12 @@ class TrainingRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Elimina un plan localmente de inmediato y confirma con el servidor, con rollback en error.
+     *
+     * @param planId Identificador del plan a eliminar.
+     * @return [Result.Success] tras confirmación del servidor, o [Result.Error] con restauración local.
+     */
     override suspend fun deleteTrainingPlan(planId: String): Result<Unit> {
         // 1. Snapshot for rollback if the network call fails.
         val planSnapshot = dao.getById(planId)
@@ -208,6 +248,12 @@ class TrainingRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Activa un plan en servidor y demota el plan activo previo a PAUSED en Room.
+     *
+     * @param planId Identificador del plan a activar.
+     * @return [Result.Error] si no hay sesión activa o falla la activación.
+     */
     override suspend fun activatePlan(planId: String): Result<TrainingPlan> {
         val userId = sessionManager.getUserId()
             ?: return Result.Error(AppException.UnknownException("No active session"))
@@ -234,6 +280,12 @@ class TrainingRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Obtiene el protocolo de calentamiento recomendado para un día concreto del plan.
+     *
+     * @param planId Identificador del plan.
+     * @param dayId Identificador del día de entrenamiento.
+     */
     override suspend fun getWarmUpProtocol(planId: String, dayId: String): Result<WarmUpProtocol> {
         return when (val remote = safeApiCall { apiService.getWarmUpProtocol(planId, dayId) }) {
             is Result.Success -> Result.Success(remote.data.toDomain())
@@ -242,6 +294,11 @@ class TrainingRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Lista sustituciones de ejercicio sugeridas por el backend para un ejercicio dado.
+     *
+     * @param exerciseId Identificador del ejercicio de entrenamiento.
+     */
     override suspend fun getExerciseSubstitutions(exerciseId: String): Result<List<ExerciseSubstitution>> {
         return when (val remote = safeApiCall { apiService.getExerciseSubstitutions(exerciseId) }) {
             is Result.Success -> Result.Success(remote.data.map { it.toDomain() })

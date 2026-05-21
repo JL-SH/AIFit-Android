@@ -59,6 +59,16 @@ import com.jlsh.aifit.feature.user.ui.state.UserUiState
 import androidx.compose.ui.res.stringResource
 import com.jlsh.aifit.R
 
+/**
+ * Pantalla de edición del perfil (modo `edit`).
+ *
+ * Muestra avatar con selector de galería y overlay de carga, nombre, fecha de nacimiento
+ * con bottom sheet, género, altura, nivel de actividad y botón guardar. Reacciona a
+ * [UserUiState] y eventos de [UserViewModel].
+ *
+ * @param onNavigateBack Vuelve tras guardar o desde la barra superior.
+ * @param viewModel ViewModel de usuario inyectado por Hilt.
+ */
 @Composable
 fun UserProfileScreen(
     onNavigateBack: () -> Unit,

@@ -107,6 +107,19 @@ private fun mealTypeDisplay(mealType: MealType): String = stringResource(
         }
     )
 
+/**
+ * Hub principal de nutrición con tres pestañas: consumo del día, planes de dieta y listas de compra.
+ *
+ * Incluye FAB contextual, bottom sheet para elegir modo de registro de comida y diálogos de confirmación.
+ *
+ * @param onNavigateToTrackMeal Navega al registro manual o por texto (`mode`: `"manual"` | `"text_analysis"`).
+ * @param onNavigateToFoodVision Navega al escaneo de comida por foto.
+ * @param onNavigateToNutritionTarget Navega a editar objetivos calóricos y macros.
+ * @param onNavigateToDietDetail Navega al detalle de un plan de dieta.
+ * @param onNavigateToGenerateDiet Navega al flujo de creación de plan de dieta.
+ * @param onNavigateToShoppingDetail Navega al detalle de una lista de la compra.
+ * @param viewModel ViewModel con [NutritionHubUiState], pestaña seleccionada y [NutritionUiEvent].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NutritionHubScreen(

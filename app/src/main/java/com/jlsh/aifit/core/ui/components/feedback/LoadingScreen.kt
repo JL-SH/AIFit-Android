@@ -15,6 +15,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
+/**
+ * Full-screen centred loading indicator shown while asynchronous data is being fetched.
+ *
+ * Fills the available space with [MaterialTheme.colorScheme.background] and renders
+ * a single [CircularProgressIndicator] in the centre. Tagged with `"loading_screen"`
+ * for UI tests.
+ *
+ * @param modifier Modifier applied to the outer [Box].
+ */
 @Composable
 fun LoadingScreen(
     modifier: Modifier = Modifier,
@@ -45,4 +54,3 @@ private fun LoadingScreenPreview() {
         LoadingScreen()
     }
 }
-

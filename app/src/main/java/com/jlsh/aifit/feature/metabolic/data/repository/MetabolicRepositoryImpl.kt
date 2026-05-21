@@ -12,10 +12,18 @@ import com.jlsh.aifit.feature.nutrition.data.mapper.NutritionMapper.toDomain
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import javax.inject.Inject
 
+/**
+ * Implementación remota de [MetabolicRepository] sobre la API metabólica.
+ *
+ * @param apiService Cliente HTTP de análisis, insights y ajustes.
+ */
 class MetabolicRepositoryImpl @Inject constructor(
     private val apiService: MetabolicApiService,
 ) : BaseRemoteDataSource(), MetabolicRepository {
 
+    /**
+     * @return [Result.Success] con el análisis metabólico, o [Result.Error] si la petición falla.
+     */
     override suspend fun analyzeMetabolicProgress(): Result<MetabolicAnalysis> =
         when (val r = safeApiCall { apiService.getAnalysis() }) {
             is Result.Success -> Result.Success(r.data.toDomain())
@@ -23,6 +31,9 @@ class MetabolicRepositoryImpl @Inject constructor(
             else -> Result.Loading
         }
 
+    /**
+     * @return [Result.Success] con el historial de insights, o [Result.Error] en fallo de red.
+     */
     override suspend fun getInsights(): Result<List<MetabolicInsight>> =
         when (val r = safeApiCall { apiService.getInsights() }) {
             is Result.Success -> Result.Success(r.data.map { it.toDomain() })
@@ -30,6 +41,10 @@ class MetabolicRepositoryImpl @Inject constructor(
             else -> Result.Loading
         }
 
+    /**
+     * @param request Objetivos calóricos y de macros sugeridos por el análisis.
+     * @return [Result.Success] con el [NutritionTarget] actualizado, o [Result.Error] si no se aplica.
+     */
     override suspend fun applyAdjustment(request: ApplyMetabolicAdjustmentRequestDto): Result<NutritionTarget> =
         when (val r = safeApiCall { apiService.applyAdjustment(request) }) {
             is Result.Success -> Result.Success(r.data.toDomain())

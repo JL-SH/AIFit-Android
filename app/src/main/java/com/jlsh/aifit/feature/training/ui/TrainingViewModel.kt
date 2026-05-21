@@ -41,6 +41,23 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
+/**
+ * ViewModel del módulo de entrenamiento: hub de planes, detalle, generación y aprobación.
+ *
+ * Estados expuestos:
+ * - [uiState]: listado general de planes y plan activo ([TrainingUiState]).
+ * - [hubUiState]: vista del hub con plan activo, semana y filtros ([TrainingHubUiState]).
+ * - [detailUiState]: detalle de un plan y sus días ([TrainingDetailUiState]).
+ * - [generateUiState]: flujo de generación de plan ([GeneratePlanUiState]).
+ * - [userFitnessLevel]: nivel del perfil para formularios de generación.
+ * - [selectedTabIndex]: pestaña seleccionada en pantallas con tabs.
+ *
+ * Eventos ([events], tipo [TrainingUiEvent]):
+ * - Navegación a detalle, generación, aprobación, historial de workouts y log de sesión.
+ * - [TrainingUiEvent.ShowSnackbar] para errores y confirmaciones.
+ * - [TrainingUiEvent.PlanDeleted] tras borrado exitoso.
+ * - [TrainingUiEvent.NavigateBack] tras aprobar un plan.
+ */
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class TrainingViewModel @Inject constructor(
@@ -54,26 +71,40 @@ class TrainingViewModel @Inject constructor(
 
     // 1. UI STATE
     private val _uiState = MutableStateFlow<TrainingUiState>(TrainingUiState.Loading)
+
+    /** Estado del listado de planes y del plan activo. */
     val uiState: StateFlow<TrainingUiState> = _uiState.asStateFlow()
 
     private val _hubUiState = MutableStateFlow<TrainingHubUiState>(TrainingHubUiState.Loading)
+
+    /** Estado específico del hub de entrenamiento (plan activo, filtros, vacío). */
     val hubUiState: StateFlow<TrainingHubUiState> = _hubUiState.asStateFlow()
 
     private val _detailUiState = MutableStateFlow<TrainingDetailUiState>(TrainingDetailUiState.Loading)
+
+    /** Estado de la pantalla de detalle / aprobación de un plan. */
     val detailUiState: StateFlow<TrainingDetailUiState> = _detailUiState.asStateFlow()
 
     private val _generateUiState = MutableStateFlow<GeneratePlanUiState>(GeneratePlanUiState.Idle)
+
+    /** Estado del flujo de generación de plan (carga, éxito, error). */
     val generateUiState: StateFlow<GeneratePlanUiState> = _generateUiState.asStateFlow()
 
     private val _userFitnessLevel = MutableStateFlow("INTERMEDIATE")
+
+    /** Nivel de fitness del usuario (`BEGINNER`, `INTERMEDIATE`, etc.) para generación. */
     val userFitnessLevel: StateFlow<String> = _userFitnessLevel.asStateFlow()
 
     // 2. EVENTS CHANNEL
     private val _events = Channel<TrainingUiEvent>(Channel.BUFFERED)
+
+    /** Eventos de navegación y feedback de una sola consumición. */
     val events = _events.receiveAsFlow()
 
     // 3. LOCAL UI STATE
     private val _selectedTabIndex = MutableStateFlow(0)
+
+    /** Índice de la pestaña seleccionada en pantallas con pestañas. */
     val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
 
     private var fetchPlansJob: Job? = null
@@ -111,6 +142,11 @@ class TrainingViewModel @Inject constructor(
     }
 
     // 5. PUBLIC FUNCTIONS
+
+    /**
+     * Solicita refresco de la lista de planes (con debounce para evitar ráfagas de lifecycle).
+     * No hace nada si hay un borrado en curso.
+     */
     fun onRefresh() {
         // TODO: remove diagnostic log below
         Log.d("AIFIT_PLANS", "onRefresh triggered — isDeletingPlan=$isDeletingPlan")
@@ -121,18 +157,38 @@ class TrainingViewModel @Inject constructor(
         _refreshTrigger.tryEmit(Unit)
     }
 
+    /**
+     * Cambia la pestaña activa en pantallas con tabs.
+     *
+     * @param index Índice de la pestaña (0-based).
+     */
     fun onTabSelected(index: Int) {
         _selectedTabIndex.value = index
     }
 
+    /**
+     * El usuario pulsó un plan; emite navegación al detalle.
+     *
+     * @param planId Identificador del plan.
+     */
     fun onPlanClicked(planId: String) {
         emitEvent(TrainingUiEvent.NavigateToDetail(planId))
     }
 
+    /**
+     * Elimina un plan con actualización optimista de la UI.
+     *
+     * @param planId Identificador del plan a eliminar.
+     */
     fun onDeletePlan(planId: String) {
         deletePlan(planId)
     }
 
+    /**
+     * Activa un plan (pausa el anterior) con UI optimista y refresco tras éxito.
+     *
+     * @param planId Identificador del plan a activar.
+     */
     fun onActivatePlan(planId: String) {
         Log.d("AIFIT_PLANS", "onActivatePlan START — planId=$planId")
 
@@ -182,18 +238,35 @@ class TrainingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Inicia o reanuda el flujo de registro de sesión de entrenamiento para el plan activo.
+     *
+     * @param planId Identificador del plan (usado en navegación al log de workout).
+     */
     fun onStartSession(planId: String) {
         emitEvent(TrainingUiEvent.NavigateToWorkoutLog(planId))
     }
 
+    /**
+     * Navega a la pantalla de generación de plan.
+     *
+     * @param adaptive Si true, abre el flujo de plan adaptativo.
+     * @param basePlanId Plan base opcional para regeneración adaptativa.
+     */
     fun onNavigateToGenerate(adaptive: Boolean = false, basePlanId: String? = null) {
         emitEvent(TrainingUiEvent.NavigateToGenerate(adaptive, basePlanId))
     }
 
+    /** Navega al historial de sesiones de entrenamiento registradas. */
     fun onNavigateToWorkoutHistory() {
         emitEvent(TrainingUiEvent.NavigateToWorkoutHistory)
     }
 
+    /**
+     * Aprueba un plan en borrador activándolo y volviendo atrás en la pila de navegación.
+     *
+     * @param planId Identificador del plan a aprobar.
+     */
     fun onApprovePlan(planId: String) {
         viewModelScope.launch {
             _detailUiState.value = TrainingDetailUiState.Loading
@@ -212,6 +285,11 @@ class TrainingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Rechaza un plan eliminándolo y navegando a generar uno nuevo.
+     *
+     * @param planId Identificador del plan rechazado.
+     */
     fun onRejectPlan(planId: String) {
         viewModelScope.launch {
             _detailUiState.value = TrainingDetailUiState.Loading
@@ -228,6 +306,12 @@ class TrainingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Regenera un plan en flujo de aprobación: borra el actual y genera uno adaptativo nuevo.
+     *
+     * @param currentPlanId Plan a sustituir.
+     * @param feedback Comentarios del usuario para la generación adaptativa.
+     */
     fun onRegenerateApprovalPlan(currentPlanId: String, feedback: String?) {
         viewModelScope.launch {
             _detailUiState.value = TrainingDetailUiState.Regenerating
@@ -271,14 +355,29 @@ class TrainingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Genera un plan estándar con la petición del formulario.
+     *
+     * @param request DTO con parámetros de generación.
+     */
     fun onGeneratePlan(request: GenerateTrainingPlanRequestDto) {
         generatePlan(request)
     }
 
+    /**
+     * Genera un plan adaptativo con la petición del formulario.
+     *
+     * @param request DTO con parámetros adaptativos.
+     */
     fun onGenerateAdaptivePlan(request: GenerateAdaptiveTrainingPlanRequestDto) {
         generateAdaptivePlan(request)
     }
 
+    /**
+     * Carga el detalle de un plan y actualiza [detailUiState].
+     *
+     * @param planId Identificador del plan.
+     */
     fun loadPlanDetail(planId: String) {
         // TODO: remove diagnostic log below
         Log.d("AIFIT_DETAIL", "loadPlanDetail START — planId=$planId")
@@ -312,6 +411,11 @@ class TrainingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Filtra el listado de planes del hub por [PlanStatus].
+     *
+     * @param status Estado a filtrar, o null para mostrar todos.
+     */
     fun filterPlans(status: PlanStatus?) {
         val currentState = _hubUiState.value
         if (currentState is TrainingHubUiState.ActivePlan) {

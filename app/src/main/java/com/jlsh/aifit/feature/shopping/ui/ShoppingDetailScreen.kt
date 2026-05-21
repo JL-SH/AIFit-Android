@@ -68,6 +68,15 @@ import com.jlsh.aifit.feature.shopping.ui.state.ShoppingDetailState
 import com.jlsh.aifit.feature.shopping.ui.state.ShoppingUiEvent
 import com.jlsh.aifit.feature.user.ui.toStringRes
 
+/**
+ * Pantalla de detalle de una lista de la compra con checklist por categorías.
+ *
+ * Muestra badge de período, ítems marcables del servidor y locales, modo edición con altas/bajas
+ * y sección de ítems eliminados recuperables. Incluye diálogo de confirmación para borrar la lista.
+ *
+ * @param onNavigateBack Vuelve al listado o pantalla anterior.
+ * @param viewModel ViewModel de compras inyectado por Hilt (`listId` en la ruta).
+ */
 @Composable
 fun ShoppingDetailScreen(
     onNavigateBack: () -> Unit,

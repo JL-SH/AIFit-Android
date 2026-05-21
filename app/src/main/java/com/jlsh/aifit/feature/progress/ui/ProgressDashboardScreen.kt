@@ -52,6 +52,19 @@ import com.jlsh.aifit.feature.progress.ui.state.ProgressUiEvent
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+/**
+ * Pantalla del dashboard de progreso: adherencia, tendencia de peso, nutrición y fuerza.
+ *
+ * Muestra un selector de periodo (chips), tarjetas con gráficos y barras de adherencia,
+ * y accesos a registro de peso, detalle semanal y análisis metabólico. Gestiona estados
+ * de carga/error mediante [ScreenScaffold] y reacciona a [ProgressUiEvent] del [viewModel].
+ *
+ * @param onNavigateBack Callback al pulsar atrás en la barra superior.
+ * @param onNavigateToBodyWeight Navegación a la pantalla de peso corporal.
+ * @param onNavigateToWeeklySummary Navegación al resumen semanal.
+ * @param onNavigateToMetabolic Navegación al análisis metabólico.
+ * @param viewModel Origen del [DashboardUiState] y eventos de navegación.
+ */
 @Composable
 fun ProgressDashboardScreen(
     onNavigateBack: () -> Unit,

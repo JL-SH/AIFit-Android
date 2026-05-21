@@ -19,6 +19,19 @@ import androidx.compose.ui.unit.sp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.FullShape
 
+/**
+ * Full-width primary CTA button styled with [MaterialTheme.colorScheme.primaryContainer].
+ *
+ * When [isLoading] is `true` the label is replaced by a [CircularProgressIndicator]
+ * and interaction is disabled, preventing double-submissions. Elevation is kept
+ * at 0 dp throughout all states to match the flat design system.
+ *
+ * @param text Label displayed inside the button.
+ * @param onClick Lambda invoked when the button is tapped.
+ * @param modifier Modifier applied to the outer [Button].
+ * @param isLoading When `true`, hides the label and shows a spinner; also disables taps.
+ * @param enabled When `false`, renders the button in its disabled visual state.
+ */
 @Composable
 fun PrimaryButton(
     text: String,

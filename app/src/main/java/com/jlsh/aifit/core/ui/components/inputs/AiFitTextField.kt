@@ -16,6 +16,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
+/**
+ * Themed [OutlinedTextField] that follows the AIFit design system.
+ *
+ * Shows a floating [label], optional [trailingIcon], and—when [error] is
+ * non-null—puts the field into error state and renders the error string as
+ * supporting text below the field. All color tokens are sourced from
+ * [MaterialTheme.colorScheme] so the component adapts to light and dark themes.
+ *
+ * @param value Current text value of the field.
+ * @param onValueChange Callback invoked on every keystroke with the updated text.
+ * @param label Floating label shown above the input area when focused.
+ * @param modifier Modifier applied to the [OutlinedTextField].
+ * @param error When non-null, switches the field to error state and shows this
+ *   string as red supporting text.
+ * @param trailingIcon Optional icon rendered at the trailing edge of the field.
+ * @param onTrailingIconClick Optional callback invoked when [trailingIcon] is tapped.
+ * @param singleLine When `true`, the field collapses to a single line. Defaults to `true`.
+ * @param enabled When `false`, renders the field in its disabled visual state.
+ * @param readOnly When `true`, the content cannot be edited by the user (used
+ *   internally by dropdown wrappers).
+ */
 @Composable
 fun AiFitTextField(
     value: String,

@@ -57,6 +57,20 @@ import com.jlsh.aifit.feature.auth.ui.state.AuthUiState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
+/**
+ * Pantalla de inicio de sesión con email, contraseña y Google Sign-In.
+ *
+ * Muestra cabecera de marca, campos de credenciales, botón principal, divisor "o",
+ * botón de Google y enlace a registro. Gestiona snackbars (errores y sesión expirada)
+ * y reacciona a los eventos de [AuthViewModel].
+ *
+ * @param onNavigateToRegister Navegación al flujo de registro.
+ * @param onNavigateToMain Navegación a la app cuando el perfil ya está completo.
+ * @param onNavigateToCreateProfile Navegación al onboarding de perfil.
+ * @param sessionExpiredMessage Mensaje opcional al volver por sesión caducada.
+ * @param onSessionExpiredMessageShown Callback tras mostrar el mensaje de sesión expirada.
+ * @param viewModel ViewModel de autenticación inyectado por Hilt.
+ */
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,

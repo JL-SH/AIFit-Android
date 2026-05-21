@@ -61,6 +61,17 @@ import com.jlsh.aifit.feature.metabolic.domain.model.WeightTrend
 import com.jlsh.aifit.feature.metabolic.ui.state.MetabolicUiEvent
 import com.jlsh.aifit.feature.metabolic.ui.state.MetabolicUiState
 
+/**
+ * Pantalla de análisis metabólico: estado, tendencia de peso, adherencia y recomendación.
+ *
+ * Si faltan datos muestra un estado vacío dedicado; en caso contrario presenta badge de estado,
+ * tarjetas de tendencia y calorías, justificación textual, recomendación de macros con diálogo
+ * de confirmación e historial de insights. Los snackbars y la recarga tras aplicar ajuste
+ * se gestionan vía [MetabolicViewModel.events].
+ *
+ * @param onNavigateBack Callback al pulsar atrás.
+ * @param viewModel Origen del [MetabolicUiState] y eventos de UI.
+ */
 @Composable
 fun MetabolicAnalysisScreen(
     onNavigateBack: () -> Unit,

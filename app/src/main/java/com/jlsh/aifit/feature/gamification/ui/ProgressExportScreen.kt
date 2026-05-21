@@ -45,6 +45,15 @@ import com.jlsh.aifit.feature.gamification.domain.model.ProgressExport
 import com.jlsh.aifit.feature.gamification.domain.model.toExportPeriodDisplayString
 import com.jlsh.aifit.feature.gamification.ui.state.ExportUiState
 
+/**
+ * Pantalla de exportación y compartición del informe de progreso del usuario.
+ *
+ * Muestra selector de período (chips), resumen estadístico en tarjeta y botón para compartir
+ * el informe como texto plano. Observa [ExportUiState] del [GamificationViewModel].
+ *
+ * @param onNavigateBack Vuelve a la pantalla anterior.
+ * @param viewModel ViewModel compartido con gamificación (mismo ámbito de navegación).
+ */
 @Composable
 fun ProgressExportScreen(
     onNavigateBack: () -> Unit,

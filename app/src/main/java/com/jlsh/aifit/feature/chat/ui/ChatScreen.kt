@@ -53,6 +53,15 @@ import com.jlsh.aifit.feature.chat.domain.model.ChatMessageRole
 import com.jlsh.aifit.feature.chat.ui.state.ChatState
 import com.jlsh.aifit.feature.chat.ui.state.ChatUiEvent
 
+/**
+ * Pantalla de conversación con el AI Coach.
+ *
+ * Muestra mensajes en burbujas (layout invertido), indicador de escritura, barra de entrada
+ * con adjunto de imagen desde galería y diálogo de archivado. Oculta la barra inferior de navegación.
+ *
+ * @param onNavigateBack Vuelve al listado o pantalla anterior.
+ * @param viewModel ViewModel de chat inyectado por Hilt (sesión desde `sessionId` en la ruta).
+ */
 @Composable
 fun ChatScreen(
     onNavigateBack: () -> Unit,

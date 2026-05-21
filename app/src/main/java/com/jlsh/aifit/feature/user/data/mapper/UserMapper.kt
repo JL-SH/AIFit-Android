@@ -20,11 +20,18 @@ import com.jlsh.aifit.feature.user.domain.model.UpdateUserProfileRequest
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import java.time.LocalDate
 
+/**
+ * Conversiones entre DTO, entidad Room y modelos de dominio del usuario.
+ */
 object UserMapper {
 
     /**
-     * Picks the best avatar URL among several candidates.
-     * Uploaded photos (Cloudinary) always beat the default Google avatar from OAuth.
+     * Elige la mejor URL de avatar entre varios candidatos.
+     *
+     * Las fotos subidas (Cloudinary) tienen prioridad sobre el avatar por defecto de Google OAuth.
+     *
+     * @param candidates URLs en orden de preferencia de entrada.
+     * @return URL elegida, o `null` si no hay candidatos válidos.
      */
     fun pickBestProfilePictureUrl(vararg candidates: String?): String? {
         val valid = candidates.mapNotNull { it?.trim()?.takeIf { s -> s.isNotEmpty() } }
@@ -33,19 +40,45 @@ object UserMapper {
             ?: valid.firstOrNull()
     }
 
+    /**
+     * Indica si la URL corresponde a una foto subida por el usuario (Cloudinary).
+     *
+     * @param url URL a evaluar.
+     * @return `true` si el host es Cloudinary.
+     */
     fun isUploadedProfilePhoto(url: String): Boolean =
         url.contains("cloudinary.com", ignoreCase = true)
 
+    /**
+     * Indica si la URL es el avatar genérico de Google tras OAuth.
+     *
+     * @param url URL a evaluar.
+     * @return `true` si proviene de dominios de Google.
+     */
     fun isDefaultGoogleAvatar(url: String): Boolean =
         url.contains("googleusercontent.com", ignoreCase = true) ||
             url.contains("ggpht.com", ignoreCase = true)
 
+    /**
+     * Resuelve la URL de avatar a partir de campos del DTO y un fallback opcional.
+     *
+     * @param profilePictureUrl Campo principal de foto en el DTO.
+     * @param profileImageUrl Campo alternativo de imagen.
+     * @param fallback URL de respaldo si los anteriores están vacíos.
+     * @return Mejor URL según [pickBestProfilePictureUrl].
+     */
     fun resolveProfilePictureUrl(
         profilePictureUrl: String?,
         profileImageUrl: String?,
         fallback: String? = null,
     ): String? = pickBestProfilePictureUrl(profilePictureUrl, profileImageUrl, fallback)
 
+    /**
+     * Mapea la respuesta de API al modelo de dominio [UserProfile].
+     *
+     * @param fallbackPictureUrl URL usada si el DTO no trae imagen válida.
+     * @return Perfil de dominio con fechas y enums parseados.
+     */
     fun UserProfileResponseDto.toDomain(fallbackPictureUrl: String? = null): UserProfile = UserProfile(
         id = id,
         name = name,
@@ -73,6 +106,7 @@ object UserMapper {
         calorieTarget = calorieTarget,
     )
 
+    /** Persiste los campos esenciales del perfil en [UserProfileEntity]. */
     fun UserProfile.toEntity(): UserProfileEntity = UserProfileEntity(
         id = id,
         name = name,
@@ -82,6 +116,11 @@ object UserMapper {
         profilePictureUrl = profilePictureUrl,
     )
 
+    /**
+     * Reconstruye un [UserProfile] desde caché local (datos parciales).
+     *
+     * @return Perfil con campos no almacenados en Room en `null`.
+     */
     fun UserProfileEntity.toDomain(): UserProfile = UserProfile(
         id = id,
         name = name,
@@ -105,6 +144,7 @@ object UserMapper {
         calorieTarget = null,
     )
 
+    /** Convierte la petición de creación de perfil al DTO de red. */
     fun CreateUserProfileRequest.toDto(): CreateUserProfileRequestDto = CreateUserProfileRequestDto(
         birthDate = birthDate?.toString(),
         gender = gender?.name,
@@ -122,6 +162,7 @@ object UserMapper {
         calorieTarget = calorieTarget,
     )
 
+    /** Convierte la petición de actualización de perfil al DTO de red. */
     fun UpdateUserProfileRequest.toDto(): UpdateUserProfileRequestDto = UpdateUserProfileRequestDto(
         name = name,
         birthDate = birthDate?.toString(),
@@ -140,6 +181,7 @@ object UserMapper {
         calorieTarget = calorieTarget,
     )
 
+    /** Mapea el resultado de onboarding (planes y objetivo nutricional) a dominio. */
     fun OnboardingResultDto.toDomain(): OnboardingResult = OnboardingResult(
         trainingPlan = trainingPlan.toDomain(),
         dietPlan = dietPlan.toDomain(),

@@ -28,6 +28,17 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 
+/**
+ * Implementación de [UserRepository] con estrategia cache-first y sincronización remota.
+ *
+ * Fusiona URLs de avatar entre caché Room, DataStore y respuestas API (priorizando fotos
+ * subidas en Cloudinary frente al avatar por defecto de Google).
+ *
+ * @param apiService Cliente HTTP de perfil de usuario.
+ * @param dao Acceso local al perfil en Room.
+ * @param authDataStore Preferencias de sesión y avatar persistido.
+ * @param context Contexto de aplicación para leer URIs de fotos.
+ */
 class UserRepositoryImpl @Inject constructor(
     private val apiService: UserApiService,
     private val dao: UserProfileDao,
@@ -35,6 +46,11 @@ class UserRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : BaseRemoteDataSource(), UserRepository {
 
+    /**
+     * Flujo del perfil con emisión cache-first.
+     *
+     * @return [Flow] que puede emitir [Result.Loading], caché [Result.Success] y luego el perfil remoto.
+     */
     override fun getProfile(): Flow<Result<UserProfile>> = flow {
         emit(Result.Loading)
 
@@ -84,6 +100,12 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Crea el perfil en el servidor y lo persiste en Room y DataStore.
+     *
+     * @param request Datos iniciales del onboarding.
+     * @return Perfil de dominio o error.
+     */
     override suspend fun createProfile(request: CreateUserProfileRequest): Result<UserProfile> {
         return when (val result = safeApiCall { apiService.createProfile(request.toDto()) }) {
             is Result.Success -> {
@@ -101,6 +123,12 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Actualiza el perfil parcialmente en el servidor.
+     *
+     * @param request Campos a modificar.
+     * @return Perfil actualizado o error.
+     */
     override suspend fun updateProfile(request: UpdateUserProfileRequest): Result<UserProfile> {
         return when (val result = safeApiCall { apiService.updateProfile(request.toDto()) }) {
             is Result.Success -> {
@@ -117,6 +145,12 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Finaliza el onboarding y devuelve planes generados.
+     *
+     * @param feedback Comentarios opcionales para la IA.
+     * @return Resultado con planes de entreno, dieta y objetivo nutricional.
+     */
     override suspend fun completeOnboarding(feedback: String?): Result<OnboardingResult> {
         val request = OnboardingFeedbackRequestDto(feedback)
         return when (val result = safeApiCall { apiService.completeOnboarding(request) }) {
@@ -126,6 +160,12 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Sube una foto de perfil y sincroniza el perfil completo.
+     *
+     * @param uri URI local de la imagen seleccionada.
+     * @return Perfil con la nueva URL de avatar, o error si no se puede abrir/subir la imagen.
+     */
     override suspend fun uploadProfilePhoto(uri: Uri): Result<UserProfile> {
         val inputStream = context.contentResolver.openInputStream(uri)
             ?: return Result.Error(AppException.UnknownException("No se pudo abrir la imagen seleccionada"))

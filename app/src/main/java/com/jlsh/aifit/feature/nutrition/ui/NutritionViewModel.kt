@@ -42,6 +42,16 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
+/**
+ * ViewModel del módulo de nutrición: hub diario, registro de comidas y objetivos.
+ *
+ * Expone:
+ * - [hubState]: [NutritionHubUiState] (hoy, planes de dieta, pestaña y filtros).
+ * - [trackMealState]: [TrackMealUiState] para guardar o analizar comidas.
+ * - [targetState]: [NutritionTargetUiState] para editar objetivos.
+ * - [selectedTabIndex]: índice de pestaña del hub (0 = Hoy, 1 = Plan, 2 = Compras).
+ * - [events]: flujo de [NutritionUiEvent] (navegación, sheet, snackbars, [NutritionUiEvent.MealDeleted]).
+ */
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class NutritionViewModel @Inject constructor(
@@ -57,18 +67,31 @@ class NutritionViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _hubState = MutableStateFlow<NutritionHubUiState>(NutritionHubUiState.Loading)
+
+    /** Estado observable del hub de nutrición ([NutritionHubUiState]). */
     val hubState: StateFlow<NutritionHubUiState> = _hubState.asStateFlow()
 
     private val _trackMealState = MutableStateFlow<TrackMealUiState>(TrackMealUiState.Idle)
+
+    /** Estado observable del registro/análisis de comida ([TrackMealUiState]). */
     val trackMealState: StateFlow<TrackMealUiState> = _trackMealState.asStateFlow()
 
     private val _targetState = MutableStateFlow<NutritionTargetUiState>(NutritionTargetUiState.Loading)
+
+    /** Estado observable de la pantalla de objetivos ([NutritionTargetUiState]). */
     val targetState: StateFlow<NutritionTargetUiState> = _targetState.asStateFlow()
 
     private val _selectedTabIndex = MutableStateFlow(0)
+
+    /** Pestaña activa del hub: 0 Hoy, 1 Plan de dieta, 2 Compras. */
     val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
 
     private val _events = Channel<NutritionUiEvent>(Channel.BUFFERED)
+
+    /**
+     * Eventos de UI de un solo consumo: navegación, [NutritionUiEvent.ShowTrackMealSheet],
+     * [NutritionUiEvent.ShowSnackbar], [NutritionUiEvent.MealDeleted], etc.
+     */
     val events = _events.receiveAsFlow()
 
     private var fetchDietPlansJob: Job? = null
@@ -141,11 +164,21 @@ class NutritionViewModel @Inject constructor(
     private fun sortDietPlans(plans: List<DietPlan>): List<DietPlan> =
         plans.sortedByDescending { it.createdAt }
 
+    /**
+     * Indica si el usuario tiene al menos un plan de dieta en estado [PlanStatus.ACTIVE].
+     *
+     * @return true si existe un plan activo en [hubState] exitoso.
+     */
     fun hasActiveDietPlan(): Boolean {
         val state = _hubState.value as? NutritionHubUiState.Success ?: return false
         return state.dietPlans.any { it.status == PlanStatus.ACTIVE }
     }
 
+    /**
+     * Cambia la pestaña del hub y sincroniza [selectedTabIndex] con [hubState].
+     *
+     * @param index Índice de pestaña (0–2).
+     */
     fun onTabSelected(index: Int) {
         _selectedTabIndex.value = index
         val current = _hubState.value
@@ -154,6 +187,11 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Aplica filtro por estado de plan en la pestaña de planes de dieta.
+     *
+     * @param status Estado a filtrar; null muestra todos los planes.
+     */
     fun onDietPlanFilterChanged(status: PlanStatus?) {
         val current = _hubState.value
         if (current is NutritionHubUiState.Success) {
@@ -161,11 +199,17 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
+    /** Recarga log del día, objetivos y planes de dieta (con debounce interno). */
     fun onRefresh() {
         if (isDeletingPlan) return
         _refreshTrigger.tryEmit(Unit)
     }
 
+    /**
+     * Elimina una comida del diario y refresca el hub; emite [NutritionUiEvent.MealDeleted].
+     *
+     * @param mealId Identificador de la comida registrada.
+     */
     fun onDeleteMeal(mealId: String) {
         viewModelScope.launch {
             when (val result = deleteMealLogUseCase(mealId)) {
@@ -182,6 +226,11 @@ class NutritionViewModel @Inject constructor(
 
     // ===== TRACK MEAL =====
 
+    /**
+     * Registra una comida manual y emite [NutritionUiEvent.NavigateToHome] al guardar.
+     *
+     * @param request Datos de la comida y alimentos.
+     */
     fun onTrackMeal(request: TrackMealRequestDto) {
         viewModelScope.launch {
             _trackMealState.value = TrackMealUiState.Saving
@@ -199,6 +248,11 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Analiza texto libre con IA, registra la comida y navega al hub al completar.
+     *
+     * @param request Texto, tipo, hora y fecha de la comida.
+     */
     fun onAnalyzeMealFromText(request: AnalyzeMealFromTextRequestDto) {
         viewModelScope.launch {
             _trackMealState.value = TrackMealUiState.Analyzing
@@ -220,12 +274,14 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
+    /** Restablece [trackMealState] a [TrackMealUiState.Idle] al entrar en la pantalla de registro. */
     fun resetTrackMealState() {
         _trackMealState.value = TrackMealUiState.Idle
     }
 
     // ===== NUTRITION TARGET =====
 
+    /** Carga objetivos actuales y actualiza [targetState] a [NutritionTargetUiState.Ready] o error. */
     fun loadNutritionTarget() {
         viewModelScope.launch {
             _targetState.value = NutritionTargetUiState.Loading
@@ -250,6 +306,14 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Persiste nuevos objetivos nutricionales y emite [NutritionUiEvent.NavigateBack] al éxito.
+     *
+     * @param calories Objetivo calórico como texto.
+     * @param protein Objetivo de proteína (g) como texto.
+     * @param carbs Objetivo de carbohidratos (g) como texto.
+     * @param fat Objetivo de grasas (g) como texto.
+     */
     fun onUpdateTarget(calories: String, protein: String, carbs: String, fat: String) {
         viewModelScope.launch {
             val current = _targetState.value
@@ -283,14 +347,25 @@ class NutritionViewModel @Inject constructor(
 
     // ===== NAVIGATION =====
 
+    /** Emite [NutritionUiEvent.ShowTrackMealSheet] para elegir modo de registro de comida. */
     fun onFabClicked() {
         emitEvent(NutritionUiEvent.ShowTrackMealSheet)
     }
 
+    /**
+     * Emite [NutritionUiEvent.NavigateToDietDetail] con el plan seleccionado.
+     *
+     * @param planId Identificador del plan.
+     */
     fun onDietPlanClicked(planId: String) {
         emitEvent(NutritionUiEvent.NavigateToDietDetail(planId))
     }
 
+    /**
+     * Activa un plan con actualización optimista en [hubState] y sincronización con servidor.
+     *
+     * @param planId Identificador del plan a activar.
+     */
     fun onActivateDietPlan(planId: String) {
         val current = _hubState.value as? NutritionHubUiState.Success ?: return
         val previousState = current
@@ -326,6 +401,11 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Elimina un plan no activo con UI optimista; revierte y muestra snackbar si falla la red.
+     *
+     * @param planId Identificador del plan a eliminar.
+     */
     fun onDeleteDietPlan(planId: String) {
         val current = _hubState.value as? NutritionHubUiState.Success ?: return
         val plan = current.dietPlans.firstOrNull { it.id == planId } ?: return
@@ -358,10 +438,12 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
+    /** Emite [NutritionUiEvent.NavigateToGenerateDiet] para crear un nuevo plan. */
     fun onGenerateDietClicked() {
         emitEvent(NutritionUiEvent.NavigateToGenerateDiet)
     }
 
+    /** Emite [NutritionUiEvent.NavigateToNutritionTarget] para editar objetivos. */
     fun onNavigateToTarget() {
         emitEvent(NutritionUiEvent.NavigateToNutritionTarget)
     }

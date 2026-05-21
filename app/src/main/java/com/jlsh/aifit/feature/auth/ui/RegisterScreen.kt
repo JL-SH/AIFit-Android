@@ -45,6 +45,17 @@ import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.feature.auth.ui.state.AuthUiEvent
 import com.jlsh.aifit.feature.auth.ui.state.AuthUiState
 
+/**
+ * Pantalla de alta de cuenta con nombre, email y contraseña.
+ *
+ * Incluye botón atrás, cabecera, formulario de registro, CTA principal y enlace
+ * para volver al login. Consume el mismo [AuthViewModel] que [LoginScreen].
+ *
+ * @param onNavigateBack Vuelve a la pantalla de login.
+ * @param onNavigateToCreateProfile Tras registro exitoso, ir a crear perfil.
+ * @param onNavigateToMain Navegación principal si el backend marca perfil completo.
+ * @param viewModel ViewModel de autenticación inyectado por Hilt.
+ */
 @Composable
 fun RegisterScreen(
     onNavigateBack: () -> Unit,

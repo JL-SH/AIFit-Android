@@ -81,6 +81,17 @@ private val MEAL_TYPE_OPTIONS = listOf(
 
 private val UNIT_OPTIONS = listOf("g", "ml", "unit", "slice", "cup", "tbsp", "tsp")
 
+/**
+ * Entrada editable de un alimento en el formulario de registro manual de comida.
+ *
+ * @property name Nombre del alimento.
+ * @property quantity Cantidad como texto (se parsea al guardar).
+ * @property unit Unidad de medida (g, ml, unidad, etc.).
+ * @property calories Calorías totales o por 100 g según [unit].
+ * @property protein Proteína en gramos (total o por 100 g).
+ * @property carbs Carbohidratos en gramos (total o por 100 g).
+ * @property fat Grasas en gramos (total o por 100 g).
+ */
 data class FoodItemEntry(
     val name: String = "",
     val quantity: String = "",
@@ -100,6 +111,14 @@ private fun FoodItemEntry.scaledMacros() = scaleFoodItemMacros(
     fatPer100g = fat.toDoubleOrNull(),
 )
 
+/**
+ * Pantalla para registrar una comida: modo manual (formulario con alimentos) o análisis por texto (IA).
+ *
+ * @param mode `"manual"` para entrada manual; `"text_analysis"` para describir la comida en texto libre.
+ * @param onNavigateBack Callback al cancelar o tras [NutritionUiEvent.NavigateBack].
+ * @param onNavigateToHome Callback tras guardar o analizar con éxito ([NutritionUiEvent.NavigateToHome]).
+ * @param viewModel ViewModel con [TrackMealUiState] y eventos de nutrición.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrackMealScreen(

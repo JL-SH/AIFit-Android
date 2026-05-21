@@ -26,6 +26,17 @@ import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
+/**
+ * Full-screen error state composed of an error icon, a human-readable message
+ * and a [SecondaryButton] that lets the user retry the failed operation.
+ *
+ * Fills the available space with [MaterialTheme.colorScheme.background] and centres
+ * its contents vertically and horizontally. Tagged with `"error_screen"` for UI tests.
+ *
+ * @param message Human-readable description of the error to display.
+ * @param onRetry Lambda invoked when the user taps the retry button.
+ * @param modifier Modifier applied to the outer [Box].
+ */
 @Composable
 fun ErrorScreen(
     message: String,

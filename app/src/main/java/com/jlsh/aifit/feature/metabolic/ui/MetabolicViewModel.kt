@@ -23,6 +23,25 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel del análisis metabólico y aplicación de ajustes nutricionales.
+ *
+ * **UiState expuesto** ([uiState] — [MetabolicUiState]):
+ * - [MetabolicUiState.Loading]: análisis e insights en carga paralela.
+ * - [MetabolicUiState.Success]: análisis, historial de insights y flag [MetabolicUiState.Success.isApplying].
+ * - [MetabolicUiState.Error]: mensaje de error genérico.
+ * - [MetabolicUiState.InsufficientData]: no hay datos suficientes para el análisis.
+ *
+ * **Eventos emitidos** ([events] — [MetabolicUiEvent]):
+ * - [MetabolicUiEvent.ShowSnackbar]: confirmación o error al aplicar ajuste.
+ * - [MetabolicUiEvent.AdjustmentApplied]: ajuste guardado; la UI puede permanecer en pantalla.
+ * - [MetabolicUiEvent.NavigateBack]: volver atrás.
+ *
+ * @param analyzeMetabolicProgressUseCase Análisis principal.
+ * @param getMetabolicInsightsUseCase Historial de ajustes aplicados.
+ * @param applyMetabolicAdjustmentUseCase Persistencia del ajuste recomendado.
+ * @param getCurrentNutritionTargetUseCase Invalida caché de objetivos tras aplicar.
+ */
 @HiltViewModel
 class MetabolicViewModel @Inject constructor(
     private val analyzeMetabolicProgressUseCase: AnalyzeMetabolicProgressUseCase,
@@ -32,15 +51,18 @@ class MetabolicViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MetabolicUiState>(MetabolicUiState.Loading)
+    /** Estado del análisis metabólico y aplicación de ajustes. */
     val uiState: StateFlow<MetabolicUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<MetabolicUiEvent>(Channel.BUFFERED)
+    /** Flujo de snackbars y señal de ajuste aplicado. */
     val events = _events.receiveAsFlow()
 
     init {
         loadAll()
     }
 
+    /** Recarga en paralelo el análisis y el historial de insights. */
     fun loadAll() {
         viewModelScope.launch {
             _uiState.value = MetabolicUiState.Loading
@@ -74,6 +96,7 @@ class MetabolicViewModel @Inject constructor(
         }
     }
 
+    /** Envía al backend la recomendación actual y refresca el análisis si tiene éxito. */
     fun onApplyAdjustment() {
         val current = _uiState.value
         if (current !is MetabolicUiState.Success) return

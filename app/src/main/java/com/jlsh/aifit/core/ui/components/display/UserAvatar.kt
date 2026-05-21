@@ -22,12 +22,30 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
+/**
+ * Available size presets for [UserAvatar].
+ *
+ * @property size Diameter of the avatar circle in density-independent pixels.
+ */
 enum class AvatarSize(val size: Dp) {
     SMALL(32.dp),
     DEFAULT(40.dp),
     LARGE(64.dp),
 }
 
+/**
+ * Circular avatar that displays a remote image or falls back to the user's initials.
+ *
+ * Coil loads [imageUrl] asynchronously. If the load fails for any reason (network
+ * error, bad URL, timeout), the component falls back to rendering initials derived
+ * from [name] on a [MaterialTheme.colorScheme.secondaryContainer] background.
+ *
+ * @param name User's full name, used both as the content description for the image
+ *   and to derive the 1–2 character initials shown as fallback.
+ * @param modifier Modifier applied to the outer [Box].
+ * @param imageUrl Optional remote image URL. When `null` or blank, initials are shown.
+ * @param size Controls the diameter of the avatar circle; see [AvatarSize].
+ */
 @Composable
 fun UserAvatar(
     name: String,
@@ -35,7 +53,6 @@ fun UserAvatar(
     imageUrl: String? = null,
     size: AvatarSize = AvatarSize.DEFAULT,
 ) {
-    // Reset the error flag whenever the URL changes so a fresh load is attempted.
     var coilFailed by remember(imageUrl) { mutableStateOf(false) }
 
     Box(
@@ -53,8 +70,6 @@ fun UserAvatar(
                     .size(size.size)
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop,
-                // When Coil fails to load (any reason: network, bad URL, timeout…)
-                // show initials as fallback instead of an empty circle.
                 onError = { coilFailed = true },
             )
         } else {

@@ -20,6 +20,19 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
+/**
+ * Data holder for [MacroRingChart] containing today's intake and daily targets
+ * for calories and the three primary macronutrients.
+ *
+ * @property currentCalories Calories consumed so far today.
+ * @property targetCalories Daily calorie target.
+ * @property currentProtein Protein consumed so far today, in grams.
+ * @property targetProtein Daily protein target, in grams.
+ * @property currentCarbs Carbohydrates consumed so far today, in grams.
+ * @property targetCarbs Daily carbohydrate target, in grams.
+ * @property currentFat Fat consumed so far today, in grams.
+ * @property targetFat Daily fat target, in grams.
+ */
 data class MacroRingData(
     val currentCalories: Float,
     val targetCalories: Float,
@@ -31,6 +44,20 @@ data class MacroRingData(
     val targetFat: Float,
 )
 
+/**
+ * Canvas-based concentric ring chart that visualises today's macronutrient
+ * intake as proportional arc segments over a total-calorie progress ring.
+ *
+ * Each macro is weighted by its caloric contribution (protein 4 kcal/g,
+ * carbs 4 kcal/g, fat 9 kcal/g). The total sweep of all segments is capped
+ * at 360° when intake exceeds the target. Current calorie intake and the
+ * `"kcal"` unit are shown as centred text inside the ring.
+ *
+ * @param data Macro and calorie values to visualise; see [MacroRingData].
+ * @param modifier Modifier applied to the outer [Box].
+ * @param size Outer diameter of the ring. Defaults to 160 dp.
+ * @param strokeWidth Width of each arc segment. Defaults to 12 dp.
+ */
 @Composable
 fun MacroRingChart(
     data: MacroRingData,
@@ -57,7 +84,6 @@ fun MacroRingChart(
             val arcSize = Size(canvasSize - strokePx, canvasSize - strokePx)
             val topLeft = Offset(strokePx / 2f, strokePx / 2f)
 
-            // Draw track
             drawArc(
                 color = trackColor,
                 startAngle = -90f,
@@ -68,8 +94,6 @@ fun MacroRingChart(
                 style = Stroke(width = strokePx, cap = StrokeCap.Round),
             )
 
-            // Calculate sweep angles based on macro contribution to total calories
-            // Protein: 4 kcal/g, Carbs: 4 kcal/g, Fat: 9 kcal/g
             val proteinKcal = data.currentProtein * 4f
             val carbsKcal = data.currentCarbs * 4f
             val fatKcal = data.currentFat * 9f
@@ -84,7 +108,6 @@ fun MacroRingChart(
 
                 var startAngle = -90f
 
-                // Protein segment
                 val proteinSweep = totalSweep * proteinFraction
                 drawArc(
                     color = proteinColor,
@@ -97,7 +120,6 @@ fun MacroRingChart(
                 )
                 startAngle += proteinSweep
 
-                // Carbs segment
                 val carbsSweep = totalSweep * carbsFraction
                 drawArc(
                     color = carbsColor,
@@ -110,7 +132,6 @@ fun MacroRingChart(
                 )
                 startAngle += carbsSweep
 
-                // Fat segment
                 val fatSweep = totalSweep * fatFraction
                 drawArc(
                     color = fatColor,
@@ -124,7 +145,6 @@ fun MacroRingChart(
             }
         }
 
-        // Center text
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "${data.currentCalories.toInt()}",
@@ -162,5 +182,3 @@ private fun MacroRingChartPreview() {
         )
     }
 }
-
-

@@ -69,6 +69,21 @@ import com.jlsh.aifit.feature.user.ui.state.UserUiState
 import androidx.compose.ui.res.stringResource
 import com.jlsh.aifit.R
 
+/**
+ * Hub central del perfil: cabecera con avatar, estadísticas y menús por secciones.
+ *
+ * Agrupa accesos a edición, progreso, logros, glosario, tema oscuro y cierre de sesión.
+ * Refresca el perfil al reanudar el ciclo de vida para reflejar fotos subidas en edición.
+ *
+ * @param onNavigateToEditProfile Abre [UserProfileScreen].
+ * @param onNavigateToDashboard Panel de progreso.
+ * @param onNavigateToBodyWeight Registro de peso corporal.
+ * @param onNavigateToMetabolic Datos metabólicos.
+ * @param onNavigateToExport Exportación de datos.
+ * @param onNavigateToGamification Pantalla de gamificación; el parámetro distingue logros/récords.
+ * @param onNavigateToGlossary Glosario educativo.
+ * @param viewModel ViewModel de usuario inyectado por Hilt.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileHubScreen(

@@ -16,6 +16,18 @@ import androidx.compose.ui.unit.sp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.FullShape
 
+/**
+ * Full-width button for irreversible or destructive actions (e.g. delete, clear).
+ *
+ * Styled with [MaterialTheme.colorScheme.errorContainer] to signal danger to the user.
+ * Typically paired with [ConfirmationDialog] as its dismiss/cancel action.
+ * The label is rendered in uppercase.
+ *
+ * @param text Label displayed inside the button (automatically uppercased).
+ * @param onClick Lambda invoked when the button is tapped.
+ * @param modifier Modifier applied to the outer [Button].
+ * @param enabled When `false`, renders the button in its disabled visual state.
+ */
 @Composable
 fun DestructiveButton(
     text: String,

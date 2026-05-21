@@ -52,6 +52,21 @@ import java.time.LocalDate
 import java.util.UUID
 import javax.inject.Inject
 
+/**
+ * ViewModel de la sesión de entrenamiento en vivo: carga, series, calentamiento y cierre.
+ *
+ * Estados expuestos:
+ * - [uiState]: flujo principal ([WorkoutSessionUiState]) desde idle hasta finalizado.
+ * - [restTimerSeconds]: segundos restantes del temporizador de descanso, o null si inactivo.
+ * - [substitutionsState]: carga de alternativas de ejercicio ([SubstitutionLoadState]).
+ *
+ * Eventos ([events], tipo [WorkoutSessionUiEvent]):
+ * - [WorkoutSessionUiEvent.NavigateBack] al abandonar la sesión.
+ * - [WorkoutSessionUiEvent.ShowSnackbar] para errores y fin de descanso.
+ * - [WorkoutSessionUiEvent.SessionAlreadyLocked] si el día ya fue finalizado hoy.
+ * - [WorkoutSessionUiEvent.RequestFinalizeSession] cuando todos los ejercicios están completos.
+ * - [WorkoutSessionUiEvent.ShowSubstitutionSheet] (reservado; la UI abre la hoja directamente).
+ */
 @HiltViewModel
 class WorkoutSessionViewModel @Inject constructor(
     private val getWarmUpProtocolUseCase: GetWarmUpProtocolUseCase,
@@ -67,15 +82,23 @@ class WorkoutSessionViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<WorkoutSessionUiState>(WorkoutSessionUiState.Idle)
+
+    /** Estado observable de la sesión (calentamiento, activa, finalizando, error). */
     val uiState: StateFlow<WorkoutSessionUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<WorkoutSessionUiEvent>(Channel.BUFFERED)
+
+    /** Eventos de navegación y feedback de una sola consumición. */
     val events = _events.receiveAsFlow()
 
     private val _restTimerSeconds = MutableStateFlow<Int?>(null)
+
+    /** Segundos restantes del descanso entre series; null si no hay temporizador activo. */
     val restTimerSeconds: StateFlow<Int?> = _restTimerSeconds.asStateFlow()
 
     private val _substitutionsState = MutableStateFlow<SubstitutionLoadState>(SubstitutionLoadState.Idle)
+
+    /** Estado de carga de sustituciones de ejercicio para la hoja inferior. */
     val substitutionsState: StateFlow<SubstitutionLoadState> = _substitutionsState.asStateFlow()
 
     private var restTimerJob: Job? = null
@@ -98,6 +121,13 @@ class WorkoutSessionViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Carga ejercicios del día, calentamiento, sesión previa del día y reanudación si aplica.
+     * Solo actúa si el estado actual es [WorkoutSessionUiState.Idle].
+     *
+     * @param planId Identificador del plan de entrenamiento.
+     * @param dayId Identificador del día de entrenamiento dentro del plan.
+     */
     fun loadSession(planId: String, dayId: String) {
         if (_uiState.value !is WorkoutSessionUiState.Idle) return
 
@@ -196,6 +226,11 @@ class WorkoutSessionViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Pasa de calentamiento a sesión activa con progreso de series ya guardadas.
+     *
+     * @param warmupCompleted Si el usuario completó el calentamiento guiado.
+     */
     fun startWorkout(warmupCompleted: Boolean = false) {
         if (_uiState.value !is WorkoutSessionUiState.WarmUpReady) return
 
@@ -226,6 +261,14 @@ class WorkoutSessionViewModel @Inject constructor(
         // Backend log is created on the first registerSet() call (if backendLogId is still null).
     }
 
+    /**
+     * Registra una serie completada: actualiza UI, temporizador, volumen y persiste en backend.
+     *
+     * @param exerciseId Identificador del ejercicio de entrenamiento.
+     * @param weightKg Peso en kg; null si el ejercicio no requiere carga externa.
+     * @param reps Repeticiones completadas.
+     * @param rpe RPE opcional (1–10) para autoregulación y descanso adaptativo.
+     */
     fun registerSet(exerciseId: String, weightKg: Double?, reps: Int, rpe: Int? = null) {
         val currentState = _uiState.value
         if (currentState !is WorkoutSessionUiState.SessionActive) return
@@ -380,6 +423,12 @@ class WorkoutSessionViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Cierra la sesión enviando fatiga sistémica y reporte articular al backend.
+     *
+     * @param systemicFatigue Valor de fatiga reportado por el usuario.
+     * @param jointPainReport Lista de entradas de dolor por articulación.
+     */
     fun finalizeSession(systemicFatigue: Int, jointPainReport: List<JointPainEntry>) {
         val currentState = _uiState.value
         if (currentState !is WorkoutSessionUiState.SessionActive) return
@@ -478,6 +527,10 @@ class WorkoutSessionViewModel @Inject constructor(
 
     // ===== ABANDON SESSION =====
 
+    /**
+     * Abandona la sesión: cancela el temporizador, borra el log incompleto en backend
+     * y emite [WorkoutSessionUiEvent.NavigateBack].
+     */
     fun abandonSession() {
         viewModelScope.launch {
             cancelRestTimer()
@@ -506,6 +559,7 @@ class WorkoutSessionViewModel @Inject constructor(
         }
     }
 
+    /** Cancela el temporizador de descanso activo y oculta el overlay. */
     fun cancelRestTimer() {
         restTimerJob?.cancel()
         restTimerJob = null
@@ -514,6 +568,11 @@ class WorkoutSessionViewModel @Inject constructor(
 
     // ===== SUBSTITUTIONS =====
 
+    /**
+     * Carga sustituciones sugeridas para un ejercicio desde el backend.
+     *
+     * @param exerciseId Identificador del ejercicio a sustituir.
+     */
     fun loadSubstitutions(exerciseId: String) {
         _substitutionsState.value = SubstitutionLoadState.Loading
         viewModelScope.launch {
@@ -529,6 +588,12 @@ class WorkoutSessionViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Aplica una sustitución actualizando nombre y músculo del ejercicio en la sesión activa.
+     *
+     * @param originalExerciseId Ejercicio que se sustituye.
+     * @param substitution Alternativa elegida por el usuario.
+     */
     fun applySubstitution(originalExerciseId: String, substitution: ExerciseSubstitution) {
         val currentState = _uiState.value
         if (currentState !is WorkoutSessionUiState.SessionActive) return
