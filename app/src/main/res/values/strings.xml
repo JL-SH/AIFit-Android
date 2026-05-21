@@ -658,9 +658,13 @@
     <string name="nutrition_track_quantity_label">Cant.</string>
     <string name="nutrition_track_unit_label">Unidad</string>
     <string name="nutrition_track_kcal_label">kcal</string>
+    <string name="nutrition_track_kcal_per_100g_label">kcal/100g</string>
     <string name="nutrition_track_protein_label">Prot(g)</string>
+    <string name="nutrition_track_protein_per_100g_label">Prot/100g</string>
     <string name="nutrition_track_carbs_label">Carbos(g)</string>
+    <string name="nutrition_track_carbs_per_100g_label">Carbos/100g</string>
     <string name="nutrition_track_fat_label">Grasa(g)</string>
+    <string name="nutrition_track_fat_per_100g_label">Grasa/100g</string>
 
     <!-- ══════════════════════════════════════════════════════════
          DIET DETAIL

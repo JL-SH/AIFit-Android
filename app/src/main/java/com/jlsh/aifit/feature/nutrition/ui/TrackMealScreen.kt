@@ -58,6 +58,8 @@ import com.jlsh.aifit.feature.diet.domain.model.MealType
 import com.jlsh.aifit.feature.nutrition.data.dto.AnalyzeMealFromTextRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.TrackFoodItemRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.TrackMealRequestDto
+import com.jlsh.aifit.feature.nutrition.domain.util.scaleFoodItemMacros
+import com.jlsh.aifit.feature.nutrition.domain.util.usesPer100gScaling
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionUiEvent
 import com.jlsh.aifit.feature.nutrition.ui.state.TrackMealUiState
 import java.time.LocalDate
@@ -84,6 +86,15 @@ data class FoodItemEntry(
     val protein: String = "",
     val carbs: String = "",
     val fat: String = "",
+)
+
+private fun FoodItemEntry.scaledMacros() = scaleFoodItemMacros(
+    unit = unit,
+    quantity = quantity.toDoubleOrNull(),
+    caloriesPer100g = calories.toIntOrNull(),
+    proteinPer100g = protein.toDoubleOrNull(),
+    carbsPer100g = carbs.toDoubleOrNull(),
+    fatPer100g = fat.toDoubleOrNull(),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -313,11 +324,11 @@ fun TrackMealScreen(
                         )
                     }
 
-                    // Totals
-                    val totalCal = items.sumOf { it.calories.toIntOrNull() ?: 0 }
-                    val totalProt = items.sumOf { it.protein.toDoubleOrNull() ?: 0.0 }
-                    val totalCarbs = items.sumOf { it.carbs.toDoubleOrNull() ?: 0.0 }
-                    val totalFat = items.sumOf { it.fat.toDoubleOrNull() ?: 0.0 }
+                    // Totals (scaled when unit is g/ml — values entered are per 100g)
+                    val totalCal = items.sumOf { it.scaledMacros().calories ?: 0 }
+                    val totalProt = items.sumOf { it.scaledMacros().proteinGrams ?: 0.0 }
+                    val totalCarbs = items.sumOf { it.scaledMacros().carbsGrams ?: 0.0 }
+                    val totalFat = items.sumOf { it.scaledMacros().fatGrams ?: 0.0 }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -342,14 +353,17 @@ fun TrackMealScreen(
                         isLoading = isSaving,
                         onClick = {
                             val foodItems = items.map { entry ->
+                                val quantity = entry.quantity.toDoubleOrNull()
+                                val per100g = usesPer100gScaling(entry.unit)
                                 TrackFoodItemRequestDto(
                                     name = entry.name,
-                                    quantity = entry.quantity.toDoubleOrNull(),
+                                    quantity = quantity,
                                     unit = entry.unit,
                                     calories = entry.calories.toIntOrNull(),
                                     proteinGrams = entry.protein.toDoubleOrNull(),
                                     carbsGrams = entry.carbs.toDoubleOrNull(),
                                     fatGrams = entry.fat.toDoubleOrNull(),
+                                    macrosPer100g = per100g,
                                 )
                             }
                             viewModel.onTrackMeal(
@@ -415,13 +429,21 @@ private fun FoodItemForm(
             AiFitNumberField(
                 value = item.calories,
                 onValueChange = { onItemChanged(item.copy(calories = it)) },
-                label = stringResource(R.string.nutrition_track_kcal_label),
+                label = if (usesPer100gScaling(item.unit)) {
+                    stringResource(R.string.nutrition_track_kcal_per_100g_label)
+                } else {
+                    stringResource(R.string.nutrition_track_kcal_label)
+                },
                 modifier = Modifier.weight(1f),
             )
             AiFitNumberField(
                 value = item.protein,
                 onValueChange = { onItemChanged(item.copy(protein = it)) },
-                label = stringResource(R.string.nutrition_track_protein_label),
+                label = if (usesPer100gScaling(item.unit)) {
+                    stringResource(R.string.nutrition_track_protein_per_100g_label)
+                } else {
+                    stringResource(R.string.nutrition_track_protein_label)
+                },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -431,13 +453,21 @@ private fun FoodItemForm(
             AiFitNumberField(
                 value = item.carbs,
                 onValueChange = { onItemChanged(item.copy(carbs = it)) },
-                label = stringResource(R.string.nutrition_track_carbs_label),
+                label = if (usesPer100gScaling(item.unit)) {
+                    stringResource(R.string.nutrition_track_carbs_per_100g_label)
+                } else {
+                    stringResource(R.string.nutrition_track_carbs_label)
+                },
                 modifier = Modifier.weight(1f),
             )
             AiFitNumberField(
                 value = item.fat,
                 onValueChange = { onItemChanged(item.copy(fat = it)) },
-                label = stringResource(R.string.nutrition_track_fat_label),
+                label = if (usesPer100gScaling(item.unit)) {
+                    stringResource(R.string.nutrition_track_fat_per_100g_label)
+                } else {
+                    stringResource(R.string.nutrition_track_fat_label)
+                },
                 modifier = Modifier.weight(1f),
             )
         }
