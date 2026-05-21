@@ -49,7 +49,9 @@ class TrainingRepositoryImpl @Inject constructor(
             return@flow
         }
 
-        val cached = dao.getAllByUserId(userId).map { it.toDomain() }
+        val cached = dao.getAllByUserId(userId)
+            .map { it.toDomain() }
+            .filter { it.id !in recentlyDeletedIds }
         if (cached.isNotEmpty()) {
             // TODO: remove diagnostic log below
             Log.d("AIFIT_PLANS", "EMIT CACHE — count=${cached.size} ids=${cached.map { it.id }.take(3)}")
@@ -164,6 +166,9 @@ class TrainingRepositoryImpl @Inject constructor(
         //    from reinserting this plan via upsertAll while the delete API is in-flight.
         recentlyDeletedIds = recentlyDeletedIds + planId
 
+        // 3. Remove from Room immediately so cache emissions never resurrect the plan
+        //    during the API window (~1–4 s).
+        dao.deleteById(planId)
 
         // 4. Confirm deletion with the server.
         return when (val remote = safeEmptyApiCall { apiService.deleteTrainingPlan(planId) }) {

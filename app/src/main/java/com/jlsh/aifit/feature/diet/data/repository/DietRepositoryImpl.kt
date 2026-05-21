@@ -39,7 +39,9 @@ class DietRepositoryImpl @Inject constructor(
             return@flow
         }
 
-        val cached = dao.getAllByUserId(userId).map { it.toDomain() }
+        val cached = dao.getAllByUserId(userId)
+            .map { it.toDomain() }
+            .filter { it.id !in recentlyDeletedIds }
         if (cached.isNotEmpty()) {
             emit(Result.Success(cached))
         }
@@ -157,15 +159,20 @@ class DietRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteDietPlan(planId: String): Result<Unit> {
+        // 1. Snapshot for rollback if the network call fails.
         val planSnapshot = dao.getById(planId)
 
+        // 2. Register in guard set — prevents concurrent getDietPlans() from reinserting
+        //    this plan via upsertAll while the delete API is in-flight.
         recentlyDeletedIds = recentlyDeletedIds + planId
 
+        // 3. Remove from Room immediately so cache emissions never resurrect the plan
+        //    during the API window (~1–4 s). Mirrors TrainingRepositoryImpl.deleteTrainingPlan.
+        dao.deleteById(planId)
+
+        // 4. Confirm deletion with the server.
         return when (val remote = safeUnitApiCall { apiService.deleteDietPlan(planId) }) {
-            is Result.Success -> {
-                dao.deleteById(planId)
-                Result.Success(Unit)
-            }
+            is Result.Success -> Result.Success(Unit)
             is Result.Error -> {
                 planSnapshot?.let { dao.upsertAll(listOf(it)) }
                 recentlyDeletedIds = recentlyDeletedIds - planId
