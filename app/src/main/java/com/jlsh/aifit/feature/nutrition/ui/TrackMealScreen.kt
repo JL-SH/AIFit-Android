@@ -16,11 +16,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -52,6 +54,7 @@ import com.jlsh.aifit.core.ui.components.inputs.AiFitDropdown
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
+import com.jlsh.aifit.core.ui.components.list.SwipeableListItem
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.diet.domain.model.MealType
@@ -297,11 +300,21 @@ fun TrackMealScreen(
                     )
 
                     items.forEachIndexed { index, item ->
-                        FoodItemForm(
-                            item = item,
-                            onItemChanged = { items[index] = it },
-                            index = index + 1,
-                        )
+                        val removeThisItem: () -> Unit = {
+                            if (items.size > 1) {
+                                items.removeAt(index)
+                            } else {
+                                items[0] = FoodItemEntry()
+                            }
+                        }
+                        SwipeableListItem(onDelete = removeThisItem) {
+                            FoodItemForm(
+                                item = item,
+                                onItemChanged = { items[index] = it },
+                                onRemove = removeThisItem,
+                                index = index + 1,
+                            )
+                        }
                         if (index < items.lastIndex) {
                             HorizontalDivider(
                                 color = MaterialTheme.colorScheme.outlineVariant,
@@ -390,16 +403,30 @@ fun TrackMealScreen(
 private fun FoodItemForm(
     item: FoodItemEntry,
     onItemChanged: (FoodItemEntry) -> Unit,
+    onRemove: () -> Unit,
     index: Int,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
     ) {
-        Text(
-            text = stringResource(R.string.nutrition_track_food_item_number, index),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.nutrition_track_food_item_number, index),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            IconButton(onClick = onRemove) {
+                Icon(
+                    imageVector = Icons.Rounded.DeleteOutline,
+                    contentDescription = stringResource(R.string.nutrition_track_remove_food_item),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
         AiFitTextField(
             value = item.name,
             onValueChange = { onItemChanged(item.copy(name = it)) },

@@ -651,6 +651,7 @@
     <string name="nutrition_track_meal_name_label">Nombre de la comida (opcional)</string>
     <string name="nutrition_track_food_items_header">ALIMENTOS</string>
     <string name="nutrition_track_add_food_item">Añadir alimento</string>
+    <string name="nutrition_track_remove_food_item">Eliminar alimento</string>
     <string name="nutrition_track_total_calories">Total: %1$d kcal</string>
     <string name="nutrition_track_macros_summary">P:%1$dg C:%2$dg F:%3$dg</string>
     <string name="nutrition_track_food_item_number">Alimento %1$d</string>
