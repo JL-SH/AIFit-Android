@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Archive
-import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material3.ExperimentalMaterial3Api
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
@@ -73,7 +73,7 @@ fun SwipeableListItem(
                         contentAlignment = Alignment.CenterEnd,
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.DeleteOutline,
+                            imageVector = PhosphorIcons.Regular.Trash,
                             contentDescription = "Eliminar",
                             modifier = Modifier.padding(horizontal = AiFitSpacing.md),
                             tint = MaterialTheme.colorScheme.onError,
@@ -88,7 +88,7 @@ fun SwipeableListItem(
                         contentAlignment = Alignment.CenterStart,
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Archive,
+                            imageVector = PhosphorIcons.Regular.Archive,
                             contentDescription = "Archivar",
                             modifier = Modifier.padding(horizontal = AiFitSpacing.md),
                             tint = MaterialTheme.colorScheme.onTertiaryContainer,

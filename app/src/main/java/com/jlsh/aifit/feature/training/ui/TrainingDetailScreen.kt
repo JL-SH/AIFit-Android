@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.training.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,12 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.TrendingUp
-import androidx.compose.material.icons.outlined.SelfImprovement
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -180,7 +177,7 @@ fun TrainingDetailScreen(
                         viewModel.onNavigateToGenerate(adaptive = true, basePlanId = planId)
                     }) {
                         Icon(
-                            imageVector = Icons.Rounded.AutoAwesome,
+                            imageVector = PhosphorIcons.Regular.Sparkle,
                             contentDescription = stringResource(R.string.training_detail_adaptive_plan_cd),
                             tint = MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.size(24.dp),
@@ -199,7 +196,7 @@ fun TrainingDetailScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 EmptyStateView(
-                    icon = Icons.Rounded.FitnessCenter,
+                    icon = PhosphorIcons.Regular.Barbell,
                     title = stringResource(R.string.training_detail_no_days_title),
                     subtitle = stringResource(R.string.training_detail_no_days_subtitle),
                 )
@@ -276,7 +273,7 @@ private fun RestDayCard(day: TrainingDay) {
             horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             Icon(
-                imageVector = Icons.Outlined.SelfImprovement,
+                imageVector = PhosphorIcons.Regular.PersonSimpleTaiChi,
                 contentDescription = stringResource(R.string.training_detail_rest_day),
                 tint = MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier.size(32.dp),
@@ -426,7 +423,7 @@ private fun ExerciseRow(
                 modifier = Modifier.size(32.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Info,
+                    imageVector = PhosphorIcons.Regular.Info,
                     contentDescription = stringResource(R.string.training_detail_exercise_explanation_title),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
@@ -439,7 +436,7 @@ private fun ExerciseRow(
                     .alpha(progressionAlpha),
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.TrendingUp,
+                    imageVector = PhosphorIcons.Regular.TrendUp,
                     contentDescription = stringResource(R.string.training_detail_progression_cd),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),

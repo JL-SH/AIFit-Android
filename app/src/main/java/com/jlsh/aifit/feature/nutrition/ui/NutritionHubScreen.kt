@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.nutrition.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -22,12 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -194,7 +191,7 @@ fun NutritionHubScreen(
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Add,
+                        imageVector = PhosphorIcons.Regular.Plus,
                         contentDescription = when (selectedTabIndex) {
                             0 -> stringResource(R.string.nutrition_hub_fab_add_meal)
                             1 -> stringResource(R.string.nutrition_hub_fab_new_plan)
@@ -308,7 +305,7 @@ private fun TodayTab(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             EmptyStateView(
-                icon = Icons.Rounded.Restaurant,
+                icon = PhosphorIcons.Regular.ForkKnife,
                 title = stringResource(R.string.nutrition_hub_no_target_title),
                 subtitle = stringResource(R.string.nutrition_hub_no_target_subtitle),
                 action = {
@@ -370,7 +367,7 @@ private fun TodayTab(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     EmptyStateView(
-                        icon = Icons.Rounded.Restaurant,
+                        icon = PhosphorIcons.Regular.ForkKnife,
                         title = stringResource(R.string.nutrition_hub_no_meals_title),
                         subtitle = stringResource(R.string.nutrition_hub_no_meals_subtitle),
                         action = {
@@ -426,7 +423,7 @@ private fun MealRow(
                     }
                     if (meal.aiGenerated) {
                         Icon(
-                            imageVector = Icons.Rounded.AutoAwesome,
+                            imageVector = PhosphorIcons.Regular.Sparkle,
                             contentDescription = stringResource(R.string.nutrition_hub_ai_generated_cd),
                             tint = MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.size(14.dp),
@@ -507,7 +504,7 @@ private fun DietPlanTab(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             EmptyStateView(
-                icon = Icons.Rounded.Restaurant,
+                icon = PhosphorIcons.Regular.ForkKnife,
                 title = stringResource(R.string.nutrition_hub_no_diet_plans_title),
                 subtitle = stringResource(R.string.nutrition_hub_no_diet_plans_subtitle),
                 action = {
@@ -530,7 +527,7 @@ private fun DietPlanTab(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             EmptyStateView(
-                icon = Icons.Rounded.Restaurant,
+                icon = PhosphorIcons.Regular.ForkKnife,
                 title = stringResource(R.string.training_hub_no_active_title),
                 subtitle = stringResource(R.string.training_hub_no_active_subtitle),
                 action = {
@@ -660,7 +657,7 @@ private fun ShoppingTab(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     EmptyStateView(
-                        icon = Icons.Rounded.ShoppingCart,
+                        icon = PhosphorIcons.Regular.ShoppingCart,
                         title = stringResource(R.string.nutrition_hub_shopping_error_title),
                         subtitle = state.message,
                     )
@@ -675,7 +672,7 @@ private fun ShoppingTab(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         EmptyStateView(
-                            icon = Icons.Rounded.ShoppingCart,
+                            icon = PhosphorIcons.Regular.ShoppingCart,
                             title = stringResource(R.string.nutrition_hub_shopping_empty_title),
                             subtitle = stringResource(R.string.nutrition_hub_shopping_empty_subtitle),
                         )
@@ -729,7 +726,7 @@ private fun ShoppingTab(
                                             onClick = { deleteDialogListId = shoppingList.id },
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Rounded.DeleteOutline,
+                                                imageVector = PhosphorIcons.Regular.Trash,
                                                 contentDescription = stringResource(R.string.nutrition_hub_delete_list_cd),
                                                 tint = MaterialTheme.colorScheme.error,
                                             )
@@ -753,7 +750,7 @@ private fun ShoppingTab(
                 .padding(AiFitSpacing.md),
         ) {
             Icon(
-                imageVector = Icons.Rounded.Add,
+                imageVector = PhosphorIcons.Regular.Plus,
                 contentDescription = stringResource(R.string.nutrition_hub_generate_list),
             )
         }

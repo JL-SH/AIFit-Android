@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.vision.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.Manifest
 import android.content.Intent
 import android.graphics.Bitmap
@@ -29,10 +32,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CameraAlt
-import androidx.compose.material.icons.rounded.PhotoLibrary
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -225,7 +224,7 @@ private fun PermissionDeniedContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         EmptyStateView(
-            icon = Icons.Rounded.CameraAlt,
+            icon = PhosphorIcons.Regular.Camera,
             title = stringResource(R.string.vision_permission_title),
             subtitle = stringResource(R.string.vision_permission_subtitle),
         )
@@ -288,7 +287,7 @@ private fun CameraContent(
         ) {
             IconButton(onClick = onGallery) {
                 Icon(
-                    imageVector = Icons.Rounded.PhotoLibrary,
+                    imageVector = PhosphorIcons.Regular.Images,
                     contentDescription = stringResource(R.string.vision_gallery_cd),
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(32.dp),
@@ -315,7 +314,7 @@ private fun CameraContent(
                 modifier = Modifier.size(64.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.CameraAlt,
+                    imageVector = PhosphorIcons.Regular.Camera,
                     contentDescription = stringResource(R.string.vision_capture_cd),
                     modifier = Modifier.size(28.dp),
                 )
@@ -365,7 +364,7 @@ private fun ResultOverlay(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Warning,
+                        imageVector = PhosphorIcons.Regular.Warning,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(16.dp),

@@ -10,11 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Send
-import androidx.compose.material.icons.rounded.AttachFile
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.CircularProgressIndicator
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -82,7 +81,7 @@ fun ChatInputBar(
                         .background(MaterialTheme.colorScheme.errorContainer),
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Close,
+                        imageVector = PhosphorIcons.Regular.X,
                         contentDescription = stringResource(R.string.chat_input_remove_image),
                         tint = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.size(14.dp),
@@ -104,7 +103,7 @@ fun ChatInputBar(
                     enabled = !isLoading,
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.AttachFile,
+                        imageVector = PhosphorIcons.Regular.Paperclip,
                         contentDescription = stringResource(R.string.chat_input_attach_image),
                         tint = if (!isLoading) MaterialTheme.colorScheme.onSurfaceVariant
                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
@@ -149,7 +148,7 @@ fun ChatInputBar(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.Send,
+                        imageVector = PhosphorIcons.Regular.PaperPlaneRight,
                         contentDescription = stringResource(R.string.chat_input_send),
                         tint = if (isSendEnabled) MaterialTheme.colorScheme.primaryContainer
                                else MaterialTheme.colorScheme.onSurfaceVariant,

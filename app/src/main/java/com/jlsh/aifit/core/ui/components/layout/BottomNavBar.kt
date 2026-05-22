@@ -2,12 +2,7 @@ package com.jlsh.aifit.core.ui.components.layout
 
 import android.content.res.Configuration
 import androidx.annotation.StringRes
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material.icons.rounded.SmartToy
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -22,6 +17,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.fill.*
+import com.adamglin.phosphoricons.regular.*
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
@@ -29,16 +29,42 @@ val LocalBottomBarVisibility = compositionLocalOf { true }
 
 data class BottomNavItem(
     @StringRes val labelResId: Int,
-    val icon: ImageVector,
+    val iconOutline: ImageVector,
+    val iconFilled: ImageVector,
     val route: String,
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem(labelResId = R.string.nav_home, icon = Icons.Rounded.Home, route = "home"),
-    BottomNavItem(labelResId = R.string.nav_training, icon = Icons.Rounded.FitnessCenter, route = "training"),
-    BottomNavItem(labelResId = R.string.nav_nutrition, icon = Icons.Rounded.Restaurant, route = "nutrition"),
-    BottomNavItem(labelResId = R.string.nav_coach, icon = Icons.Rounded.SmartToy, route = "coach"),
-    BottomNavItem(labelResId = R.string.nav_profile, icon = Icons.Rounded.Person, route = "profile"),
+    BottomNavItem(
+        labelResId = R.string.nav_home,
+        iconOutline = PhosphorIcons.Regular.House,
+        iconFilled = PhosphorIcons.Fill.House,
+        route = "home",
+    ),
+    BottomNavItem(
+        labelResId = R.string.nav_training,
+        iconOutline = PhosphorIcons.Regular.Barbell,
+        iconFilled = PhosphorIcons.Fill.Barbell,
+        route = "training",
+    ),
+    BottomNavItem(
+        labelResId = R.string.nav_nutrition,
+        iconOutline = PhosphorIcons.Regular.ForkKnife,
+        iconFilled = PhosphorIcons.Fill.ForkKnife,
+        route = "nutrition",
+    ),
+    BottomNavItem(
+        labelResId = R.string.nav_coach,
+        iconOutline = PhosphorIcons.Regular.ChatTeardropDots,
+        iconFilled = PhosphorIcons.Fill.ChatTeardropDots,
+        route = "coach",
+    ),
+    BottomNavItem(
+        labelResId = R.string.nav_profile,
+        iconOutline = PhosphorIcons.Regular.UserCircle,
+        iconFilled = PhosphorIcons.Fill.UserCircle,
+        route = "profile",
+    ),
 )
 
 @Composable
@@ -55,13 +81,20 @@ fun BottomNavBar(
         bottomNavItems.forEach { item ->
             val selected = currentRoute == item.route
             val label = stringResource(item.labelResId)
+            val iconTint = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+            }
             NavigationBarItem(
                 selected = selected,
                 onClick = { onItemSelected(item) },
                 icon = {
                     Icon(
-                        imageVector = item.icon,
+                        imageVector = if (selected) item.iconFilled else item.iconOutline,
                         contentDescription = label,
+                        modifier = Modifier.size(24.dp),
+                        tint = iconTint,
                     )
                 },
                 label = {
@@ -72,9 +105,9 @@ fun BottomNavBar(
                 },
                 alwaysShowLabel = true,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedIconColor = Color.Unspecified,
                     selectedTextColor = MaterialTheme.colorScheme.primaryContainer,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedIconColor = Color.Unspecified,
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     indicatorColor = Color.Transparent,
                 ),
@@ -97,4 +130,3 @@ private fun BottomNavBarPreview() {
         )
     }
 }
-

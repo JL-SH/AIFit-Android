@@ -4,9 +4,12 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Whatshot
 import androidx.compose.material3.Icon
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.fill.*
+import com.adamglin.phosphoricons.regular.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,7 +43,7 @@ fun StreakBadge(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = Icons.Rounded.Whatshot,
+            imageVector = PhosphorIcons.Fill.Fire,
             contentDescription = null,
             modifier = Modifier.size(20.dp),
             tint = accentColor,

@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.chat.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,11 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.DriveFileRenameOutline
-import androidx.compose.material.icons.rounded.SmartToy
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -106,7 +104,7 @@ fun ChatSessionListScreen(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ) {
-                Icon(imageVector = Icons.Rounded.Add, contentDescription = stringResource(R.string.chat_new_cd))
+                Icon(imageVector = PhosphorIcons.Regular.Plus, contentDescription = stringResource(R.string.chat_new_cd))
             }
         },
         onRetry = viewModel::loadSessions,
@@ -119,7 +117,7 @@ fun ChatSessionListScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 EmptyStateView(
-                    icon = Icons.Rounded.SmartToy,
+                    icon = PhosphorIcons.Regular.Robot,
                     title = stringResource(R.string.chat_empty_title),
                     subtitle = stringResource(R.string.chat_empty_subtitle),
                 )
@@ -227,7 +225,7 @@ private fun SessionRow(
             )
             IconButton(onClick = onRename, modifier = Modifier.size(36.dp)) {
                 Icon(
-                    imageVector = Icons.Rounded.DriveFileRenameOutline,
+                    imageVector = PhosphorIcons.Regular.PencilSimple,
                     contentDescription = stringResource(R.string.chat_rename_cd),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
@@ -235,7 +233,7 @@ private fun SessionRow(
             }
             IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
                 Icon(
-                    imageVector = Icons.Rounded.Delete,
+                    imageVector = PhosphorIcons.Regular.Trash,
                     contentDescription = stringResource(R.string.chat_delete_cd),
                     tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                     modifier = Modifier.size(18.dp),

@@ -13,9 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.Button
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -86,7 +87,7 @@ fun AiGenerateButton(
             )
         } else {
             Icon(
-                imageVector = Icons.Rounded.AutoAwesome,
+                imageVector = PhosphorIcons.Regular.Sparkle,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
             )

@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.workout.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,9 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -151,7 +151,7 @@ fun WorkoutHistoryScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         EmptyStateView(
-                            icon = Icons.Rounded.FitnessCenter,
+                            icon = PhosphorIcons.Regular.Barbell,
                             title = stringResource(R.string.workout_history_empty_title),
                             subtitle = stringResource(R.string.workout_history_empty_subtitle),
                         )
@@ -300,7 +300,7 @@ private fun HistoryFiltersBar(
                 },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Rounded.CalendarMonth,
+                        imageVector = PhosphorIcons.Regular.Calendar,
                         contentDescription = null,
                         modifier = Modifier.height(16.dp),
                     )
@@ -322,7 +322,7 @@ private fun HistoryFiltersBar(
                 },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Rounded.CalendarMonth,
+                        imageVector = PhosphorIcons.Regular.Calendar,
                         contentDescription = null,
                         modifier = Modifier.height(16.dp),
                     )

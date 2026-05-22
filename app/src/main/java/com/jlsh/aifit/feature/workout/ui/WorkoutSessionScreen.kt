@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.workout.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -20,9 +23,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.DropdownMenu
@@ -491,7 +491,7 @@ private fun ExerciseHeader(
                         modifier = Modifier.size(32.dp),
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.MoreVert,
+                            imageVector = PhosphorIcons.Regular.DotsThreeVertical,
                             contentDescription = stringResource(R.string.workout_session_options_cd),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -616,7 +616,7 @@ private fun AutoregulationChip(suggestion: Double) {
                 modifier = Modifier.size(18.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Close,
+                    imageVector = PhosphorIcons.Regular.X,
                     contentDescription = stringResource(R.string.workout_session_dismiss_cd),
                     modifier = Modifier.size(14.dp),
                 )

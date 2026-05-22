@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.shopping.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -19,12 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Undo
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -108,7 +105,7 @@ fun ShoppingDetailScreen(
                     if (detailState.list != null) {
                         IconButton(onClick = { viewModel.onToggleEditMode() }) {
                             Icon(
-                                imageVector = if (detailState.isEditing) Icons.Rounded.Close else Icons.Rounded.Edit,
+                                imageVector = if (detailState.isEditing) PhosphorIcons.Regular.X else PhosphorIcons.Regular.PencilSimple,
                                 contentDescription = if (detailState.isEditing) stringResource(R.string.shopping_close_edit_cd) else stringResource(R.string.shopping_edit_cd),
                                 tint = if (detailState.isEditing) {
                                     MaterialTheme.colorScheme.primary
@@ -120,7 +117,7 @@ fun ShoppingDetailScreen(
                     }
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
-                            imageVector = Icons.Rounded.DeleteOutline,
+                            imageVector = PhosphorIcons.Regular.Trash,
                             contentDescription = stringResource(R.string.shopping_delete_cd),
                             tint = MaterialTheme.colorScheme.error,
                         )
@@ -295,7 +292,7 @@ private fun ShoppingDetailContent(
                     )
                     IconButton(onClick = { onRestoreServerItem(name, cat) }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.Undo,
+                            imageVector = PhosphorIcons.Regular.ArrowCounterClockwise,
                             contentDescription = stringResource(R.string.shopping_restore_cd),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp),
@@ -333,7 +330,7 @@ private fun ShoppingDetailContent(
                     if (isEditing) {
                         IconButton(onClick = { onDeleteServerItem(item.name, merged.categoryName) }) {
                             Icon(
-                                imageVector = Icons.Rounded.Close,
+                                imageVector = PhosphorIcons.Regular.X,
                                 contentDescription = stringResource(R.string.shopping_remove_cd),
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(20.dp),
@@ -363,7 +360,7 @@ private fun ShoppingDetailContent(
                     if (isEditing) {
                         IconButton(onClick = { onRemoveLocalItem(localItem.localId) }) {
                             Icon(
-                                imageVector = Icons.Rounded.Close,
+                                imageVector = PhosphorIcons.Regular.X,
                                 contentDescription = stringResource(R.string.shopping_remove_cd),
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(20.dp),
@@ -475,7 +472,7 @@ private fun AddItemForm(
                 enabled = canAdd,
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Add,
+                    imageVector = PhosphorIcons.Regular.Plus,
                     contentDescription = stringResource(R.string.shopping_add_cd),
                     tint = if (canAdd) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                 )

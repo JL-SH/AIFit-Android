@@ -4,9 +4,10 @@ import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material3.DropdownMenuItem
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
@@ -78,7 +79,7 @@ fun AiFitDropdown(
             },
             trailingIcon = {
                 Icon(
-                    imageVector = Icons.Rounded.ExpandMore,
+                    imageVector = PhosphorIcons.Regular.CaretDown,
                     contentDescription = null,
                     modifier = Modifier.rotate(rotation),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,

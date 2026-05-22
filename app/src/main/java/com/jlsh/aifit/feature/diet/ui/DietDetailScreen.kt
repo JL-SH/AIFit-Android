@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.diet.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,10 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.QuestionMark
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -198,7 +197,7 @@ fun DietDetailScreen(
                 actions = {
                     IconButton(onClick = { onNavigateToGenerate(true, planId) }) {
                         Icon(
-                            imageVector = Icons.Rounded.AutoAwesome,
+                            imageVector = PhosphorIcons.Regular.Sparkle,
                             contentDescription = stringResource(R.string.diet_detail_adaptive_plan_cd),
                             tint = MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.size(24.dp),
@@ -534,7 +533,7 @@ private fun MealRow(
                     modifier = Modifier.size(32.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Info,
+                        imageVector = PhosphorIcons.Regular.Info,
                         contentDescription = stringResource(R.string.diet_detail_info_cd),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp),
@@ -545,7 +544,7 @@ private fun MealRow(
                     modifier = Modifier.size(32.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.QuestionMark,
+                        imageVector = PhosphorIcons.Regular.Question,
                         contentDescription = stringResource(R.string.diet_detail_why_cd),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp),

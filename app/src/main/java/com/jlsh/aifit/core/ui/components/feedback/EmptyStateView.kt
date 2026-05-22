@@ -6,9 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material3.Icon
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -84,7 +85,7 @@ fun EmptyStateView(
 private fun EmptyStateViewPreview() {
     AIFitTheme(darkTheme = true) {
         EmptyStateView(
-            icon = Icons.Rounded.FitnessCenter,
+            icon = PhosphorIcons.Regular.Barbell,
             title = "No training plans yet",
             subtitle = "Create your first training plan to get started.",
         )

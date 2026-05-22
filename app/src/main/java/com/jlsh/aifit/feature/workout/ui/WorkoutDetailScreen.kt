@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.workout.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,11 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -195,7 +193,7 @@ private fun WorkoutDetailContent(
                     horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.CheckCircle,
+                        imageVector = PhosphorIcons.Regular.CheckCircle,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.tertiaryContainer,
                         modifier = Modifier.size(20.dp),
@@ -412,7 +410,7 @@ private fun WorkoutDetailContent(
                                     modifier = Modifier.size(28.dp),
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Rounded.Info,
+                                        imageVector = PhosphorIcons.Regular.Info,
                                         contentDescription = "Info",
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(16.dp),
@@ -668,7 +666,7 @@ private fun SetDetailRow(
             contentAlignment = Alignment.CenterEnd,
         ) {
             Icon(
-                imageVector = if (set.completed) Icons.Rounded.Check else Icons.Rounded.Close,
+                imageVector = if (set.completed) PhosphorIcons.Regular.Check else PhosphorIcons.Regular.X,
                 contentDescription = if (set.completed) stringResource(R.string.workout_detail_set_completed_cd) else stringResource(R.string.workout_detail_set_not_completed_cd),
                 tint = if (set.completed)
                     MaterialTheme.colorScheme.primaryContainer
@@ -730,7 +728,7 @@ private fun LockedSetDetailRow(
             contentAlignment = Alignment.CenterEnd,
         ) {
             Icon(
-                imageVector = if (set.completed) Icons.Rounded.Check else Icons.Rounded.Close,
+                imageVector = if (set.completed) PhosphorIcons.Regular.Check else PhosphorIcons.Regular.X,
                 contentDescription = if (set.completed) stringResource(R.string.workout_detail_set_completed_cd) else stringResource(R.string.workout_detail_set_not_completed_cd),
                 tint = if (set.completed)
                     MaterialTheme.colorScheme.primaryContainer

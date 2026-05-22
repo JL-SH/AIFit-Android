@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.metabolic.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,11 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.TrendingDown
-import androidx.compose.material.icons.automirrored.rounded.TrendingUp
-import androidx.compose.material.icons.rounded.BarChart
-import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -145,7 +143,7 @@ private fun MetabolicInsufficientDataScreen(onBack: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 16.dp),
             ) {
                 EmptyStateView(
-                    icon = Icons.Rounded.BarChart,
+                    icon = PhosphorIcons.Regular.ChartBar,
                     title = stringResource(R.string.metabolic_insufficient_data_title),
                     subtitle = stringResource(R.string.metabolic_insufficient_data_subtitle),
                 )
@@ -282,9 +280,9 @@ private fun StatusSection(status: MetabolicStatus) {
 @Composable
 private fun WeightTrendCard(trend: WeightTrend) {
     val trendIcon = when {
-        trend.averageWeeklyChange > 0.05 -> Icons.AutoMirrored.Rounded.TrendingUp
-        trend.averageWeeklyChange < -0.05 -> Icons.AutoMirrored.Rounded.TrendingDown
-        else -> Icons.Rounded.Remove
+        trend.averageWeeklyChange > 0.05 -> PhosphorIcons.Regular.TrendUp
+        trend.averageWeeklyChange < -0.05 -> PhosphorIcons.Regular.TrendDown
+        else -> PhosphorIcons.Regular.Minus
     }
 
     AiFitCard {

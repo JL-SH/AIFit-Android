@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.nutrition.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,10 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -247,7 +246,7 @@ fun TrackMealScreen(
                         onValueChange = {},
                         label = stringResource(R.string.nutrition_track_time_label),
                         readOnly = true,
-                        trailingIcon = Icons.Rounded.Schedule,
+                        trailingIcon = PhosphorIcons.Regular.Timer,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     // Overlay transparente para capturar clicks
@@ -346,7 +345,7 @@ fun TrackMealScreen(
                         onClick = { items.add(FoodItemEntry()) },
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Add,
+                            imageVector = PhosphorIcons.Regular.Plus,
                             contentDescription = stringResource(R.string.nutrition_track_add_food_item),
                             tint = MaterialTheme.colorScheme.primaryContainer,
                         )
@@ -440,7 +439,7 @@ private fun FoodItemForm(
             )
             IconButton(onClick = onRemove) {
                 Icon(
-                    imageVector = Icons.Rounded.DeleteOutline,
+                    imageVector = PhosphorIcons.Regular.Trash,
                     contentDescription = stringResource(R.string.nutrition_track_remove_food_item),
                     tint = MaterialTheme.colorScheme.error,
                 )

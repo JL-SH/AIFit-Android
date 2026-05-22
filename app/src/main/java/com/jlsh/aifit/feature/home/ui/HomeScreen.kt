@@ -1,5 +1,10 @@
 package com.jlsh.aifit.feature.home.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.fill.*
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -21,18 +26,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.TrendingDown
-import androidx.compose.material.icons.automirrored.rounded.TrendingFlat
-import androidx.compose.material.icons.automirrored.rounded.TrendingUp
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.EmojiEvents
-import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.MonitorWeight
-import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -410,7 +403,7 @@ private fun TodayTrainingCard(
         ) {
             // Section header
             SectionTitle(
-                icon = Icons.Rounded.FitnessCenter,
+                icon = PhosphorIcons.Regular.Barbell,
                 title = stringResource(R.string.home_today_training_header),
             )
 
@@ -478,7 +471,7 @@ private fun TodayTrainingCard(
                                 horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.CheckCircle,
+                                    imageVector = PhosphorIcons.Regular.CheckCircle,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primaryContainer,
                                     modifier = Modifier.size(24.dp),
@@ -584,7 +577,7 @@ private fun TodayNutritionCard(
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             SectionTitle(
-                icon = Icons.Rounded.Restaurant,
+                icon = PhosphorIcons.Regular.ForkKnife,
                 title = stringResource(R.string.home_today_nutrition_header),
             )
 
@@ -676,7 +669,7 @@ private fun NextMealCard(
                     horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Schedule,
+                        imageVector = PhosphorIcons.Regular.Timer,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier.size(18.dp),
@@ -736,7 +729,7 @@ private fun MotivationCard(
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             SectionTitle(
-                icon = Icons.Rounded.EmojiEvents,
+                icon = PhosphorIcons.Fill.Trophy,
                 title = stringResource(R.string.home_motivation_header),
             )
 
@@ -769,7 +762,7 @@ private fun MotivationCard(
                     horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.EmojiEvents,
+                        imageVector = PhosphorIcons.Fill.Trophy,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier.size(20.dp),
@@ -803,7 +796,7 @@ private fun MotivationCard(
                     horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.ChevronRight,
+                        imageVector = PhosphorIcons.Regular.CaretRight,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp),
@@ -884,7 +877,7 @@ private fun CurrentWeightCard(
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             SectionTitle(
-                icon = Icons.Rounded.MonitorWeight,
+                icon = PhosphorIcons.Regular.Scales,
                 title = stringResource(R.string.home_weight_header),
             )
 
@@ -906,9 +899,9 @@ private fun CurrentWeightCard(
                             "${"%.1f".format(weightDelta)} kg"
                         }
                         val trendIcon = when {
-                            weightDelta < -0.05 -> Icons.AutoMirrored.Rounded.TrendingDown
-                            weightDelta > 0.05 -> Icons.AutoMirrored.Rounded.TrendingUp
-                            else -> Icons.AutoMirrored.Rounded.TrendingFlat
+                            weightDelta < -0.05 -> PhosphorIcons.Regular.TrendDown
+                            weightDelta > 0.05 -> PhosphorIcons.Regular.TrendUp
+                            else -> PhosphorIcons.Regular.Minus
                         }
                         val trendColor = when {
                             weightDelta < -0.05 -> MaterialTheme.colorScheme.primaryContainer
@@ -959,7 +952,7 @@ private fun CurrentWeightCard(
                 horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Add,
+                    imageVector = PhosphorIcons.Regular.Plus,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier.size(18.dp),
@@ -1006,7 +999,7 @@ private fun WeeklyProgressCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Icon(
-                    imageVector = Icons.Rounded.ChevronRight,
+                    imageVector = PhosphorIcons.Regular.CaretRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp),
@@ -1080,7 +1073,7 @@ private fun WeeklyProgressCard(
                         horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.MonitorWeight,
+                            imageVector = PhosphorIcons.Regular.Scales,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp),
@@ -1098,9 +1091,9 @@ private fun WeeklyProgressCard(
                             "${"%.1f".format(weightDelta)} kg"
                         }
                         val trendIcon = when {
-                            weightDelta < -0.05 -> Icons.AutoMirrored.Rounded.TrendingDown
-                            weightDelta > 0.05 -> Icons.AutoMirrored.Rounded.TrendingUp
-                            else -> Icons.AutoMirrored.Rounded.TrendingFlat
+                            weightDelta < -0.05 -> PhosphorIcons.Regular.TrendDown
+                            weightDelta > 0.05 -> PhosphorIcons.Regular.TrendUp
+                            else -> PhosphorIcons.Regular.Minus
                         }
                         val trendColor = when {
                             weightDelta < -0.05 -> MaterialTheme.colorScheme.primaryContainer
@@ -1142,7 +1135,7 @@ private fun WeeklyProgressCard(
                 horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Add,
+                    imageVector = PhosphorIcons.Regular.Plus,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier.size(18.dp),
@@ -1181,7 +1174,7 @@ private fun WeightTrendCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Icon(
-                    imageVector = Icons.Rounded.ChevronRight,
+                    imageVector = PhosphorIcons.Regular.CaretRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp),

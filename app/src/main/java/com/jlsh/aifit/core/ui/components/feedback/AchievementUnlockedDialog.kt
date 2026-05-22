@@ -15,9 +15,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material3.Icon
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.fill.*
+import com.adamglin.phosphoricons.regular.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -106,7 +109,7 @@ fun AchievementUnlockedDialog(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.EmojiEvents,
+                    imageVector = PhosphorIcons.Fill.Trophy,
                     contentDescription = stringResource(R.string.component_achievement_icon_cd),
                     modifier = Modifier.size(48.dp),
                     tint = MaterialTheme.colorScheme.primaryContainer,

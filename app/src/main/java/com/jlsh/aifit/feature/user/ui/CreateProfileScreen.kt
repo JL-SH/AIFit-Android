@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.user.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -22,8 +25,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -401,7 +402,7 @@ fun CreateProfileScreen(
                                             label = stringResource(R.string.profile_field_birthday),
                                             error = birthDateError,
                                             enabled = false,
-                                            trailingIcon = Icons.Rounded.CalendarMonth,
+                                            trailingIcon = PhosphorIcons.Regular.Calendar,
                                             modifier = Modifier.fillMaxWidth(),
                                         )
                                     }

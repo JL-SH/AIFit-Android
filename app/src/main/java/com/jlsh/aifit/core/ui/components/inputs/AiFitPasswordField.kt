@@ -4,10 +4,10 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -49,8 +49,8 @@ fun AiFitPasswordField(
         trailingIcon = {
             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                 Icon(
-                    imageVector = if (passwordVisible) Icons.Rounded.VisibilityOff
-                    else Icons.Rounded.Visibility,
+                    imageVector = if (passwordVisible) PhosphorIcons.Regular.EyeSlash
+                    else PhosphorIcons.Regular.Eye,
                     contentDescription = if (passwordVisible) "Ocultar contraseña"
                     else "Mostrar contraseña",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,

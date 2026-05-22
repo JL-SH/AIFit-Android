@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.training.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,11 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.History
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -125,7 +123,7 @@ fun TrainingHubScreen(
                 actions = {
                     IconButton(onClick = { viewModel.onNavigateToWorkoutHistory() }) {
                         Icon(
-                            imageVector = Icons.Rounded.History,
+                            imageVector = PhosphorIcons.Regular.ClockCounterClockwise,
                             contentDescription = stringResource(R.string.training_hub_history_cd),
                         )
                     }
@@ -141,7 +139,7 @@ fun TrainingHubScreen(
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Add,
+                        imageVector = PhosphorIcons.Regular.Plus,
                         contentDescription = stringResource(R.string.training_hub_new_plan_cd),
                     )
                 }
@@ -173,7 +171,7 @@ fun TrainingHubScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     EmptyStateView(
-                        icon = Icons.Rounded.FitnessCenter,
+                        icon = PhosphorIcons.Regular.Barbell,
                         title = stringResource(R.string.training_hub_no_active_title),
                         subtitle = stringResource(R.string.training_hub_no_active_subtitle),
                         action = {
@@ -374,7 +372,7 @@ private fun TrainingHubScreenEmptyPreview() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             EmptyStateView(
-                icon = Icons.Rounded.FitnessCenter,
+                icon = PhosphorIcons.Regular.Barbell,
                 title = stringResource(R.string.training_empty_title),
                 subtitle = stringResource(R.string.training_empty_subtitle),
                 action = {

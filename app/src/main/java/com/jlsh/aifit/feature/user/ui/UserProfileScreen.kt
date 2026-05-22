@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.user.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -19,9 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -188,7 +188,7 @@ fun UserProfileScreen(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.PhotoCamera,
+                                    imageVector = PhosphorIcons.Regular.Camera,
                                     contentDescription = stringResource(R.string.user_profile_change_photo),
                                     tint = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier.size(13.dp),
@@ -222,7 +222,7 @@ fun UserProfileScreen(
                             label = stringResource(R.string.profile_field_birthday),
                             error = birthDateError,
                             enabled = false,
-                            trailingIcon = Icons.Rounded.CalendarMonth,
+                            trailingIcon = PhosphorIcons.Regular.Calendar,
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
@@ -320,7 +320,7 @@ private fun UserProfileScreenPreview() {
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.PhotoCamera,
+                            imageVector = PhosphorIcons.Regular.Camera,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(13.dp),
@@ -340,7 +340,7 @@ private fun UserProfileScreenPreview() {
                     onValueChange = {},
                     label = "Fecha de nacimiento",
                     enabled = false,
-                    trailingIcon = Icons.Rounded.CalendarMonth,
+                    trailingIcon = PhosphorIcons.Regular.Calendar,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 AiFitDropdown(

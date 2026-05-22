@@ -2,9 +2,10 @@ package com.jlsh.aifit.core.ui.components.layout
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.ExperimentalMaterial3Api
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +42,7 @@ fun AiFitTopBar(
             if (onBack != null) {
                 IconButton(onClick = onBack) {
                     Icon(
-                        imageVector = Icons.Rounded.ArrowBackIosNew,
+                        imageVector = PhosphorIcons.Regular.ArrowLeft,
                         contentDescription = stringResource(R.string.common_back),
                         modifier = Modifier.size(20.dp),
                     )

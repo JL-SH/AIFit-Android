@@ -5,9 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material3.Icon
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -55,7 +56,7 @@ fun PlanSummaryCard(
                 if (status != PlanStatus.ACTIVE) {
                     IconButton(onClick = onDelete) {
                         Icon(
-                            imageVector = Icons.Rounded.DeleteOutline,
+                            imageVector = PhosphorIcons.Regular.Trash,
                             contentDescription = deleteContentDescription,
                             tint = MaterialTheme.colorScheme.error,
                         )

@@ -1,5 +1,10 @@
 package com.jlsh.aifit.feature.progress.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.fill.*
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -11,8 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -191,7 +194,7 @@ private fun WeeklySummaryContent(
                     horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.LocalFireDepartment,
+                        imageVector = PhosphorIcons.Fill.Fire,
                         contentDescription = stringResource(R.string.progress_weekly_streak_cd),
                         tint = MaterialTheme.colorScheme.primaryContainer,
                     )

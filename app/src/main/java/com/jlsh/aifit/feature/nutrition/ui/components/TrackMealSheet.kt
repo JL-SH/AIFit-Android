@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.nutrition.ui.components
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,10 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.CameraAlt
-import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -80,7 +79,7 @@ fun TrackMealSheet(
             )
 
             SheetOption(
-                icon = Icons.Rounded.Edit,
+                icon = PhosphorIcons.Regular.PencilSimple,
                 title = stringResource(R.string.nutrition_track_manual_title),
                 description = stringResource(R.string.nutrition_track_manual_desc),
                 onClick = onManual,
@@ -90,7 +89,7 @@ fun TrackMealSheet(
                 thickness = 0.5.dp,
             )
             SheetOption(
-                icon = Icons.Rounded.CameraAlt,
+                icon = PhosphorIcons.Regular.Camera,
                 title = stringResource(R.string.nutrition_track_scan_title),
                 description = stringResource(R.string.nutrition_track_scan_desc),
                 onClick = onScanPhoto,
@@ -100,7 +99,7 @@ fun TrackMealSheet(
                 thickness = 0.5.dp,
             )
             SheetOption(
-                icon = Icons.Rounded.AutoAwesome,
+                icon = PhosphorIcons.Regular.Sparkle,
                 title = stringResource(R.string.nutrition_track_text_title),
                 description = stringResource(R.string.nutrition_track_text_desc),
                 onClick = onAnalyzeText,

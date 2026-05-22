@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.workout.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -17,8 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -387,7 +388,7 @@ private fun SetEntryRow(
             ),
         ) {
             Icon(
-                imageVector = Icons.Rounded.Check,
+                imageVector = PhosphorIcons.Regular.Check,
                 contentDescription = if (completed) "Completed" else "Mark as done",
                 modifier = Modifier.size(20.dp),
             )

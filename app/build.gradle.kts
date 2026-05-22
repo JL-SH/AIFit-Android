@@ -91,6 +91,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.extended)
+    implementation("com.adamglin:phosphor-icon:1.0.0")
     implementation(libs.compose.ui.text.google.fonts)
 
     // Activity & Lifecycle

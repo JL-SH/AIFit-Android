@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.training.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
@@ -30,8 +33,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -497,7 +498,7 @@ private fun TrainingPhaseHero() {
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    imageVector = Icons.Rounded.FitnessCenter,
+                    imageVector = PhosphorIcons.Regular.Barbell,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier

@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.user.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -28,10 +31,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -96,17 +95,17 @@ fun OnboardingGeneratingScreen(
         OnboardingPhaseUi(
             title = stringResource(R.string.onboarding_phase_profile_title),
             subtitle = stringResource(R.string.onboarding_phase_profile_subtitle),
-            icon = Icons.Rounded.Person,
+            icon = PhosphorIcons.Regular.UserCircle,
         ),
         OnboardingPhaseUi(
             title = stringResource(R.string.onboarding_phase_training_title),
             subtitle = stringResource(R.string.onboarding_phase_training_subtitle),
-            icon = Icons.Rounded.FitnessCenter,
+            icon = PhosphorIcons.Regular.Barbell,
         ),
         OnboardingPhaseUi(
             title = stringResource(R.string.onboarding_phase_nutrition_title),
             subtitle = stringResource(R.string.onboarding_phase_nutrition_subtitle),
-            icon = Icons.Rounded.Restaurant,
+            icon = PhosphorIcons.Regular.ForkKnife,
         ),
     )
 
@@ -501,17 +500,17 @@ private fun OnboardingGeneratingScreenPreview() {
             OnboardingPhaseUi(
                 title = stringResource(R.string.onboarding_phase_profile_title),
                 subtitle = stringResource(R.string.onboarding_phase_profile_subtitle),
-                icon = Icons.Rounded.Person,
+                icon = PhosphorIcons.Regular.UserCircle,
             ),
             OnboardingPhaseUi(
                 title = stringResource(R.string.onboarding_phase_training_title),
                 subtitle = stringResource(R.string.onboarding_phase_training_subtitle),
-                icon = Icons.Rounded.FitnessCenter,
+                icon = PhosphorIcons.Regular.Barbell,
             ),
             OnboardingPhaseUi(
                 title = stringResource(R.string.onboarding_phase_nutrition_title),
                 subtitle = stringResource(R.string.onboarding_phase_nutrition_subtitle),
-                icon = Icons.Rounded.Restaurant,
+                icon = PhosphorIcons.Regular.ForkKnife,
             ),
         )
         Box(

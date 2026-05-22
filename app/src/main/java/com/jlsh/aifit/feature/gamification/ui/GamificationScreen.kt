@@ -1,5 +1,10 @@
 package com.jlsh.aifit.feature.gamification.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.fill.*
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -13,12 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.EmojiEvents
-import androidx.compose.material.icons.rounded.FileDownload
-import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Whatshot
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -101,7 +100,7 @@ fun GamificationScreen(
             actions = {
                 IconButton(onClick = { viewModel.onNavigateToExport() }) {
                     Icon(
-                        imageVector = Icons.Rounded.FileDownload,
+                        imageVector = PhosphorIcons.Regular.DownloadSimple,
                         contentDescription = stringResource(R.string.gamification_export_cd),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -166,7 +165,7 @@ fun GamificationScreen(
 private fun StreaksTab(streaks: List<Streak>) {
     if (streaks.isEmpty()) {
         EmptyStateView(
-            icon = Icons.Rounded.Whatshot,
+            icon = PhosphorIcons.Fill.Fire,
             title = stringResource(R.string.gamification_streak_empty_title),
             subtitle = stringResource(R.string.gamification_streak_empty_subtitle),
             modifier = Modifier
@@ -248,7 +247,7 @@ private fun AchievementsTab(
 
     if (unlocked.isEmpty() && locked.isEmpty()) {
         EmptyStateView(
-            icon = Icons.Rounded.EmojiEvents,
+            icon = PhosphorIcons.Fill.Trophy,
             title = stringResource(R.string.gamification_achievement_empty_title),
             subtitle = stringResource(R.string.gamification_achievement_empty_subtitle),
             modifier = Modifier
@@ -339,7 +338,7 @@ private fun AchievementCard(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = if (isUnlocked) Icons.Rounded.EmojiEvents else Icons.Rounded.Lock,
+                    imageVector = if (isUnlocked) PhosphorIcons.Fill.Trophy else PhosphorIcons.Regular.Lock,
                     contentDescription = null,
                     modifier = Modifier.size(28.dp),
                     tint = iconTint,
@@ -415,7 +414,7 @@ private fun AchievementCard(
 private fun RecordsTab(records: List<PersonalRecord>) {
     if (records.isEmpty()) {
         EmptyStateView(
-            icon = Icons.Rounded.FitnessCenter,
+            icon = PhosphorIcons.Regular.Barbell,
             title = stringResource(R.string.gamification_record_empty_title),
             subtitle = stringResource(R.string.gamification_record_empty_subtitle),
             modifier = Modifier

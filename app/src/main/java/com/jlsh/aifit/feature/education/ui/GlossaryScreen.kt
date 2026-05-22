@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.education.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,9 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -108,7 +108,7 @@ fun GlossaryScreen(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     label = stringResource(R.string.education_glossary_search_label),
-                    trailingIcon = Icons.Rounded.Search,
+                    trailingIcon = PhosphorIcons.Regular.MagnifyingGlass,
                     onTrailingIconClick = {
                         if (searchQuery.isNotBlank()) {
                             showConfirmSheet = true
@@ -122,7 +122,7 @@ fun GlossaryScreen(
                 when (val state = glossaryState) {
                     is GlossaryState.Idle -> {
                         EmptyStateView(
-                            icon = Icons.AutoMirrored.Rounded.MenuBook,
+                            icon = PhosphorIcons.Regular.BookOpen,
                             title = stringResource(R.string.education_glossary_empty_title),
                             subtitle = stringResource(R.string.education_glossary_empty_subtitle),
                             modifier = Modifier

@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.auth.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,8 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -108,7 +109,7 @@ fun RegisterScreen(
                 ) {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Rounded.ArrowBackIosNew,
+                            imageVector = PhosphorIcons.Regular.ArrowLeft,
                             contentDescription = stringResource(R.string.common_back),
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(20.dp),
@@ -208,7 +209,7 @@ private fun RegisterScreenPreview() {
                 ) {
                     IconButton(onClick = {}) {
                         Icon(
-                            imageVector = Icons.Rounded.ArrowBackIosNew,
+                            imageVector = PhosphorIcons.Regular.ArrowLeft,
                             contentDescription = stringResource(R.string.common_back),
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(20.dp),

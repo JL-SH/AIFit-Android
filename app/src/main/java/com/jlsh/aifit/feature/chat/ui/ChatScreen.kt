@@ -1,5 +1,8 @@
 package com.jlsh.aifit.feature.chat.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,8 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -108,7 +109,7 @@ fun ChatScreen(
                     actions = {
                         IconButton(onClick = { showArchiveDialog = true }) {
                             Icon(
-                                imageVector = Icons.Rounded.Archive,
+                                imageVector = PhosphorIcons.Regular.Archive,
                                 contentDescription = stringResource(R.string.chat_archive_cd),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

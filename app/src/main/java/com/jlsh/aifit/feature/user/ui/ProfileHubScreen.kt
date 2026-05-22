@@ -1,5 +1,10 @@
 package com.jlsh.aifit.feature.user.ui
 
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.fill.*
+import com.adamglin.phosphoricons.regular.*
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,18 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ExitToApp
-import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
-import androidx.compose.material.icons.automirrored.rounded.ShowChart
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.EmojiEvents
-import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.ImportExport
-import androidx.compose.material.icons.rounded.MonitorWeight
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Science
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -260,7 +253,7 @@ private fun ProfileHubContent(
         item { SectionHeader(title = stringResource(R.string.profile_section_my_account)) }
         item {
             MenuRow(
-                icon = Icons.Rounded.Person,
+                icon = PhosphorIcons.Regular.UserCircle,
                 label = stringResource(R.string.profile_edit_label),
                 onClick = onEditProfile,
             )
@@ -268,19 +261,19 @@ private fun ProfileHubContent(
 
         // PROGRESO
         item { SectionHeader(title = stringResource(R.string.profile_section_progress)) }
-        item { MenuRow(Icons.AutoMirrored.Rounded.ShowChart, stringResource(R.string.profile_menu_dashboard), onDashboard) }
-        item { MenuRow(Icons.Rounded.MonitorWeight, stringResource(R.string.profile_menu_body_weight), onBodyWeight) }
-        item { MenuRow(Icons.Rounded.Science, stringResource(R.string.profile_menu_metabolic), onMetabolic) }
-        item { MenuRow(Icons.Rounded.ImportExport, stringResource(R.string.profile_menu_export), onExport) }
+        item { MenuRow(PhosphorIcons.Regular.ChartLine, stringResource(R.string.profile_menu_dashboard), onDashboard) }
+        item { MenuRow(PhosphorIcons.Regular.Scales, stringResource(R.string.profile_menu_body_weight), onBodyWeight) }
+        item { MenuRow(PhosphorIcons.Regular.Flask, stringResource(R.string.profile_menu_metabolic), onMetabolic) }
+        item { MenuRow(PhosphorIcons.Regular.ArrowsLeftRight, stringResource(R.string.profile_menu_export), onExport) }
 
         // LOGROS
         item { SectionHeader(title = stringResource(R.string.profile_section_achievements)) }
-        item { MenuRow(Icons.Rounded.EmojiEvents, stringResource(R.string.profile_menu_achievements), onAchievements) }
-        item { MenuRow(Icons.Rounded.FitnessCenter, stringResource(R.string.profile_menu_records), onRecords) }
+        item { MenuRow(PhosphorIcons.Fill.Trophy, stringResource(R.string.profile_menu_achievements), onAchievements) }
+        item { MenuRow(PhosphorIcons.Regular.Barbell, stringResource(R.string.profile_menu_records), onRecords) }
 
         // HERRAMIENTAS
         item { SectionHeader(title = stringResource(R.string.profile_section_tools)) }
-        item { MenuRow(Icons.AutoMirrored.Rounded.LibraryBooks, stringResource(R.string.profile_menu_glossary), onGlossary) }
+        item { MenuRow(PhosphorIcons.Regular.Books, stringResource(R.string.profile_menu_glossary), onGlossary) }
 
         // APP
         item { SectionHeader(title = stringResource(R.string.profile_section_app)) }
@@ -292,7 +285,7 @@ private fun ProfileHubContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.DarkMode,
+                    imageVector = PhosphorIcons.Regular.Moon,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp),
@@ -316,7 +309,7 @@ private fun ProfileHubContent(
         }
         item {
             MenuRow(
-                icon = Icons.AutoMirrored.Rounded.ExitToApp,
+                icon = PhosphorIcons.Regular.SignOut,
                 label = stringResource(R.string.profile_sign_out_label),
                 onClick = onLogout,
             )
@@ -367,7 +360,7 @@ private fun MenuRow(
             modifier = Modifier.weight(1f),
         )
         Icon(
-            imageVector = Icons.Rounded.ChevronRight,
+            imageVector = PhosphorIcons.Regular.CaretRight,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
             modifier = Modifier.size(20.dp),
