@@ -57,14 +57,17 @@ This repository is part of the author's **Final Degree Project (TFG)**: it demon
 
 ## Documentation
 
-Extended project documentation lives under **`docs/`**. Each guide is published in **English** and **Spanish** (`.es.md` suffix).
+Extended project documentation lives under **`docs/`**. Each guide is available in **English** and **Spanish** (`.es.md` suffix).
 
 | English | Español | Purpose |
 |---------|---------|---------|
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | [`docs/ARCHITECTURE.es.md`](docs/ARCHITECTURE.es.md) | Layering, MVVM + Clean Architecture, data flow, and module boundaries |
-| [`docs/FEATURES.md`](docs/FEATURES.md) | [`docs/FEATURES.es.md`](docs/FEATURES.es.md) | Feature modules, use cases, and API integration per domain |
-| [`docs/SETUP.md`](docs/SETUP.md) | [`docs/SETUP.es.md`](docs/SETUP.es.md) | Environment setup, backend URL, Google Sign-In, and build variants |
-| [`docs/UI_COMPONENTS.md`](docs/UI_COMPONENTS.md) | [`docs/UI_COMPONENTS.es.md`](docs/UI_COMPONENTS.es.md) | Shared Compose components, theme tokens, and design conventions |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | [`docs/ARCHITECTURE.es.md`](docs/ARCHITECTURE.es.md) | Clean Architecture + MVVM, layers, and module boundaries |
+| [`docs/FEATURES.md`](docs/FEATURES.md) | [`docs/FEATURES.es.md`](docs/FEATURES.es.md) | All features and 15 use cases |
+| [`docs/SETUP.md`](docs/SETUP.md) | [`docs/SETUP.es.md`](docs/SETUP.es.md) | Local setup, backend URL, Google Sign-In, build and run |
+| [`docs/API_INTEGRATION.md`](docs/API_INTEGRATION.md) | [`docs/API_INTEGRATION.es.md`](docs/API_INTEGRATION.es.md) | REST client, auth, API services, and error handling |
+| [`docs/TESTING.md`](docs/TESTING.md) | [`docs/TESTING.es.md`](docs/TESTING.es.md) | Testing strategy and how to run tests |
+| [`docs/NAVIGATION.md`](docs/NAVIGATION.md) | [`docs/NAVIGATION.es.md`](docs/NAVIGATION.es.md) | Navigation graphs, routes, and bottom tabs |
+| [`docs/STATE_MANAGEMENT.md`](docs/STATE_MANAGEMENT.md) | [`docs/STATE_MANAGEMENT.es.md`](docs/STATE_MANAGEMENT.es.md) | `Result`, `UiState`, `UiEvent`, and data flow |
 
 ---
 

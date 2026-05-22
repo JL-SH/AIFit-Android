@@ -58,14 +58,17 @@ Este repositorio forma parte del **Trabajo de Fin de Grado (TFG)** del autor: de
 
 ## Documentación
 
-La documentación ampliada del proyecto está en **`docs/`**. Cada guía se publica en **inglés** y **español** (sufijo `.es.md`).
+La documentación ampliada del proyecto está en **`docs/`**. Cada guía está disponible en **inglés** y **español** (sufijo `.es.md`).
 
 | English | Español | Contenido |
 |---------|---------|-----------|
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | [`docs/ARCHITECTURE.es.md`](docs/ARCHITECTURE.es.md) | Capas, MVVM + Clean Architecture, flujo de datos y límites de módulos |
-| [`docs/FEATURES.md`](docs/FEATURES.md) | [`docs/FEATURES.es.md`](docs/FEATURES.es.md) | Módulos por feature, casos de uso e integración con la API |
-| [`docs/SETUP.md`](docs/SETUP.md) | [`docs/SETUP.es.md`](docs/SETUP.es.md) | Entorno, URL del backend, Google Sign-In y variantes de build |
-| [`docs/UI_COMPONENTS.md`](docs/UI_COMPONENTS.md) | [`docs/UI_COMPONENTS.es.md`](docs/UI_COMPONENTS.es.md) | Componentes Compose compartidos, tema y convenciones de diseño |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | [`docs/ARCHITECTURE.es.md`](docs/ARCHITECTURE.es.md) | Clean Architecture + MVVM, capas y módulos |
+| [`docs/FEATURES.md`](docs/FEATURES.md) | [`docs/FEATURES.es.md`](docs/FEATURES.es.md) | Funcionalidades y 15 casos de uso |
+| [`docs/SETUP.md`](docs/SETUP.md) | [`docs/SETUP.es.md`](docs/SETUP.es.md) | Instalación local, backend, Google Sign-In y ejecución |
+| [`docs/API_INTEGRATION.md`](docs/API_INTEGRATION.md) | [`docs/API_INTEGRATION.es.md`](docs/API_INTEGRATION.es.md) | Cliente REST, autenticación, servicios y errores |
+| [`docs/TESTING.md`](docs/TESTING.md) | [`docs/TESTING.es.md`](docs/TESTING.es.md) | Estrategia de tests y cómo ejecutarlos |
+| [`docs/NAVIGATION.md`](docs/NAVIGATION.md) | [`docs/NAVIGATION.es.md`](docs/NAVIGATION.es.md) | Grafos de navegación, rutas y pestañas |
+| [`docs/STATE_MANAGEMENT.md`](docs/STATE_MANAGEMENT.md) | [`docs/STATE_MANAGEMENT.es.md`](docs/STATE_MANAGEMENT.es.md) | `Result`, `UiState`, `UiEvent` y flujo de datos |
 
 ---
 
