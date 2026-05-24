@@ -46,6 +46,7 @@ import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
 import com.jlsh.aifit.core.ui.components.plans.PlanFilterChipGroup
 import com.jlsh.aifit.core.ui.components.plans.PlanHubActiveCard
 import com.jlsh.aifit.core.ui.components.plans.PlanSummaryCard
+import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
@@ -172,6 +173,7 @@ fun TrainingHubScreen(
                 ) {
                     EmptyStateView(
                         icon = PhosphorIcons.Regular.Barbell,
+                        kind = EmptyStateKind.TrainingPlans,
                         title = stringResource(R.string.training_hub_no_active_title),
                         subtitle = stringResource(R.string.training_hub_no_active_subtitle),
                         action = {
@@ -373,6 +375,7 @@ private fun TrainingHubScreenEmptyPreview() {
         ) {
             EmptyStateView(
                 icon = PhosphorIcons.Regular.Barbell,
+                kind = EmptyStateKind.TrainingPlans,
                 title = stringResource(R.string.training_empty_title),
                 subtitle = stringResource(R.string.training_empty_subtitle),
                 action = {

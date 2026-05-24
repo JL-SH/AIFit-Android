@@ -50,6 +50,7 @@ import com.jlsh.aifit.core.ui.components.layout.ExpandableSection
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.core.ui.theme.MacroType
 import com.jlsh.aifit.feature.education.ui.EducationViewModel
 import com.jlsh.aifit.feature.education.ui.components.EducationConfirmSheet
 import com.jlsh.aifit.feature.education.ui.components.MealExplanationSheet
@@ -343,19 +344,19 @@ private fun DietDetailContent(
                     name = stringResource(R.string.diet_detail_macro_protein),
                     current = plan.proteinGrams.toFloat(),
                     target = plan.proteinGrams.toFloat(),
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    macro = MacroType.Protein,
                 )
                 MacroProgressBar(
                     name = stringResource(R.string.diet_detail_macro_carbs),
                     current = plan.carbsGrams.toFloat(),
                     target = plan.carbsGrams.toFloat(),
-                    color = MaterialTheme.colorScheme.tertiary,
+                    macro = MacroType.Carbs,
                 )
                 MacroProgressBar(
                     name = stringResource(R.string.diet_detail_macro_fat),
                     current = plan.fatGrams.toFloat(),
                     target = plan.fatGrams.toFloat(),
-                    color = MaterialTheme.colorScheme.secondary,
+                    macro = MacroType.Fat,
                 )
             }
         }

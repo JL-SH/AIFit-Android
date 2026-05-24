@@ -59,6 +59,7 @@ import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
+import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
@@ -225,6 +226,7 @@ private fun PermissionDeniedContent(
     ) {
         EmptyStateView(
             icon = PhosphorIcons.Regular.Camera,
+            kind = EmptyStateKind.FoodVision,
             title = stringResource(R.string.vision_permission_title),
             subtitle = stringResource(R.string.vision_permission_subtitle),
         )

@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
-import com.jlsh.aifit.core.ui.theme.FullShape
+import com.jlsh.aifit.core.ui.theme.ButtonShape
 
 /**
  * Full-width outlined ghost button for secondary actions.
@@ -48,7 +48,7 @@ fun SecondaryButton(
             .fillMaxWidth()
             .heightIn(min = 52.dp),
         enabled = isActive,
-        shape = FullShape,
+        shape = ButtonShape,
         border = BorderStroke(
             width = 1.dp,
             color = if (isActive) MaterialTheme.colorScheme.outline

@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
+import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
@@ -152,6 +153,7 @@ fun WorkoutHistoryScreen(
                     ) {
                         EmptyStateView(
                             icon = PhosphorIcons.Regular.Barbell,
+                            kind = EmptyStateKind.WorkoutHistory,
                             title = stringResource(R.string.workout_history_empty_title),
                             subtitle = stringResource(R.string.workout_history_empty_subtitle),
                         )

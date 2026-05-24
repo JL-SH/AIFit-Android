@@ -1,51 +1,62 @@
 package com.jlsh.aifit.core.ui.components.display
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import com.jlsh.aifit.R
-import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jlsh.aifit.R
+import com.jlsh.aifit.core.ui.theme.AIFitTheme
+import com.jlsh.aifit.core.ui.theme.AiFitGradients
+import com.jlsh.aifit.core.ui.theme.aifitSubtleBorder
+
+private val BadgeShape = RoundedCornerShape(6.dp)
 
 /**
- * Small colored pill badge that renders a localised label for a plan status value.
- *
- * Background and text colors are drawn from the Material color scheme and vary
- * per status: active uses primary, completed uses tertiary, and draft/archived
- * use surface variants. Unknown status values are displayed as-is with surface
- * variant colors.
- *
- * @param status Backend status string (e.g. `"ACTIVE"`, `"COMPLETED"`, `"DRAFT"`,
- *   `"ARCHIVED"`, `"PAUSED"`). Comparison is case-insensitive.
- * @param modifier Modifier applied to the outer [Surface].
+ * Small badge that renders a localised label for a plan status value.
  */
 @Composable
 fun PlanStatusBadge(
     status: String,
     modifier: Modifier = Modifier,
 ) {
-    val (backgroundColor, textColor) = statusColors(status)
+    val (backgroundBrush, backgroundColor, textColor) = statusStyle(status)
 
-    Surface(
-        color = backgroundColor,
-        shape = RoundedCornerShape(6.dp),
-        modifier = modifier,
+    Box(
+        modifier = modifier
+            .clip(BadgeShape)
+            .then(
+                if (backgroundBrush != null) {
+                    Modifier.background(backgroundBrush)
+                } else {
+                    Modifier
+                        .background(backgroundColor)
+                        .aifitSubtleBorder(shape = BadgeShape)
+                },
+            )
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = statusDisplayName(status),
             style = MaterialTheme.typography.labelSmall,
             letterSpacing = 1.sp,
             color = textColor,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Visible,
         )
     }
 }
@@ -63,27 +74,35 @@ private fun statusDisplayName(status: String): String {
 }
 
 @Composable
-private fun statusColors(status: String): Pair<Color, Color> {
+private fun statusStyle(status: String): Triple<Brush?, Color, Color> {
+    val scheme = MaterialTheme.colorScheme
     return when (status.uppercase()) {
-        "ACTIVE" -> Pair(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
+        "ACTIVE" -> Triple(
+            AiFitGradients.primaryGradient(),
+            Color.Transparent,
+            scheme.onPrimaryContainer,
         )
-        "COMPLETED" -> Pair(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.colorScheme.onTertiaryContainer,
+        "COMPLETED" -> Triple(
+            AiFitGradients.achievementGradient(),
+            Color.Transparent,
+            Color(0xFF1A1200),
         )
-        "DRAFT" -> Pair(
-            MaterialTheme.colorScheme.surfaceContainerHigh,
-            MaterialTheme.colorScheme.onSurfaceVariant,
+        "DRAFT" -> Triple(
+            null,
+            scheme.surfaceContainerHigh,
+            scheme.onSurfaceVariant,
         )
-        "ARCHIVED" -> Pair(
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.onSurfaceVariant,
+        "ARCHIVED",
+        "PAUSED",
+        -> Triple(
+            null,
+            scheme.surfaceVariant,
+            scheme.onSurfaceVariant,
         )
-        else -> Pair(
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.onSurfaceVariant,
+        else -> Triple(
+            null,
+            scheme.surfaceVariant,
+            scheme.onSurfaceVariant,
         )
     }
 }

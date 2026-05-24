@@ -32,6 +32,8 @@ import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.components.display.AdherenceBar
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
+import com.jlsh.aifit.core.ui.components.display.CardVariant
+import com.jlsh.aifit.core.ui.components.display.MetricStatItem
 import com.jlsh.aifit.core.ui.components.display.ChartEntry
 import com.jlsh.aifit.core.ui.components.display.LineChartView
 import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
@@ -53,17 +55,17 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
- * Pantalla del dashboard de progreso: adherencia, tendencia de peso, nutrición y fuerza.
+ * Pantalla del dashboard de progreso: adherencia, tendencia de peso, nutrici?n y fuerza.
  *
- * Muestra un selector de periodo (chips), tarjetas con gráficos y barras de adherencia,
- * y accesos a registro de peso, detalle semanal y análisis metabólico. Gestiona estados
+ * Muestra un selector de periodo (chips), tarjetas con gr?ficos y barras de adherencia,
+ * y accesos a registro de peso, detalle semanal y an?lisis metab?lico. Gestiona estados
  * de carga/error mediante [ScreenScaffold] y reacciona a [ProgressUiEvent] del [viewModel].
  *
- * @param onNavigateBack Callback al pulsar atrás en la barra superior.
- * @param onNavigateToBodyWeight Navegación a la pantalla de peso corporal.
- * @param onNavigateToWeeklySummary Navegación al resumen semanal.
- * @param onNavigateToMetabolic Navegación al análisis metabólico.
- * @param viewModel Origen del [DashboardUiState] y eventos de navegación.
+ * @param onNavigateBack Callback al pulsar atr?s en la barra superior.
+ * @param onNavigateToBodyWeight Navegaci?n a la pantalla de peso corporal.
+ * @param onNavigateToWeeklySummary Navegaci?n al resumen semanal.
+ * @param onNavigateToMetabolic Navegaci?n al an?lisis metab?lico.
+ * @param viewModel Origen del [DashboardUiState] y eventos de navegaci?n.
  */
 @Composable
 fun ProgressDashboardScreen(
@@ -155,7 +157,7 @@ private fun DashboardContent(
         // Workout Adherence
         item(key = "workout") {
             SectionHeader(title = stringResource(R.string.progress_dashboard_workout_adherence))
-            AiFitCard {
+            AiFitCard(variant = CardVariant.Subtle) {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
                     verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
@@ -168,15 +170,15 @@ private fun DashboardContent(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        StatItem(
+                        MetricStatItem(
                             value = "${dashboard.workoutAdherence.completedSessions}/${dashboard.workoutAdherence.plannedSessions}",
                             label = stringResource(R.string.progress_dashboard_sessions),
                         )
-                        StatItem(
+                        MetricStatItem(
                             value = "${dashboard.workoutAdherence.currentStreak}",
                             label = stringResource(R.string.progress_dashboard_streak),
                         )
-                        StatItem(
+                        MetricStatItem(
                             value = "${dashboard.workoutAdherence.longestStreak}",
                             label = stringResource(R.string.progress_dashboard_best),
                         )
@@ -188,7 +190,7 @@ private fun DashboardContent(
         // Weight Trend
         item(key = "weight") {
             SectionHeader(title = stringResource(R.string.progress_dashboard_weight_trend))
-            AiFitCard {
+            AiFitCard(variant = CardVariant.Subtle) {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
                     verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
@@ -209,17 +211,17 @@ private fun DashboardContent(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        StatItem(
+                        MetricStatItem(
                             value = dashboard.weightProgress.startWeight
                                 ?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "--",
                             label = stringResource(R.string.progress_dashboard_start),
                         )
-                        StatItem(
+                        MetricStatItem(
                             value = dashboard.weightProgress.currentWeight
                                 ?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "--",
                             label = stringResource(R.string.progress_dashboard_current),
                         )
-                        StatItem(
+                        MetricStatItem(
                             value = dashboard.weightProgress.change
                                 ?.let { String.format(java.util.Locale.getDefault(), "%+.1f", it) } ?: "--",
                             label = stringResource(R.string.progress_dashboard_change),
@@ -227,7 +229,7 @@ private fun DashboardContent(
                                 dashboard.weightProgress.change == null ->
                                     MaterialTheme.colorScheme.onSurfaceVariant
                                 dashboard.weightProgress.change <= 0 ->
-                                    MaterialTheme.colorScheme.primaryContainer
+                                    MaterialTheme.colorScheme.primary
                                 else ->
                                     MaterialTheme.colorScheme.error
                             },
@@ -240,7 +242,7 @@ private fun DashboardContent(
         // Nutrition Adherence
         item(key = "nutrition") {
             SectionHeader(title = stringResource(R.string.progress_dashboard_nutrition_adherence))
-            AiFitCard {
+            AiFitCard(variant = CardVariant.Subtle) {
                 Column(
                     modifier = Modifier.padding(AiFitSpacing.md),
                     verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
@@ -251,11 +253,11 @@ private fun DashboardContent(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        StatItem(
+                        MetricStatItem(
                             value = "${dashboard.nutritionAdherence.averageCalories.toInt()}",
                             label = stringResource(R.string.progress_dashboard_avg_kcal),
                         )
-                        StatItem(
+                        MetricStatItem(
                             value = "${dashboard.nutritionAdherence.calorieTarget}",
                             label = stringResource(R.string.progress_dashboard_goal),
                         )
@@ -284,7 +286,7 @@ private fun DashboardContent(
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = "${String.format("%.1f", progress.startMax)} → ${String.format("%.1f", progress.currentMax)} kg",
+                                text = "${String.format("%.1f", progress.startMax)} ��� ${String.format("%.1f", progress.currentMax)} kg",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -323,26 +325,6 @@ private fun DashboardContent(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun StatItem(
-    value: String,
-    label: String,
-    valueColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primaryContainer,
-) {
-    Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            color = valueColor,
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 

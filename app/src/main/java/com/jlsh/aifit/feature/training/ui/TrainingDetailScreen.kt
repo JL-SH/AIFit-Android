@@ -46,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
+import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
@@ -197,6 +198,7 @@ fun TrainingDetailScreen(
             ) {
                 EmptyStateView(
                     icon = PhosphorIcons.Regular.Barbell,
+                    kind = EmptyStateKind.TrainingDays,
                     title = stringResource(R.string.training_detail_no_days_title),
                     subtitle = stringResource(R.string.training_detail_no_days_subtitle),
                 )

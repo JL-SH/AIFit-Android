@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.StreakBadge
+import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.components.layout.AiFitTabRow
@@ -166,6 +167,7 @@ private fun StreaksTab(streaks: List<Streak>) {
     if (streaks.isEmpty()) {
         EmptyStateView(
             icon = PhosphorIcons.Fill.Fire,
+            kind = EmptyStateKind.StreakEmpty,
             title = stringResource(R.string.gamification_streak_empty_title),
             subtitle = stringResource(R.string.gamification_streak_empty_subtitle),
             modifier = Modifier

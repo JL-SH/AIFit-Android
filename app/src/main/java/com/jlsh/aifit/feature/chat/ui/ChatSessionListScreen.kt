@@ -43,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
+import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
@@ -118,6 +119,7 @@ fun ChatSessionListScreen(
             ) {
                 EmptyStateView(
                     icon = PhosphorIcons.Regular.Robot,
+                    kind = EmptyStateKind.ChatSessions,
                     title = stringResource(R.string.chat_empty_title),
                     subtitle = stringResource(R.string.chat_empty_subtitle),
                 )

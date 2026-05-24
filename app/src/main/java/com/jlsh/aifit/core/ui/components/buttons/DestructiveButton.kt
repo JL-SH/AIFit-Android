@@ -14,7 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
-import com.jlsh.aifit.core.ui.theme.FullShape
+import com.jlsh.aifit.core.ui.theme.ButtonShape
 
 /**
  * Full-width button for irreversible or destructive actions (e.g. delete, clear).
@@ -41,7 +41,7 @@ fun DestructiveButton(
             .fillMaxWidth()
             .heightIn(min = 52.dp),
         enabled = enabled,
-        shape = FullShape,
+        shape = ButtonShape,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.errorContainer,
             contentColor = MaterialTheme.colorScheme.onError,

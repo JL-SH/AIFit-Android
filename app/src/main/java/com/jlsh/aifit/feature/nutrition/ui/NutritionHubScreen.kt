@@ -58,6 +58,7 @@ import com.jlsh.aifit.core.ui.components.display.MacroRingChart
 import com.jlsh.aifit.core.ui.components.display.MacroRingData
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
+import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.components.plans.PlanFilterChipGroup
@@ -306,6 +307,7 @@ private fun TodayTab(
         ) {
             EmptyStateView(
                 icon = PhosphorIcons.Regular.ForkKnife,
+                kind = EmptyStateKind.NutritionTarget,
                 title = stringResource(R.string.nutrition_hub_no_target_title),
                 subtitle = stringResource(R.string.nutrition_hub_no_target_subtitle),
                 action = {
@@ -368,6 +370,8 @@ private fun TodayTab(
                 ) {
                     EmptyStateView(
                         icon = PhosphorIcons.Regular.ForkKnife,
+                        iconSize = 48.dp,
+                        iconTint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                         title = stringResource(R.string.nutrition_hub_no_meals_title),
                         subtitle = stringResource(R.string.nutrition_hub_no_meals_subtitle),
                         action = {
@@ -505,6 +509,7 @@ private fun DietPlanTab(
         ) {
             EmptyStateView(
                 icon = PhosphorIcons.Regular.ForkKnife,
+                kind = EmptyStateKind.NutritionDietPlans,
                 title = stringResource(R.string.nutrition_hub_no_diet_plans_title),
                 subtitle = stringResource(R.string.nutrition_hub_no_diet_plans_subtitle),
                 action = {
@@ -528,6 +533,7 @@ private fun DietPlanTab(
         ) {
             EmptyStateView(
                 icon = PhosphorIcons.Regular.ForkKnife,
+                kind = EmptyStateKind.NutritionDietPlans,
                 title = stringResource(R.string.training_hub_no_active_title),
                 subtitle = stringResource(R.string.training_hub_no_active_subtitle),
                 action = {
@@ -657,7 +663,7 @@ private fun ShoppingTab(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     EmptyStateView(
-                        icon = PhosphorIcons.Regular.ShoppingCart,
+                        icon = PhosphorIcons.Regular.ShoppingCartSimple,
                         title = stringResource(R.string.nutrition_hub_shopping_error_title),
                         subtitle = state.message,
                     )
@@ -672,7 +678,7 @@ private fun ShoppingTab(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         EmptyStateView(
-                            icon = PhosphorIcons.Regular.ShoppingCart,
+                            icon = PhosphorIcons.Regular.ShoppingCartSimple,
                             title = stringResource(R.string.nutrition_hub_shopping_empty_title),
                             subtitle = stringResource(R.string.nutrition_hub_shopping_empty_subtitle),
                         )

@@ -38,6 +38,7 @@ import com.jlsh.aifit.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
+import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
@@ -123,6 +124,7 @@ fun GlossaryScreen(
                     is GlossaryState.Idle -> {
                         EmptyStateView(
                             icon = PhosphorIcons.Regular.BookOpen,
+                            kind = EmptyStateKind.Glossary,
                             title = stringResource(R.string.education_glossary_empty_title),
                             subtitle = stringResource(R.string.education_glossary_empty_subtitle),
                             modifier = Modifier

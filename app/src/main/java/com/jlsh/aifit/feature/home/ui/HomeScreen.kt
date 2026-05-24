@@ -57,6 +57,7 @@ import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.components.display.AdherenceBar
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
+import com.jlsh.aifit.core.ui.components.display.CardVariant
 import com.jlsh.aifit.core.ui.components.display.AvatarSize
 import com.jlsh.aifit.core.ui.components.display.ChartEntry
 import com.jlsh.aifit.core.ui.components.display.LineChartView
@@ -68,6 +69,8 @@ import com.jlsh.aifit.core.ui.components.display.UserAvatar
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.core.ui.theme.AiFitTextStyles
+import com.jlsh.aifit.core.ui.theme.MacroType
 import com.jlsh.aifit.feature.gamification.domain.model.AchievementDefinition
 import com.jlsh.aifit.feature.gamification.ui.localizedDescription
 import com.jlsh.aifit.feature.gamification.ui.localizedName
@@ -607,19 +610,19 @@ private fun TodayNutritionCard(
                         name = stringResource(R.string.home_macro_protein),
                         current = nutrition.proteinConsumed.toFloat(),
                         target = nutrition.proteinTarget.toFloat(),
-                        color = MaterialTheme.colorScheme.primaryContainer,
+                        macro = MacroType.Protein,
                     )
                     MacroProgressBar(
                         name = stringResource(R.string.home_macro_carbs),
                         current = nutrition.carbsConsumed.toFloat(),
                         target = nutrition.carbsTarget.toFloat(),
-                        color = MaterialTheme.colorScheme.tertiary,
+                        macro = MacroType.Carbs,
                     )
                     MacroProgressBar(
                         name = stringResource(R.string.home_macro_fat),
                         current = nutrition.fatConsumed.toFloat(),
                         target = nutrition.fatTarget.toFloat(),
-                        color = MaterialTheme.colorScheme.secondary,
+                        macro = MacroType.Fat,
                     )
                 }
 
@@ -889,7 +892,7 @@ private fun CurrentWeightCard(
                 ) {
                     Text(
                         text = "${"%.1f".format(currentWeight)} kg",
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = AiFitTextStyles.metricDisplay,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     if (weightDelta != null) {
@@ -982,7 +985,7 @@ private fun WeeklyProgressCard(
         currentWeight - previousWeight
     } else null
 
-    AiFitCard(onClick = onTap, containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+    AiFitCard(onClick = onTap, variant = CardVariant.Subtle) {
         Column(
             modifier = Modifier.padding(AiFitSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),

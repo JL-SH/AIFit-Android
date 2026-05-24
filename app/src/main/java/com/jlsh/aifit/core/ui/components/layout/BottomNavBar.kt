@@ -2,6 +2,9 @@ package com.jlsh.aifit.core.ui.components.layout
 
 import android.content.res.Configuration
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -11,7 +14,9 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -86,6 +91,14 @@ fun BottomNavBar(
             } else {
                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
             }
+            val iconScale by animateFloatAsState(
+                targetValue = if (selected) 1.12f else 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium,
+                ),
+                label = "navIconScale",
+            )
             NavigationBarItem(
                 selected = selected,
                 onClick = { onItemSelected(item) },
@@ -93,7 +106,9 @@ fun BottomNavBar(
                     Icon(
                         imageVector = if (selected) item.iconFilled else item.iconOutline,
                         contentDescription = label,
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier
+                            .size(24.dp)
+                            .scale(iconScale),
                         tint = iconTint,
                     )
                 },
@@ -106,10 +121,10 @@ fun BottomNavBar(
                 alwaysShowLabel = true,
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Color.Unspecified,
-                    selectedTextColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
                     unselectedIconColor = Color.Unspecified,
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = Color.Transparent,
+                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                 ),
             )
         }
@@ -126,6 +141,21 @@ private fun BottomNavBarPreview() {
     AIFitTheme(darkTheme = true) {
         BottomNavBar(
             currentRoute = "home",
+            onItemSelected = {},
+        )
+    }
+}
+
+@Preview(
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
+    name = "Light"
+)
+@Composable
+private fun BottomNavBarLightPreview() {
+    AIFitTheme(darkTheme = false) {
+        BottomNavBar(
+            currentRoute = "nutrition",
             onItemSelected = {},
         )
     }

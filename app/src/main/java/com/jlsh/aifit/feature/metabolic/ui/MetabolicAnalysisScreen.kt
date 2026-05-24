@@ -42,6 +42,7 @@ import com.jlsh.aifit.core.ui.components.display.AdherenceBar
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
+import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
@@ -144,6 +145,7 @@ private fun MetabolicInsufficientDataScreen(onBack: () -> Unit) {
             ) {
                 EmptyStateView(
                     icon = PhosphorIcons.Regular.ChartBar,
+                    kind = EmptyStateKind.Metabolic,
                     title = stringResource(R.string.metabolic_insufficient_data_title),
                     subtitle = stringResource(R.string.metabolic_insufficient_data_subtitle),
                 )
