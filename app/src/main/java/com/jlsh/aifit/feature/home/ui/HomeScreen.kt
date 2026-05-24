@@ -10,6 +10,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -62,11 +63,14 @@ import com.jlsh.aifit.core.ui.components.display.AvatarSize
 import com.jlsh.aifit.core.ui.components.display.ChartEntry
 import com.jlsh.aifit.core.ui.components.display.LineChartView
 import com.jlsh.aifit.core.ui.components.display.MacroProgressBar
+import com.jlsh.aifit.core.ui.components.display.AnimatedMetricText
 import com.jlsh.aifit.core.ui.components.display.MacroRingChart
 import com.jlsh.aifit.core.ui.components.display.MacroRingData
 import com.jlsh.aifit.core.ui.components.display.StreakBadge
 import com.jlsh.aifit.core.ui.components.display.UserAvatar
-import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
+import com.jlsh.aifit.core.ui.components.feedback.HomeScreenSkeleton
+import com.jlsh.aifit.core.ui.components.feedback.SuccessCheckOverlay
+import com.jlsh.aifit.core.ui.theme.AiFitMotion
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.core.ui.theme.AiFitTextStyles
@@ -129,6 +133,7 @@ fun HomeScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
 
     var showWeightSheet by rememberSaveable { mutableStateOf(false) }
+    var showWeightSuccessOverlay by remember { mutableStateOf(false) }
     val weightSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(lifecycleOwner) {
@@ -152,18 +157,27 @@ fun HomeScreen(
                 is HomeUiEvent.NavigateToGeneratePlan -> onNavigateToGeneratePlan()
                 is HomeUiEvent.ShowLogWeightSheet -> showWeightSheet = true
                 is HomeUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                is HomeUiEvent.WeightLoggedSuccessfully -> showWeightSuccessOverlay = true
             }
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
+        SuccessCheckOverlay(
+            visible = showWeightSuccessOverlay,
+            onAnimationComplete = { showWeightSuccessOverlay = false },
+        )
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+    ) {
         when (val state = uiState) {
             is HomeUiState.Loading -> {
-                LoadingScreen()
+                HomeScreenSkeleton()
             }
 
             is HomeUiState.Error -> {
@@ -202,6 +216,7 @@ fun HomeScreen(
                 )
             }
         }
+    }
     }
 
     if (showWeightSheet) {
@@ -397,9 +412,7 @@ private fun TodayTrainingCard(
     onViewDetail: (String) -> Unit,
     onCreatePlan: () -> Unit,
 ) {
-    AiFitCard(
-        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-    ) {
+    AiFitCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
         Column(
             modifier = Modifier.padding(AiFitSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
@@ -459,6 +472,13 @@ private fun TodayTrainingCard(
 
                     if (training.isCompleted) {
                         // ── Completed banner ──
+                        AnimatedVisibility(
+                            visible = true,
+                            enter = scaleIn(
+                                initialScale = 0.92f,
+                                animationSpec = AiFitMotion.standardTween<Float>(),
+                            ) + fadeIn(AiFitMotion.standardTween<Float>()),
+                        ) {
                         Surface(
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
                             shape = RoundedCornerShape(8.dp),
@@ -492,6 +512,7 @@ private fun TodayTrainingCard(
                                     )
                                 }
                             }
+                        }
                         }
                         Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                         SecondaryButton(
@@ -746,11 +767,18 @@ private fun MotivationCard(
                         text = "🔥",
                         style = MaterialTheme.typography.titleMedium,
                     )
-                    Text(
-                        text = "$streakDays días seguidos entrenando",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AnimatedMetricText(
+                            target = streakDays,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = " días seguidos entrenando",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                 }
             }
 
@@ -890,17 +918,13 @@ private fun CurrentWeightCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom,
                 ) {
-                    Text(
-                        text = "${"%.1f".format(currentWeight)} kg",
+                    AnimatedMetricText(
+                        target = currentWeight.toFloat(),
+                        suffix = " kg",
                         style = AiFitTextStyles.metricDisplay,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     if (weightDelta != null) {
-                        val deltaText = if (weightDelta >= 0) {
-                            "+${"%.1f".format(weightDelta)} kg"
-                        } else {
-                            "${"%.1f".format(weightDelta)} kg"
-                        }
                         val trendIcon = when {
                             weightDelta < -0.05 -> PhosphorIcons.Regular.TrendDown
                             weightDelta > 0.05 -> PhosphorIcons.Regular.TrendUp
@@ -921,8 +945,10 @@ private fun CurrentWeightCard(
                                 tint = trendColor,
                                 modifier = Modifier.size(18.dp),
                             )
-                            Text(
-                                text = deltaText,
+                            AnimatedMetricText(
+                                target = weightDelta.toFloat(),
+                                suffix = " kg",
+                                prefix = if (weightDelta >= 0) "+" else "",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = trendColor,
                             )
@@ -1019,11 +1045,18 @@ private fun WeeklyProgressCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                Text(
-                    text = "${summary.workoutsThisWeek} / ${summary.workoutsTarget}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AnimatedMetricText(
+                        target = summary.workoutsThisWeek,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    )
+                    Text(
+                        text = " / ${summary.workoutsTarget}",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    )
+                }
             }
 
             val trainingAdherence = if (summary.workoutsTarget > 0) {
@@ -1047,11 +1080,18 @@ private fun WeeklyProgressCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                Text(
-                    text = "${"%.0f".format(summary.averageCaloriesToday)} / ${summary.calorieTarget}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AnimatedMetricText(
+                        target = summary.averageCaloriesToday.toInt(),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = " / ${summary.calorieTarget}",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
 
             val nutritionAdherence = if (summary.calorieTarget > 0) {
@@ -1081,18 +1121,14 @@ private fun WeeklyProgressCard(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp),
                         )
-                        Text(
-                            text = "${"%.1f".format(currentWeight)} kg",
+                        AnimatedMetricText(
+                            target = currentWeight.toFloat(),
+                            suffix = " kg",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                     if (weightDelta != null) {
-                        val deltaText = if (weightDelta >= 0) {
-                            "+${"%.1f".format(weightDelta)} kg"
-                        } else {
-                            "${"%.1f".format(weightDelta)} kg"
-                        }
                         val trendIcon = when {
                             weightDelta < -0.05 -> PhosphorIcons.Regular.TrendDown
                             weightDelta > 0.05 -> PhosphorIcons.Regular.TrendUp
@@ -1113,8 +1149,10 @@ private fun WeeklyProgressCard(
                                 tint = trendColor,
                                 modifier = Modifier.size(16.dp),
                             )
-                            Text(
-                                text = deltaText,
+                            AnimatedMetricText(
+                                target = weightDelta.toFloat(),
+                                suffix = " kg",
+                                prefix = if (weightDelta >= 0) "+" else "",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = trendColor,
                             )

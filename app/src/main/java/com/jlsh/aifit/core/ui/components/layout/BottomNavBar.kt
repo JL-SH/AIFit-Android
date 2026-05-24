@@ -2,10 +2,10 @@ package com.jlsh.aifit.core.ui.components.layout
 
 import android.content.res.Configuration
 import androidx.annotation.StringRes
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -29,6 +29,7 @@ import com.adamglin.phosphoricons.fill.*
 import com.adamglin.phosphoricons.regular.*
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
+import com.jlsh.aifit.core.ui.theme.AiFitMotion
 
 val LocalBottomBarVisibility = compositionLocalOf { true }
 
@@ -78,11 +79,15 @@ fun BottomNavBar(
     onItemSelected: (BottomNavItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    NavigationBar(
-        modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 0.dp,
-    ) {
+    Column(modifier = modifier) {
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f),
+            thickness = 1.dp,
+        )
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            tonalElevation = 0.dp,
+        ) {
         bottomNavItems.forEach { item ->
             val selected = currentRoute == item.route
             val label = stringResource(item.labelResId)
@@ -93,10 +98,7 @@ fun BottomNavBar(
             }
             val iconScale by animateFloatAsState(
                 targetValue = if (selected) 1.12f else 1f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium,
-                ),
+                animationSpec = AiFitMotion.standardTween<Float>(),
                 label = "navIconScale",
             )
             NavigationBarItem(
@@ -127,6 +129,7 @@ fun BottomNavBar(
                     indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                 ),
             )
+        }
         }
     }
 }

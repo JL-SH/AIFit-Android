@@ -177,7 +177,7 @@ class ProgressViewModel @Inject constructor(
                         formDate = LocalDate.now(),
                         isSaving = false,
                     )
-                    emitEvent(ProgressUiEvent.ShowSnackbar("Peso registrado"))
+                    emitEvent(ProgressUiEvent.WeightLoggedSuccessfully)
                     loadBodyWeightHistory()
                 }
                 is Result.Error -> {

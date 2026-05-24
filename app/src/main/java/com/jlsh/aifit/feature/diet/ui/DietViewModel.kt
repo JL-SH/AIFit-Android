@@ -118,10 +118,9 @@ class DietViewModel @Inject constructor(
      */
     fun onApproveDietPlan(planId: String) {
         viewModelScope.launch {
-            _detailUiState.value = DietUiState.Loading
             when (val result = setActiveDietPlanUseCase(planId)) {
                 is Result.Success -> {
-                    emitEvent(DietUiEvent.NavigateBack)
+                    emitEvent(DietUiEvent.PlanApproved)
                 }
                 is Result.Error -> {
                     _detailUiState.value = DietUiState.Error(result.exception.toMessage())

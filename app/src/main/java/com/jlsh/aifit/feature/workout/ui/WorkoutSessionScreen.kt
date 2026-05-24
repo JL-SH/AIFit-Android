@@ -59,6 +59,8 @@ import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
+import com.jlsh.aifit.core.ui.components.feedback.SuccessCheckOverlay
+import kotlinx.coroutines.delay
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
@@ -101,10 +103,17 @@ fun WorkoutSessionScreen(
     var showSubstitutionExerciseId by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
+    var showSuccessOverlay by remember { mutableStateOf(false) }
+    var pendingLogId by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(uiState) {
-        val state = uiState
-        if (state is WorkoutSessionUiState.SessionFinalized) {
-            onSessionFinalized(state.summary.id)
+        when (val state = uiState) {
+            is WorkoutSessionUiState.Finalizing -> showSuccessOverlay = true
+            is WorkoutSessionUiState.SessionFinalized -> {
+                showSuccessOverlay = true
+                pendingLogId = state.summary.id
+            }
+            else -> Unit
         }
     }
 
@@ -205,13 +214,28 @@ fun WorkoutSessionScreen(
                 }
             }
 
-            is WorkoutSessionUiState.Finalizing -> LoadingScreen()
-            is WorkoutSessionUiState.SessionFinalized -> { /* handled by LaunchedEffect */ }
+            is WorkoutSessionUiState.Finalizing,
+            is WorkoutSessionUiState.SessionFinalized,
+            -> {
+                // Success overlay is shown above this when-block.
+            }
             is WorkoutSessionUiState.Error -> ErrorScreen(
                 message = state.message,
                 onRetry = onNavigateBack,
             )
         }
+        SuccessCheckOverlay(
+            visible = showSuccessOverlay,
+        )
+
+        LaunchedEffect(pendingLogId) {
+            val logId = pendingLogId ?: return@LaunchedEffect
+            delay(700)
+            pendingLogId = null
+            showSuccessOverlay = false
+            onSessionFinalized(logId)
+        }
+
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter),

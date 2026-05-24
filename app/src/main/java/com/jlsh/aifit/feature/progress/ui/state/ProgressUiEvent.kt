@@ -6,5 +6,6 @@ sealed class ProgressUiEvent {
     data object NavigateToMetabolic : ProgressUiEvent()
     data object NavigateBack : ProgressUiEvent()
     data class ShowSnackbar(val message: String) : ProgressUiEvent()
+    data object WeightLoggedSuccessfully : ProgressUiEvent()
 }
 

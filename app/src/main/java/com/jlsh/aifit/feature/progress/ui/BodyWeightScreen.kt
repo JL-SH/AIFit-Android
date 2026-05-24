@@ -25,7 +25,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +44,7 @@ import com.jlsh.aifit.core.ui.components.display.LineChartView
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
+import com.jlsh.aifit.core.ui.components.feedback.SuccessCheckOverlay
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
@@ -61,6 +64,7 @@ fun BodyWeightScreen(
 ) {
     val state by viewModel.bodyWeightState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showSuccessOverlay by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadBodyWeightHistory()
@@ -70,6 +74,7 @@ fun BodyWeightScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is ProgressUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                is ProgressUiEvent.WeightLoggedSuccessfully -> showSuccessOverlay = true
                 is ProgressUiEvent.NavigateBack -> onNavigateBack()
                 else -> {}
             }
@@ -81,6 +86,11 @@ fun BodyWeightScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
+        SuccessCheckOverlay(
+            visible = showSuccessOverlay,
+            onAnimationComplete = { showSuccessOverlay = false },
+        )
+
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {

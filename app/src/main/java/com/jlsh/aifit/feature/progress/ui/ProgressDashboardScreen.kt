@@ -87,6 +87,7 @@ fun ProgressDashboardScreen(
                 is ProgressUiEvent.NavigateToMetabolic -> onNavigateToMetabolic()
                 is ProgressUiEvent.NavigateBack -> onNavigateBack()
                 is ProgressUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                is ProgressUiEvent.WeightLoggedSuccessfully -> Unit
             }
         }
     }
@@ -175,11 +176,11 @@ private fun DashboardContent(
                             label = stringResource(R.string.progress_dashboard_sessions),
                         )
                         MetricStatItem(
-                            value = "${dashboard.workoutAdherence.currentStreak}",
+                            targetInt = dashboard.workoutAdherence.currentStreak,
                             label = stringResource(R.string.progress_dashboard_streak),
                         )
                         MetricStatItem(
-                            value = "${dashboard.workoutAdherence.longestStreak}",
+                            targetInt = dashboard.workoutAdherence.longestStreak,
                             label = stringResource(R.string.progress_dashboard_best),
                         )
                     }
@@ -207,33 +208,53 @@ private fun DashboardContent(
                             .height(200.dp),
                     )
 
+                    val startWeight = dashboard.weightProgress.startWeight
+                    val currentWeight = dashboard.weightProgress.currentWeight
+                    val weightChange = dashboard.weightProgress.change
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        MetricStatItem(
-                            value = dashboard.weightProgress.startWeight
-                                ?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "--",
-                            label = stringResource(R.string.progress_dashboard_start),
-                        )
-                        MetricStatItem(
-                            value = dashboard.weightProgress.currentWeight
-                                ?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "--",
-                            label = stringResource(R.string.progress_dashboard_current),
-                        )
-                        MetricStatItem(
-                            value = dashboard.weightProgress.change
-                                ?.let { String.format(java.util.Locale.getDefault(), "%+.1f", it) } ?: "--",
-                            label = stringResource(R.string.progress_dashboard_change),
-                            valueColor = when {
-                                dashboard.weightProgress.change == null ->
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                dashboard.weightProgress.change <= 0 ->
+                        if (startWeight != null) {
+                            MetricStatItem(
+                                targetFloat = startWeight.toFloat(),
+                                label = stringResource(R.string.progress_dashboard_start),
+                            )
+                        } else {
+                            MetricStatItem(
+                                value = "--",
+                                label = stringResource(R.string.progress_dashboard_start),
+                            )
+                        }
+                        if (currentWeight != null) {
+                            MetricStatItem(
+                                targetFloat = currentWeight.toFloat(),
+                                label = stringResource(R.string.progress_dashboard_current),
+                            )
+                        } else {
+                            MetricStatItem(
+                                value = "--",
+                                label = stringResource(R.string.progress_dashboard_current),
+                            )
+                        }
+                        if (weightChange != null) {
+                            MetricStatItem(
+                                targetFloat = weightChange.toFloat(),
+                                label = stringResource(R.string.progress_dashboard_change),
+                                prefix = if (weightChange >= 0) "+" else "",
+                                valueColor = if (weightChange <= 0) {
                                     MaterialTheme.colorScheme.primary
-                                else ->
+                                } else {
                                     MaterialTheme.colorScheme.error
-                            },
-                        )
+                                },
+                            )
+                        } else {
+                            MetricStatItem(
+                                value = "--",
+                                label = stringResource(R.string.progress_dashboard_change),
+                                valueColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }
@@ -254,11 +275,11 @@ private fun DashboardContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         MetricStatItem(
-                            value = "${dashboard.nutritionAdherence.averageCalories.toInt()}",
+                            targetInt = dashboard.nutritionAdherence.averageCalories.toInt(),
                             label = stringResource(R.string.progress_dashboard_avg_kcal),
                         )
                         MetricStatItem(
-                            value = "${dashboard.nutritionAdherence.calorieTarget}",
+                            targetInt = dashboard.nutritionAdherence.calorieTarget,
                             label = stringResource(R.string.progress_dashboard_goal),
                         )
                     }
@@ -286,7 +307,7 @@ private fun DashboardContent(
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = "${String.format("%.1f", progress.startMax)} ˇˇˇ ${String.format("%.1f", progress.currentMax)} kg",
+                                text = "${String.format("%.1f", progress.startMax)} ùùù ${String.format("%.1f", progress.currentMax)} kg",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

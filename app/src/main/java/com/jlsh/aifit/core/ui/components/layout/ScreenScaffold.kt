@@ -31,6 +31,7 @@ fun <S : UiStateHost.Success> ScreenScaffold(
     bottomBar: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     onRetry: () -> Unit = {},
+    loadingContent: @Composable () -> Unit = { LoadingScreen() },
     content: @Composable (PaddingValues, S) -> Unit,
 ) {
     Scaffold(
@@ -42,7 +43,7 @@ fun <S : UiStateHost.Success> ScreenScaffold(
         containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
         when (uiState) {
-            is UiStateHost.Loading -> LoadingScreen()
+            is UiStateHost.Loading -> loadingContent()
             is UiStateHost.Error -> ErrorScreen(
                 message = uiState.message,
                 onRetry = onRetry,

@@ -111,6 +111,7 @@ fun TrainingHubScreen(
                 is TrainingUiEvent.NavigateToWorkoutHistory -> onNavigateToWorkoutHistory()
                 is TrainingUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
                 is TrainingUiEvent.PlanDeleted -> { }
+                is TrainingUiEvent.PlanApproved -> { }
                 is TrainingUiEvent.NavigateBack -> { }
             }
         }

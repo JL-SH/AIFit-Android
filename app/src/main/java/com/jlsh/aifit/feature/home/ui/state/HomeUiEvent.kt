@@ -12,5 +12,6 @@ sealed class HomeUiEvent {
     data object NavigateToGeneratePlan : HomeUiEvent()
     data object ShowLogWeightSheet : HomeUiEvent()
     data class ShowSnackbar(val message: String) : HomeUiEvent()
+    data object WeightLoggedSuccessfully : HomeUiEvent()
 }
 

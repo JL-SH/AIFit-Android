@@ -146,8 +146,8 @@ fun MacroRingChart(
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "${data.currentCalories.toInt()}",
+            AnimatedMetricText(
+                target = data.currentCalories.toInt(),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )

@@ -15,6 +15,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.jlsh.aifit.navigation.NavTransitionType
+import com.jlsh.aifit.navigation.aifitComposable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
@@ -130,7 +132,7 @@ private fun MainNavScreen() {
                     route = HomeRoutes.GRAPH,
                     startDestination = HomeRoutes.HOME,
                 ) {
-                    composable(HomeRoutes.HOME) {
+                    aifitComposable(HomeRoutes.HOME, NavTransitionType.Fade) {
                         HomeScreen(
                             onNavigateToWorkoutSession = { planId, dayId ->
                                 // Navigate to Training tab first so Back lands on TrainingHub
@@ -193,7 +195,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(HomeRoutes.DASHBOARD) {
+                    aifitComposable(HomeRoutes.DASHBOARD) {
                         ProgressDashboardScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                             onNavigateToBodyWeight = {
@@ -207,17 +209,17 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(HomeRoutes.BODY_WEIGHT) {
+                    aifitComposable(HomeRoutes.BODY_WEIGHT) {
                         BodyWeightScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                         )
                     }
-                    composable(HomeRoutes.WEEKLY_SUMMARY) {
+                    aifitComposable(HomeRoutes.WEEKLY_SUMMARY) {
                         WeeklySummaryScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                         )
                     }
-                    composable(HomeRoutes.METABOLIC_ANALYSIS) {
+                    aifitComposable(HomeRoutes.METABOLIC_ANALYSIS) {
                         MetabolicAnalysisScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                         )
@@ -229,7 +231,7 @@ private fun MainNavScreen() {
                     route = TrainingRoutes.GRAPH,
                     startDestination = TrainingRoutes.HUB,
                 ) {
-                    composable(TrainingRoutes.HUB) {
+                    aifitComposable(TrainingRoutes.HUB, NavTransitionType.Fade) {
                         TrainingHubScreen(
                             onNavigateToDetail = { planId ->
                                 tabNavController.navigate(TrainingRoutes.detailRoute(planId))
@@ -248,7 +250,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = TrainingRoutes.DETAIL,
                         arguments = listOf(
                             navArgument("planId") { type = NavType.StringType },
@@ -269,7 +271,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = TrainingRoutes.WORKOUT_SESSION,
                         arguments = listOf(
                             navArgument("planId") { type = NavType.StringType },
@@ -294,7 +296,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = TrainingRoutes.GENERATE,
                         arguments = listOf(
                             navArgument("adaptive") {
@@ -320,28 +322,30 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = TrainingRoutes.APPROVAL,
                         arguments = listOf(
                             navArgument("planId") { type = NavType.StringType },
                         ),
                     ) { backStackEntry ->
-                        val planId = backStackEntry.arguments?.getString("planId") ?: return@composable
-                        TrainingPlanApprovalScreen(
-                            planId = planId,
-                            onAccept = {
-                                tabNavController.navigate(TrainingRoutes.HUB) {
-                                    popUpTo(TrainingRoutes.GRAPH) { inclusive = false }
-                                }
-                            },
-                            onNavigateToApproval = { newPlanId ->
-                                tabNavController.navigate(TrainingRoutes.approvalRoute(newPlanId)) {
-                                    popUpTo(TrainingRoutes.APPROVAL) { inclusive = true }
-                                }
-                            },
-                        )
+                        val planId = backStackEntry.arguments?.getString("planId")
+                        if (planId != null) {
+                            TrainingPlanApprovalScreen(
+                                planId = planId,
+                                onAccept = {
+                                    tabNavController.navigate(TrainingRoutes.HUB) {
+                                        popUpTo(TrainingRoutes.GRAPH) { inclusive = false }
+                                    }
+                                },
+                                onNavigateToApproval = { newPlanId ->
+                                    tabNavController.navigate(TrainingRoutes.approvalRoute(newPlanId)) {
+                                        popUpTo(TrainingRoutes.APPROVAL) { inclusive = true }
+                                    }
+                                },
+                            )
+                        }
                     }
-                    composable(
+                    aifitComposable(
                         route = TrainingRoutes.WORKOUT_LOG,
                         arguments = listOf(
                             navArgument("planId") {
@@ -361,7 +365,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = TrainingRoutes.WORKOUT_DETAIL,
                         arguments = listOf(
                             navArgument("logId") { type = NavType.StringType },
@@ -379,7 +383,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(route = TrainingRoutes.WORKOUT_HISTORY) {
+                    aifitComposable(route = TrainingRoutes.WORKOUT_HISTORY) {
                         WorkoutHistoryScreen(
                             onNavigateToDetail = { logId ->
                                 tabNavController.navigate(TrainingRoutes.workoutDetailRoute(logId))
@@ -394,7 +398,7 @@ private fun MainNavScreen() {
                     route = NutritionRoutes.GRAPH,
                     startDestination = NutritionRoutes.HUB,
                 ) {
-                    composable(NutritionRoutes.HUB) {
+                    aifitComposable(NutritionRoutes.HUB, NavTransitionType.Fade) {
                         NutritionHubScreen(
                             onNavigateToTrackMeal = { mode ->
                                 tabNavController.navigate(NutritionRoutes.trackMealRoute(mode = mode))
@@ -416,7 +420,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = NutritionRoutes.TRACK_MEAL,
                         arguments = listOf(
                             navArgument("mode") {
@@ -444,7 +448,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(NutritionRoutes.FOOD_VISION) {
+                    aifitComposable(NutritionRoutes.FOOD_VISION) {
                         FoodVisionScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                             onNavigateToTrackMeal = { prefilled ->
@@ -454,12 +458,12 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(NutritionRoutes.TARGET) {
+                    aifitComposable(NutritionRoutes.TARGET) {
                         NutritionTargetScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = NutritionRoutes.DIET_DETAIL,
                         arguments = listOf(
                             navArgument("planId") { type = NavType.StringType },
@@ -474,7 +478,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = NutritionRoutes.DIET_GENERATE,
                         arguments = listOf(
                             navArgument("adaptive") {
@@ -500,28 +504,30 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = NutritionRoutes.DIET_APPROVAL,
                         arguments = listOf(
                             navArgument("planId") { type = NavType.StringType },
                         ),
                     ) { backStackEntry ->
-                        val planId = backStackEntry.arguments?.getString("planId") ?: return@composable
-                        DietPlanApprovalScreen(
-                            planId = planId,
-                            onAccept = {
-                                tabNavController.navigate(NutritionRoutes.HUB) {
-                                    popUpTo(NutritionRoutes.GRAPH) { inclusive = false }
-                                }
-                            },
-                            onNavigateToApproval = { newPlanId ->
-                                tabNavController.navigate(NutritionRoutes.dietApprovalRoute(newPlanId)) {
-                                    popUpTo(NutritionRoutes.DIET_APPROVAL) { inclusive = true }
-                                }
-                            },
-                        )
+                        val planId = backStackEntry.arguments?.getString("planId")
+                        if (planId != null) {
+                            DietPlanApprovalScreen(
+                                planId = planId,
+                                onAccept = {
+                                    tabNavController.navigate(NutritionRoutes.HUB) {
+                                        popUpTo(NutritionRoutes.GRAPH) { inclusive = false }
+                                    }
+                                },
+                                onNavigateToApproval = { newPlanId ->
+                                    tabNavController.navigate(NutritionRoutes.dietApprovalRoute(newPlanId)) {
+                                        popUpTo(NutritionRoutes.DIET_APPROVAL) { inclusive = true }
+                                    }
+                                },
+                            )
+                        }
                     }
-                    composable(
+                    aifitComposable(
                         route = NutritionRoutes.SHOPPING_DETAIL,
                         arguments = listOf(
                             navArgument("listId") { type = NavType.StringType },
@@ -538,7 +544,7 @@ private fun MainNavScreen() {
                     route = CoachRoutes.GRAPH,
                     startDestination = CoachRoutes.SESSION_LIST,
                 ) {
-                    composable(CoachRoutes.SESSION_LIST) {
+                    aifitComposable(CoachRoutes.SESSION_LIST, NavTransitionType.Fade) {
                         ChatSessionListScreen(
                             onNavigateToChat = { sessionId ->
                                 tabNavController.navigate(CoachRoutes.chatRoute(sessionId))
@@ -549,12 +555,12 @@ private fun MainNavScreen() {
                         )
                     }
                     // Ruta para chat nuevo (sin sessionId — sesión se crea al primer mensaje)
-                    composable(route = CoachRoutes.NEW_CHAT) {
+                    aifitComposable(route = CoachRoutes.NEW_CHAT) {
                         ChatScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = CoachRoutes.CHAT,
                         arguments = listOf(
                             navArgument("sessionId") { type = NavType.StringType },
@@ -571,7 +577,7 @@ private fun MainNavScreen() {
                     route = ProfileRoutes.GRAPH,
                     startDestination = ProfileRoutes.HUB,
                 ) {
-                    composable(ProfileRoutes.HUB) {
+                    aifitComposable(ProfileRoutes.HUB, NavTransitionType.Fade) {
                         ProfileHubScreen(
                             onNavigateToEditProfile = {
                                 tabNavController.navigate(ProfileRoutes.editRoute())
@@ -596,7 +602,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = ProfileRoutes.EDIT,
                         arguments = listOf(
                             navArgument("mode") {
@@ -609,7 +615,7 @@ private fun MainNavScreen() {
                             onNavigateBack = { tabNavController.popBackStack() },
                         )
                     }
-                    composable(ProfileRoutes.DASHBOARD) {
+                    aifitComposable(ProfileRoutes.DASHBOARD) {
                         ProgressDashboardScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                             onNavigateToBodyWeight = {
@@ -623,27 +629,27 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(ProfileRoutes.BODY_WEIGHT) {
+                    aifitComposable(ProfileRoutes.BODY_WEIGHT) {
                         BodyWeightScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                         )
                     }
-                    composable(ProfileRoutes.WEEKLY_SUMMARY) {
+                    aifitComposable(ProfileRoutes.WEEKLY_SUMMARY) {
                         WeeklySummaryScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                         )
                     }
-                    composable(ProfileRoutes.METABOLIC) {
+                    aifitComposable(ProfileRoutes.METABOLIC) {
                         MetabolicAnalysisScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                         )
                     }
-                    composable(ProfileRoutes.EXPORT) {
+                    aifitComposable(ProfileRoutes.EXPORT) {
                         ProgressExportScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                         )
                     }
-                    composable(
+                    aifitComposable(
                         route = ProfileRoutes.GAMIFICATION,
                         arguments = listOf(
                             navArgument("tab") {
@@ -659,7 +665,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    composable(ProfileRoutes.GLOSSARY) {
+                    aifitComposable(ProfileRoutes.GLOSSARY) {
                         GlossaryScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
                         )

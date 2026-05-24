@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,6 +47,7 @@ import com.jlsh.aifit.core.ui.components.layout.AiFitTabRow
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.core.ui.theme.HexagonShape
 import com.jlsh.aifit.feature.gamification.domain.model.AchievementDefinition
 import com.jlsh.aifit.feature.gamification.domain.model.AchievementRarity
 import com.jlsh.aifit.feature.gamification.domain.model.PersonalRecord
@@ -336,7 +338,8 @@ private fun AchievementCard(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(rarityColor, MaterialTheme.shapes.medium),
+                    .clip(HexagonShape)
+                    .background(rarityColor),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(

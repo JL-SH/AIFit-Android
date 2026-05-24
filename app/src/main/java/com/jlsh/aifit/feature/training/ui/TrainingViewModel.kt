@@ -269,11 +269,10 @@ class TrainingViewModel @Inject constructor(
      */
     fun onApprovePlan(planId: String) {
         viewModelScope.launch {
-            _detailUiState.value = TrainingDetailUiState.Loading
             when (val result = setActivePlanUseCase(planId)) {
                 is Result.Success -> {
                     fetchPlans()
-                    emitEvent(TrainingUiEvent.NavigateBack)
+                    emitEvent(TrainingUiEvent.PlanApproved)
                 }
                 is Result.Error -> {
                     _detailUiState.value =

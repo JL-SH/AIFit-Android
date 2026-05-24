@@ -103,12 +103,10 @@ private fun ActiveStreakBadge(
             modifier = Modifier.size(20.dp),
             tint = fireTint,
         )
-        Text(
-            text = count.toString(),
+        AnimatedMetricText(
+            target = count,
             style = MaterialTheme.typography.titleSmall,
             color = contentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Visible,
         )
         Text(
             text = label.uppercase(),
@@ -140,12 +138,10 @@ private fun InactiveStreakBadge(
             modifier = Modifier.size(20.dp),
             tint = accentColor,
         )
-        Text(
-            text = count.toString(),
+        AnimatedMetricText(
+            target = count,
             style = MaterialTheme.typography.titleSmall,
             color = accentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Visible,
         )
         Text(
             text = label.uppercase(),

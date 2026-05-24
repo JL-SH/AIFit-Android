@@ -234,7 +234,7 @@ class HomeViewModel @Inject constructor(
                     _uiState.update { current ->
                         if (current is HomeUiState.Success) current.copy(weightEntries = newWeightEntries) else current
                     }
-                    emitEvent(HomeUiEvent.ShowSnackbar("Peso registrado ✓"))
+                    emitEvent(HomeUiEvent.WeightLoggedSuccessfully)
                 }
                 is Result.Error -> {
                     emitEvent(HomeUiEvent.ShowSnackbar(result.exception.toMessage()))

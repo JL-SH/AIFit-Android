@@ -44,6 +44,7 @@ import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.ExpandableSection
+import com.jlsh.aifit.core.ui.components.feedback.SuccessCheckOverlay
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.diet.domain.model.DietDay
@@ -63,6 +64,7 @@ fun DietPlanApprovalScreen(
     viewModel: DietViewModel = hiltViewModel(),
 ) {
     val detailUiState by viewModel.detailUiState.collectAsStateWithLifecycle()
+    var showSuccessOverlay by remember { mutableStateOf(false) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
     var feedbackText by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -75,6 +77,7 @@ fun DietPlanApprovalScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is DietUiEvent.NavigateToDietApproval -> onNavigateToApproval(event.planId)
+                is DietUiEvent.PlanApproved -> showSuccessOverlay = true
                 is DietUiEvent.NavigateBack -> onAccept()
                 else -> Unit
             }
@@ -105,6 +108,15 @@ fun DietPlanApprovalScreen(
         }
         return
     }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        SuccessCheckOverlay(
+            visible = showSuccessOverlay,
+            onAnimationComplete = {
+                showSuccessOverlay = false
+                onAccept()
+            },
+        )
 
     ScreenScaffold<DietUiState.Success>(
         uiState = detailUiState,
@@ -272,6 +284,7 @@ fun DietPlanApprovalScreen(
                 )
             }
         }
+    }
     }
 }
 

@@ -21,7 +21,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -61,6 +64,7 @@ import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
+import com.jlsh.aifit.core.ui.components.feedback.NutritionHubSkeleton
 import com.jlsh.aifit.core.ui.components.plans.PlanFilterChipGroup
 import com.jlsh.aifit.core.ui.components.plans.PlanHubActiveCard
 import com.jlsh.aifit.core.ui.components.plans.PlanSummaryCard
@@ -168,6 +172,13 @@ fun NutritionHubScreen(
 
     ScreenScaffold<NutritionHubUiState.Success>(
         uiState = hubState,
+        loadingContent = {
+            NutritionHubSkeleton(
+                modifier = Modifier.padding(
+                    top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 64.dp,
+                ),
+            )
+        },
         snackbarHostState = snackbarHostState,
         topBar = {
             AiFitTopBar(

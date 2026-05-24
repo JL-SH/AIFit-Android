@@ -9,5 +9,9 @@ object AiFitSpacing {
     val lg = 24.dp
     val xl = 32.dp
     val xxl = 48.dp
+
+    val screenHorizontal = md
+    val cardPadding = md
+    val sectionGap = md
 }
 

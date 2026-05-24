@@ -7,8 +7,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.jlsh.aifit.core.ui.theme.AiFitMotion
 import com.jlsh.aifit.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -97,6 +100,10 @@ fun AppNavGraph(viewModel: AppNavViewModel = hiltViewModel()) {
     NavHost(
         navController = navController,
         startDestination = viewModel.startDestination,
+        enterTransition = { fadeIn(AiFitMotion.standardTween<Float>()) },
+        exitTransition = { fadeOut(AiFitMotion.standardTween<Float>()) },
+        popEnterTransition = { fadeIn(AiFitMotion.standardTween<Float>()) },
+        popExitTransition = { fadeOut(AiFitMotion.standardTween<Float>()) },
     ) {
         authNavGraph(
             navController = navController,

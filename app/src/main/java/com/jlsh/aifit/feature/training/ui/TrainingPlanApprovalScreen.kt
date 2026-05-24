@@ -42,6 +42,7 @@ import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.ExpandableSection
+import com.jlsh.aifit.core.ui.components.feedback.SuccessCheckOverlay
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.training.domain.model.TrainingExercise
@@ -60,6 +61,7 @@ fun TrainingPlanApprovalScreen(
     viewModel: TrainingViewModel = hiltViewModel(),
 ) {
     val detailUiState by viewModel.detailUiState.collectAsStateWithLifecycle()
+    var showSuccessOverlay by remember { mutableStateOf(false) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
     var feedbackText by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -72,6 +74,7 @@ fun TrainingPlanApprovalScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is TrainingUiEvent.NavigateToApproval -> onNavigateToApproval(event.planId)
+                is TrainingUiEvent.PlanApproved -> showSuccessOverlay = true
                 is TrainingUiEvent.NavigateBack -> onAccept()
                 else -> Unit
             }
@@ -102,6 +105,15 @@ fun TrainingPlanApprovalScreen(
         }
         return
     }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        SuccessCheckOverlay(
+            visible = showSuccessOverlay,
+            onAnimationComplete = {
+                showSuccessOverlay = false
+                onAccept()
+            },
+        )
 
     ScreenScaffold<TrainingDetailUiState.Ready>(
         uiState = detailUiState,
@@ -295,6 +307,7 @@ fun TrainingPlanApprovalScreen(
                 )
             }
         }
+    }
     }
 }
 

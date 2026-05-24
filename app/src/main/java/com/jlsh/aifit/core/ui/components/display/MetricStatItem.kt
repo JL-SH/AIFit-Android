@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitTextStyles
+
 @Composable
 fun MetricStatItem(
     value: String,
@@ -37,10 +38,68 @@ fun MetricStatItem(
     }
 }
 
+@Composable
+fun MetricStatItem(
+    targetInt: Int,
+    label: String,
+    modifier: Modifier = Modifier,
+    suffix: String = "",
+    prefix: String = "",
+    valueColor: Color = MaterialTheme.colorScheme.primary,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        AnimatedMetricText(
+            target = targetInt,
+            suffix = suffix,
+            prefix = prefix,
+            style = AiFitTextStyles.metricDisplay,
+            color = valueColor,
+        )
+        Text(
+            text = label.uppercase(),
+            style = AiFitTextStyles.metricLabel,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+fun MetricStatItem(
+    targetFloat: Float,
+    label: String,
+    modifier: Modifier = Modifier,
+    suffix: String = "",
+    prefix: String = "",
+    formatter: (Float) -> String = { "%.1f".format(it) },
+    valueColor: Color = MaterialTheme.colorScheme.primary,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        AnimatedMetricText(
+            target = targetFloat,
+            suffix = suffix,
+            prefix = prefix,
+            formatter = formatter,
+            style = AiFitTextStyles.metricDisplay,
+            color = valueColor,
+        )
+        Text(
+            text = label.uppercase(),
+            style = AiFitTextStyles.metricLabel,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
 @Preview(
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark"
+    name = "Dark",
 )
 @Composable
 private fun MetricStatItemPreview() {
@@ -49,8 +108,13 @@ private fun MetricStatItemPreview() {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
         ) {
-            MetricStatItem(value = "76.2", label = "Actual")
-            MetricStatItem(value = "+2.3", label = "Cambio", valueColor = MaterialTheme.colorScheme.primaryContainer)
+            MetricStatItem(targetFloat = 76.2f, label = "Actual")
+            MetricStatItem(
+                targetFloat = 2.3f,
+                label = "Cambio",
+                prefix = "+",
+                valueColor = MaterialTheme.colorScheme.primaryContainer,
+            )
         }
     }
 }

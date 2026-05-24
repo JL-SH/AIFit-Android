@@ -122,6 +122,7 @@ fun DietDetailScreen(
                 is DietUiEvent.NavigateToDietApproval -> { /* not applicable from detail screen */ }
                 is DietUiEvent.NavigateToDietGenerate -> { /* not applicable from detail screen */ }
                 is DietUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                is DietUiEvent.PlanApproved -> Unit
             }
         }
     }

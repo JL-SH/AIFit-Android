@@ -37,6 +37,7 @@ object AiFitTextStyles {
         fontWeight = FontWeight.ExtraBold,
         fontSize = 32.sp,
         lineHeight = 36.sp,
+        fontFeatureSettings = "tnum",
     )
     val metricLabel = TextStyle(
         fontFamily = InterFontFamily,
