@@ -6,18 +6,18 @@ import com.jlsh.aifit.feature.auth.domain.repository.AuthRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso que autentica al usuario mediante Google Sign-In.
+ * Use case that authenticates the user using Google Sign-In.
  *
- * @param repository Repositorio de autenticación.
+ * @param repository Authentication repository.
  */
 class GoogleLoginUseCase @Inject constructor(
     private val repository: AuthRepository,
 ) {
     /**
-     * Intercambia el ID token de Google por una sesión en el backend.
+     * Exchange the Google ID token for a session in the backend.
      *
-     * @param idToken Token JWT obtenido del flujo de Credential Manager / Google.
-     * @return [Result.Success] con el token de sesión, o [Result.Error] si el backend rechaza el token.
+     * @param idToken JWT token obtained from Credential Manager/Google flow.
+     * @return [Result.Success] with the session token, or [Result.Error] if the backend rejects the token.
      */
     suspend operator fun invoke(idToken: String): Result<AuthToken> =
         repository.googleLogin(idToken)

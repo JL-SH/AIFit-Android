@@ -3,14 +3,14 @@ package com.jlsh.aifit.feature.user.data.dto
 import kotlinx.serialization.Serializable
 
 /**
- * DTO específico para la respuesta del endpoint POST users/me/photo.
+ * Specific DTO for the POST users/me/photo endpoint response.
  *
- * El backend devuelve únicamente la URL de la foto actualizada, no el perfil completo.
- * Se aceptan los dos nombres de campo más comunes para cubrir posibles variaciones del backend:
- *   - profilePictureUrl  (convención usada en el resto de DTOs de este proyecto)
- *   - profileImageUrl    (convención alternativa)
+ * The backend returns only the URL of the updated photo, not the full profile.
+ * The two most common field names are accepted to cover possible backend variations:
+ * - profilePictureUrl (convention used in the rest of the DTOs of this project)
+ * - profileImageUrl (alternative convention)
  *
- * El repositorio usa `profilePictureUrl ?: profileImageUrl` para obtener la URL resultante.
+ * The repository uses `profilePictureUrl ?: profileImageUrl` to get the resulting URL.
  */
 @Serializable
 data class UploadProfilePhotoResponseDto(

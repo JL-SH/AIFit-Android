@@ -50,7 +50,7 @@ class ShoppingViewModelTest {
         )
     }
 
-    // ── List mode (sin listId) ──────────────────────────────────────────────
+    // ── List mode (without listId) ──────────────────────────────────────────────
 
     @Test
     fun `sin listId, init carga listas`() = runTest {
@@ -167,7 +167,7 @@ class ShoppingViewModelTest {
         }
     }
 
-    // ── Detail mode (con listId) ────────────────────────────────────────────
+    // ── Detail mode (with listId) ────────────────────────────────────────────
 
     @Test
     fun `con listId, init carga detalle y checkStates`() = runTest {

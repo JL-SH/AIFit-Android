@@ -7,18 +7,18 @@ import com.jlsh.aifit.feature.nutrition.domain.repository.NutritionLogRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso que registra una comida manual en el diario nutricional del usuario.
+ * Use case that records a manual meal in the user's nutritional diary.
  *
- * @param repository Repositorio del registro nutricional.
+ * @param repository Nutritional registry repository.
  */
 class TrackMealUseCase @Inject constructor(
     private val repository: NutritionLogRepository,
 ) {
     /**
-     * Envía la comida al backend y actualiza la caché local del día indicado.
+     * Sends the food to the backend and updates the local cache for the given day.
      *
-     * @param request Datos de la comida (fecha, tipo, hora, alimentos, macros).
-     * @return [Result.Success] con el [MealLog] persistido, o [Result.Error] si falla el registro.
+     * @param request Food data (date, type, time, food, macros).
+     * @return [Result.Success] with the [MealLog] persisted, or [Result.Error] if logging fails.
      */
     suspend operator fun invoke(request: TrackMealRequestDto): Result<MealLog> =
         repository.trackMeal(request)

@@ -1,250 +1,250 @@
 package com.jlsh.aifit.navigation
 
-/** Rutas del grafo de autenticación y onboarding. */
+/** Authentication and onboarding graph routes.*/
 object AuthRoutes {
-    /** Ruta raíz del subgrafo de auth. */
+    /** Root path of the auth subgraph.*/
     const val GRAPH = "auth"
-    /** Pantalla de inicio de sesión. */
+    /** Login screen.*/
     const val LOGIN = "auth/login"
-    /** Pantalla de registro de cuenta. */
+    /** Account registration screen.*/
     const val REGISTER = "auth/register"
-    /** Creación o completado del perfil de usuario. */
+    /** Creation or completion of the user profile.*/
     const val CREATE_PROFILE = "auth/create_profile"
-    /** Generación de planes iniciales durante el onboarding. */
+    /** Generation of initial plans during onboarding.*/
     const val ONBOARDING_GENERATING = "auth/onboarding_generating"
-    /** Aprobación del plan de entrenamiento generado en onboarding. */
+    /** Approval of the training plan generated in onboarding.*/
     const val ONBOARDING_TRAINING_APPROVAL = "auth/onboarding_training_approval"
-    /** Aprobación del plan nutricional generado en onboarding. */
+    /** Approval of the nutritional plan generated in onboarding.*/
     const val ONBOARDING_NUTRITION_APPROVAL = "auth/onboarding_nutrition_approval"
 }
 
-/** Rutas del subgrafo de la pestaña Inicio. */
+/** Home tab subgraph routes.*/
 object HomeRoutes {
-    /** Ruta raíz del subgrafo home. */
+    /** Root path of the home subgraph.*/
     const val GRAPH = "home_graph"
     /** Dashboard principal. */
     const val HOME = "home"
-    /** Panel de progreso semanal. */
+    /** Weekly progress dashboard.*/
     const val DASHBOARD = "home/dashboard"
-    /** Historial y registro de peso corporal. */
+    /** History and record of body weight.*/
     const val BODY_WEIGHT = "home/body_weight"
-    /** Resumen semanal detallado. */
+    /** Detailed weekly summary.*/
     const val WEEKLY_SUMMARY = "home/weekly_summary"
-    /** Análisis metabólico. */
+    /** Metabolic analysis.*/
     const val METABOLIC_ANALYSIS = "home/metabolic_analysis"
 }
 
-/** Rutas del subgrafo de la pestaña Entrenamiento. */
+/** Training tab subgraph routes.*/
 object TrainingRoutes {
-    /** Ruta raíz del subgrafo training. */
+    /** Root path of the training subgraph.*/
     const val GRAPH = "training_graph"
     /** Hub de planes de entrenamiento. */
     const val HUB = "training"
-    /** Detalle de un plan; requiere argumento `planId`. */
+    /** Detail of a plan; requires `planId` argument.*/
     const val DETAIL = "training/detail/{planId}"
-    /** Generación de plan; query `adaptive` y `basePlanId`. */
+    /** Plan generation; query `adaptive` and `basePlanId`.*/
     const val GENERATE = "training/generate?adaptive={adaptive}&basePlanId={basePlanId}"
-    /** Aprobación de plan generado; requiere `planId`. */
+    /** Approval of generated plan; requires `planId`.*/
     const val APPROVAL = "training/approval/{planId}"
-    /** Sesión de entreno en curso; requiere `planId` y `dayId`. */
+    /** Training session in progress; requires `planId` and `dayId`.*/
     const val WORKOUT_SESSION = "training/session/{planId}/{dayId}"
-    /** Registro manual de entreno; query opcional `planId`. */
+    /** Manual training record; optional query `planId`.*/
     const val WORKOUT_LOG = "training/workout_log?planId={planId}"
-    /** Detalle de un log de entreno; requiere `logId`. */
+    /** Detail of a training log; requires `logId`.*/
     const val WORKOUT_DETAIL = "training/workout_detail/{logId}"
-    /** Historial de entrenamientos. */
+    /** Training history.*/
     const val WORKOUT_HISTORY = "training/workout_history"
 
     /**
-     * Ruta concreta al detalle de un plan.
+     * Specific route to the detail of a plan.
      *
-     * @param planId Identificador del plan.
-     * @return Ruta resuelta para navegación.
+     * @param planId Plan identifier.
+     * @return Resolved route for navigation.
      */
     fun detailRoute(planId: String) = "training/detail/$planId"
 
     /**
-     * Ruta al flujo de generación de plan.
+     * Path to the plan generation flow.
      *
-     * @param adaptive Si es un plan adaptativo sobre uno existente.
-     * @param basePlanId Plan base para modo adaptativo; vacío si no aplica.
-     * @return Ruta con query params codificados.
+     * @param adaptive Whether it is an adaptive plan over an existing one.
+     * @param basePlanId Base plan for adaptive mode; empty if not applicable.
+     * @return Route with encoded query params.
      */
     fun generateRoute(adaptive: Boolean = false, basePlanId: String? = null) =
         "training/generate?adaptive=$adaptive&basePlanId=${basePlanId ?: ""}"
 
     /**
-     * Ruta a la pantalla de aprobación tras generar un plan.
+     * Path to the approval screen after generating a plan.
      *
-     * @param planId Identificador del plan generado.
-     * @return Ruta resuelta.
+     * @param planId Identifier of the generated plan.
+     * @return Resolved route.
      */
     fun approvalRoute(planId: String) = "training/approval/$planId"
 
     /**
-     * Ruta a la sesión de entreno activa.
+     * Route to the active training session.
      *
-     * @param planId Identificador del plan.
-     * @param dayId Identificador del día de entrenamiento.
-     * @return Ruta resuelta.
+     * @param planId Plan identifier.
+     * @param dayId Identifier of the training day.
+     * @return Resolved route.
      */
     fun workoutSessionRoute(planId: String, dayId: String) =
         "training/session/$planId/$dayId"
 
     /**
-     * Ruta al registro manual de entreno.
+     * Path to the manual training record.
      *
-     * @param planId Plan asociado, o null para registro sin plan.
-     * @return Ruta con query `planId`.
+     * @param planId Associated plan, or null for registration without a plan.
+     * @return Route with query `planId`.
      */
     fun workoutLogRoute(planId: String? = null) =
         "training/workout_log?planId=${planId ?: ""}"
 
     /**
-     * Ruta al detalle de un log de entreno completado.
+     * Route to the detail of a completed training log.
      *
-     * @param logId Identificador del log.
-     * @return Ruta resuelta.
+     * @param logId Log identifier.
+     * @return Resolved route.
      */
     fun workoutDetailRoute(logId: String) = "training/workout_detail/$logId"
 }
 
-/** Rutas del subgrafo de la pestaña Nutrición. */
+/** Nutrition tab subgraph routes.*/
 object NutritionRoutes {
-    /** Ruta raíz del subgrafo nutrition. */
+    /** Root path of the nutrition subgraph.*/
     const val GRAPH = "nutrition_graph"
-    /** Hub de nutrición y planes dietéticos. */
+    /** Nutrition and diet plans hub.*/
     const val HUB = "nutrition"
-    /** Registro de comida; query `mode` y `prefilled`. */
+    /** Food record; query `mode` and `prefilled`.*/
     const val TRACK_MEAL = "nutrition/track_meal?mode={mode}&prefilled={prefilled}"
-    /** Reconocimiento de alimento por cámara. */
+    /** Food recognition by camera.*/
     const val FOOD_VISION = "nutrition/food_vision"
-    /** Objetivos nutricionales del usuario. */
+    /** Nutritional goals of the user.*/
     const val TARGET = "nutrition/target"
-    /** Detalle de plan dietético; requiere `planId`. */
+    /** Diet plan details; requires `planId`.*/
     const val DIET_DETAIL = "nutrition/diet_detail/{planId}"
-    /** Generación de plan dietético; query `adaptive` y `basePlanId`. */
+    /** Diet plan generation; query `adaptive` and `basePlanId`.*/
     const val DIET_GENERATE = "nutrition/diet_generate?adaptive={adaptive}&basePlanId={basePlanId}"
-    /** Aprobación de plan dietético generado; requiere `planId`. */
+    /** Approval of generated dietary plan; requires `planId`.*/
     const val DIET_APPROVAL = "nutrition/diet/approval/{planId}"
-    /** Detalle de lista de la compra; requiere `listId`. */
+    /** Shopping list details; requires `listId`.*/
     const val SHOPPING_DETAIL = "nutrition/shopping_detail/{listId}"
 
     /**
-     * Ruta al registro de comida.
+     * Route to food registration.
      *
-     * @param mode Modo de entrada (p. ej. manual).
-     * @param prefilled Datos precargados desde visión, codificados en la query.
-     * @return Ruta resuelta.
+     * @param mode Entry mode (e.g. manual).
+     * @param prefilled Data prefilled from vision, encoded in the query.
+     * @return Resolved route.
      */
     fun trackMealRoute(mode: String = "", prefilled: String = "") =
         "nutrition/track_meal?mode=$mode&prefilled=$prefilled"
 
     /**
-     * Ruta al detalle de un plan dietético.
+     * Route to the details of a dietary plan.
      *
-     * @param planId Identificador del plan.
-     * @return Ruta resuelta.
+     * @param planId Plan identifier.
+     * @return Resolved route.
      */
     fun dietDetailRoute(planId: String) = "nutrition/diet_detail/$planId"
 
     /**
-     * Ruta al flujo de generación de plan dietético.
+     * Path to the diet plan generation flow.
      *
-     * @param adaptive Plan adaptativo sobre uno existente.
-     * @param basePlanId Plan base; vacío si no aplica.
-     * @return Ruta con query params.
+     * @param adaptive Adaptive plan over an existing one.
+     * @param basePlanId Base Plan; empty if not applicable.
+     * @return Route with query params.
      */
     fun dietGenerateRoute(adaptive: Boolean = false, basePlanId: String? = null) =
         "nutrition/diet_generate?adaptive=$adaptive&basePlanId=${basePlanId ?: ""}"
 
     /**
-     * Ruta a la aprobación de un plan dietético generado.
+     * Route to approval of a generated dietary plan.
      *
-     * @param planId Identificador del plan.
-     * @return Ruta resuelta.
+     * @param planId Plan identifier.
+     * @return Resolved route.
      */
     fun dietApprovalRoute(planId: String) = "nutrition/diet/approval/$planId"
 
     /**
-     * Ruta al detalle de una lista de la compra.
+     * Route to the detail of a shopping list.
      *
-     * @param listId Identificador de la lista.
-     * @return Ruta resuelta.
+     * @param listId Identifier of the list.
+     * @return Resolved route.
      */
     fun shoppingDetailRoute(listId: String) = "nutrition/shopping_detail/$listId"
 }
 
-/** Rutas del subgrafo de la pestaña Coach (chat). */
+/** Coach (chat) tab subgraph routes.*/
 object CoachRoutes {
-    /** Ruta raíz del subgrafo coach. */
+    /** Root path of the coach subgraph.*/
     const val GRAPH = "coach_graph"
-    /** Listado de sesiones de chat. */
+    /** List of chat sessions.*/
     const val SESSION_LIST = "coach"
-    /** Chat con sesión existente; requiere `sessionId`. */
+    /** Chat with existing session; requires `sessionId`.*/
     const val CHAT = "coach/chat/{sessionId}"
-    /** Nuevo chat sin sesión previa. */
+    /** New chat without previous session.*/
     const val NEW_CHAT = "coach/new_chat"
 
     /**
-     * Ruta a un chat existente.
+     * Route to an existing chat.
      *
-     * @param sessionId Identificador de la sesión.
-     * @return Ruta resuelta.
+     * @param sessionId Session identifier.
+     * @return Resolved route.
      */
     fun chatRoute(sessionId: String) = "coach/chat/$sessionId"
 
     /**
-     * Ruta para iniciar un chat nuevo.
+     * Route to start a new chat.
      *
      * @return [NEW_CHAT].
      */
     fun newChatRoute() = NEW_CHAT
 }
 
-/** Rutas del subgrafo de la pestaña Perfil. */
+/** Profile tab subgraph routes.*/
 object ProfileRoutes {
-    /** Ruta raíz del subgrafo profile. */
+    /** Root path of the profile subgraph.*/
     const val GRAPH = "profile_graph"
-    /** Hub del perfil y accesos rápidos. */
+    /** Profile hub and quick access.*/
     const val HUB = "profile"
-    /** Edición de perfil; query `mode`. */
+    /** Profile editing; query `mode`.*/
     const val EDIT = "profile/edit?mode={mode}"
 
     /**
-     * Ruta a la edición del perfil en modo edición.
+     * Path to profile editing in editing mode.
      *
-     * @return Ruta con `mode=edit`.
+     * @return Route with `mode=edit`.
      */
     fun editRoute() = "profile/edit?mode=edit"
 
-    /** Panel de progreso desde perfil. */
+    /** Progress panel from profile.*/
     const val DASHBOARD = "profile/dashboard"
-    /** Peso corporal desde perfil. */
+    /** Body weight from profile.*/
     const val BODY_WEIGHT = "profile/body_weight"
-    /** Resumen semanal desde perfil. */
+    /** Weekly summary from profile.*/
     const val WEEKLY_SUMMARY = "profile/weekly_summary"
-    /** Análisis metabólico desde perfil. */
+    /** Metabolic analysis from profile.*/
     const val METABOLIC = "profile/metabolic"
-    /** Exportación de datos de progreso. */
+    /** Export progress data.*/
     const val EXPORT = "profile/export"
-    /** Gamificación; query `tab` para la pestaña inicial. */
+    /** Gamification; query `tab` for the initial tab.*/
     const val GAMIFICATION = "profile/gamification?tab={tab}"
-    /** Glosario de términos de fitness. */
+    /** Glossary of fitness terms.*/
     const val GLOSSARY = "profile/glossary"
 
     /**
-     * Ruta a gamificación con pestaña inicial.
+     * Route to gamification with initial tab.
      *
-     * @param tab Identificador de pestaña (p. ej. `"ACHIEVEMENTS"`).
-     * @return Ruta resuelta.
+     * @param tab Tab identifier (e.g. `"ACHIEVEMENTS"`).
+     * @return Resolved route.
      */
     fun gamificationRoute(tab: String = "ACHIEVEMENTS") =
         "profile/gamification?tab=$tab"
 }
 
-/** Ruta raíz del grafo principal (app autenticada con bottom nav). */
+/** Root route of the main graph (app authenticated with bottom nav).*/
 object MainRoutes {
-    /** Entrada al shell con pestañas Home, Training, Nutrition, Coach y Profile. */
+    /** Entry to the shell with Home, Training, Nutrition, Coach and Profile tabs.*/
     const val GRAPH = "main"
 }

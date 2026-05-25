@@ -29,15 +29,15 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 
 /**
- * Implementación de [UserRepository] con estrategia cache-first y sincronización remota.
+ * Implementation of [UserRepository] with cache-first strategy and remote synchronization.
  *
- * Fusiona URLs de avatar entre caché Room, DataStore y respuestas API (priorizando fotos
- * subidas en Cloudinary frente al avatar por defecto de Google).
+ * Merge avatar URLs between Room cache, DataStore and API responses (prioritizing photos
+ * uploads on Cloudinary versus Google's default avatar).
  *
- * @param apiService Cliente HTTP de perfil de usuario.
- * @param dao Acceso local al perfil en Room.
- * @param authDataStore Preferencias de sesión y avatar persistido.
- * @param context Contexto de aplicación para leer URIs de fotos.
+ * @param apiService User profile HTTP client.
+ * @param dao Local access to the profile in Room.
+ * @param authDataStore Persistent avatar and session preferences.
+ * @param context Application context for reading photo URIs.
  */
 class UserRepositoryImpl @Inject constructor(
     private val apiService: UserApiService,
@@ -47,9 +47,9 @@ class UserRepositoryImpl @Inject constructor(
 ) : BaseRemoteDataSource(), UserRepository {
 
     /**
-     * Flujo del perfil con emisión cache-first.
+     * Profile flow with cache-first issuance.
      *
-     * @return [Flow] que puede emitir [Result.Loading], caché [Result.Success] y luego el perfil remoto.
+     * @return [Flow] which can output [Result.Loading], cache [Result.Success] and then the remote profile.
      */
     override fun getProfile(): Flow<Result<UserProfile>> = flow {
         emit(Result.Loading)
@@ -101,10 +101,10 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Crea el perfil en el servidor y lo persiste en Room y DataStore.
+     * Creates the profile on the server and persists it in Room and DataStore.
      *
-     * @param request Datos iniciales del onboarding.
-     * @return Perfil de dominio o error.
+     * @param request Initial onboarding data.
+     * @return Domain profile or error.
      */
     override suspend fun createProfile(request: CreateUserProfileRequest): Result<UserProfile> {
         return when (val result = safeApiCall { apiService.createProfile(request.toDto()) }) {
@@ -124,10 +124,10 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Actualiza el perfil parcialmente en el servidor.
+     * Updates the profile partially on the server.
      *
      * @param request Campos a modificar.
-     * @return Perfil actualizado o error.
+     * @return Updated profile or error.
      */
     override suspend fun updateProfile(request: UpdateUserProfileRequest): Result<UserProfile> {
         return when (val result = safeApiCall { apiService.updateProfile(request.toDto()) }) {
@@ -146,10 +146,10 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Finaliza el onboarding y devuelve planes generados.
+     * Finishes onboarding and returns generated plans.
      *
-     * @param feedback Comentarios opcionales para la IA.
-     * @return Resultado con planes de entreno, dieta y objetivo nutricional.
+     * @param feedback Optional feedback for the AI.
+     * @return Result with training plans, diet and nutritional objective.
      */
     override suspend fun completeOnboarding(feedback: String?): Result<OnboardingResult> {
         val request = OnboardingFeedbackRequestDto(feedback)
@@ -161,10 +161,10 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Sube una foto de perfil y sincroniza el perfil completo.
+     * Uploads a profile photo and syncs the full profile.
      *
-     * @param uri URI local de la imagen seleccionada.
-     * @return Perfil con la nueva URL de avatar, o error si no se puede abrir/subir la imagen.
+     * @param uri Local URI of the selected image.
+     * @return Profile with the new avatar URL, or error if the image cannot be opened/uploaded.
      */
     override suspend fun uploadProfilePhoto(uri: Uri): Result<UserProfile> {
         val inputStream = context.contentResolver.openInputStream(uri)

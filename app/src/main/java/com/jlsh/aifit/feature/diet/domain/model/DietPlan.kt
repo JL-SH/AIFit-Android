@@ -5,21 +5,21 @@ import com.jlsh.aifit.feature.user.domain.model.DietPreference
 import java.time.LocalDateTime
 
 /**
- * Plan de dieta estructurado con objetivos calóricos, macros y días de comidas asociados.
+ * Structured diet plan with associated calorie goals, macros, and meal days.
  *
- * @property id Identificador único del plan.
- * @property name Nombre visible del plan.
- * @property description Descripción opcional del plan.
- * @property dailyCalories Objetivo calórico diario en kcal.
- * @property proteinGrams Objetivo diario de proteína en gramos.
- * @property carbsGrams Objetivo diario de carbohidratos en gramos.
- * @property fatGrams Objetivo diario de grasas en gramos.
- * @property durationWeeks Duración total del plan en semanas.
- * @property preference Preferencia o estilo de dieta ([DietPreference]).
- * @property status Estado de ciclo de vida del plan ([PlanStatus]).
- * @property totalDays Número total de días del plan.
- * @property createdAt Fecha y hora de creación del plan.
- * @property days Lista de días con comidas; vacía en resúmenes de listado.
+ * @property id Unique identifier of the plan.
+ * @property name Display name of the plan.
+ * @property description Optional description of the plan.
+ * @property dailyCalories Daily calorie goal in kcal.
+ * @property proteinGrams Daily protein goal in grams.
+ * @property carbsGrams Daily carb goal in grams.
+ * @property fatGrams Daily fat goal in grams.
+ * @property durationWeeks Total duration of the plan in weeks.
+ * @property preference Diet preference or style ([DietPreference]).
+ * @property status Plan lifecycle status ([PlanStatus]).
+ * @property totalDays Total number of days in the plan.
+ * @property createdAt Plan creation date and time.
+ * @property days List of days with meals; empty in listing summaries.
  */
 data class DietPlan(
     val id: String,

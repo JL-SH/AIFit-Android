@@ -21,8 +21,8 @@ import java.util.Collections
 import javax.inject.Inject
 
 /**
- * Implementación de [WorkoutRepository] con caché Room y protección ante re-inserción
- * de logs eliminados durante respuestas de red obsoletas.
+ * Implementation of [WorkoutRepository] with Room cache and re-insertion protection
+ * of deleted logs during stale network responses.
  */
 class WorkoutRepositoryImpl @Inject constructor(
     private val apiService: WorkoutApiService,
@@ -46,9 +46,9 @@ class WorkoutRepositoryImpl @Inject constructor(
     private var deleteGeneration: Int = 0
 
     /**
-     * Crea un nuevo log de sesión en el servidor y lo guarda en Room.
+     * Creates a new session log on the server and saves it in Room.
      *
-     * @param request Datos iniciales de la sesión (plan, día, fecha, series opcionales).
+     * @param request Initial session data (plan, day, date, optional series).
      */
     override suspend fun logSession(request: LogWorkoutSessionRequestDto): Result<WorkoutLog> {
         return when (val remote = safeApiCall { apiService.logWorkoutSession(request) }) {
@@ -63,10 +63,10 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Añade una serie a un log existente vía API.
+     * Add a series to an existing log via API.
      *
-     * @param logId Identificador del log de sesión.
-     * @param set Datos de la serie a registrar.
+     * @param logId Identifier of the session log.
+     * @param set Data of the series to register.
      */
     override suspend fun addSetToLog(logId: String, set: LogWorkoutSetRequestDto): Result<Unit> {
         return when (val remote = safeApiCall { apiService.addSetToLog(logId, set) }) {
@@ -77,11 +77,11 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Emite historial de logs: caché filtrada y luego reconciliación con red.
+     * Issue log history: leaked cache and then network reconciliation.
      *
-     * @param planId Filtra por plan; null incluye todos.
-     * @param from Fecha inicio ISO opcional.
-     * @param to Fecha fin ISO opcional.
+     * @param planId Filter by plan; null includes all.
+     * @param from ISO start date optional.
+     * @param to Optional ISO End Date.
      */
     override fun getHistory(
         planId: String?,
@@ -155,9 +155,9 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Obtiene el detalle de un log de sesión desde el servidor.
+     * Obtains the details of a session log from the server.
      *
-     * @param id Identificador del log.
+     * @param id Log identifier.
      */
     override suspend fun getLogDetail(id: String): Result<WorkoutLog> {
         return when (val remote = safeApiCall { apiService.getWorkoutLogById(id) }) {
@@ -168,9 +168,9 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Elimina un log localmente y confirma con el servidor, con rollback en error.
+     * Delete a log locally and confirm with the server, with rollback on error.
      *
-     * @param id Identificador del log a eliminar.
+     * @param id Identifier of the log to delete.
      */
     override suspend fun deleteLog(id: String): Result<Unit> {
         // Increment the generation counter BEFORE adding to pendingDeleteIds.
@@ -198,11 +198,11 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Finaliza una sesión bloqueando el log y persistiendo fatiga y dolor articular.
+     * A session ends by blocking the log and fatigue and joint pain persist.
      *
-     * @param logId Identificador del log.
-     * @param systemicFatigue Fatiga sistémica reportada.
-     * @param jointPainReport Entradas de dolor articular.
+     * @param logId Log identifier.
+     * @param systemicFatigue Reported systemic fatigue.
+     * @param jointPainReport Joint pain entries.
      */
     override suspend fun finalizeWorkoutSession(
         logId: String,
@@ -229,11 +229,11 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Obtiene la última sesión registrada para un día concreto del plan (series “fantasma”).
+     * Gets the last session recorded for a specific day of the plan (“phantom” series).
      *
-     * @param planId Identificador del plan de entrenamiento.
-     * @param dayId Identificador del día de entrenamiento.
-     * @return [Result.Success] con el log más reciente o null si no hay historial previo.
+     * @param planId Identifier of the training plan.
+     * @param dayId Identifier of the training day.
+     * @return [Result.Success] with the most recent log or null if there is no previous history.
      */
     override suspend fun getPreviousSessionForDay(
         planId: String,

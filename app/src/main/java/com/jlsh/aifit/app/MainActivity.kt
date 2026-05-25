@@ -15,7 +15,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 /**
- * Actividad principal: aplica tema claro/oscuro y monta el grafo de navegación [AppNavGraph].
+ * Main activity: apply light/dark theme and assemble the navigation graph [AppNavGraph].
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -24,18 +24,18 @@ class MainActivity : ComponentActivity() {
     lateinit var userPreferencesDataStore: UserPreferencesDataStore
 
     /**
-     * Aplica el locale de la app antes de crear el contexto de la actividad.
+     * Applies the app locale before creating the activity context.
      *
-     * @param newBase Contexto base del sistema.
+     * @param newBase System base context.
      */
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(newBase.wrapWithAppLocale())
     }
 
     /**
-     * Configura edge-to-edge, tema según preferencias y contenido Compose con [AppNavGraph].
+     * Configure edge-to-edge, theme-based preferences, and Compose content with [AppNavGraph].
      *
-     * @param savedInstanceState Estado guardado de la actividad, si existe.
+     * @param savedInstanceState Saved state of the activity, if it exists.
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

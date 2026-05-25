@@ -6,16 +6,16 @@ import com.jlsh.aifit.feature.training.domain.repository.TrainingRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso para marcar un plan como activo y pausar el plan activo anterior.
+ * Use case to mark a plan as active and pause the previous active plan.
  */
 class SetActivePlanUseCase @Inject constructor(
     private val repository: TrainingRepository,
 ) {
     /**
-     * Activa el plan indicado en servidor y caché local.
+     * Activate the indicated plan on the server and local cache.
      *
-     * @param planId Identificador del plan a activar.
-     * @return [Result.Success] con el plan activado, o [Result.Error] (p. ej. plan no encontrado).
+     * @param planId Identifier of the plan to activate.
+     * @return [Result.Success] with plan activated, or [Result.Error] (e.g. plan not found).
      */
     suspend operator fun invoke(planId: String): Result<TrainingPlan> =
         repository.activatePlan(planId)

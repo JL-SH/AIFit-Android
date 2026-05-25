@@ -55,19 +55,19 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * ViewModel de la sesión de entrenamiento en vivo: carga, series, calentamiento y cierre.
+ * ViewModel of the live training session: load, sets, warm-up and closing.
  *
- * Estados expuestos:
- * - [uiState]: flujo principal ([WorkoutSessionUiState]) desde idle hasta finalizado.
- * - [restTimerSeconds]: segundos restantes del temporizador de descanso, o null si inactivo.
- * - [substitutionsState]: carga de alternativas de ejercicio ([SubstitutionLoadState]).
+ * Exposed states:
+ * - [uiState]: main flow ([WorkoutSessionUiState]) from idle to finished.
+ * - [restTimerSeconds]: Rest timer remaining seconds, or null if inactive.
+ * - [substitutionsState]: load exercise alternatives ([SubstitutionLoadState]).
  *
- * Eventos ([events], tipo [WorkoutSessionUiEvent]):
- * - [WorkoutSessionUiEvent.NavigateBack] al abandonar la sesión.
- * - [WorkoutSessionUiEvent.ShowSnackbar] para errores y fin de descanso.
- * - [WorkoutSessionUiEvent.SessionAlreadyLocked] si el día ya fue finalizado hoy.
- * - [WorkoutSessionUiEvent.RequestFinalizeSession] cuando todos los ejercicios están completos.
- * - [WorkoutSessionUiEvent.ShowSubstitutionSheet] (reservado; la UI abre la hoja directamente).
+ * Events ([events], type [WorkoutSessionUiEvent]):
+ * - [WorkoutSessionUiEvent.NavigateBack] when leaving the session.
+ * - [WorkoutSessionUiEvent.ShowSnackbar] for errors and end of rest.
+ * - [WorkoutSessionUiEvent.SessionAlreadyLocked] if the day has already ended today.
+ * - [WorkoutSessionUiEvent.RequestFinalizeSession] when all exercises are complete.
+ * - [WorkoutSessionUiEvent.ShowSubstitutionSheet] (reserved; the UI opens the sheet directly).
  */
 @HiltViewModel
 class WorkoutSessionViewModel @Inject constructor(
@@ -85,22 +85,22 @@ class WorkoutSessionViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<WorkoutSessionUiState>(WorkoutSessionUiState.Idle)
 
-    /** Estado observable de la sesión (calentamiento, activa, finalizando, error). */
+    /** Observable state of the session (warming up, active, ending, error).*/
     val uiState: StateFlow<WorkoutSessionUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<WorkoutSessionUiEvent>(Channel.BUFFERED)
 
-    /** Eventos de navegación y feedback de una sola consumición. */
+    /** Single-drink navigation and feedback events.*/
     val events = _events.receiveAsFlow()
 
     private val _restTimerSeconds = MutableStateFlow<Int?>(null)
 
-    /** Segundos restantes del descanso entre series; null si no hay temporizador activo. */
+    /** Seconds left of rest between sets; null if there is no active timer.*/
     val restTimerSeconds: StateFlow<Int?> = _restTimerSeconds.asStateFlow()
 
     private val _substitutionsState = MutableStateFlow<SubstitutionLoadState>(SubstitutionLoadState.Idle)
 
-    /** Estado de carga de sustituciones de ejercicio para la hoja inferior. */
+    /** Fiscal year substitutions loading status for the bottom sheet.*/
     val substitutionsState: StateFlow<SubstitutionLoadState> = _substitutionsState.asStateFlow()
 
     private var restTimerJob: Job? = null
@@ -129,11 +129,11 @@ class WorkoutSessionViewModel @Inject constructor(
     }
 
     /**
-     * Carga ejercicios del día, calentamiento, sesión previa del día y reanudación si aplica.
-     * Solo actúa si el estado actual es [WorkoutSessionUiState.Idle].
+     * Load the day's exercises, warm-up, previous session of the day and resumption if applicable.
+     * Only acts if the current state is [WorkoutSessionUiState.Idle].
      *
-     * @param planId Identificador del plan de entrenamiento.
-     * @param dayId Identificador del día de entrenamiento dentro del plan.
+     * @param planId Identifier of the training plan.
+     * @param dayId Identifier of the training day within the plan.
      */
     fun loadSession(planId: String, dayId: String) {
         if (_uiState.value !is WorkoutSessionUiState.Idle) return
@@ -236,9 +236,9 @@ class WorkoutSessionViewModel @Inject constructor(
     }
 
     /**
-     * Pasa de calentamiento a sesión activa con progreso de series ya guardadas.
+     * Go from warm-up to active session with progress of already saved series.
      *
-     * @param warmupCompleted Si el usuario completó el calentamiento guiado.
+     * @param warmupCompleted Whether the user completed the guided warmup.
      */
     fun startWorkout(warmupCompleted: Boolean = false) {
         if (_uiState.value !is WorkoutSessionUiState.WarmUpReady) return
@@ -271,12 +271,12 @@ class WorkoutSessionViewModel @Inject constructor(
     }
 
     /**
-     * Registra una serie completada: actualiza UI, temporizador, volumen y persiste en backend.
+     * Logs a completed series: updates UI, timer, volume and persists to backend.
      *
-     * @param exerciseId Identificador del ejercicio de entrenamiento.
-     * @param weightKg Peso en kg; null si el ejercicio no requiere carga externa.
-     * @param reps Repeticiones completadas.
-     * @param rpe RPE opcional (1–10) para autoregulación y descanso adaptativo.
+     * @param exerciseId Identifier of the training exercise.
+     * @param weightKg Weight in kg; null if the exercise requires no external load.
+     * @param reps Completed repetitions.
+     * @param rpe Optional RPE (1–10) for self-regulation and adaptive rest.
      */
     fun registerSet(exerciseId: String, weightKg: Double?, reps: Int, rpe: Int? = null) {
         val currentState = _uiState.value
@@ -390,10 +390,10 @@ class WorkoutSessionViewModel @Inject constructor(
     }
 
     /**
-     * Cierra la sesión enviando fatiga sistémica y reporte articular al backend.
+     * Close the session by sending systemic fatigue and joint report to the backend.
      *
-     * @param systemicFatigue Valor de fatiga reportado por el usuario.
-     * @param jointPainReport Lista de entradas de dolor por articulación.
+     * @param systemicFatigue Fatigue value reported by the user.
+     * @param jointPainReport List of pain entries per joint.
      */
     fun finalizeSession(systemicFatigue: Int, jointPainReport: List<JointPainEntry>) {
         val currentState = _uiState.value
@@ -593,8 +593,8 @@ class WorkoutSessionViewModel @Inject constructor(
     // ===== ABANDON SESSION =====
 
     /**
-     * Abandona la sesión: cancela el temporizador, borra el log incompleto en backend
-     * y emite [WorkoutSessionUiEvent.NavigateBack].
+     * Leave session: cancel timer, delete incomplete log in backend
+     * and emits [WorkoutSessionUiEvent.NavigateBack].
      */
     fun abandonSession() {
         viewModelScope.launch {
@@ -626,7 +626,7 @@ class WorkoutSessionViewModel @Inject constructor(
         }
     }
 
-    /** Cancela el temporizador de descanso activo y oculta el overlay. */
+    /** Cancels the active sleep timer and hides the overlay.*/
     fun cancelRestTimer() {
         restTimerJob?.cancel()
         restTimerJob = null
@@ -636,9 +636,9 @@ class WorkoutSessionViewModel @Inject constructor(
     // ===== SUBSTITUTIONS =====
 
     /**
-     * Carga sustituciones sugeridas para un ejercicio desde el backend.
+     * Load suggested substitutions for an exercise from the backend.
      *
-     * @param exerciseId Identificador del ejercicio a sustituir.
+     * @param exerciseId Identifier of the exercise to replace.
      */
     fun loadSubstitutions(exerciseId: String) {
         _substitutionsState.value = SubstitutionLoadState.Loading
@@ -656,10 +656,10 @@ class WorkoutSessionViewModel @Inject constructor(
     }
 
     /**
-     * Aplica una sustitución actualizando nombre y músculo del ejercicio en la sesión activa.
+     * Applies a substitution updating the name and muscle of the exercise in the active session.
      *
-     * @param originalExerciseId Ejercicio que se sustituye.
-     * @param substitution Alternativa elegida por el usuario.
+     * @param originalExerciseId Exercise to be replaced.
+     * @param substitution Alternative chosen by the user.
      */
     fun applySubstitution(originalExerciseId: String, substitution: ExerciseSubstitution) {
         val currentState = _uiState.value

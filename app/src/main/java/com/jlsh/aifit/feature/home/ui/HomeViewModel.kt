@@ -64,24 +64,24 @@ import java.time.LocalTime
 import javax.inject.Inject
 
 /**
- * ViewModel del dashboard de inicio: perfil, entreno y nutrición de hoy, rachas y peso.
+ * ViewModel of the home dashboard: profile, today's training and nutrition, streaks and weight.
  *
- * **UiState expuesto** ([uiState] — [HomeUiState]):
- * - [HomeUiState.Loading]: carga inicial del dashboard; skeleton hasta snapshot completo.
- * - [HomeUiState.Error]: fallo crítico (p. ej. perfil no cargado).
- * - [HomeUiState.Success]: dashboard con tarjetas de entreno, nutrición, próxima comida, peso y gamificación.
+ * **UiState exposed** ([uiState] — [HomeUiState]):
+ * - [HomeUiState.Loading]: initial loading of the dashboard; skeleton until full snapshot.
+ * - [HomeUiState.Error]: critical failure (e.g. profile not loaded).
+ * - [HomeUiState.Success]: dashboard with training, nutrition, next meal, weight and gamification cards.
  *
- * **Eventos emitidos** ([events] — [HomeUiEvent]):
- * - [HomeUiEvent.NavigateToWorkoutSession]: iniciar sesión de entreno (planId, dayId).
- * - [HomeUiEvent.NavigateToTrainingDetail]: detalle del plan de entrenamiento.
- * - [HomeUiEvent.ShowTrackMealSheet]: abrir selector de modo de registro de comida.
- * - [HomeUiEvent.NavigateToProgressDashboard]: panel de progreso semanal.
- * - [HomeUiEvent.NavigateToBodyWeight]: historial de peso corporal.
- * - [HomeUiEvent.NavigateToGamification]: pantalla de logros/rachas (tab).
- * - [HomeUiEvent.NavigateToProfile]: perfil del usuario.
- * - [HomeUiEvent.NavigateToGeneratePlan]: generar nuevo plan de entrenamiento.
- * - [HomeUiEvent.ShowLogWeightSheet]: abrir hoja modal para registrar peso.
- * - [HomeUiEvent.ShowSnackbar]: mensaje transitorio (éxito o error al guardar peso).
+ * **Emitted events** ([events] — [HomeUiEvent]):
+ * - [HomeUiEvent.NavigateToWorkoutSession]: start training session (planId, dayId).
+ * - [HomeUiEvent.NavigateToTrainingDetail]: training plan detail.
+ * - [HomeUiEvent.ShowTrackMealSheet]: Open food record mode selector.
+ * - [HomeUiEvent.NavigateToProgressDashboard]: Weekly progress dashboard.
+ * - [HomeUiEvent.NavigateToBodyWeight]: Body weight history.
+ * - [HomeUiEvent.NavigateToGamification]: Achievements/streaks screen (tab).
+ * - [HomeUiEvent.NavigateToProfile]: user profile.
+ * - [HomeUiEvent.NavigateToGeneratePlan]: generate new training plan.
+ * - [HomeUiEvent.ShowLogWeightSheet]: Open modal sheet to log weight.
+ * - [HomeUiEvent.ShowSnackbar]: Temporary message (success or error saving weight).
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -104,17 +104,17 @@ class HomeViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
 
-    /** Estado del dashboard de inicio; observar con `collectAsStateWithLifecycle`. */
+    /** Home dashboard status; observe with `collectAsStateWithLifecycle`.*/
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<HomeUiEvent>(Channel.BUFFERED)
 
-    /** Eventos de navegación y UI de un solo uso; consumir en [HomeScreen]. */
+    /** Single-use navigation and UI events; consume on [HomeScreen].*/
     val events = _events.receiveAsFlow()
 
     private val _planPickerMeals = MutableStateFlow<List<Meal>>(emptyList())
 
-    /** Comidas del plan activo para el día actual; se cargan al abrir el picker. */
+    /** Meals from the active plan for the current day; They are loaded when you open the picker.*/
     val planPickerMeals: StateFlow<List<Meal>> = _planPickerMeals.asStateFlow()
 
     private var loadJob: Job? = null
@@ -131,7 +131,7 @@ class HomeViewModel @Inject constructor(
         loadAll()
     }
 
-    /** Recarga el home: cache-first instantáneo y reconciliación silenciosa en red. */
+    /** Reload home: instant cache-first and silent network reconciliation.*/
     fun loadAll() {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
@@ -209,9 +209,9 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * Inicia la sesión de entreno del día si hay [TodayTrainingState] disponible.
+     * Start the day's training session if [TodayTrainingState] is available.
      *
-     * @param planId Identificador del plan activo.
+     * @param planId Identifier of the active plan.
      */
     fun onStartSession(planId: String) {
         val state = _uiState.value as? HomeUiState.Success ?: return
@@ -220,20 +220,20 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * Navega al detalle del plan de entrenamiento.
+     * Navigate to the details of the training plan.
      *
-     * @param planId Identificador del plan.
+     * @param planId Plan identifier.
      */
     fun onViewTrainingDetail(planId: String) {
         emitEvent(HomeUiEvent.NavigateToTrainingDetail(planId))
     }
 
-    /** Abre el bottom sheet para elegir el modo de registro de comida. */
+    /** Open the bottom sheet to choose the food recording mode.*/
     fun onLogMeal() {
         emitEvent(HomeUiEvent.ShowTrackMealSheet)
     }
 
-    /** Carga las comidas de hoy del plan activo y abre el picker. */
+    /** Load today's meals from the active plan and open the picker.*/
     fun onShowPlanMealPicker() {
         viewModelScope.launch {
             _planPickerMeals.value = resolveTodayPlanMeals()
@@ -242,9 +242,9 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * Registra una comida del plan de dieta activo y actualiza el resumen nutricional del home.
+     * Record a meal from the active diet plan and update the home nutritional summary.
      *
-     * @param meal Comida seleccionada en el picker.
+     * @param meal Food selected in the picker.
      */
     fun onTrackMealFromPlan(meal: Meal) {
         viewModelScope.launch {
@@ -267,15 +267,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /** Abre la hoja modal para registrar el peso corporal. */
+    /** Open the modal sheet to record body weight.*/
     fun onLogWeight() {
         emitEvent(HomeUiEvent.ShowLogWeightSheet)
     }
 
     /**
-     * Persiste un nuevo registro de peso y actualiza [HomeUiState.Success.weightEntries].
+     * Persists a new weight record and updates [HomeUiState.Success.weightEntries].
      *
-     * @param weight Peso en kilogramos.
+     * @param weight Weight in kilograms.
      */
     fun onSaveWeight(weight: Double) {
         viewModelScope.launch {
@@ -299,36 +299,36 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /** Navega al panel de progreso semanal. */
+    /** Navigate to the weekly progress dashboard.*/
     fun onProgressDashboard() {
         emitEvent(HomeUiEvent.NavigateToProgressDashboard)
     }
 
-    /** Navega a la pantalla de historial de peso corporal. */
+    /** Navigate to the body weight history screen.*/
     fun onBodyWeight() {
         emitEvent(HomeUiEvent.NavigateToBodyWeight)
     }
 
     /**
-     * Navega a gamificación (logros o rachas).
+     * Navigate to gamification (achievements or streaks).
      *
-     * @param tab Pestaña destino (p. ej. `"ACHIEVEMENTS"`).
+     * @param tab Target tab (e.g. `"ACHIEVEMENTS"`).
      */
     fun onGamification(tab: String) {
         emitEvent(HomeUiEvent.NavigateToGamification(tab))
     }
 
-    /** Navega al perfil del usuario. */
+    /** Navigate to the user's profile.*/
     fun onProfile() {
         emitEvent(HomeUiEvent.NavigateToProfile)
     }
 
-    /** Navega al flujo de generación de un nuevo plan de entrenamiento. */
+    /** Navigate to the flow of generating a new training plan.*/
     fun onCreatePlan() {
         emitEvent(HomeUiEvent.NavigateToGeneratePlan)
     }
 
-    /** Refresco silencioso al volver a la pantalla (ciclo RESUMED). */
+    /** Silent refresh when returning to the screen (RESUMED cycle).*/
     fun onResumed() {
         Log.d("AIFIT_HOME", "onResumed called")
         resumeDebounceJob?.cancel()
@@ -682,7 +682,7 @@ class HomeViewModel @Inject constructor(
         weeklySummary: WeeklyProgressSummary?,
         todayWorkoutLogs: List<WorkoutLog>,
     ): TodayTrainingState? {
-        // AIFIT_DEBUG ── checkpoint 5: razón exacta de retorno null
+        // AIFIT_DEBUG ── checkpoint 5: exact reason returning null
         if (activePlan == null) {
             Log.w("AIFIT_DEBUG", "[VM][derive] RETURN NULL — activePlan is null")
             return null
@@ -882,9 +882,9 @@ class HomeViewModel @Inject constructor(
         private const val RESUME_DEBOUNCE_MS = 300L
 
         /**
-         * Saludo según la hora local del dispositivo.
+         * Greeting based on the device's local time.
          *
-         * @return `"Buenos días"`, `"Buenas tardes"` o `"Buenas noches"`.
+         * @return `"Good morning"`, `"Good afternoon"` or `"Good evening"`.
          */
         fun greetingForTime(): String {
             val hour = LocalTime.now().hour

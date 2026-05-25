@@ -115,7 +115,7 @@ private val LOCATION_OPTIONS = listOf(
     "HOME_GYM" to "Gym en casa",
 )
 
-// ── Animación de carga ──────────────────────────────────────────────────────
+// ── Loading animation ─────────────────────────── ───────────────────────────
 private const val TRAINING_FACT_SLOTS = 4
 private const val TRAINING_PROGRESS_K = 0.018f
 
@@ -175,9 +175,9 @@ fun GeneratePlanScreen(
     val isLoading = generateState is GeneratePlanUiState.Loading
     val errorState = generateState as? GeneratePlanUiState.Error
 
-    // Success es un estado transitorio puro (emitido justo antes de navegar).
-    // Mantener la pantalla de carga visible evita que el formulario flashee ~1 s
-    // durante el tiempo que tarda el evento de navegación en ser consumido.
+    // Success is a pure transient state (issued just before navigating).
+    // Keeping the loading screen visible prevents the form from flashing ~1s
+    // during the time it takes for the navigation event to be consumed.
     val showLoadingScreen = isLoading || generateState is GeneratePlanUiState.Success
 
     val submitPlan: () -> Unit = {
@@ -224,7 +224,7 @@ fun GeneratePlanScreen(
         }
     }
 
-    // Gestionar animación mientras carga
+    // Manage animation while loading
     LaunchedEffect(isLoading) {
         if (isLoading) {
             elapsedSeconds = 0
@@ -232,7 +232,7 @@ fun GeneratePlanScreen(
             nextFactIndex = TRAINING_FACT_SLOTS
             progress.snapTo(0f)
 
-            // Progreso adaptativo
+            // Adaptive progress
             launch {
                 while (true) {
                     val current = progress.value
@@ -242,7 +242,7 @@ fun GeneratePlanScreen(
                 }
             }
 
-            // Cronómetro
+            // Chronometer
             launch {
                 while (true) {
                     delay(1000L)
@@ -250,7 +250,7 @@ fun GeneratePlanScreen(
                 }
             }
 
-            // Rotación de facts
+            // Fact rotation
             launch {
                 delay(5000L)
                 while (true) {
@@ -334,7 +334,7 @@ fun GeneratePlanScreen(
         ) {
             Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
-            // ── Frecuencia semanal ────────────────────────────────
+            // ── Weekly frequency ────────────────────────────────
             Text(
                 text = stringResource(R.string.training_generate_frequency_label),
                 style = MaterialTheme.typography.labelSmall,
@@ -352,7 +352,7 @@ fun GeneratePlanScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            // ── Duración por sesión ───────────────────────────────
+            // ── Duration per session ───────────────────────────────
             Text(
                 text = stringResource(R.string.training_generate_session_duration_label),
                 style = MaterialTheme.typography.labelSmall,
@@ -370,7 +370,7 @@ fun GeneratePlanScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            // ── Duración del plan ─────────────────────────────────
+            // ── Duration of plan ─────────────────────────────────
             Text(
                 text = stringResource(R.string.training_generate_plan_duration_label),
                 style = MaterialTheme.typography.labelSmall,
@@ -388,7 +388,7 @@ fun GeneratePlanScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            // ── Objetivo ─────────────────────────────────────────
+            // ── Objective ──────────────────── ─────────────────────
             Text(
                 text = stringResource(R.string.training_generate_goal_label),
                 style = MaterialTheme.typography.labelSmall,
@@ -406,7 +406,7 @@ fun GeneratePlanScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            // ── Lugar de entrenamiento ────────────────────────────
+            // ── Workout location ────────────────────────────
             Text(
                 text = stringResource(R.string.training_generate_location_label),
                 style = MaterialTheme.typography.labelSmall,
@@ -483,7 +483,7 @@ fun GeneratePlanScreen(
     }
 }
 
-// ── Composables privados de la pantalla de carga animada ─────────────────────
+// ── Private Animated Loading Screen Composables ─────────────────────
 
 @Composable
 private fun TrainingPhaseHero() {

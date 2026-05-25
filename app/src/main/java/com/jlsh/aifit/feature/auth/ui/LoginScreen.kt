@@ -58,18 +58,18 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 /**
- * Pantalla de inicio de sesión con email, contraseña y Google Sign-In.
+ * Login screen with email, password and Google Sign-In.
  *
- * Muestra cabecera de marca, campos de credenciales, botón principal, divisor "o",
- * botón de Google y enlace a registro. Gestiona snackbars (errores y sesión expirada)
- * y reacciona a los eventos de [AuthViewModel].
+ * Shows brand header, credentials fields, main button, "or" divider,
+ * Google button and link to register. Manage snackbars (errors and expired session)
+ * and reacts to the events of [AuthViewModel].
  *
- * @param onNavigateToRegister Navegación al flujo de registro.
- * @param onNavigateToMain Navegación a la app cuando el perfil ya está completo.
- * @param onNavigateToCreateProfile Navegación al onboarding de perfil.
- * @param sessionExpiredMessage Mensaje opcional al volver por sesión caducada.
- * @param onSessionExpiredMessageShown Callback tras mostrar el mensaje de sesión expirada.
- * @param viewModel ViewModel de autenticación inyectado por Hilt.
+ * @param onNavigateToRegister Navigation to the registration stream.
+ * @param onNavigateToMain Navigating to the app when the profile is already complete.
+ * @param onNavigateToCreateProfile Navigation to profile onboarding.
+ * @param sessionExpiredMessage Optional message when returning for expired session.
+ * @param onSessionExpiredMessageShown Callback after displaying the session expired message.
+ * @param viewModel Authentication ViewModel injected by Hilt.
  */
 @Composable
 fun LoginScreen(
@@ -230,7 +230,7 @@ fun LoginScreen(
                                     e.localizedMessage ?: context.getString(R.string.auth_google_error)
                                 )
                             } catch (e: CancellationException) {
-                                throw e  // Cancelación de ciclo de vida, no es un error
+                                throw e  // Cancellation of life cycle, not an error
                             } catch (e: Exception) {
                                 Log.e("AIFIT", "Google Sign-In: error inesperado — ${e.javaClass.simpleName}: ${e.message}", e)
                                 snackbarHostState.showSnackbar(

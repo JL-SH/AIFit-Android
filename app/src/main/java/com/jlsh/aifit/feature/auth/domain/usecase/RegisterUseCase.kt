@@ -6,20 +6,20 @@ import com.jlsh.aifit.feature.auth.domain.repository.AuthRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso que registra una cuenta nueva y devuelve la sesión inicial.
+ * Use case that registers a new account and returns the initial session.
  *
- * @param repository Repositorio de autenticación.
+ * @param repository Authentication repository.
  */
 class RegisterUseCase @Inject constructor(
     private val repository: AuthRepository,
 ) {
     /**
-     * Crea un usuario con email, contraseña y nombre visible.
+     * Create a user with email, password and visible name.
      *
-     * @param email Correo electrónico del nuevo usuario.
-     * @param password Contraseña elegida por el usuario.
-     * @param name Nombre para mostrar en el perfil.
-     * @return [Result.Success] con el token de sesión tras el registro, o [Result.Error] si falla.
+     * @param email Email of the new user.
+     * @param password Password chosen by the user.
+     * @param name Name to display in the profile.
+     * @return [Result.Success] with the session token after registration, or [Result.Error] if it fails.
      */
     suspend operator fun invoke(email: String, password: String, name: String): Result<AuthToken> =
         repository.register(email, password, name)

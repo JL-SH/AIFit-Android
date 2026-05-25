@@ -72,15 +72,15 @@ import com.jlsh.aifit.feature.vision.ui.state.VisionUiEvent
 import com.jlsh.aifit.feature.vision.ui.state.VisionUiState
 
 /**
- * Pantalla de análisis de comida por foto con cámara o galería.
+ * Food analysis screen by photo with camera or gallery.
  *
- * Solicita permiso de cámara, muestra visor CameraX con captura y selector de galería,
- * estados de análisis/resultado/error y lista de alimentos detectados con macros.
- * Permite registrar la comida o reintentar. Oculta la barra inferior de navegación.
+ * Request camera permission, show CameraX viewer with capture and gallery selector,
+ * analysis/result/error statuses and list of foods detected with macros.
+ * Allows you to record the food or retry. Hide the bottom navigation bar.
  *
- * @param onNavigateBack Vuelve a la pantalla anterior.
- * @param onNavigateToTrackMeal Navega al registro de comida con datos prefilled serializados.
- * @param viewModel ViewModel de visión inyectado por Hilt.
+ * @param onNavigateBack Returns to the previous screen.
+ * @param onNavigateToTrackMeal Navigate to the food record with serialized prefilled data.
+ * @param viewModel ViewModel injected by Hilt.
  */
 @Composable
 fun FoodVisionScreen(

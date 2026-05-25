@@ -6,17 +6,17 @@ import com.jlsh.aifit.feature.workout.domain.repository.WorkoutRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso para registrar una serie adicional en un log de sesión ya creado.
+ * Use case to log an additional series in an already created session log.
  */
 class AddSetToLogUseCase @Inject constructor(
     private val repository: WorkoutRepository,
 ) {
     /**
-     * Envía una serie al backend y la asocia al log indicado.
+     * Sends a series to the backend and associates it with the indicated log.
      *
-     * @param logId Identificador del log de sesión de entrenamiento.
-     * @param set Datos de la serie (ejercicio, repeticiones, peso, etc.).
-     * @return [Result.Success] si la serie se persiste, o [Result.Error] en caso de fallo.
+     * @param logId Identifier of the training session log.
+     * @param set Set data (exercise, reps, weight, etc.).
+     * @return [Result.Success] if the string is persisted, or [Result.Error] on failure.
      */
     suspend operator fun invoke(logId: String, set: LogWorkoutSetRequestDto): Result<Unit> =
         repository.addSetToLog(logId, set)

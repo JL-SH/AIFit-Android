@@ -24,23 +24,23 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ViewModel del análisis metabólico y aplicación de ajustes nutricionales.
+ * ViewModel of metabolic analysis and application of nutritional adjustments.
  *
- * **UiState expuesto** ([uiState] — [MetabolicUiState]):
- * - [MetabolicUiState.Loading]: análisis e insights en carga paralela.
- * - [MetabolicUiState.Success]: análisis, historial de insights y flag [MetabolicUiState.Success.isApplying].
- * - [MetabolicUiState.Error]: mensaje de error genérico.
- * - [MetabolicUiState.InsufficientData]: no hay datos suficientes para el análisis.
+ * **Exposed UiState** ([uiState] — [MetabolicUiState]):
+ * - [MetabolicUiState.Loading]: analysis and insights in parallel loading.
+ * - [MetabolicUiState.Success]: analysis, insight history and [MetabolicUiState.Success.isApplying] flag.
+ * - [MetabolicUiState.Error]: Generic error message.
+ * - [MetabolicUiState.InsufficientData]: There is not enough data for analysis.
  *
- * **Eventos emitidos** ([events] — [MetabolicUiEvent]):
- * - [MetabolicUiEvent.ShowSnackbar]: confirmación o error al aplicar ajuste.
- * - [MetabolicUiEvent.AdjustmentApplied]: ajuste guardado; la UI puede permanecer en pantalla.
- * - [MetabolicUiEvent.NavigateBack]: volver atrás.
+ * **Emitted events** ([events] — [MetabolicUiEvent]):
+ * - [MetabolicUiEvent.ShowSnackbar]: Confirmation or error applying adjustment.
+ * - [MetabolicUiEvent.AdjustmentApplied]: saved adjustment; the UI can remain on screen.
+ * - [MetabolicUiEvent.NavigateBack]: go back.
  *
- * @param analyzeMetabolicProgressUseCase Análisis principal.
- * @param getMetabolicInsightsUseCase Historial de ajustes aplicados.
- * @param applyMetabolicAdjustmentUseCase Persistencia del ajuste recomendado.
- * @param getCurrentNutritionTargetUseCase Invalida caché de objetivos tras aplicar.
+ * @param analyzeMetabolicProgressUseCase Primary analysis.
+ * @param getMetabolicInsightsUseCase History of applied settings.
+ * @param applyMetabolicAdjustmentUseCase Persistence of the recommended setting.
+ * @param getCurrentNutritionTargetUseCase Invalidate target cache after applying.
  */
 @HiltViewModel
 class MetabolicViewModel @Inject constructor(
@@ -51,18 +51,18 @@ class MetabolicViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MetabolicUiState>(MetabolicUiState.Loading)
-    /** Estado del análisis metabólico y aplicación de ajustes. */
+    /** Status of metabolic analysis and application of adjustments.*/
     val uiState: StateFlow<MetabolicUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<MetabolicUiEvent>(Channel.BUFFERED)
-    /** Flujo de snackbars y señal de ajuste aplicado. */
+    /** Snackbar flow and adjustment sign applied.*/
     val events = _events.receiveAsFlow()
 
     init {
         loadAll()
     }
 
-    /** Recarga en paralelo el análisis y el historial de insights. */
+    /** Reload analysis and insights history in parallel.*/
     fun loadAll() {
         viewModelScope.launch {
             _uiState.value = MetabolicUiState.Loading
@@ -96,7 +96,7 @@ class MetabolicViewModel @Inject constructor(
         }
     }
 
-    /** Envía al backend la recomendación actual y refresca el análisis si tiene éxito. */
+    /** Sends the current recommendation to the backend and refreshes the analysis if it is successful.*/
     fun onApplyAdjustment() {
         val current = _uiState.value
         if (current !is MetabolicUiState.Success) return

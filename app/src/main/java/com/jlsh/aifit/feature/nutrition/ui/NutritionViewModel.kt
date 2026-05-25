@@ -48,14 +48,14 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 /**
- * ViewModel del módulo de nutrición: hub diario, registro de comidas y objetivos.
+ * ViewModel of the nutrition module: daily hub, meal log and goals.
  *
  * Expone:
- * - [hubState]: [NutritionHubUiState] (hoy, planes de dieta, pestaña y filtros).
- * - [trackMealState]: [TrackMealUiState] para guardar o analizar comidas.
- * - [targetState]: [NutritionTargetUiState] para editar objetivos.
- * - [selectedTabIndex]: índice de pestaña del hub (0 = Hoy, 1 = Plan, 2 = Compras).
- * - [events]: flujo de [NutritionUiEvent] (navegación, sheet, snackbars, [NutritionUiEvent.MealDeleted]).
+ * - [hubState]: [NutritionHubUiState] (today, diet plans, tab and filters).
+ * - [trackMealState]: [TrackMealUiState] to save or analyze meals.
+ * - [targetState]: [NutritionTargetUiState] to edit targets.
+ * - [selectedTabIndex]: hub tab index (0 = Today, 1 = Plan, 2 = Purchases).
+ * - [events]: [NutritionUiEvent] flow (navigation, sheet, snackbars, [NutritionUiEvent.MealDeleted]).
  */
 @OptIn(FlowPreview::class)
 @HiltViewModel
@@ -74,35 +74,35 @@ class NutritionViewModel @Inject constructor(
 
     private val _hubState = MutableStateFlow<NutritionHubUiState>(NutritionHubUiState.Loading)
 
-    /** Estado observable del hub de nutrición ([NutritionHubUiState]). */
+    /** Nutrition hub observable state ([NutritionHubUiState]).*/
     val hubState: StateFlow<NutritionHubUiState> = _hubState.asStateFlow()
 
     private val _trackMealState = MutableStateFlow<TrackMealUiState>(TrackMealUiState.Idle)
 
-    /** Estado observable del registro/análisis de comida ([TrackMealUiState]). */
+    /** Observable state of the food log/analysis ([TrackMealUiState]).*/
     val trackMealState: StateFlow<TrackMealUiState> = _trackMealState.asStateFlow()
 
     private val _targetState = MutableStateFlow<NutritionTargetUiState>(NutritionTargetUiState.Loading)
 
-    /** Estado observable de la pantalla de objetivos ([NutritionTargetUiState]). */
+    /** Target screen observable state ([NutritionTargetUiState]).*/
     val targetState: StateFlow<NutritionTargetUiState> = _targetState.asStateFlow()
 
     private val _selectedTabIndex = MutableStateFlow(0)
 
-    /** Pestaña activa del hub: 0 Hoy, 1 Plan de dieta, 2 Compras. */
+    /** Active hub tab: 0 Today, 1 Diet Plan, 2 Purchases.*/
     val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
 
     private val _events = Channel<NutritionUiEvent>(Channel.BUFFERED)
 
     /**
-     * Eventos de UI de un solo consumo: navegación, [NutritionUiEvent.ShowTrackMealSheet],
+     * One-time UI Events: Navigation, [NutritionUiEvent.ShowTrackMealSheet],
      * [NutritionUiEvent.ShowSnackbar], [NutritionUiEvent.MealDeleted], etc.
      */
     val events = _events.receiveAsFlow()
 
     private val _planPickerMeals = MutableStateFlow<List<Meal>>(emptyList())
 
-    /** Comidas del plan activo para hoy; se cargan al abrir el picker desde el plan. */
+    /** Active plan meals for today; They are loaded when opening the picker from the plan.*/
     val planPickerMeals: StateFlow<List<Meal>> = _planPickerMeals.asStateFlow()
 
     private var fetchDietPlansJob: Job? = null
@@ -174,9 +174,9 @@ class NutritionViewModel @Inject constructor(
         plans.sortedByDescending { it.createdAt }
 
     /**
-     * Indica si el usuario tiene al menos un plan de dieta en estado [PlanStatus.ACTIVE].
+     * Indicates whether the user has at least one diet plan in status [PlanStatus.ACTIVE].
      *
-     * @return true si existe un plan activo en [hubState] exitoso.
+     * @return true if an active plan exists in [hubState] successful.
      */
     fun hasActiveDietPlan(): Boolean {
         val state = _hubState.value as? NutritionHubUiState.Success ?: return false
@@ -184,9 +184,9 @@ class NutritionViewModel @Inject constructor(
     }
 
     /**
-     * Cambia la pestaña del hub y sincroniza [selectedTabIndex] con [hubState].
+     * Change the hub tab and sync [selectedTabIndex] with [hubState].
      *
-     * @param index Índice de pestaña (0–2).
+     * @param index Tab index (0–2).
      */
     fun onTabSelected(index: Int) {
         _selectedTabIndex.value = index
@@ -197,9 +197,9 @@ class NutritionViewModel @Inject constructor(
     }
 
     /**
-     * Aplica filtro por estado de plan en la pestaña de planes de dieta.
+     * Apply filter by plan status in the diet plans tab.
      *
-     * @param status Estado a filtrar; null muestra todos los planes.
+     * @param status State to filter; null shows all plans.
      */
     fun onDietPlanFilterChanged(status: PlanStatus?) {
         val current = _hubState.value
@@ -208,16 +208,16 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
-    /** Recarga log del día, objetivos y planes de dieta (con debounce interno). */
+    /** Reload log of the day, goals and diet plans (with internal debounce).*/
     fun onRefresh() {
         if (isDeletingPlan) return
         _refreshTrigger.tryEmit(Unit)
     }
 
     /**
-     * Elimina una comida del diario y refresca el hub; emite [NutritionUiEvent.MealDeleted].
+     * Eliminate a meal from the daily and refresh the hub; emits [NutritionUiEvent.MealDeleted].
      *
-     * @param mealId Identificador de la comida registrada.
+     * @param mealId Identifier of the registered meal.
      */
     fun onDeleteMeal(mealId: String) {
         viewModelScope.launch {
@@ -236,9 +236,9 @@ class NutritionViewModel @Inject constructor(
     // ===== TRACK MEAL =====
 
     /**
-     * Registra una comida manual y emite [NutritionUiEvent.NavigateToHome] al guardar.
+     * Registers a manual meal and emits [NutritionUiEvent.NavigateToHome] when saving.
      *
-     * @param request Datos de la comida y alimentos.
+     * @param request Food and meal data.
      */
     fun onTrackMeal(request: TrackMealRequestDto) {
         viewModelScope.launch {
@@ -259,9 +259,9 @@ class NutritionViewModel @Inject constructor(
     }
 
     /**
-     * Analiza texto libre con IA, registra la comida y navega al hub al completar.
+     * Analyze free text with AI, log food, and navigate to hub upon completion.
      *
-     * @param request Texto, tipo, hora y fecha de la comida.
+     * @param request Text, type, time and date of the meal.
      */
     fun onAnalyzeMealFromText(request: AnalyzeMealFromTextRequestDto) {
         viewModelScope.launch {
@@ -285,14 +285,14 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
-    /** Restablece [trackMealState] a [TrackMealUiState.Idle] al entrar en la pantalla de registro. */
+    /** Resets [trackMealState] to [TrackMealUiState.Idle] upon entering the registration screen.*/
     fun resetTrackMealState() {
         _trackMealState.value = TrackMealUiState.Idle
     }
 
     // ===== NUTRITION TARGET =====
 
-    /** Carga objetivos actuales y actualiza [targetState] a [NutritionTargetUiState.Ready] o error. */
+    /** Loads current targets and updates [targetState] to [NutritionTargetUiState.Ready] or error.*/
     fun loadNutritionTarget() {
         viewModelScope.launch {
             _targetState.value = NutritionTargetUiState.Loading
@@ -318,12 +318,12 @@ class NutritionViewModel @Inject constructor(
     }
 
     /**
-     * Persiste nuevos objetivos nutricionales y emite [NutritionUiEvent.NavigateBack] al éxito.
+     * Persist new nutritional goals and cast [NutritionUiEvent.NavigateBack] to success.
      *
-     * @param calories Objetivo calórico como texto.
-     * @param protein Objetivo de proteína (g) como texto.
-     * @param carbs Objetivo de carbohidratos (g) como texto.
-     * @param fat Objetivo de grasas (g) como texto.
+     * @param calories Calorie target as text.
+     * @param protein Target protein (g) as text.
+     * @param carbs Target carbs (g) as text.
+     * @param fat Target fat (g) as text.
      */
     fun onUpdateTarget(calories: String, protein: String, carbs: String, fat: String) {
         viewModelScope.launch {
@@ -358,12 +358,12 @@ class NutritionViewModel @Inject constructor(
 
     // ===== NAVIGATION =====
 
-    /** Emite [NutritionUiEvent.ShowTrackMealSheet] para elegir modo de registro de comida. */
+    /** Issue [NutritionUiEvent.ShowTrackMealSheet] to choose meal tracking mode.*/
     fun onFabClicked() {
         emitEvent(NutritionUiEvent.ShowTrackMealSheet)
     }
 
-    /** Carga las comidas de hoy del plan activo y abre el picker. */
+    /** Load today's meals from the active plan and open the picker.*/
     fun onShowPlanMealPicker() {
         viewModelScope.launch {
             _planPickerMeals.value = loadActivePlanMealsForToday()
@@ -372,9 +372,9 @@ class NutritionViewModel @Inject constructor(
     }
 
     /**
-     * Registra una comida del plan de dieta activo y refresca el hub.
+     * Log a meal from the active diet plan and refresh the hub.
      *
-     * @param meal Comida seleccionada en el picker.
+     * @param meal Food selected in the picker.
      */
     fun onTrackMealFromPlan(meal: Meal) {
         viewModelScope.launch {
@@ -392,18 +392,18 @@ class NutritionViewModel @Inject constructor(
     }
 
     /**
-     * Emite [NutritionUiEvent.NavigateToDietDetail] con el plan seleccionado.
+     * Issues [NutritionUiEvent.NavigateToDietDetail] with the selected plan.
      *
-     * @param planId Identificador del plan.
+     * @param planId Plan identifier.
      */
     fun onDietPlanClicked(planId: String) {
         emitEvent(NutritionUiEvent.NavigateToDietDetail(planId))
     }
 
     /**
-     * Activa un plan con actualización optimista en [hubState] y sincronización con servidor.
+     * Activate a plan with optimistic update in [hubState] and synchronization with server.
      *
-     * @param planId Identificador del plan a activar.
+     * @param planId Identifier of the plan to activate.
      */
     fun onActivateDietPlan(planId: String) {
         val current = _hubState.value as? NutritionHubUiState.Success ?: return
@@ -441,9 +441,9 @@ class NutritionViewModel @Inject constructor(
     }
 
     /**
-     * Elimina un plan no activo con UI optimista; revierte y muestra snackbar si falla la red.
+     * Delete a non-active plan with optimistic UI; reverts and shows snackbar if network fails.
      *
-     * @param planId Identificador del plan a eliminar.
+     * @param planId Identifier of the plan to delete.
      */
     fun onDeleteDietPlan(planId: String) {
         val current = _hubState.value as? NutritionHubUiState.Success ?: return
@@ -477,12 +477,12 @@ class NutritionViewModel @Inject constructor(
         }
     }
 
-    /** Emite [NutritionUiEvent.NavigateToGenerateDiet] para crear un nuevo plan. */
+    /** Issue [NutritionUiEvent.NavigateToGenerateDiet] to create a new plan.*/
     fun onGenerateDietClicked() {
         emitEvent(NutritionUiEvent.NavigateToGenerateDiet)
     }
 
-    /** Emite [NutritionUiEvent.NavigateToNutritionTarget] para editar objetivos. */
+    /** Issues [NutritionUiEvent.NavigateToNutritionTarget] to edit targets.*/
     fun onNavigateToTarget() {
         emitEvent(NutritionUiEvent.NavigateToNutritionTarget)
     }

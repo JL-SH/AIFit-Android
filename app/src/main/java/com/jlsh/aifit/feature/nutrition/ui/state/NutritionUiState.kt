@@ -7,10 +7,10 @@ import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 
 /**
- * Datos del día actual para la pestaña "Hoy" del hub de nutrición.
+ * Data for the current day for the "Today" tab of the nutrition hub.
  *
- * @property nutritionLog Registro de comidas del día; null si aún no hay entradas.
- * @property target Objetivos calóricos y de macros vigentes; null si no están configurados.
+ * @property nutritionLog Log of meals for the day; null if there are no entries yet.
+ * @property target Current calorie and macro goals; null if they are not set.
  */
 data class TodayState(
     val nutritionLog: NutritionLog? = null,
@@ -18,27 +18,27 @@ data class TodayState(
 )
 
 /**
- * Estado de la UI del hub de nutrición (pestañas Hoy, Plan de dieta y Compras).
+ * Nutrition hub UI status (Today, Diet Plan, and Shopping tabs).
  */
 sealed class NutritionHubUiState {
-    /** Cargando log del día, objetivos y lista de planes de dieta. */
+    /** Loading log of the day, goals and list of diet plans.*/
     data object Loading : NutritionHubUiState(), UiStateHost.Loading
 
     /**
-     * Error al cargar datos del hub.
+     * Error loading data from hub.
      *
-     * @property message Mensaje de error para mostrar al usuario.
+     * @property message Error message to display to the user.
      */
     data class Error(override val message: String) : NutritionHubUiState(), UiStateHost.Error
 
     /**
-     * Hub cargado con datos del día y planes de dieta.
+     * Hub loaded with data for the day and diet plans.
      *
-     * @property todayState Resumen nutricional y objetivos del día actual.
-     * @property dietPlans Lista de planes de dieta del usuario.
-     * @property selectedTabIndex Índice de la pestaña seleccionada (0 = Hoy, 1 = Plan, 2 = Compras).
-     * @property selectedDietPlanFilter Filtro por estado de plan; null muestra todos.
-     * @property isActivatingPlan true mientras se confirma la activación de un plan en servidor.
+     * @property todayState Nutrition summary and goals for the current day.
+     * @property dietPlans List of user's diet plans.
+     * @property selectedTabIndex Index of the selected tab (0 = Today, 1 = Plan, 2 = Purchases).
+     * @property selectedDietPlanFilter Filter by plan status; null shows all.
+     * @property isActivatingPlan true while confirming activation of a plan on the server.
      */
     data class Success(
         val todayState: TodayState,
@@ -50,52 +50,52 @@ sealed class NutritionHubUiState {
 }
 
 /**
- * Estado de la UI para registrar o analizar una comida.
+ * UI status for recording or analyzing a meal.
  */
 sealed class TrackMealUiState {
-    /** Formulario listo; sin operación en curso. */
+    /** Form ready; no operation in progress.*/
     data object Idle : TrackMealUiState()
 
-    /** Guardando comida manual en el servidor. */
+    /** Saving manual food on the server.*/
     data object Saving : TrackMealUiState()
 
-    /** Analizando texto con IA antes de registrar la comida. */
+    /** Analyzing text with AI before registering food.*/
     data object Analyzing : TrackMealUiState()
 
     /**
-     * Error al guardar o analizar.
+     * Error saving or parsing.
      *
-     * @property message Mensaje de error para mostrar al usuario.
+     * @property message Error message to display to the user.
      */
     data class Error(val message: String) : TrackMealUiState()
 
-    /** Comida registrada correctamente; la UI puede navegar al hub. */
+    /** Food recorded correctly; the UI can navigate to the hub.*/
     data object Saved : TrackMealUiState()
 }
 
 /**
- * Estado de la UI para editar los objetivos nutricionales del usuario.
+ * UI status to edit the user's nutritional goals.
  */
 sealed class NutritionTargetUiState {
-    /** Cargando objetivos actuales. */
+    /** Loading current objectives.*/
     data object Loading : NutritionTargetUiState()
 
     /**
-     * Error al cargar objetivos.
+     * Error loading targets.
      *
-     * @property message Mensaje de error para mostrar al usuario.
+     * @property message Error message to display to the user.
      */
     data class Error(val message: String) : NutritionTargetUiState()
 
     /**
-     * Objetivos listos para editar en formulario.
+     * Objectives ready to edit in form.
      *
-     * @property calorieTarget Objetivo calórico como texto editable.
-     * @property proteinTarget Objetivo de proteína (g) como texto editable.
-     * @property carbsTarget Objetivo de carbohidratos (g) como texto editable.
-     * @property fatTarget Objetivo de grasas (g) como texto editable.
-     * @property setBy Origen del objetivo (manual, plan de dieta, etc.) para mostrar al usuario.
-     * @property isSaving true mientras se persiste la actualización en servidor.
+     * @property calorieTarget Calorie target as editable text.
+     * @property proteinTarget Protein target (g) as editable text.
+     * @property carbsTarget Target carbs (g) as editable text.
+     * @property fatTarget Fat target (g) as editable text.
+     * @property setBy Source of the goal (manual, diet plan, etc.) to display to the user.
+     * @property isSaving true while the update is persisted on the server.
      */
     data class Ready(
         val calorieTarget: String,

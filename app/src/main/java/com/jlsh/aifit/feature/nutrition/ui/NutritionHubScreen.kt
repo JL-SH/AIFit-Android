@@ -112,17 +112,17 @@ private fun mealTypeDisplay(mealType: MealType): String = stringResource(
     )
 
 /**
- * Hub principal de nutrición con tres pestañas: consumo del día, planes de dieta y listas de compra.
+ * Main nutrition hub with three tabs: daily consumption, diet plans and shopping lists.
  *
- * Incluye FAB contextual, bottom sheet para elegir modo de registro de comida y diálogos de confirmación.
+ * Includes contextual FAB, bottom sheet to choose food recording mode and confirmation dialogs.
  *
- * @param onNavigateToTrackMeal Navega al registro manual o por texto (`mode`: `"manual"` | `"text_analysis"`).
- * @param onNavigateToFoodVision Navega al escaneo de comida por foto.
- * @param onNavigateToNutritionTarget Navega a editar objetivos calóricos y macros.
- * @param onNavigateToDietDetail Navega al detalle de un plan de dieta.
- * @param onNavigateToGenerateDiet Navega al flujo de creación de plan de dieta.
- * @param onNavigateToShoppingDetail Navega al detalle de una lista de la compra.
- * @param viewModel ViewModel con [NutritionHubUiState], pestaña seleccionada y [NutritionUiEvent].
+ * @param onNavigateToTrackMeal Navigate to manual or text log (`mode`: `"manual"` | `"text_analysis"`).
+ * @param onNavigateToFoodVision Navigate to food scanning by photo.
+ * @param onNavigateToNutritionTarget Navigate to edit calorie goals and macros.
+ * @param onNavigateToDietDetail Navigate to the details of a diet plan.
+ * @param onNavigateToGenerateDiet Navigate to the diet plan creation flow.
+ * @param onNavigateToShoppingDetail Navigate to the details of a shopping list.
+ * @param viewModel ViewModel with [NutritionHubUiState], selected tab and [NutritionUiEvent].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

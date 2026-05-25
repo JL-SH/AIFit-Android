@@ -29,17 +29,17 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ViewModel del flujo de onboarding: generación y regeneración de planes.
+ * ViewModel of the onboarding flow: generation and regeneration of plans.
  *
- * **Estado expuesto** ([state] — [OnboardingState]):
- * - [OnboardingState.Idle]: sin generación en curso.
- * - [OnboardingState.Generating]: completando onboarding en el servidor.
- * - [OnboardingState.RegeneratingTraining]: regenerando solo plan de entreno.
- * - [OnboardingState.RegeneratingDiet]: regenerando solo plan de dieta.
- * - [OnboardingState.Ready]: planes y objetivo nutricional listos.
- * - [OnboardingState.Error]: mensaje de fallo.
+ * **Exposed state** ([state] — [OnboardingState]):
+ * - [OnboardingState.Idle]: No generation in progress.
+ * - [OnboardingState.Generating]: completing onboarding on the server.
+ * - [OnboardingState.RegeneratingTraining]: regenerating only training plan.
+ * - [OnboardingState.RegeneratingDiet]: regenerating diet plan only.
+ * - [OnboardingState.Ready]: plans and nutritional goal ready.
+ * - [OnboardingState.Error]: error message.
  *
- * No emite eventos de navegación; la UI observa [state] directamente.
+ * Does not emit navigation events; the UI looks at [state] directly.
  */
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
@@ -56,13 +56,13 @@ class OnboardingViewModel @Inject constructor(
 
     private val _state = MutableStateFlow<OnboardingState>(OnboardingState.Idle)
 
-    /** Estado del onboarding (ver documentación de la clase). */
+    /** Onboarding status (see class documentation).*/
     val state: StateFlow<OnboardingState> = _state.asStateFlow()
 
     /**
-     * Completa el onboarding en backend y obtiene planes iniciales.
+     * Complete backend onboarding and get initial plans.
      *
-     * @param feedback Comentarios opcionales del usuario para la IA.
+     * @param feedback Optional user feedback for the AI.
      */
     fun generatePlan(feedback: String? = null) {
         viewModelScope.launch {
@@ -80,9 +80,9 @@ class OnboardingViewModel @Inject constructor(
     }
 
     /**
-     * Regenera el plan de entrenamiento manteniendo dieta y nutrición actuales.
+     * Regenerate the training plan while maintaining current diet and nutrition.
      *
-     * @param feedback Notas adicionales para la generación.
+     * @param feedback Additional notes for the build.
      */
     fun regenerateTraining(feedback: String? = null) {
         val previous = _state.value as? OnboardingState.Ready
@@ -131,9 +131,9 @@ class OnboardingViewModel @Inject constructor(
     }
 
     /**
-     * Regenera el plan de dieta manteniendo el plan de entrenamiento actual.
+     * Regenerate the diet plan by maintaining the current training plan.
      *
-     * @param feedback Notas adicionales para la generación.
+     * @param feedback Additional notes for the build.
      */
     fun regenerateDiet(feedback: String? = null) {
         val previous = _state.value as? OnboardingState.Ready
@@ -178,12 +178,12 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    /** Marca el perfil como completo en sesión tras confirmar los planes. */
+    /** Mark profile as complete in session after confirming plans.*/
     fun confirmOnboarding() {
         sessionManager.setProfileComplete(true)
     }
 
-    /** Restaura el estado a [OnboardingState.Idle]. */
+    /** Restores the state to [OnboardingState.Idle].*/
     fun reset() {
         _state.value = OnboardingState.Idle
     }
@@ -211,33 +211,33 @@ class OnboardingViewModel @Inject constructor(
 }
 
 /**
- * Estados del flujo de generación de planes en onboarding.
+ * Plan generation flow states in onboarding.
  */
 sealed class OnboardingState {
 
-    /** Esperando acción del usuario. */
+    /** Waiting for user action.*/
     data object Idle : OnboardingState()
 
-    /** Primera generación (entreno + dieta + nutrición). */
+    /** First generation (training + diet + nutrition).*/
     data object Generating : OnboardingState()
 
-    /** Regeneración solo del plan de entrenamiento. */
+    /** Regeneration only of the training plan.*/
     data object RegeneratingTraining : OnboardingState()
 
-    /** Regeneración solo del plan de dieta. */
+    /** Regeneration only from the diet plan.*/
     data object RegeneratingDiet : OnboardingState()
 
     /**
-     * Planes listos para revisión.
+     * Plans ready for review.
      *
-     * @property result Planes y objetivo nutricional devueltos por el backend.
+     * @property result Plans and nutritional goal returned by the backend.
      */
     data class Ready(val result: OnboardingResult) : OnboardingState()
 
     /**
-     * Error en generación o regeneración.
+     * Error in generation or regeneration.
      *
-     * @property message Mensaje para mostrar al usuario.
+     * @property message Message to display to the user.
      */
     data class Error(val message: String) : OnboardingState()
 }

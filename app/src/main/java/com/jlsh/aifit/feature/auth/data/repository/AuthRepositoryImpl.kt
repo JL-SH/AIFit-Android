@@ -13,12 +13,12 @@ import com.jlsh.aifit.feature.auth.domain.repository.AuthRepository
 import javax.inject.Inject
 
 /**
- * Implementación de [AuthRepository] que delega en la API remota y persiste la sesión local.
+ * Implementation of [AuthRepository] that delegates to the remote API and persists the local session.
  *
- * Tras un login exitoso, actualiza [SessionManager] con token, usuario y flag de perfil completo.
+ * After a successful login, update [SessionManager] with token, user and full profile flag.
  *
- * @param apiService Cliente HTTP de autenticación.
- * @param sessionManager Gestor de sesión local.
+ * @param apiService Authentication HTTP Client.
+ * @param sessionManager Local session manager.
  */
 class AuthRepositoryImpl @Inject constructor(
     private val apiService: AuthApiService,
@@ -26,11 +26,11 @@ class AuthRepositoryImpl @Inject constructor(
 ) : BaseRemoteDataSource(), AuthRepository {
 
     /**
-     * Autentica con email y contraseña vía API y persiste la sesión si tiene éxito.
+     * Authenticate with email and password via API and persist the session if successful.
      *
-     * @param email Correo del usuario.
-     * @param password Contraseña.
-     * @return Token de dominio o error de red/validación.
+     * @param email User's email.
+     * @param password Password.
+     * @return Domain token or network/validation error.
      */
     override suspend fun login(email: String, password: String): Result<AuthToken> {
         val result = safeApiCall { apiService.login(LoginRequestDto(email, password)) }
@@ -38,12 +38,12 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Registra una cuenta nueva y devuelve la sesión inicial.
+     * Register a new account and return your initial session.
      *
-     * @param email Correo del nuevo usuario.
-     * @param password Contraseña.
-     * @param name Nombre visible.
-     * @return Token de dominio o error.
+     * @param email Email of the new user.
+     * @param password Password.
+     * @param name Display name.
+     * @return Domain token or error.
      */
     override suspend fun register(email: String, password: String, name: String): Result<AuthToken> {
         val result = safeApiCall { apiService.register(RegisterRequestDto(email, password, name)) }
@@ -51,10 +51,10 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Intercambia un ID token de Google por sesión en el backend.
+     * Exchange one Google token ID per session in the backend.
      *
-     * @param idToken JWT de Google Sign-In.
-     * @return Token de dominio o error.
+     * @param idToken Google Sign-In JWT.
+     * @return Domain token or error.
      */
     override suspend fun googleLogin(idToken: String): Result<AuthToken> {
         Log.d("AIFIT", "AuthRepository: googleLogin — llamando a POST auth/google con idToken (${idToken.length} chars)")

@@ -56,13 +56,13 @@ import com.jlsh.aifit.feature.chat.ui.state.ChatState
 import com.jlsh.aifit.feature.chat.ui.state.ChatUiEvent
 
 /**
- * Pantalla de conversación con el AI Coach.
+ * Conversation screen with the AI ​​Coach.
  *
- * Muestra mensajes en burbujas (layout invertido), indicador de escritura, barra de entrada
- * con adjunto de imagen desde galería y diálogo de archivado. Oculta la barra inferior de navegación.
+ * Show messages in bubbles (inverted layout), typing indicator, input bar
+ * with image attachment from gallery and archiving dialog. Hide the bottom navigation bar.
  *
- * @param onNavigateBack Vuelve al listado o pantalla anterior.
- * @param viewModel ViewModel de chat inyectado por Hilt (sesión desde `sessionId` en la ruta).
+ * @param onNavigateBack Returns to the previous list or screen.
+ * @param viewModel Hilt-injected chat ViewModel (session from `sessionId` in route).
  */
 @Composable
 fun ChatScreen(

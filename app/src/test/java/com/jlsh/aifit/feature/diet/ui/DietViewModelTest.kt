@@ -47,7 +47,7 @@ class DietViewModelTest {
         )
     }
 
-    // ─── Estado inicial ────────────────────────────────────────────────────────
+    // ─── Initial state ──────────────────────────── ────────────────────────────
 
     @Test
     fun `detailUiState inicial es Loading`() {

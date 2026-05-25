@@ -117,7 +117,7 @@ fun OnboardingTrainingApprovalScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
         ) {
-            // Cabecera
+            // Header
             item {
                 Text(
                     text = stringResource(R.string.onboarding_review_training),
@@ -133,7 +133,7 @@ fun OnboardingTrainingApprovalScreen(
                 )
             }
 
-            // Resumen en cards
+            // Summary in cards
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -165,7 +165,7 @@ fun OnboardingTrainingApprovalScreen(
                 }
             }
 
-            // Descripción opcional
+            // Optional Description
             plan.description?.let { desc ->
                 item {
                     Text(
@@ -176,7 +176,7 @@ fun OnboardingTrainingApprovalScreen(
                 }
             }
 
-            // Sección días de entrenamiento
+            // Training days section
             item {
                 Text(
                     text = stringResource(R.string.onboarding_training_days_header),

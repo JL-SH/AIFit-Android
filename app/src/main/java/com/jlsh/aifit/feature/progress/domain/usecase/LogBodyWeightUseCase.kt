@@ -7,18 +7,18 @@ import com.jlsh.aifit.feature.progress.domain.repository.BodyWeightRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso que registra un nuevo peso corporal del usuario.
+ * Use case that records a new user body weight.
  *
- * @param repository Repositorio de historial y registro de peso.
+ * @param repository History and weight log repository.
  */
 class LogBodyWeightUseCase @Inject constructor(
     private val repository: BodyWeightRepository,
 ) {
     /**
-     * Persiste el peso indicado en el backend y en la caché local.
+     * The indicated weight persists in the backend and in the local cache.
      *
-     * @param request Peso, fecha y notas opcionales del registro.
-     * @return [Result.Success] con el [BodyWeightLog] creado, o [Result.Error] si falla el envío.
+     * @param request Weight, date, and optional notes of the record.
+     * @return [Result.Success] with the created [BodyWeightLog], or [Result.Error] if the send fails.
      */
     suspend operator fun invoke(request: LogBodyWeightRequestDto): Result<BodyWeightLog> =
         repository.logWeight(request)

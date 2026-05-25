@@ -80,15 +80,15 @@ private val MEAL_TYPE_OPTIONS = listOf(
 private val UNIT_OPTIONS = listOf("g", "ml", "unit", "slice", "cup", "tbsp", "tsp")
 
 /**
- * Entrada editable de un alimento en el formulario de registro manual de comida.
+ * Editable entry of a food item on the manual food record form.
  *
- * @property name Nombre del alimento.
- * @property quantity Cantidad como texto (se parsea al guardar).
- * @property unit Unidad de medida (g, ml, unidad, etc.).
- * @property calories Calorías totales o por 100 g según [unit].
- * @property protein Proteína en gramos (total o por 100 g).
- * @property carbs Carbohidratos en gramos (total o por 100 g).
- * @property fat Grasas en gramos (total o por 100 g).
+ * @property name Name of the food.
+ * @property quantity Quantity as text (parsed on save).
+ * @property unit Unit of measure (g, ml, unit, etc.).
+ * @property calories Total calories or per 100 g according to [unit].
+ * @property protein Protein in grams (total or per 100 g).
+ * @property carbs Carbohydrates in grams (total or per 100 g).
+ * @property fat Fat in grams (total or per 100 g).
  */
 data class FoodItemEntry(
     val name: String = "",
@@ -110,12 +110,12 @@ private fun FoodItemEntry.scaledMacros() = scaleFoodItemMacros(
 )
 
 /**
- * Pantalla para registrar una comida: modo manual (formulario con alimentos) o análisis por texto (IA).
+ * Screen to record a meal: manual mode (form with food) or text analysis (AI).
  *
- * @param mode `"manual"` para entrada manual; `"text_analysis"` para describir la comida en texto libre.
- * @param onNavigateBack Callback al cancelar o tras [NutritionUiEvent.NavigateBack].
- * @param onNavigateToHome Callback tras guardar o analizar con éxito ([NutritionUiEvent.NavigateToHome]).
- * @param viewModel ViewModel con [TrackMealUiState] y eventos de nutrición.
+ * @param mode `"manual"` for manual input; `"text_analysis"` to describe the food in free text.
+ * @param onNavigateBack Callback on cancellation or after [NutritionUiEvent.NavigateBack].
+ * @param onNavigateToHome Callback after successful save or parse ([NutritionUiEvent.NavigateToHome]).
+ * @param viewModel ViewModel with [TrackMealUiState] and nutrition events.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -228,7 +228,7 @@ fun TrackMealScreen(
             ) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
-                // BUG-018: Dropdown en lugar de ChipGroup
+                // BUG-018: Dropdown instead of ChipGroup
                 AiFitDropdown(
                     selectedValue = selectedMealType,
                     options = MEAL_TYPE_OPTIONS,
@@ -238,7 +238,7 @@ fun TrackMealScreen(
                     displayMapper = { mealTypeDisplayMap[it] ?: it },
                 )
 
-                // BUG-019: TimePicker en lugar de TextField
+                // BUG-019: TimePicker instead of TextField
                 Box(modifier = Modifier.fillMaxWidth()) {
                     AiFitTextField(
                         value = mealTime,
@@ -248,7 +248,7 @@ fun TrackMealScreen(
                         trailingIcon = PhosphorIcons.Regular.Timer,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    // Overlay transparente para capturar clicks
+                    // Transparent overlay to capture clicks
                     Box(
                         modifier = Modifier
                             .matchParentSize()

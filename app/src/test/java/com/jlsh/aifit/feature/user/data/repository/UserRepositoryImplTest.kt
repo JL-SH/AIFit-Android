@@ -197,7 +197,7 @@ class UserRepositoryImplTest {
         sut.getProfile().test {
             assertTrue(awaitItem() is Result.Loading)
             assertTrue(awaitItem() is Result.Success<*>)
-            // No debe emitir Error cuando ya hay cache
+            // Must not emit Error when cache already exists
             cancelAndIgnoreRemainingEvents()
         }
     }

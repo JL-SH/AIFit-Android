@@ -7,18 +7,18 @@ import com.jlsh.aifit.feature.shopping.domain.repository.ShoppingRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso que genera una lista de la compra a partir de un plan de dieta y un período.
+ * Use case that generates a shopping list from a diet plan and a period.
  *
- * @param repository Repositorio de listas de compra.
+ * @param repository Shopping list repository.
  */
 class GenerateShoppingListUseCase @Inject constructor(
     private val repository: ShoppingRepository,
 ) {
     /**
-     * Solicita al backend la generación de una nueva lista de la compra.
+     * Requests the backend to generate a new shopping list.
      *
-     * @param request Parámetros con el plan de dieta opcional y el período temporal.
-     * @return [Result.Success] con la lista generada, o [Result.Error] si falla la petición.
+     * @param request Parameters with optional diet plan and time period.
+     * @return [Result.Success] with the generated list, or [Result.Error] if the request fails.
      */
     suspend operator fun invoke(request: GenerateShoppingListRequestDto): Result<ShoppingList> =
         repository.generateList(request)

@@ -5,18 +5,18 @@ import com.jlsh.aifit.feature.diet.domain.repository.DietRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso que elimina un plan de dieta del usuario en servidor y caché local.
+ * Use case that deletes a user's diet plan in server and local cache.
  *
- * @param repository Repositorio de planes de dieta.
+ * @param repository Diet plan repository.
  */
 class DeleteDietPlanUseCase @Inject constructor(
     private val repository: DietRepository,
 ) {
     /**
-     * Elimina el plan identificado por [planId].
+     * Deletes the plan identified by [planId].
      *
-     * @param planId Identificador del plan a eliminar.
-     * @return [Result.Success] si la eliminación se confirma, o [Result.Error] si falla.
+     * @param planId Identifier of the plan to delete.
+     * @return [Result.Success] if the delete succeeds, or [Result.Error] if it fails.
      */
     suspend operator fun invoke(planId: String): Result<Unit> =
         repository.deleteDietPlan(planId)

@@ -83,7 +83,7 @@ class CreateProfileScreenTest {
             }
         }
 
-        // Paso 1 muestra opciones de objetivo (GoalType)
+        // Step 1 shows goal options (GoalType)
         composeTestRule.onNodeWithText("Perder grasa").assertIsDisplayed()
     }
 
@@ -130,26 +130,26 @@ class CreateProfileScreenTest {
             }
         }
 
-        // Step 0: Objetivo
+        // Step 0: Objective
         composeTestRule.onNodeWithText("Perder grasa").performClick()
         composeTestRule.onNodeWithText("Continuar").performClick()
         // Step 1: Experiencia
         composeTestRule.onNodeWithText("Nunca he entrenado").performClick()
         composeTestRule.onNodeWithText("Continuar").performClick()
-        // Step 2: Ubicación
+        // Step 2: Location
         composeTestRule.onNodeWithText("En casa").performClick()
         composeTestRule.onNodeWithText("Continuar").performClick()
-        // Step 3: Días de entrenamiento
+        // Step 3: Training days
         composeTestRule.onNodeWithText("3 días").performClick()
         composeTestRule.onNodeWithText("Continuar").performClick()
-        // Step 4: Tiempo por sesión
+        // Step 4: Time per session
         composeTestRule.onNodeWithText("30 min").performClick()
         composeTestRule.onNodeWithText("Continuar").performClick()
         // Step 5: Lesiones (siempre habilitado)
         composeTestRule.onNodeWithText("Continuar").performClick()
-        // Step 6: Datos físicos (opcional)
+        // Step 6: Physical data (optional)
         composeTestRule.onNodeWithText("Continuar").performClick()
-        // Step 7: Preferencia dietética
+        // Step 7: Dietary preference
         composeTestRule.onNodeWithText("Sin restricciones").performClick()
         composeTestRule.onNodeWithText("Empezar").performClick()
 

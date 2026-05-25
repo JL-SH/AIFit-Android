@@ -73,7 +73,7 @@ class TrainingViewModelTest {
         )
     }
 
-    // ─── Estado inicial ────────────────────────────────────────────────────────
+    // ─── Initial state ──────────────────────────── ────────────────────────────
 
     @Test
     fun `uiState es Success con lista vacía cuando no hay planes`() = runTest {
@@ -95,7 +95,7 @@ class TrainingViewModelTest {
         assertTrue(state is TrainingHubUiState.NoActivePlan)
     }
 
-    // ─── Con planes ────────────────────────────────────────────────────────────
+    // ─── With plans ────────────────────────────────────────────────────────────
 
     @Test
     fun `uiState es Success con plan activo cuando hay plan ACTIVE`() = runTest {

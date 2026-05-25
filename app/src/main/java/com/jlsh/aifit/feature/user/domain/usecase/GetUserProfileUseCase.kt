@@ -7,19 +7,19 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 /**
- * Caso de uso que observa el perfil del usuario autenticado.
+ * Use case that looks at the profile of the authenticated user.
  *
- * El flujo puede emitir caché local primero y luego el resultado de red.
+ * The flow can emit local cache first and then the network result.
  *
- * @param repository Repositorio de usuario.
+ * @param repository User repository.
  */
 class GetUserProfileUseCase @Inject constructor(
     private val repository: UserRepository,
 ) {
     /**
-     * Obtiene el perfil como flujo reactivo.
+     * Gets the profile as a reactive flow.
      *
-     * @return [Flow] de [Result] con [UserProfile]; incluye [Result.Loading] al inicio.
+     * @return [Flow] from [Result] with [UserProfile]; includes [Result.Loading] at the start.
      */
     operator fun invoke(): Flow<Result<UserProfile>> = repository.getProfile()
 }

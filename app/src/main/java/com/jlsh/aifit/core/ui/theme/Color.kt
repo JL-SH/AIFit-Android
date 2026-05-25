@@ -161,7 +161,7 @@ enum class MacroType {
     Fat,
 }
 
-/** Colores y gradientes de macros alineados con [MacroRingChart]. */
+/** Colores y gradientes de macros alineados with [MacroRingChart]. */
 object MacroColors {
 
     @Composable

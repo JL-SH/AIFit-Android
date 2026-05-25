@@ -5,12 +5,12 @@ import com.jlsh.aifit.core.util.applyAppLocale
 import dagger.hilt.android.HiltAndroidApp
 
 /**
- * Punto de entrada de la aplicación: inicializa Hilt y el locale global.
+ * Application entry point: Initializes Hilt and the global locale.
  */
 @HiltAndroidApp
 class AiFitApplication : Application() {
 
-    /** Aplica el locale configurado antes de que arranque cualquier pantalla. */
+    /** Applies the configured locale before any screen boots.*/
     override fun onCreate() {
         super.onCreate()
         applyAppLocale()

@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 /**
- * Implementación de [NutritionLogRepository] con caché diaria en Room y sincronización con la API.
+ * Deployed [NutritionLogRepository] with daily cache in Room and sync with API.
  */
 class NutritionLogRepositoryImpl @Inject constructor(
     private val apiService: NutritionLogApiService,
@@ -28,10 +28,10 @@ class NutritionLogRepositoryImpl @Inject constructor(
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
     /**
-     * Emite el registro del [date]: primero caché Room si existe, luego datos del servidor.
+     * Outputs the record on [date]: first Room cache if it exists, then server data.
      *
-     * @param date Fecha del registro en formato local.
-     * @return Flujo de [Result] con [NutritionLog], [Result.Loading] o [Result.Error].
+     * @param date Date of the record in local format.
+     * @return Flow of [Result] with [NutritionLog], [Result.Loading], or [Result.Error].
      */
     override fun getNutritionLog(date: LocalDate): Flow<Result<NutritionLog>> = flow {
         emit(Result.Loading)
@@ -57,11 +57,11 @@ class NutritionLogRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Obtiene el historial de registros entre dos fechas ISO (solo red).
+     * Gets the log history between two ISO dates (network only).
      *
-     * @param from Fecha inicial inclusive (ISO_LOCAL_DATE).
-     * @param to Fecha final inclusive (ISO_LOCAL_DATE).
-     * @return [Result.Success] con la lista de logs, o [Result.Error].
+     * @param from Starting date inclusive (ISO_LOCAL_DATE).
+     * @param to End date inclusive (ISO_LOCAL_DATE).
+     * @return [Result.Success] with the list of logs, or [Result.Error].
      */
     override suspend fun getNutritionHistory(from: String, to: String): Result<List<NutritionLog>> {
         return when (val remote = safeApiCall { apiService.getNutritionHistory(from, to) }) {
@@ -72,10 +72,10 @@ class NutritionLogRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Registra una comida manual e invalida la caché del día indicado en [TrackMealRequestDto.date].
+     * Records a manual meal and invalidates the cache for the day indicated in [TrackMealRequestDto.date].
      *
-     * @param request Datos de la comida y alimentos.
-     * @return [Result.Success] con el [MealLog] creado, o [Result.Error].
+     * @param request Food and meal data.
+     * @return [Result.Success] with the created [MealLog], or [Result.Error].
      */
     override suspend fun trackMeal(request: TrackMealRequestDto): Result<MealLog> {
         return when (val remote = safeApiCall { apiService.trackMeal(request) }) {
@@ -89,10 +89,10 @@ class NutritionLogRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Analiza texto libre con IA, registra la comida inferida e invalida la caché del día.
+     * Analyzes free text with AI, records inferred food, and invalidates the day's cache.
      *
-     * @param request Texto, tipo de comida, hora y fecha.
-     * @return [Result.Success] con el [MealLog] generado, o [Result.Error].
+     * @param request Text, food type, time and date.
+     * @return [Result.Success] with the generated [MealLog], or [Result.Error].
      */
     override suspend fun analyzeMealFromText(request: AnalyzeMealFromTextRequestDto): Result<MealLog> {
         return when (val remote = safeApiCall { apiService.analyzeMealFromText(request) }) {
@@ -106,10 +106,10 @@ class NutritionLogRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Elimina una comida registrada e invalida la caché del día actual.
+     * Delete a recorded meal and invalidate the current day's cache.
      *
-     * @param mealId Identificador de la comida a eliminar.
-     * @return [Result.Success] tras confirmación del servidor, o [Result.Error].
+     * @param mealId Identifier of the meal to delete.
+     * @return [Result.Success] upon server confirmation, or [Result.Error].
      */
     override suspend fun deleteMealLog(mealId: String): Result<Unit> {
         return when (val remote = safeApiCall { apiService.deleteMealLog(mealId) }) {

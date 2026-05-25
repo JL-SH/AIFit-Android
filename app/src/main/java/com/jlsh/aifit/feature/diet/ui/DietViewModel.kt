@@ -27,12 +27,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ViewModel del flujo de dieta: detalle de plan, generación y acciones de aprobación.
+ * ViewModel of the diet flow: plan detail, generation and approval actions.
  *
  * Expone:
- * - [detailUiState]: [DietUiState] para la pantalla de detalle (carga, éxito, error, regeneración).
- * - [generateUiState]: [GenerateDietUiState] para el flujo de generación de planes.
- * - [events]: flujo único de [DietUiEvent] (navegación, snackbars).
+ * - [detailUiState]: [DietUiState] for the detail display (loading, success, error, regeneration).
+ * - [generateUiState]: [GenerateDietUiState] for the plan generation flow.
+ * - [events]: single stream of [DietUiEvent] (navigation, snackbars).
  */
 @HiltViewModel
 class DietViewModel @Inject constructor(
@@ -46,19 +46,19 @@ class DietViewModel @Inject constructor(
     // 1. UI STATE
     private val _detailUiState = MutableStateFlow<DietUiState>(DietUiState.Loading)
 
-    /** Estado observable del detalle del plan ([DietUiState]). */
+    /** Plan detail observable state ([DietUiState]).*/
     val detailUiState: StateFlow<DietUiState> = _detailUiState.asStateFlow()
 
     private val _generateUiState = MutableStateFlow<GenerateDietUiState>(GenerateDietUiState.Idle)
 
-    /** Estado observable de la generación de planes ([GenerateDietUiState]). */
+    /** Plan generation observable state ([GenerateDietUiState]).*/
     val generateUiState: StateFlow<GenerateDietUiState> = _generateUiState.asStateFlow()
 
     // 2. EVENTS CHANNEL
     private val _events = Channel<DietUiEvent>(Channel.BUFFERED)
 
     /**
-     * Eventos de UI de un solo consumo: [DietUiEvent.NavigateBack],
+     * One-time UI events: [DietUiEvent.NavigateBack],
      * [DietUiEvent.NavigateToDetail], [DietUiEvent.NavigateToDietApproval],
      * [DietUiEvent.NavigateToDietGenerate] y [DietUiEvent.ShowSnackbar].
      */
@@ -67,9 +67,9 @@ class DietViewModel @Inject constructor(
     // 5. PUBLIC FUNCTIONS
 
     /**
-     * Carga el detalle del plan y actualiza [detailUiState].
+     * Load the plan detail and update [detailUiState].
      *
-     * @param planId Identificador del plan a mostrar.
+     * @param planId Identifier of the plan to display.
      */
     fun loadPlanDetail(planId: String) {
         viewModelScope.launch {
@@ -87,9 +87,9 @@ class DietViewModel @Inject constructor(
     }
 
     /**
-     * Elimina el plan si no está activo; emite snackbar y [DietUiEvent.NavigateBack] al éxito.
+     * Delete the plan if it is not active; casts snackbar and [DietUiEvent.NavigateBack] on success.
      *
-     * @param planId Identificador del plan a eliminar.
+     * @param planId Identifier of the plan to delete.
      */
     fun onDeletePlan(planId: String) {
         val current = _detailUiState.value
@@ -112,9 +112,9 @@ class DietViewModel @Inject constructor(
     }
 
     /**
-     * Activa el plan (aprobación) y navega atrás al completar.
+     * Activate the plan (approval) and navigate back upon completion.
      *
-     * @param planId Identificador del plan a activar.
+     * @param planId Identifier of the plan to activate.
      */
     fun onApproveDietPlan(planId: String) {
         viewModelScope.launch {
@@ -132,9 +132,9 @@ class DietViewModel @Inject constructor(
     }
 
     /**
-     * Rechaza el plan eliminándolo y emite [DietUiEvent.NavigateToDietGenerate] para generar otro.
+     * Reject the plan by deleting it and issue [DietUiEvent.NavigateToDietGenerate] to generate another one.
      *
-     * @param planId Identificador del plan rechazado.
+     * @param planId Identifier of the rejected plan.
      */
     fun onRejectDietPlan(planId: String) {
         viewModelScope.launch {
@@ -151,10 +151,10 @@ class DietViewModel @Inject constructor(
     }
 
     /**
-     * Elimina el plan actual, genera uno adaptativo con [feedback] y navega a aprobación.
+     * Delete the current plan, generate an adaptive one with [feedback] and navigate to approval.
      *
-     * @param currentPlanId Plan a sustituir.
-     * @param feedback Consideraciones del usuario para la regeneración; puede ser null.
+     * @param currentPlanId Plan to replace.
+     * @param feedback User considerations for feedback; can be null.
      */
     fun onRegenerateApprovalDietPlan(currentPlanId: String, feedback: String?) {
         viewModelScope.launch {
@@ -202,9 +202,9 @@ class DietViewModel @Inject constructor(
     }
 
     /**
-     * Genera un plan estándar, actualiza [generateUiState] y emite [DietUiEvent.NavigateToDetail].
+     * Generate a standard plan, update [generateUiState], and emit [DietUiEvent.NavigateToDetail].
      *
-     * @param request Parámetros de generación del plan.
+     * @param request Plan generation parameters.
      */
     fun onGeneratePlan(request: GenerateDietPlanRequestDto) {
         viewModelScope.launch {
@@ -227,9 +227,9 @@ class DietViewModel @Inject constructor(
     }
 
     /**
-     * Genera un plan adaptativo, actualiza [generateUiState] y emite [DietUiEvent.NavigateToDetail].
+     * Generate an adaptive plan, update [generateUiState], and emit [DietUiEvent.NavigateToDetail].
      *
-     * @param request Parámetros adaptativos del plan.
+     * @param request Adaptive parameters of the plan.
      */
     fun onGenerateAdaptivePlan(request: GenerateAdaptiveDietPlanRequestDto) {
         viewModelScope.launch {
@@ -252,10 +252,10 @@ class DietViewModel @Inject constructor(
     }
 
     /**
-     * Reservado para navegación a generación; la pantalla delega en lambdas de navegación.
+     * Reserved for navigation to generation; the screen delegates to navigation lambdas.
      *
-     * @param adaptive true para flujo adaptativo.
-     * @param basePlanId Plan base opcional para regeneración.
+     * @param adaptive true for adaptive flow.
+     * @param basePlanId Optional base plan for regeneration.
      */
     fun onNavigateToGenerate(adaptive: Boolean, basePlanId: String?) {
         // Navigation handled by screen lambdas — this is a pass-through if needed

@@ -20,21 +20,21 @@ val AiFitShapes = Shapes(
 /** Cards principales — amplio, moderno (16 dp). */
 val CardShape: Shape = RoundedCornerShape(16.dp)
 
-/** Chips, badges y tracks de barras — look técnico/deportivo (8 dp). */
+/** Chips, badges and bar tracks — technical/sporty look (8 dp).*/
 val ChipShape: Shape = RoundedCornerShape(8.dp)
 
 /** Botones primarios y CTAs — equilibrado, no circular (12 dp). */
 val ButtonShape: Shape = RoundedCornerShape(12.dp)
 
-/** Indicador de selección en bottom navigation — cápsula. */
+/** Selection indicator in bottom navigation — capsule.*/
 val NavIndicatorShape: Shape = RoundedCornerShape(50)
 
 /** @deprecated Use [NavIndicatorShape] for nav indicators or [ButtonShape] for CTAs. */
 val FullShape: Shape = NavIndicatorShape
 
 /**
- * Hexágono regular con el primer vértice en la parte superior.
- * Pensado para badges de gamificación y estado de plan.
+ * Regular hexagon with the first vertex at the top.
+ * Designed for gamification and plan status badges.
  */
 val HexagonShape: Shape = GenericShape { size, _ ->
     val cx = size.width / 2f

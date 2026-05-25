@@ -5,13 +5,13 @@ import com.jlsh.aifit.feature.gamification.domain.model.AchievementRarity
 import com.jlsh.aifit.feature.gamification.domain.model.AchievementType
 
 /**
- * Lista local y estática de todas las definiciones de logros de la aplicación.
+ * Local, static list of all achievement definitions in the application.
  *
- * Se usa como fuente de verdad para mostrar los "próximos logros" (bloqueados) cuando
- * el endpoint del backend no está disponible o devuelve error. El campo [AchievementDefinition.code]
- * se usa para hacer el matching con los logros que el usuario ya ha desbloqueado (que llegan
- * del servidor con su `code` real). Los IDs locales solo se usan para la lista de bloqueados
- * y no necesitan coincidir con los IDs del servidor.
+ * Used as a source of truth to show "next achievements" (locked) when
+ * the backend endpoint is not available or returns an error. The [AchievementDefinition.code] field
+ * is used to match the achievements that the user has already unlocked (which arrive
+ * of the server with its real `code`). Local IDs are only used for the block list
+ * and they do not need to match server IDs.
  */
 internal object LocalAchievementDefinitions {
 

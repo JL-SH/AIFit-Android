@@ -63,19 +63,19 @@ import androidx.compose.ui.res.stringResource
 import com.jlsh.aifit.R
 
 /**
- * Hub central del perfil: cabecera con avatar, estadísticas y menús por secciones.
+ * Profile central hub: header with avatar, statistics and section menus.
  *
- * Agrupa accesos a edición, progreso, logros, glosario, tema oscuro y cierre de sesión.
- * Refresca el perfil al reanudar el ciclo de vida para reflejar fotos subidas en edición.
+ * Groups access to editing, progress, achievements, glossary, dark theme and logout.
+ * Refreshes the profile by resuming the life cycle to reflect uploaded photos in editing.
  *
- * @param onNavigateToEditProfile Abre [UserProfileScreen].
- * @param onNavigateToDashboard Panel de progreso.
- * @param onNavigateToBodyWeight Registro de peso corporal.
- * @param onNavigateToMetabolic Datos metabólicos.
- * @param onNavigateToExport Exportación de datos.
- * @param onNavigateToGamification Pantalla de gamificación; el parámetro distingue logros/récords.
- * @param onNavigateToGlossary Glosario educativo.
- * @param viewModel ViewModel de usuario inyectado por Hilt.
+ * @param onNavigateToEditProfile Opens [UserProfileScreen].
+ * @param onNavigateToDashboard Progress panel.
+ * @param onNavigateToBodyWeight Record body weight.
+ * @param onNavigateToMetabolic Metabolic data.
+ * @param onNavigateToExport Data export.
+ * @param onNavigateToGamification Gamification display; The parameter distinguishes achievements/records.
+ * @param onNavigateToGlossary Education glossary.
+ * @param viewModel ViewModel of user injected by Hilt.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -259,7 +259,7 @@ private fun ProfileHubContent(
             )
         }
 
-        // PROGRESO
+        // PROGRESS
         item { SectionHeader(title = stringResource(R.string.profile_section_progress)) }
         item { MenuRow(PhosphorIcons.Regular.ChartLine, stringResource(R.string.profile_menu_dashboard), onDashboard) }
         item { MenuRow(PhosphorIcons.Regular.Scales, stringResource(R.string.profile_menu_body_weight), onBodyWeight) }

@@ -62,7 +62,7 @@ class LoginScreenTest {
             ) }
         }
 
-        // La label del campo password según strings.xml = "Contraseña"
+        // The label of the password field according to strings.xml = "Password"
         composeTestRule.onNodeWithText("Contraseña").assertIsDisplayed()
     }
 

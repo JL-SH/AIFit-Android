@@ -5,9 +5,9 @@ import androidx.compose.ui.Modifier
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 
 /**
- * Pantalla de carga a pantalla completa al cambiar el plan activo.
- * Usa el mismo aspecto que [LoadingScreen] (fondo opaco, spinner centrado) para no
- * mostrar el hub detrás ni un layout distinto al resto de la app.
+ * Full screen loading screen when changing active plan.
+ * Uses the same look as [LoadingScreen] (opaque background, centered spinner) to avoid
+ * show the hub behind or a layout different from the rest of the app.
  */
 @Composable
 fun PlanActivatingOverlay(modifier: Modifier = Modifier) {

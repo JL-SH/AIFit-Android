@@ -32,14 +32,14 @@ import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
 /**
- * Burbuja del coach que muestra tres puntos pulsantes de forma secuencial
- * mientras se espera la respuesta del AI.
+ * Coach bubble showing three sequentially pulsating dots
+ * while waiting for the AI's response.
  */
 @Composable
 fun TypingIndicator(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "typing")
 
-    // Tres animaciones escalonadas (delay de 200ms entre cada punto)
+    // Three staggered dot animations (200 ms delay between each)
     val dot1Scale by infiniteTransition.animateFloat(
         initialValue = 0.5f,
         targetValue = 1f,

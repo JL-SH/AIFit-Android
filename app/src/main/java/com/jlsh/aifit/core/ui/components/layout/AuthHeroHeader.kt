@@ -22,15 +22,15 @@ import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 
 /**
- * Cabecera hero compartida por todas las pantallas de autenticación.
+ * Hero header shared by all authentication screens.
  *
- * Muestra el logo de la app centrado, precedido del "breathing room" superior
- * definido en el Design System (xxl = 48 dp) y seguido del título de la
- * pantalla con el nivel tipográfico [MaterialTheme.typography.displaySmall]
- * (lg = 24 dp de separación).
+ * Shows the app logo centered, preceded by the upper breathing room
+ * defined in the Design System (xxl = 48 dp) and followed by the title of the
+ * display with typographic level [MaterialTheme.typography.displaySmall]
+ * (lg = 24 dp separation).
  *
- * @param title Texto del título que se renderiza bajo el logo.
- * @param modifier Modificador opcional para personalizar el contenedor externo.
+ * @param title Title text that is rendered under the logo.
+ * @param modifier Optional modifier to customize the outer container.
  */
 @Composable
 fun AuthHeroHeader(

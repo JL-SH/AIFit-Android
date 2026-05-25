@@ -40,7 +40,7 @@ class EducationViewModelTest {
         getGlossaryTermUseCase,
     )
 
-    // ─── Estado inicial ────────────────────────────────────────────────────────
+    // ─── Initial state ──────────────────────────── ────────────────────────────
 
     @Test
     fun `estado inicial de explanationState es Idle`() {

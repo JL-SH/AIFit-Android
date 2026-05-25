@@ -26,25 +26,25 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 /**
- * ViewModel del módulo de progreso: dashboard, peso corporal y resumen semanal.
+ * ViewModel of the progress module: dashboard, body weight and weekly summary.
  *
- * **UiState expuesto**:
- * - [dashboardState] — [DashboardUiState]: panel principal (carga, error o [ProgressDashboard]).
- * - [bodyWeightState] — [BodyWeightUiState]: historial y formulario de registro de peso.
- * - [weeklySummaryState] — [WeeklySummaryUiState]: resumen semanal.
- * - [selectedPeriod]: etiqueta del filtro temporal del dashboard (7 / 30 / 90 días).
+ * **UiState exposed**:
+ * - [dashboardState] — [DashboardUiState]: main panel (loading, error or [ProgressDashboard]).
+ * - [bodyWeightState] — [BodyWeightUiState]: Weight record history and form.
+ * - [weeklySummaryState] — [WeeklySummaryUiState]: weekly summary.
+ * - [selectedPeriod]: dashboard temporal filter label (7 / 30 / 90 days).
  *
- * **Eventos emitidos** ([events] — [ProgressUiEvent]):
- * - [ProgressUiEvent.NavigateToBodyWeight]: abrir pantalla de peso.
- * - [ProgressUiEvent.NavigateToWeeklySummary]: abrir resumen semanal.
- * - [ProgressUiEvent.NavigateToMetabolic]: abrir análisis metabólico.
- * - [ProgressUiEvent.NavigateBack]: volver atrás.
- * - [ProgressUiEvent.ShowSnackbar]: mensaje transitorio (éxito o error).
+ * **Emitted events** ([events] — [ProgressUiEvent]):
+ * - [ProgressUiEvent.NavigateToBodyWeight]: Open weight screen.
+ * - [ProgressUiEvent.NavigateToWeeklySummary]: Open weekly summary.
+ * - [ProgressUiEvent.NavigateToMetabolic]: Open metabolic analysis.
+ * - [ProgressUiEvent.NavigateBack]: go back.
+ * - [ProgressUiEvent.ShowSnackbar]: transient message (success or error).
  *
- * @param getProgressDashboardUseCase Carga del dashboard agregado.
- * @param getWeeklyProgressSummaryUseCase Resumen semanal.
- * @param logBodyWeightUseCase Registro de un nuevo peso.
- * @param getBodyWeightHistoryUseCase Historial reactivo de peso.
+ * @param getProgressDashboardUseCase Loading the added dashboard.
+ * @param getWeeklyProgressSummaryUseCase Weekly summary.
+ * @param logBodyWeightUseCase Log a new weight.
+ * @param getBodyWeightHistoryUseCase Reactive body-weight history.
  */
 @HiltViewModel
 class ProgressViewModel @Inject constructor(
@@ -56,25 +56,25 @@ class ProgressViewModel @Inject constructor(
 
     // 1. UI STATE
     private val _dashboardState = MutableStateFlow<DashboardUiState>(DashboardUiState.Loading)
-    /** Estado del dashboard de progreso. */
+    /** Status of the progress dashboard.*/
     val dashboardState: StateFlow<DashboardUiState> = _dashboardState.asStateFlow()
 
     private val _bodyWeightState = MutableStateFlow(BodyWeightUiState())
-    /** Estado de historial y formulario de peso corporal. */
+    /** History status and body weight form.*/
     val bodyWeightState: StateFlow<BodyWeightUiState> = _bodyWeightState.asStateFlow()
 
     private val _weeklySummaryState = MutableStateFlow<WeeklySummaryUiState>(WeeklySummaryUiState.Loading)
-    /** Estado del resumen semanal. */
+    /** Weekly summary status.*/
     val weeklySummaryState: StateFlow<WeeklySummaryUiState> = _weeklySummaryState.asStateFlow()
 
     // 2. EVENTS CHANNEL
     private val _events = Channel<ProgressUiEvent>(Channel.BUFFERED)
-    /** Flujo único de eventos de navegación y snackbar. */
+    /** Unique flow of navigation and snackbar events.*/
     val events = _events.receiveAsFlow()
 
     // 3. LOCAL UI STATE
     private val _selectedPeriod = MutableStateFlow("30 días")
-    /** Periodo seleccionado en el dashboard («7 días», «30 días», «90 días»). */
+    /** Period selected in the dashboard (“7 days”, “30 days”, “90 days”).*/
     val selectedPeriod: StateFlow<String> = _selectedPeriod.asStateFlow()
 
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -87,35 +87,35 @@ class ProgressViewModel @Inject constructor(
 
     // 5. PUBLIC FUNCTIONS
 
-    /** Actualiza el filtro temporal y recarga el dashboard. */
+    /** Update the temporary filter and reload the dashboard.*/
     fun onPeriodSelected(period: String) {
         _selectedPeriod.value = period
         loadDashboard()
     }
 
-    /** Fuerza la recarga del dashboard con el periodo actual. */
+    /** Force the dashboard to reload with the current period.*/
     fun onRefreshDashboard() {
         loadDashboard()
     }
 
-    /** Solicita navegación a la pantalla de peso corporal. */
+    /** Request navigation to body weight screen.*/
     fun onNavigateToBodyWeight() {
         emitEvent(ProgressUiEvent.NavigateToBodyWeight)
     }
 
-    /** Solicita navegación al resumen semanal. */
+    /** Request navigation to the weekly summary.*/
     fun onNavigateToWeeklySummary() {
         emitEvent(ProgressUiEvent.NavigateToWeeklySummary)
     }
 
-    /** Solicita navegación al análisis metabólico. */
+    /** Request navigation to metabolic analysis.*/
     fun onNavigateToMetabolic() {
         emitEvent(ProgressUiEvent.NavigateToMetabolic)
     }
 
     // ===== BODY WEIGHT =====
 
-    /** Inicia la observación del historial de peso de los últimos seis meses. */
+    /** Start observing weight history for the last six months.*/
     fun loadBodyWeightHistory() {
         bodyWeightHistoryJob?.cancel()
         bodyWeightHistoryJob = viewModelScope.launch {
@@ -142,22 +142,22 @@ class ProgressViewModel @Inject constructor(
         }
     }
 
-    /** Actualiza el valor del campo de peso en el formulario. */
+    /** Updates the value of the weight field on the form.*/
     fun onWeightChanged(value: String) {
         _bodyWeightState.value = _bodyWeightState.value.copy(formWeight = value)
     }
 
-    /** Actualiza la fecha del registro de peso. */
+    /** Updates the date of the weight record.*/
     fun onWeightDateChanged(date: LocalDate) {
         _bodyWeightState.value = _bodyWeightState.value.copy(formDate = date)
     }
 
-    /** Actualiza las notas opcionales del registro. */
+    /** Update optional log notes.*/
     fun onWeightNotesChanged(notes: String) {
         _bodyWeightState.value = _bodyWeightState.value.copy(formNotes = notes)
     }
 
-    /** Valida el formulario, envía el peso y refresca el historial si tiene éxito. */
+    /** Validate the form, send the weight and refresh the history if successful.*/
     fun onLogWeight() {
         val state = _bodyWeightState.value
         val weight = state.formWeight.toDoubleOrNull() ?: return
@@ -191,7 +191,7 @@ class ProgressViewModel @Inject constructor(
 
     // ===== WEEKLY SUMMARY =====
 
-    /** Carga el resumen de progreso de la semana actual. */
+    /** Loads the progress summary for the current week.*/
     fun loadWeeklySummary() {
         viewModelScope.launch {
             _weeklySummaryState.value = WeeklySummaryUiState.Loading

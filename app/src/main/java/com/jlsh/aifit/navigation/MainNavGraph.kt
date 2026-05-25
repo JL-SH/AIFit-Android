@@ -62,9 +62,9 @@ private val tabRouteToGraphRoute = mapOf(
 )
 
 /**
- * Registra el grafo principal de la app autenticada (bottom navigation y pestañas).
+ * Registers the main graph of the authenticated app (bottom navigation and tabs).
  *
- * @param navController Controlador del [NavHost] raíz; usado para saltos entre auth y main.
+ * @param navController Controller for root [NavHost]; used for jumps between auth and main.
  */
 fun NavGraphBuilder.mainNavGraph(navController: NavController) {
     composable(MainRoutes.GRAPH) {
@@ -563,7 +563,7 @@ private fun MainNavScreen() {
                             },
                         )
                     }
-                    // Ruta para chat nuevo (sin sessionId — sesión se crea al primer mensaje)
+                    // Route for new chat (without sessionId — session is created on first message)
                     aifitComposable(route = CoachRoutes.NEW_CHAT) {
                         ChatScreen(
                             onNavigateBack = { tabNavController.popBackStack() },

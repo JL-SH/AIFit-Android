@@ -38,16 +38,16 @@ class DietRepositoryImplTest {
         coEvery { apiService.getDietPlans() } returns ApiResponse(success = true, data = freshDto)
 
         sut.getDietPlans().test {
-            // 1ª emisión: Loading
+            // 1st broadcast: Loading
             val loading = awaitItem()
             assertTrue(loading is Result.Loading)
 
-            // 2ª emisión: cache
+            // 2nd broadcast: cache
             val cacheResult = awaitItem()
             assertTrue(cacheResult is Result.Success)
             assertEquals("cached-1", (cacheResult as Result.Success).data[0].id)
 
-            // 3ª emisión: fresco de API
+            // 3rd issue: fresh from API
             val freshResult = awaitItem()
             assertTrue(freshResult is Result.Success)
             assertEquals("fresh-1", (freshResult as Result.Success).data[0].id)

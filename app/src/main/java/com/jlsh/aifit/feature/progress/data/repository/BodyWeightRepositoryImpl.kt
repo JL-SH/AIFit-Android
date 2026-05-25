@@ -18,13 +18,13 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 /**
- * Implementación de [BodyWeightRepository] con caché reactiva en Room y sincronización remota.
+ * Implementation of [BodyWeightRepository] with reactive cache in Room and remote synchronization.
  *
- * Emite primero datos locales y refresca en segundo plano desde la API; las inserciones en Room
- * vuelven a emitir automáticamente al observador.
+ * Emits local data first and refreshes in the background from the API; Room inserts
+ * automatically rebroadcast to the observer.
  *
- * @param apiService Cliente HTTP de peso corporal.
- * @param dao Acceso local al historial de peso.
+ * @param apiService Bodyweight HTTP Client.
+ * @param dao Local access to weight history.
  */
 class BodyWeightRepositoryImpl @Inject constructor(
     private val apiService: BodyWeightApiService,
@@ -34,11 +34,11 @@ class BodyWeightRepositoryImpl @Inject constructor(
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
     /**
-     * Observa el historial de peso en el rango de fechas, combinando caché local y red.
+     * Observe the weight history in the date range, combining local and network cache.
      *
-     * @param from Fecha de inicio en formato ISO local (`yyyy-MM-dd`).
-     * @param to Fecha de fin en formato ISO local (`yyyy-MM-dd`).
-     * @return Flujo que emite [Result.Loading], luego [Result.Success] con la lista (o [Result.Error] en fallos de red sin caché).
+     * @param from Start date in local ISO format (`yyyy-MM-dd`).
+     * @param to End date in local ISO format (`yyyy-MM-dd`).
+     * @return Flow that emits [Result.Loading], then [Result.Success] with the list (or [Result.Error] on non-cache network failures).
      */
     override fun getHistory(from: String, to: String): Flow<Result<List<BodyWeightLog>>> {
         val fromEpoch = runCatching { LocalDate.parse(from, dateFormatter).toEpochDay() }.getOrDefault(0L)
@@ -80,10 +80,10 @@ class BodyWeightRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Registra un peso en el servidor y lo persiste en Room.
+     * Registers a weight on the server and persists it in Room.
      *
-     * @param request Peso, fecha y notas del registro.
-     * @return [Result.Success] con el log creado, [Result.Error] en fallo de API, o [Result.Loading] transitorio.
+     * @param request Weight, date and notes of the record.
+     * @return [Result.Success] with the log created, [Result.Error] on API failure, or [Result.Loading] transient.
      */
     override suspend fun logWeight(request: LogBodyWeightRequestDto): Result<BodyWeightLog> {
         return when (val remote = safeApiCall { apiService.logWeight(request) }) {

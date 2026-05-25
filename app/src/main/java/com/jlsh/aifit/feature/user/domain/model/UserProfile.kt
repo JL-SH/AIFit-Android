@@ -3,28 +3,28 @@ package com.jlsh.aifit.feature.user.domain.model
 import java.time.LocalDate
 
 /**
- * Perfil de usuario con datos de identidad, antropometría y preferencias de entrenamiento/nutrición.
+ * User profile with identity data, anthropometry and training/nutrition preferences.
  *
- * @property id Identificador único del usuario.
- * @property name Nombre para mostrar.
- * @property email Correo de la cuenta.
- * @property authProvider Proveedor de autenticación (p. ej. `LOCAL`, `GOOGLE`).
- * @property profilePictureUrl URL del avatar, si existe.
- * @property birthDate Fecha de nacimiento.
- * @property gender Género declarado.
- * @property height Altura en centímetros.
- * @property weight Peso actual en kilogramos.
- * @property targetWeight Peso objetivo en kilogramos.
- * @property goalType Objetivo principal (pérdida de grasa, ganancia muscular, etc.).
- * @property activityLevel Nivel de actividad diaria.
- * @property fitnessLevel Nivel de experiencia en entrenamiento.
- * @property workoutLocation Lugar preferido para entrenar.
- * @property dietPreference Preferencia dietética.
- * @property knowledgeLevel Nivel de conocimiento en fitness/nutrición (texto libre del backend).
- * @property weeklyWorkoutDays Días de entrenamiento por semana.
- * @property availableMinutesPerSession Minutos disponibles por sesión.
- * @property injuries Lesiones o limitaciones indicadas por el usuario.
- * @property calorieTarget Objetivo calórico diario en kcal.
+ * @property id Unique identifier of the user.
+ * @property name Name to display.
+ * @property email Email of the account.
+ * @property authProvider Authentication provider (e.g. `LOCAL`, `GOOGLE`).
+ * @property profilePictureUrl URL of the avatar, if it exists.
+ * @property birthDate Date of birth.
+ * @property gender Declared gender.
+ * @property height Height in centimeters.
+ * @property weight Current weight in kilograms.
+ * @property targetWeight Target weight in kilograms.
+ * @property goalType Main goal (fat loss, muscle gain, etc.).
+ * @property activityLevel Daily activity level.
+ * @property fitnessLevel Training experience level.
+ * @property workoutLocation Preferred place to work out.
+ * @property dietPreference Dietary preference.
+ * @property knowledgeLevel Fitness/nutrition knowledge level (free text from backend).
+ * @property weeklyWorkoutDays Training days per week.
+ * @property availableMinutesPerSession Available minutes per session.
+ * @property injuries Injuries or limitations indicated by the user.
+ * @property calorieTarget Daily calorie goal in kcal.
  */
 data class UserProfile(
     val id: String,

@@ -51,13 +51,13 @@ import com.jlsh.aifit.feature.education.ui.components.EducationConfirmSheet
 import com.jlsh.aifit.feature.education.ui.state.GlossaryState
 
 /**
- * Pantalla de búsqueda en el glosario educativo de fitness y nutrición.
+ * Fitness and nutrition educational glossary search screen.
  *
- * Muestra campo de búsqueda, hoja de confirmación antes de consultar, estados vacío/carga/error
- * y tarjeta con definición y chips de términos relacionados navegables.
+ * Shows search field, confirmation sheet before query, empty/load/error statuses
+ * and card with definition and chips of navigable related terms.
  *
- * @param onNavigateBack Vuelve a la pantalla anterior.
- * @param viewModel ViewModel educativo inyectado por Hilt.
+ * @param onNavigateBack Returns to the previous screen.
+ * @param viewModel Education ViewModel injected by Hilt.
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable

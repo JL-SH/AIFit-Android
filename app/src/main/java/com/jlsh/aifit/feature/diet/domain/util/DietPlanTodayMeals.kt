@@ -5,8 +5,8 @@ import com.jlsh.aifit.feature.diet.domain.model.Meal
 import java.time.LocalDate
 
 /**
- * Devuelve las comidas programadas para el día actual según el calendario del plan.
- * Usa el mismo índice cíclico que el dashboard de inicio (lunes = día 1, etc.).
+ * Returns meals scheduled for the current day based on the plan calendar.
+ * Use the same cyclical index as the home dashboard (Monday = day 1, etc.).
  */
 fun DietPlan.mealsForToday(): List<Meal> {
     if (days.isEmpty()) return emptyList()

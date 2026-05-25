@@ -107,7 +107,7 @@ class UserProfileDaoTest {
 
     @Test
     fun `delete con id inexistente no lanza excepción`() = runTest {
-        // No debe lanzar excepción
+        // Should not throw exception
         dao.delete("id-que-no-existe")
     }
 

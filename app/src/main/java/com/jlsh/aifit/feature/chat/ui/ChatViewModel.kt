@@ -37,27 +37,27 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * ViewModel compartido por el listado de sesiones y la conversación activa con el AI Coach.
+ * ViewModel shared by the list of sessions and the active conversation with the AI ​​Coach.
  *
- * **UiState del listado** ([listState] — [ChatListUiState]):
- * - [ChatListUiState.Loading]: cargando sesiones.
- * - [ChatListUiState.Success]: sesiones activas (excluye archivadas y borrados optimistas).
- * - [ChatListUiState.Error]: mensaje de error.
+ * **ListUiState** ([listState] — [ChatListUiState]):
+ * - [ChatListUiState.Loading]: loading sessions.
+ * - [ChatListUiState.Success]: Active sessions (excludes archived and optimistic deletes).
+ * - [ChatListUiState.Error]: error message.
  *
- * **UiState del chat** ([chatState] — [ChatState]):
- * - Mensajes, texto de entrada, imagen pendiente, título de sesión.
- * - [ChatState.isLoading]: carga de sesión existente.
- * - [ChatState.isWaitingResponse]: esperando respuesta del asistente.
- * - [ChatState.error]: error al cargar la sesión.
+ * **Chat UiState** ([chatState] — [ChatState]):
+ * - Messages, input text, pending image, session title.
+ * - [ChatState.isLoading]: Load existing session.
+ * - [ChatState.isWaitingResponse]: waiting for response from the assistant.
+ * - [ChatState.error]: Error loading session.
  *
- * **Eventos emitidos** ([events] — [ChatUiEvent]):
- * - [ChatUiEvent.NavigateToChat]: abrir sesión existente.
- * - [ChatUiEvent.NavigateToNewChat]: iniciar chat vacío sin crear sesión en backend.
- * - [ChatUiEvent.NavigateBack]: volver tras archivar la sesión actual.
- * - [ChatUiEvent.SessionCreated]: sesión creada (reservado para flujos futuros).
- * - [ChatUiEvent.ShowSnackbar]: mensaje al usuario.
+ * **Emitted events** ([events] — [ChatUiEvent]):
+ * - [ChatUiEvent.NavigateToChat]: Open existing session.
+ * - [ChatUiEvent.NavigateToNewChat]: Start empty chat without creating session in backend.
+ * - [ChatUiEvent.NavigateBack]: Return after archiving the current session.
+ * - [ChatUiEvent.SessionCreated]: Session created (reserved for future flows).
+ * - [ChatUiEvent.ShowSnackbar]: message to the user.
  *
- * @param savedStateHandle Lee `sessionId` de la ruta; `null` indica chat nuevo.
+ * @param savedStateHandle Reads `sessionId` from the path; `null` indicates new chat.
  */
 @HiltViewModel
 class ChatViewModel @Inject constructor(
@@ -75,26 +75,26 @@ class ChatViewModel @Inject constructor(
     // ── Session List State ───────────────────────────────────────────────────
     private val _listState = MutableStateFlow<ChatListUiState>(ChatListUiState.Loading)
 
-    /** Estado del listado de conversaciones. */
+    /** Status of the conversation list.*/
     val listState: StateFlow<ChatListUiState> = _listState.asStateFlow()
 
-    // IDs pendientes de borrado en red (para filtrarlos en loadSessions)
+    // IDs pending network deletion (filtered out in loadSessions)
     private val pendingDeleteIds = mutableSetOf<String>()
 
     // ── Active Chat State ────────────────────────────────────────────────────
     private val _chatState = MutableStateFlow(ChatState())
 
-    /** Estado de la conversación activa (mensajes, entrada, carga). */
+    /** Status of the active conversation (messages, entry, upload).*/
     val chatState: StateFlow<ChatState> = _chatState.asStateFlow()
 
     // ── Events ───────────────────────────────────────────────────────────────
     private val _events = Channel<ChatUiEvent>(Channel.BUFFERED)
 
-    /** Flujo de navegación y snackbars; consumir una vez por pantalla. */
+    /** Navigation flow and snackbars; consume once per screen.*/
     val events = _events.receiveAsFlow()
 
-    // Puede ser null cuando el usuario navega a "nuevo chat" sin haber enviado nada aún.
-    // Se asigna el id real en el primer envío.
+    // Can be null when the user navigates to "new chat" without having sent anything yet.
+    // The real id is assigned in the first sending.
     private val savedSessionId: String? = savedStateHandle.get<String>("sessionId")
     private var effectiveSessionId: String? = savedSessionId
 
@@ -102,7 +102,7 @@ class ChatViewModel @Inject constructor(
         if (savedSessionId != null) {
             loadSession(savedSessionId)
         } else {
-            // Chat nuevo: mostrar pantalla vacía lista para escribir
+            // New chat: show empty screen ready to write
             _chatState.value = ChatState(isLoading = false)
             loadSessions()
         }
@@ -110,7 +110,7 @@ class ChatViewModel @Inject constructor(
 
     // ── Session List ─────────────────────────────────────────────────────────
 
-    /** Recarga el listado de sesiones desde el repositorio (caché + red). */
+    /** Reload the session list from the repository (cache + network).*/
     fun loadSessions() {
         viewModelScope.launch {
             getChatSessionsUseCase().collect { result ->
@@ -134,18 +134,18 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    /** Emite [ChatUiEvent.NavigateToNewChat] sin crear sesión en el backend. */
+    /** Issues [ChatUiEvent.NavigateToNewChat] without creating a session in the backend.*/
     fun onNewSession() {
-        // Navegar a chat nuevo SIN llamar al backend todavía
+        // Navigate to new chat WITHOUT calling the backend yet
         viewModelScope.launch {
             _events.send(ChatUiEvent.NavigateToNewChat)
         }
     }
 
     /**
-     * Elimina una sesión con borrado optimista en el listado.
+     * Delete a session with optimistic delete from the list.
      *
-     * @param id Identificador de la sesión a eliminar.
+     * @param id Identifier of the session to delete.
      */
     fun onDeleteSession(id: String) {
         // Optimistic delete: remove immediately from local state
@@ -175,9 +175,9 @@ class ChatViewModel @Inject constructor(
     }
 
     /**
-     * Archiva una sesión y recarga el listado.
+     * Archive a session and reload the list.
      *
-     * @param id Identificador de la sesión a archivar.
+     * @param id Identifier of the session to archive.
      */
     fun onArchiveSession(id: String) {
         viewModelScope.launch {
@@ -195,10 +195,10 @@ class ChatViewModel @Inject constructor(
     }
 
     /**
-     * Renombra una sesión y recarga el listado.
+     * Rename a session and reload the list.
      *
-     * @param id Identificador de la sesión.
-     * @param newTitle Nuevo título (se recorta espacios en blanco).
+     * @param id Session identifier.
+     * @param newTitle New title (whitespace is trimmed).
      */
     fun onRenameSession(id: String, newTitle: String) {
         viewModelScope.launch {
@@ -218,11 +218,11 @@ class ChatViewModel @Inject constructor(
     // ── Active Chat ──────────────────────────────────────────────────────────
 
     /**
-     * Carga los mensajes y metadatos de una sesión existente.
+     * Loads messages and metadata from an existing session.
      *
-     * @param id Identificador de la sesión de chat.
+     * @param id Identifier of the chat session.
      */
-    /** Reintenta cargar la sesión activa tras un error de red o servidor. */
+    /** Retry loading the active session after a network or server error.*/
     fun retrySessionLoad() {
         effectiveSessionId?.let { loadSession(it) }
     }
@@ -256,18 +256,18 @@ class ChatViewModel @Inject constructor(
     }
 
     /**
-     * Actualiza el texto del campo de entrada.
+     * Updates the input field text.
      *
-     * @param text Contenido actual del input.
+     * @param text Current content of the input.
      */
     fun onInputChanged(text: String) {
         _chatState.update { it.copy(inputText = text) }
     }
 
     /**
-     * Almacena una imagen de galería comprimida como adjunto pendiente de envío.
+     * Stores a compressed gallery image as an attachment pending delivery.
      *
-     * @param rawBytes Bytes originales de la imagen seleccionada.
+     * @param rawBytes Original bytes of the selected image.
      */
     fun onImageSelected(rawBytes: ByteArray) {
         viewModelScope.launch(Dispatchers.Default) {
@@ -278,13 +278,13 @@ class ChatViewModel @Inject constructor(
     }
 
     /**
-     * Decodifica los bytes en un Bitmap, lo escala a máx. MAX_IMAGE_PX × MAX_IMAGE_PX
-     * y lo recomprime como JPEG al 70 % de calidad.
-     * Resultado típico: foto de 4 MB → ~80-120 KB → Base64 ~160 KB (viable en HTTP JSON).
+     * Decodes the bytes in a Bitmap, scales it to max. MAX_IMAGE_PX × MAX_IMAGE_PX
+     * and re-encodes it as JPEG at 70% quality.
+     * Typical result: 4 MB photo → ~80-120 KB → Base64 ~160 KB (workable in HTTP JSON).
      */
     private fun compressImageBytes(raw: ByteArray): ByteArray {
         val original = BitmapFactory.decodeByteArray(raw, 0, raw.size)
-            ?: return raw  // fallback: si no se puede decodificar, usar raw
+            ?: return raw  // fallback: use raw bytes when decode fails
 
         val maxPx = MAX_IMAGE_PX
         val (w, h) = original.width to original.height
@@ -308,8 +308,8 @@ class ChatViewModel @Inject constructor(
     }
 
     /**
-     * Envía el mensaje actual (texto y/o imagen). Crea la sesión en el primer envío si aún no existe.
-     * Tras el primer intercambio, solicita un título generado por IA o usa un fallback local.
+     * Send the current message (text and/or image). Create the session on the first submission if it doesn't already exist.
+     * After the first exchange, request an AI-generated title or use a local fallback.
      */
     fun onSendMessage() {
         val content = _chatState.value.inputText.trim()
@@ -319,11 +319,11 @@ class ChatViewModel @Inject constructor(
             return
         }
 
-        // ¿Es el primer mensaje de una sesión nueva (aún sin ID)?
+        // Is it the first message of a new session (even without ID)?
         val isNewSession = effectiveSessionId == null
         val isFirstMessage = _chatState.value.messages.isEmpty()
 
-        // Convertir imagen a Base64 si existe
+        // Convert image to Base64 when present
         val imageBase64 = imageBytes?.let { Base64.encodeToString(it, Base64.NO_WRAP) }
 
         val userMessage = ChatMessage(
@@ -344,7 +344,7 @@ class ChatViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            // Si todavía no hay sesión, crearla ahora (primer mensaje)
+            // If there is no session yet, create it now (first message)
             if (isNewSession) {
                 Log.d("AIFIT_DEBUG", "onSendMessage: creando sesión lazy…")
                 when (val created = startChatSessionUseCase()) {
@@ -374,7 +374,7 @@ class ChatViewModel @Inject constructor(
                     _chatState.update {
                         it.copy(messages = it.messages + result.data, isWaitingResponse = false)
                     }
-                    // Generar título por temática usando IA del backend (primer intercambio)
+                    // Generate title by topic using backend AI (first exchange)
                     if (isFirstMessage) {
                         when (val titleResult = generateChatSessionTitleUseCase(sid)) {
                             is Result.Success -> {
@@ -382,7 +382,7 @@ class ChatViewModel @Inject constructor(
                                 Log.d("AIFIT_DEBUG", "onSendMessage: título por IA → '${titleResult.data}'")
                             }
                             is Result.Error -> {
-                                // Fallback: usar el primer mensaje truncado
+                                // Fallback: use truncated first message as title
                                 val fallback = generateAutoTitle(content)
                                 renameChatSessionUseCase(sid, fallback)
                                 _chatState.update { it.copy(sessionTitle = fallback) }
@@ -403,13 +403,13 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    /** Genera un título legible a partir del primer mensaje del usuario (máx. 45 chars). */
+    /** Generates a readable title from the user's first message (max. 45 chars).*/
     private fun generateAutoTitle(firstMessage: String): String {
         val clean = firstMessage.trim().replace('\n', ' ')
         return if (clean.length <= 45) clean else clean.take(42) + "…"
     }
 
-    /** Archiva la sesión activa y emite [ChatUiEvent.NavigateBack] si tiene éxito. */
+    /** Archives the active session and issues [ChatUiEvent.NavigateBack] if successful.*/
     fun onArchiveCurrentSession() {
         val sid = effectiveSessionId ?: return
         viewModelScope.launch {
@@ -427,7 +427,7 @@ class ChatViewModel @Inject constructor(
     }
 
     companion object {
-        private const val MAX_IMAGE_PX = 800   // máx. dimensión en píxeles
+        private const val MAX_IMAGE_PX = 800   // max. dimension in pixels
         private const val IMAGE_QUALITY = 70   // calidad JPEG (0-100)
     }
 }

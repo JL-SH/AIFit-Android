@@ -19,7 +19,7 @@ data class ChatState(
     val sessionTitle: String = "",
     val isLoading: Boolean = true,
     val error: String? = null,
-    /** Bytes de la imagen pendiente de enviar (seleccionada de la galería). */
+    /** Bytes of the image pending to be sent (selected from the gallery).*/
     val pendingImageBytes: ByteArray? = null,
 ) {
     override fun equals(other: Any?): Boolean {

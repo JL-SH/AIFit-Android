@@ -21,33 +21,33 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ViewModel compartido por las pantallas de contenido educativo contextual.
+ * ViewModel shared by contextual educational content screens.
  *
- * **UiState expuesto** ([explanationState] — [ExplanationState]):
- * - [ExplanationState.Idle]: sin explicación cargada.
- * - [ExplanationState.Loading]: cargando explicación de ejercicio o comida.
- * - [ExplanationState.Success]: explicación contextual lista.
- * - [ExplanationState.Error]: mensaje de error.
+ * **Exposed UiState** ([explanationState] — [ExplanationState]):
+ * - [ExplanationState.Idle]: No explanation loaded.
+ * - [ExplanationState.Loading]: loading exercise or food explanation.
+ * - [ExplanationState.Success]: Contextual explanation ready.
+ * - [ExplanationState.Error]: error message.
  *
- * **UiState expuesto** ([whyThisState] — [WhyThisState]):
- * - [WhyThisState.Idle]: sin explicación "por qué esto".
- * - [WhyThisState.Loading]: cargando justificación.
- * - [WhyThisState.Success]: explicación lista.
- * - [WhyThisState.Error]: mensaje de error.
+ * **UiState exposed** ([whyThisState] — [WhyThisState]):
+ * - [WhyThisState.Idle]: No explanation "why this".
+ * - [WhyThisState.Loading]: loading justification.
+ * - [WhyThisState.Success]: explanation ready.
+ * - [WhyThisState.Error]: error message.
  *
- * **UiState expuesto** ([glossaryState] — [GlossaryState]):
- * - [GlossaryState.Idle]: glosario sin búsqueda activa.
- * - [GlossaryState.Loading]: consultando término.
- * - [GlossaryState.Success]: definición del término lista.
- * - [GlossaryState.Error]: mensaje de error.
+ * **UiState exposed** ([glossaryState] — [GlossaryState]):
+ * - [GlossaryState.Idle]: Glossary without active search.
+ * - [GlossaryState.Loading]: Querying term.
+ * - [GlossaryState.Success]: definition of the term list.
+ * - [GlossaryState.Error]: error message.
  *
- * No emite eventos de navegación; las pantallas reaccionan directamente al [StateFlow].
+ * Does not emit navigation events; The screens react directly to [StateFlow].
  *
- * @param getExerciseExplanationUseCase Explicación de un ejercicio del plan.
- * @param getMealExplanationUseCase Explicación de una comida del plan.
- * @param getWhyThisExerciseUseCase Justificación de por qué está ese ejercicio.
- * @param getWhyThisMealUseCase Justificación de por qué está esa comida.
- * @param getGlossaryTermUseCase Definición de un término del glosario.
+ * @param getExerciseExplanationUseCase Explanation of an exercise in the plan.
+ * @param getMealExplanationUseCase Explanation of a meal in the plan.
+ * @param getWhyThisExerciseUseCase Justification for why this exercise is there.
+ * @param getWhyThisMealUseCase Justification for why that food is there.
+ * @param getGlossaryTermUseCase Definition of a glossary term.
  */
 @HiltViewModel
 class EducationViewModel @Inject constructor(
@@ -60,23 +60,23 @@ class EducationViewModel @Inject constructor(
 
     private val _explanationState = MutableStateFlow<ExplanationState>(ExplanationState.Idle)
 
-    /** Estado de la explicación contextual de ejercicio o comida. */
+    /** State of the contextual explanation of exercise or food.*/
     val explanationState: StateFlow<ExplanationState> = _explanationState.asStateFlow()
 
     private val _whyThisState = MutableStateFlow<WhyThisState>(WhyThisState.Idle)
 
-    /** Estado de la explicación "por qué este ejercicio/comida". */
+    /** State of the "why this exercise/food" explanation.*/
     val whyThisState: StateFlow<WhyThisState> = _whyThisState.asStateFlow()
 
     private val _glossaryState = MutableStateFlow<GlossaryState>(GlossaryState.Idle)
 
-    /** Estado de la búsqueda en el glosario. */
+    /** Search status in the glossary.*/
     val glossaryState: StateFlow<GlossaryState> = _glossaryState.asStateFlow()
 
     /**
-     * Carga la explicación educativa de un ejercicio.
+     * Load the educational explanation of an exercise.
      *
-     * @param exerciseId Identificador del ejercicio en el plan.
+     * @param exerciseId Identifier of the exercise in the plan.
      */
     fun loadExerciseExplanation(exerciseId: String) {
         viewModelScope.launch {
@@ -97,9 +97,9 @@ class EducationViewModel @Inject constructor(
     }
 
     /**
-     * Carga la explicación educativa de una comida.
+     * Load the educational explanation of a food.
      *
-     * @param mealId Identificador de la comida en el plan.
+     * @param mealId Identifier of the meal in the plan.
      */
     fun loadMealExplanation(mealId: String) {
         viewModelScope.launch {
@@ -120,9 +120,9 @@ class EducationViewModel @Inject constructor(
     }
 
     /**
-     * Carga la justificación de por qué el plan incluye ese ejercicio.
+     * Upload the justification of why the plan includes that exercise.
      *
-     * @param exerciseId Identificador del ejercicio en el plan.
+     * @param exerciseId Identifier of the exercise in the plan.
      */
     fun loadWhyThisExercise(exerciseId: String) {
         viewModelScope.launch {
@@ -143,9 +143,9 @@ class EducationViewModel @Inject constructor(
     }
 
     /**
-     * Carga la justificación de por qué el plan incluye esa comida.
+     * Upload the justification of why the plan includes that meal.
      *
-     * @param mealId Identificador de la comida en el plan.
+     * @param mealId Identifier of the meal in the plan.
      */
     fun loadWhyThisMeal(mealId: String) {
         viewModelScope.launch {
@@ -166,9 +166,9 @@ class EducationViewModel @Inject constructor(
     }
 
     /**
-     * Consulta la definición de un término en el glosario.
+     * See the definition of a term in the glossary.
      *
-     * @param term Término a buscar (se recomienda texto ya recortado).
+     * @param term Term to search for (already trimmed text is recommended).
      */
     fun loadGlossaryTerm(term: String) {
         viewModelScope.launch {

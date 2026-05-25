@@ -23,29 +23,29 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ViewModel raíz de navegación: destino inicial según sesión y logout forzado.
+ * Navigation root ViewModel: initial destination based on session and forced logout.
  *
- * **Estado / señales expuestas:**
- * - [startDestination]: grafo auth o main según login y perfil completo.
- * - [authStartDestination]: login o crear perfil dentro del grafo auth.
- * - [logoutNavigationEvent]: emisión única al cerrar sesión (p. ej. token expirado).
- * - [sessionExpiredMessage]: mensaje para mostrar en login tras logout forzado.
+ * **State/exposed signs:**
+ * - [startDestination]: auth or main graph depending on login and complete profile.
+ * - [authStartDestination]: login or create profile within the auth graph.
+ * - [logoutNavigationEvent]: Single issue on logout (e.g. token expired).
+ * - [sessionExpiredMessage]: message to display at login after forced logout.
  *
- * @param sessionManager Gestión de sesión, perfil completo y eventos de logout.
+ * @param sessionManager Session management, full profile and logout events.
  */
 @HiltViewModel
 class AppNavViewModel @Inject constructor(
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
-    /** Destino inicial del [NavHost] raíz (`auth` o `main`). */
+    /** Initial destination of the root [NavHost] (`auth` or `main`).*/
     val startDestination: String = when {
         !sessionManager.isLoggedIn.value -> AuthRoutes.GRAPH
         !sessionManager.isProfileComplete() -> AuthRoutes.GRAPH
         else -> MainRoutes.GRAPH
     }
 
-    /** Destino inicial dentro del subgrafo de autenticación. */
+    /** Initial destination within the authentication subgraph.*/
     val authStartDestination: String = when {
         sessionManager.isLoggedIn.value && !sessionManager.isProfileComplete() ->
             AuthRoutes.CREATE_PROFILE
@@ -53,12 +53,12 @@ class AppNavViewModel @Inject constructor(
     }
 
     private val _logoutNavigationEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    /** Flujo que notifica que la app debe navegar a auth tras un logout forzado. */
+    /** Flow that notifies that the app must navigate to auth after a forced logout.*/
     val logoutNavigationEvent = _logoutNavigationEvent.asSharedFlow()
 
     private val _sessionExpiredMessage = MutableStateFlow<String?>(null)
 
-    /** Mensaje para la pantalla de login tras cierre de sesión (p. ej. token expirado). */
+    /** Message for the login screen after session closure (e.g. token expired).*/
     val sessionExpiredMessage: StateFlow<String?> = _sessionExpiredMessage.asStateFlow()
 
     /** Limpia [sessionExpiredMessage] tras mostrarlo en login. */
@@ -77,12 +77,12 @@ class AppNavViewModel @Inject constructor(
 }
 
 /**
- * Grafo de navegación raíz: alterna entre flujo de autenticación y shell principal con pestañas.
+ * Root navigation graph: Toggles between authentication flow and main shell with tabs.
  *
- * Escucha [AppNavViewModel.logoutNavigationEvent] para resetear la pila hacia auth y pasa
- * [AppNavViewModel.sessionExpiredMessage] al login.
+ * Listens to [AppNavViewModel.logoutNavigationEvent] to reset the stack to auth and passes
+ * [AppNavViewModel.sessionExpiredMessage] to login.
  *
- * @param viewModel ViewModel de navegación raíz; por defecto Hilt.
+ * @param viewModel root navigation ViewModel; default Hilt.
  */
 @Composable
 fun AppNavGraph(viewModel: AppNavViewModel = hiltViewModel()) {

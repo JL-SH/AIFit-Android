@@ -219,7 +219,7 @@ private fun HistoryFiltersBar(
             .padding(top = AiFitSpacing.sm, bottom = AiFitSpacing.xs),
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
     ) {
-        // ── Plan chips ──
+        // ── Chip plan ──
         if (plans.isNotEmpty()) {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),

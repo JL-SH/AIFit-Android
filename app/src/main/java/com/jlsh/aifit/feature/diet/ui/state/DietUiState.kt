@@ -4,26 +4,26 @@ import com.jlsh.aifit.core.ui.components.layout.UiStateHost
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 
 /**
- * Estado de la UI para la pantalla de detalle de un plan de dieta.
+ * UI status for a diet plan detail screen.
  */
 sealed class DietUiState {
-    /** Cargando el detalle del plan desde el repositorio. */
+    /** Loading the plan detail from the repository.*/
     data object Loading : DietUiState(), UiStateHost.Loading
 
-    /** Regenerando el plan tras rechazo o feedback del usuario. */
+    /** Regenerating the plan after rejection or user feedback.*/
     data object Regenerating : DietUiState()
 
     /**
-     * Error al cargar o procesar el plan.
+     * Error loading or processing the plan.
      *
-     * @property message Mensaje de error para mostrar al usuario.
+     * @property message Error message to display to the user.
      */
     data class Error(override val message: String) : DietUiState(), UiStateHost.Error
 
     /**
-     * Detalle del plan cargado correctamente.
+     * Plan details uploaded correctly.
      *
-     * @property plan Plan de dieta con días y comidas.
+     * @property plan Diet plan with days and meals.
      */
     data class Success(
         val plan: DietPlan,
@@ -31,26 +31,26 @@ sealed class DietUiState {
 }
 
 /**
- * Estado de la UI para el flujo de generación de un plan de dieta.
+ * UI state for the diet plan generation flow.
  */
 sealed class GenerateDietUiState {
-    /** Sin generación en curso; formulario listo para enviar. */
+    /** No generation in progress; form ready to send.*/
     data object Idle : GenerateDietUiState()
 
-    /** Generación en curso; se muestra animación de carga. */
+    /** Generation in progress; loading animation is shown.*/
     data object Generating : GenerateDietUiState()
 
     /**
-     * Error durante la generación.
+     * Error during generation.
      *
-     * @property message Mensaje de error para mostrar al usuario.
+     * @property message Error message to display to the user.
      */
     data class Error(val message: String) : GenerateDietUiState()
 
     /**
-     * Plan generado correctamente.
+     * Successfully generated plan.
      *
-     * @property plan Plan recién creado.
+     * @property plan Newly created plan.
      */
     data class Success(val plan: DietPlan) : GenerateDietUiState()
 }

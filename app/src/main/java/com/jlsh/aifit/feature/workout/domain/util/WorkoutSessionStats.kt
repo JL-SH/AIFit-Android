@@ -4,7 +4,7 @@ import com.jlsh.aifit.feature.training.domain.model.TrainingExercise
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutSetLog
 
 /**
- * Métricas de sesión alineadas al plan del día (objetivos) frente a lo registrado en el log.
+ * Session metrics aligned to the day's plan (objectives) versus what is recorded in the log.
  */
 data class WorkoutSessionStats(
     val planExerciseCount: Int,
@@ -15,7 +15,7 @@ data class WorkoutSessionStats(
 )
 
 /**
- * Calcula ejercicios y series completadas según el plan y las series guardadas en el log.
+ * Calculates exercises and completed series according to the plan and the series saved in the log.
  */
 fun computeWorkoutSessionStats(
     planExercises: List<TrainingExercise>,

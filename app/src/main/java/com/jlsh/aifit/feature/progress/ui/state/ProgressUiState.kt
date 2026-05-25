@@ -7,24 +7,24 @@ import com.jlsh.aifit.feature.progress.domain.model.WeeklyProgressSummary
 import java.time.LocalDate
 
 /**
- * Estado de la pantalla principal del dashboard de progreso.
+ * Status of the main screen of the progress dashboard.
  */
 sealed class DashboardUiState {
-    /** Carga inicial o recarga del panel. */
+    /** Initial charge or reload of the panel.*/
     data object Loading : DashboardUiState(), UiStateHost.Loading
 
     /**
-     * Error al obtener el dashboard.
+     * Error obtaining the dashboard.
      *
-     * @property message Texto para mostrar al usuario.
+     * @property message Text to display to the user.
      */
     data class Error(override val message: String) : DashboardUiState(), UiStateHost.Error
 
     /**
-     * Dashboard cargado correctamente.
+     * Dashboard loaded successfully.
      *
-     * @property dashboard Métricas agregadas del periodo seleccionado.
-     * @property selectedPeriod Etiqueta del filtro temporal activo (p. ej. «30 días»).
+     * @property dashboard Aggregated metrics for the selected period.
+     * @property selectedPeriod Label of the active temporal filter (e.g. “30 days”).
      */
     data class Success(
         val dashboard: ProgressDashboard,
@@ -33,14 +33,14 @@ sealed class DashboardUiState {
 }
 
 /**
- * Estado de la pantalla de registro e historial de peso corporal.
+ * Body weight history and record screen status.
  *
- * @property weightHistory Entradas de peso en el rango consultado.
- * @property isLoading Indica si el historial se está cargando.
- * @property formWeight Texto del campo de peso en el formulario.
- * @property formDate Fecha seleccionada para el nuevo registro.
- * @property formNotes Notas opcionales del registro.
- * @property isSaving Indica si un envío de peso está en curso.
+ * @property weightHistory Weight entries in the queried range.
+ * @property isLoading Indicates whether the history is being loaded.
+ * @property formWeight Text of the weight field on the form.
+ * @property formDate Date selected for the new record.
+ * @property formNotes Optional registry notes.
+ * @property isSaving Indicates whether a weight send is in progress.
  */
 data class BodyWeightUiState(
     val weightHistory: List<BodyWeightLog> = emptyList(),
@@ -52,23 +52,23 @@ data class BodyWeightUiState(
 )
 
 /**
- * Estado de la pantalla de resumen semanal de progreso.
+ * Weekly progress summary screen status.
  */
 sealed class WeeklySummaryUiState {
-    /** Carga del resumen semanal. */
+    /** Uploading the weekly summary.*/
     data object Loading : WeeklySummaryUiState(), UiStateHost.Loading
 
     /**
-     * Error al obtener el resumen.
+     * Error getting summary.
      *
-     * @property message Texto para mostrar al usuario.
+     * @property message Text to display to the user.
      */
     data class Error(override val message: String) : WeeklySummaryUiState(), UiStateHost.Error
 
     /**
-     * Resumen semanal disponible.
+     * Weekly summary available.
      *
-     * @property summary Datos agregados de la semana.
+     * @property summary Aggregated data for the week.
      */
     data class Success(
         val summary: WeeklyProgressSummary,

@@ -1,28 +1,28 @@
 package com.jlsh.aifit.feature.training.domain.model
 
 /**
- * Estados posibles de un plan de entrenamiento en el ciclo de vida de la aplicación.
+ * Possible states of a training plan in the application life cycle.
  */
 enum class PlanStatus {
-    /** Plan actualmente en uso por el usuario. */
+    /** Plan currently in use by the user.*/
     ACTIVE,
-    /** Plan finalizado según su duración o uso. */
+    /** Finalized plan based on duration or use.*/
     COMPLETED,
-    /** Plan pausado; no es el plan activo pero sigue disponible. */
+    /** Paused plan; It is not the active plan but it is still available.*/
     PAUSED,
-    /** Plan en borrador, pendiente de aprobación o activación. */
+    /** Draft plan, pending approval or activation.*/
     DRAFT,
-    /** Plan eliminado (lógicamente o en servidor). */
+    /** Deleted plan (logically or on server).*/
     DELETED,
-    /** Estado no reconocido o valor desconocido del backend. */
+    /** Unrecognized state or unknown value of the backend.*/
     UNKNOWN;
 
     companion object {
         /**
-         * Convierte una cadena del API o caché local al valor del enum correspondiente.
+         * Converts a string from the API or local cache to the value of the corresponding enum.
          *
-         * @param value Texto del estado; se compara sin distinguir mayúsculas/minúsculas.
-         * @return [UNKNOWN] si [value] es nulo, vacío o no coincide con ningún miembro del enum.
+         * @param value State text; is compared case-insensitive.
+         * @return [UNKNOWN] if [value] is null, empty, or does not match any member of the enum.
          */
         fun fromString(value: String?): PlanStatus =
             value?.let { runCatching { valueOf(it.uppercase()) }.getOrDefault(UNKNOWN) } ?: UNKNOWN

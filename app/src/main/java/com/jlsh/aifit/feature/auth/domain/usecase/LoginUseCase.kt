@@ -6,19 +6,19 @@ import com.jlsh.aifit.feature.auth.domain.repository.AuthRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso que autentica al usuario con email y contraseña.
+ * Use case that authenticates the user with email and password.
  *
- * @param repository Repositorio de autenticación.
+ * @param repository Authentication repository.
  */
 class LoginUseCase @Inject constructor(
     private val repository: AuthRepository,
 ) {
     /**
-     * Inicia sesión con las credenciales indicadas.
+     * Sign in with the indicated credentials.
      *
-     * @param email Correo electrónico del usuario.
-     * @param password Contraseña en texto plano.
-     * @return [Result.Success] con el token de sesión, o [Result.Error] si falla la autenticación.
+     * @param email Email of the user.
+     * @param password Password in plain text.
+     * @return [Result.Success] with the session token, or [Result.Error] if authentication fails.
      */
     suspend operator fun invoke(email: String, password: String): Result<AuthToken> =
         repository.login(email, password)

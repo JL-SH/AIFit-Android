@@ -7,18 +7,18 @@ import com.jlsh.aifit.feature.user.domain.repository.UserRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso que persiste cambios parciales del perfil en el backend.
+ * Use case that persists partial profile changes to the backend.
  *
- * @param repository Repositorio de usuario.
+ * @param repository User repository.
  */
 class UpdateUserProfileUseCase @Inject constructor(
     private val repository: UserRepository,
 ) {
     /**
-     * Actualiza el perfil con los campos presentes en la petición.
+     * Update the profile with the fields present in the request.
      *
-     * @param request Campos a modificar (los nulos o ausentes no se envían).
-     * @return [Result.Success] con el perfil actualizado, o [Result.Error] si falla la API.
+     * @param request Fields to modify (null or absent fields are not sent).
+     * @return [Result.Success] with the updated profile, or [Result.Error] if the API call fails.
      */
     suspend operator fun invoke(request: UpdateUserProfileRequest): Result<UserProfile> =
         repository.updateProfile(request)

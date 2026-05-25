@@ -26,8 +26,8 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 /**
- * Implementación de [TrainingRepository] con caché Room, sincronización de red
- * y protección ante condiciones de carrera en borrados locales.
+ * Implementation of [TrainingRepository] with Room cache, network sync
+ * and protection against race conditions in local erasures.
  */
 class TrainingRepositoryImpl @Inject constructor(
     private val apiService: TrainingApiService,
@@ -44,17 +44,17 @@ class TrainingRepositoryImpl @Inject constructor(
      *  - getTrainingPlans() skips it when upserting network results → prevents race-condition
      *    reinjection during the API call window (~1–4 s).
      *  - The guard auto-lifts the first time getTrainingPlans() receives a network response
-     *    that no longer contains the plan (server has committed the delete).
+     * that no longer contains the plan (server has committed the delete).
      * @Volatile ensures the reference is always fresh across coroutines/threads.
      */
     @Volatile
     private var recentlyDeletedIds = emptySet<String>()
 
     /**
-     * Emite la lista de planes del usuario: primero caché local y luego reconciliación con red.
+     * Outputs the list of user plans: first local cache and then network reconciliation.
      *
-     * @return Flujo que emite [Result.Loading], luego caché si existe, y finalmente datos de red
-     *   o error si no hay caché.
+     * @return Stream that emits [Result.Loading], then cache if it exists, and finally network data
+     * or error if there is no cache.
      */
     override fun getTrainingPlans(): Flow<Result<List<TrainingPlan>>> = flow {
         emit(Result.Loading)
@@ -73,7 +73,7 @@ class TrainingRepositoryImpl @Inject constructor(
         if (cached.isNotEmpty()) {
             // TODO: remove diagnostic log below
             Log.d("AIFIT_PLANS", "EMIT CACHE — count=${cached.size} ids=${cached.map { it.id }.take(3)}")
-            // AIFIT_DEBUG: status de cada plan en caché
+            // AIFIT_DEBUG: status of each cached plan
             cached.forEach { p ->
                 Log.d("AIFIT_DEBUG", "[REPO][CACHE] plan id=${p.id} status=${p.status} days=${p.days.size}")
             }
@@ -106,7 +106,7 @@ class TrainingRepositoryImpl @Inject constructor(
                 }
                 // TODO: remove diagnostic log below
                 Log.d("AIFIT_PLANS", "EMIT NETWORK — count=${plans.size} ids=${plans.map { it.id }.take(3)}")
-                // AIFIT_DEBUG: status de cada plan recibido de red
+                // AIFIT_DEBUG: status of each plan received from the network
                 plans.forEach { p ->
                     Log.d("AIFIT_DEBUG", "[REPO][NETWORK] plan id=${p.id} status=${p.status} days=${p.days.size}")
                 }
@@ -120,10 +120,10 @@ class TrainingRepositoryImpl @Inject constructor(
     }.distinctUntilChanged()
 
     /**
-     * Obtiene el detalle de un plan desde la caché de detalle JSON, sin llamada de red.
+     * Gets the detail of a plan from the JSON detail cache, without a network call.
      *
-     * @param planId Identificador del plan.
-     * @return Plan de dominio o null si no hay entrada en caché o el JSON es inválido.
+     * @param planId Plan identifier.
+     * @return Domain plan or null if there is no cached entry or the JSON is invalid.
      */
     override suspend fun getCachedTrainingPlanDetail(planId: String): TrainingPlan? =
         detailCacheDao.getById(planId)?.let { entity ->
@@ -133,10 +133,10 @@ class TrainingRepositoryImpl @Inject constructor(
         }
 
     /**
-     * Carga el detalle completo del plan desde red y actualiza caché y resumen en Room.
+     * Load the complete plan detail from the network and update cache and summary in Room.
      *
-     * @param planId Identificador del plan.
-     * @return [Result.Success] con días y ejercicios, caché en error de red, o [Result.Error].
+     * @param planId Plan identifier.
+     * @return [Result.Success] with days and exercises, cache on network error, or [Result.Error].
      */
     override suspend fun getTrainingPlanDetail(planId: String): Result<TrainingPlan> {
         Log.d("AIFIT_DEBUG", "[REPO][DETAIL] START planId=$planId")
@@ -173,10 +173,10 @@ class TrainingRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Genera un plan estándar vía API y lo persiste en Room.
+     * Generates a standard plan via API and persists it in Room.
      *
-     * @param request Parámetros de generación.
-     * @return [Result.Error] si no hay sesión activa o falla la petición.
+     * @param request Generation parameters.
+     * @return [Result.Error] if there is no active session or the request fails.
      */
     override suspend fun generateTrainingPlan(
         request: GenerateTrainingPlanRequestDto,
@@ -195,10 +195,10 @@ class TrainingRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Genera un plan adaptativo vía API y lo persiste en Room.
+     * Generates an adaptive plan via API and persists it in Room.
      *
-     * @param request Parámetros adaptativos.
-     * @return [Result.Error] si no hay sesión activa o falla la petición.
+     * @param request Adaptive parameters.
+     * @return [Result.Error] if there is no active session or the request fails.
      */
     override suspend fun generateAdaptiveTrainingPlan(
         request: GenerateAdaptiveTrainingPlanRequestDto,
@@ -217,10 +217,10 @@ class TrainingRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Elimina un plan localmente de inmediato y confirma con el servidor, con rollback en error.
+     * Delete a plan locally immediately and commit to the server, with rollback on error.
      *
-     * @param planId Identificador del plan a eliminar.
-     * @return [Result.Success] tras confirmación del servidor, o [Result.Error] con restauración local.
+     * @param planId Identifier of the plan to delete.
+     * @return [Result.Success] upon server confirmation, or [Result.Error] with local restore.
      */
     override suspend fun deleteTrainingPlan(planId: String): Result<Unit> {
         // 1. Snapshot for rollback if the network call fails.
@@ -249,10 +249,10 @@ class TrainingRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Activa un plan en servidor y demota el plan activo previo a PAUSED en Room.
+     * Activate a plan on the server and demote the active plan prior to PAUSED in the Room.
      *
-     * @param planId Identificador del plan a activar.
-     * @return [Result.Error] si no hay sesión activa o falla la activación.
+     * @param planId Identifier of the plan to activate.
+     * @return [Result.Error] if there is no active session or activation fails.
      */
     override suspend fun activatePlan(planId: String): Result<TrainingPlan> {
         val userId = sessionManager.getUserId()
@@ -281,10 +281,10 @@ class TrainingRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Obtiene el protocolo de calentamiento recomendado para un día concreto del plan.
+     * Get the recommended warm-up protocol for a specific day in the plan.
      *
-     * @param planId Identificador del plan.
-     * @param dayId Identificador del día de entrenamiento.
+     * @param planId Plan identifier.
+     * @param dayId Identifier of the training day.
      */
     override suspend fun getWarmUpProtocol(planId: String, dayId: String): Result<WarmUpProtocol> {
         return when (val remote = safeApiCall { apiService.getWarmUpProtocol(planId, dayId) }) {
@@ -295,9 +295,9 @@ class TrainingRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Lista sustituciones de ejercicio sugeridas por el backend para un ejercicio dado.
+     * Lists exercise substitutions suggested by the backend for a given exercise.
      *
-     * @param exerciseId Identificador del ejercicio de entrenamiento.
+     * @param exerciseId Identifier of the training exercise.
      */
     override suspend fun getExerciseSubstitutions(exerciseId: String): Result<List<ExerciseSubstitution>> {
         return when (val remote = safeApiCall { apiService.getExerciseSubstitutions(exerciseId) }) {

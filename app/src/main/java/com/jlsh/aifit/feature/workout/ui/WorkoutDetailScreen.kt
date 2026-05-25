@@ -222,7 +222,7 @@ private fun WorkoutDetailContent(
                     .padding(top = AiFitSpacing.md, bottom = AiFitSpacing.lg),
                 verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
             ) {
-                // Fecha — título dominante
+                // Date — dominant title
                 Text(
                     text = log.date.format(
                         DateTimeFormatter.ofPattern("EEEE, dd MMM yyyy", java.util.Locale.getDefault())
@@ -231,7 +231,7 @@ private fun WorkoutDetailContent(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
 
-                // Notas opcionales
+                // Optional notes
                 log.notes?.let { notes ->
                     if (notes.isNotBlank()) {
                         Spacer(Modifier.height(AiFitSpacing.xs))
@@ -245,7 +245,7 @@ private fun WorkoutDetailContent(
 
                 Spacer(Modifier.height(AiFitSpacing.sm))
 
-                // Stats row — datos clave de la sesión
+                // Stats row — key session data
                 Row(modifier = Modifier.fillMaxWidth()) {
                     log.durationMinutes?.let { dur ->
                         StatCell(
@@ -368,7 +368,7 @@ private fun WorkoutDetailContent(
             )
         }
 
-        // ── Ejercicios agrupados ──────────────────────────────────────
+        // ── Grouped exercises ──────────────────────────────────────
         groupedSets.forEach { (exerciseId, sets) ->
             val exerciseName = sets.firstOrNull()?.exerciseName ?: "Ejercicio"
             val targetSets = sessionStats?.targetSetsByExerciseId?.get(exerciseId) ?: sets.size
@@ -381,7 +381,7 @@ private fun WorkoutDetailContent(
                         .padding(horizontal = AiFitSpacing.md)
                         .padding(top = AiFitSpacing.sm),
                 ) {
-                    // Nombre del ejercicio + badge series + info
+                    // Exercise name + badge series + info
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -397,7 +397,7 @@ private fun WorkoutDetailContent(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
                         ) {
-                            // Badge series completadas
+                            // Completed sets badge
                             Surface(
                                 color = if (completedInGroup >= targetSets)
                                     MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
@@ -433,7 +433,7 @@ private fun WorkoutDetailContent(
 
                     Spacer(Modifier.height(AiFitSpacing.xs))
 
-                    // Cabecera de columnas — adaptada para locked
+                    // Column header — adapted for locked
                     if (log.isLocked) {
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Text(
@@ -648,14 +648,14 @@ private fun SetDetailRow(
             .padding(vertical = AiFitSpacing.xs), // U-12/U-13 compliance fix
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Número de serie
+        // Serial number
         Text(
             text = "${set.exerciseSetNumber}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(0.15f),
         )
-        // Peso — dato importante
+        // Weight — key metric
         Text(
             text = set.weightUsed?.let { "${it}kg" } ?: "—",
             style = MaterialTheme.typography.bodyMedium,
@@ -663,7 +663,7 @@ private fun SetDetailRow(
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(0.3f),
         )
-        // Reps — dato importante
+        // Reps — key metric
         Text(
             text = set.repsCompleted?.let { stringResource(R.string.workout_detail_reps_format, it) } ?: "—",
             style = MaterialTheme.typography.bodyMedium,
@@ -671,7 +671,7 @@ private fun SetDetailRow(
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(0.3f),
         )
-        // Estado — icono con color semántico
+        // Status — icon with semantic color
         Box(
             modifier = Modifier.weight(0.25f),
             contentAlignment = Alignment.CenterEnd,

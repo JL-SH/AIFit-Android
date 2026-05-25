@@ -81,15 +81,15 @@ private fun mealTypeDisplay(mealType: MealType): String = stringResource(
 )
 
 /**
- * Pantalla de detalle de un plan de dieta: resumen de macros, días expandibles y acciones por comida.
+ * Diet plan detail screen: summary of macros, expandable days and actions per meal.
  *
- * Muestra estado de carga/error mediante [ScreenScaffold] y hojas educativas (explicar / por qué esta comida).
+ * Shows loading/error status using [ScreenScaffold] and educational sheets (explain/why this food).
  *
- * @param planId Identificador del plan a cargar.
- * @param onNavigateBack Callback al pulsar atrás o tras eventos de navegación.
- * @param onNavigateToGenerate Abre el flujo de generación adaptativa desde la barra superior.
- * @param viewModel ViewModel de dieta con [DietUiState] y [DietUiEvent].
- * @param educationViewModel ViewModel para explicaciones de comidas.
+ * @param planId Identifier of the plan to load.
+ * @param onNavigateBack Callback when clicking back or after navigation events.
+ * @param onNavigateToGenerate Opens the adaptive generation flow from the top bar.
+ * @param viewModel Diet ViewModel with [DietUiState] and [DietUiEvent].
+ * @param educationViewModel ViewModel for meal explanations.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -250,7 +250,7 @@ private fun DietDetailContent(
 
                 Spacer(Modifier.height(AiFitSpacing.xs))
 
-                // Título dominante
+                // Dominant title
                 Text(
                     text = plan.name,
                     style = MaterialTheme.typography.titleLarge,
@@ -279,7 +279,7 @@ private fun DietDetailContent(
 
                 Spacer(Modifier.height(AiFitSpacing.sm))
 
-                // Stats row — calorías + macros como números destacados
+                // Stats row — calories + macros as highlighted numbers
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(0.dp),
@@ -311,7 +311,7 @@ private fun DietDetailContent(
             }
         }
 
-        // Divisor + sección de macros
+        // Divider + macro section
         item(key = "divider_macros") {
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant,
@@ -362,7 +362,7 @@ private fun DietDetailContent(
             }
         }
 
-        // Divisor + sección de días
+        // Divider + days section
         item(key = "divider_days") {
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant,
@@ -384,7 +384,7 @@ private fun DietDetailContent(
             )
         }
 
-        // ── Días expandibles ─────────────────────────────────────────
+        // ── Expandable days ──────────────────── ─────────────────────
         items(plan.days, key = { it.id }) { day ->
             Column(
                 modifier = Modifier.padding(horizontal = AiFitSpacing.md),
@@ -401,7 +401,7 @@ private fun DietDetailContent(
                         ),
                         verticalArrangement = Arrangement.spacedBy(0.dp),
                     ) {
-                        // Calorías del día en lime
+                        // Calories of the day in lime
                         Text(
                             text = "${day.totalCalories} kcal",
                             style = MaterialTheme.typography.labelMedium,
@@ -503,7 +503,7 @@ private fun MealRow(
                     horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // Badge tipo comida
+                    // Food type badge
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         shape = RoundedCornerShape(6.dp),
@@ -515,7 +515,7 @@ private fun MealRow(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         )
                     }
-                    // Calorías en lime + hora discreta
+                    // Calories in lime + discrete time
                     Text(
                         text = "${meal.calories} kcal",
                         style = MaterialTheme.typography.labelMedium,
@@ -555,7 +555,7 @@ private fun MealRow(
             }
         }
 
-        // Items de la comida — indentados y discretos
+        // Food items — indented and discreet
         if (meal.items.isNotEmpty()) {
             Column(
                 modifier = Modifier.padding(start = AiFitSpacing.sm),

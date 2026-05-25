@@ -396,7 +396,7 @@ class NutritionViewModelTest {
         }
     }
 
-    // ─── Diet plan management ──────────────────────────────────────────────────
+    // ─── Diet plan management ───────────────────────── ─────────────────────────
 
     @Test
     fun `onDeleteDietPlan no llama use case cuando plan es ACTIVE`() = runTest {

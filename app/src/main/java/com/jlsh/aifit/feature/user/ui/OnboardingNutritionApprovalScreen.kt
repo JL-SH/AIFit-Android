@@ -119,7 +119,7 @@ fun OnboardingNutritionApprovalScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
         ) {
-            // Cabecera
+            // Header
             item {
                 Text(
                     text = stringResource(R.string.onboarding_review_nutrition),
@@ -135,7 +135,7 @@ fun OnboardingNutritionApprovalScreen(
                 )
             }
 
-            // Tarjeta resumen de macros
+            // Macro summary card
             item {
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -179,7 +179,7 @@ fun OnboardingNutritionApprovalScreen(
                 }
             }
 
-            // Sección plan semanal
+            // Weekly plan section
             item {
                 Text(
                     text = stringResource(R.string.onboarding_weekly_plan),

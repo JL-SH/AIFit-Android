@@ -6,18 +6,18 @@ import com.jlsh.aifit.feature.education.domain.repository.EducationRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso que consulta la definición de un término del glosario educativo.
+ * Use case that queries the definition of a term from the educational glossary.
  *
- * @param repository Repositorio de contenido educativo.
+ * @param repository Educational content repository.
  */
 class GetGlossaryTermUseCase @Inject constructor(
     private val repository: EducationRepository,
 ) {
     /**
-     * Busca la definición del término indicado.
+     * Look up the definition of the indicated term.
      *
-     * @param term Término a consultar (p. ej. "Progressive Overload").
-     * @return [Result.Success] con la definición y términos relacionados, o [Result.Error] si no se encuentra o falla la red.
+     * @param term Term to query (e.g. "Progressive Overload").
+     * @return [Result.Success] with the definition and related terms, or [Result.Error] if not found or network fails.
      */
     suspend operator fun invoke(term: String): Result<GlossaryDefinition> =
         repository.getGlossaryTerm(term)

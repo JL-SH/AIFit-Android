@@ -10,8 +10,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Borde sutil para definir superficies en dark mode sin elevación/sombra.
- * En light mode usa alpha reducida para no competir con el fondo claro.
+ * Subtle border to define surfaces in dark mode without elevation/shadow.
+ * In light mode uses reduced alpha so it does not compete with the light background.
  */
 @Composable
 fun Modifier.aifitSubtleBorder(

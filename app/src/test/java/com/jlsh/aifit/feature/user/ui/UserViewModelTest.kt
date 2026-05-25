@@ -79,14 +79,14 @@ class UserViewModelTest {
         savedStateHandle = SavedStateHandle(mapOf("mode" to mode)),
     )
 
-    // ─── Estado inicial (modo create) ─────────────────────────────────────────
+    // ─── Initial state (create mode) ──────────────────── ─────────────────────
 
     @Test
     fun `en modo create estado inicial es Idle cuando no hay perfil previo`() = runTest {
         val vm = createViewModel(mode = "create")
 
         // UnconfinedTestDispatcher ejecuta coroutines de forma eager:
-        // init llama checkIfProfileAlreadyExists() → estado = Idle por Error del repo
+        // init calls checkIfProfileAlreadyExists() → status = Idle for Repo Error
         assertTrue(vm.uiState.value is UserUiState.Idle)
     }
 
@@ -107,7 +107,7 @@ class UserViewModelTest {
         }
     }
 
-    // ─── Estado inicial (modo edit) ────────────────────────────────────────────
+    // ─── Initial state (edit mode) ────────────────────── ──────────────────────
 
     @Test
     fun `en modo edit estado Loading se emite al arrancar`() = runTest {
@@ -121,7 +121,7 @@ class UserViewModelTest {
         val vm = createViewModel(mode = "edit", getUserProfile = gpuCase)
 
         vm.uiState.test {
-            // El estado puede ser Loading o Success dependiendo de la ejecución eager
+            // The status can be Loading or Success depending on the eager execution
             val state = awaitItem()
             assert(state is UserUiState.Loading || state is UserUiState.Success) {
                 "Esperado Loading o Success, recibido $state"
@@ -141,7 +141,7 @@ class UserViewModelTest {
 
         vm.uiState.test {
             val state = awaitItem()
-            // Con UnconfinedTestDispatcher el estado final es Success
+            // With UnconfinedTestDispatcher the final status is Success
             when (state) {
                 is UserUiState.Success -> assertEquals(profile, state.profile)
                 is UserUiState.Loading -> {
@@ -188,7 +188,7 @@ class UserViewModelTest {
         assertEquals("Maria", vm.name.value)
     }
 
-    // ─── onSaveProfile modo create ─────────────────────────────────────────────
+    // ─── onSaveProfile create mode ─────────────────────────────────────────────
 
     @Test
     fun `onSaveProfile en modo create con exito emite ProfileSaved`() = runTest {
@@ -232,7 +232,7 @@ class UserViewModelTest {
         assertTrue(vm.uiState.value is UserUiState.Idle)
     }
 
-    // ─── onSaveProfile modo edit ───────────────────────────────────────────────
+    // ─── onSaveProfile edit mode ───────────────────────────────────────────────
 
     @Test
     fun `onSaveProfile en modo edit con exito emite NavigateBack y ShowSnackbar`() = runTest {
@@ -292,7 +292,7 @@ class UserViewModelTest {
         }
     }
 
-    // ─── Validacion de fecha ───────────────────────────────────────────────────
+    // ─── Date validation ───────────────────────── ──────────────────────────
 
     @Test
     fun `onSaveProfile con birthDate invalido setea birthDateError y no llama al useCase`() = runTest {

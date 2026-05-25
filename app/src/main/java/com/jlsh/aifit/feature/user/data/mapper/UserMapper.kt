@@ -21,17 +21,17 @@ import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import java.time.LocalDate
 
 /**
- * Conversiones entre DTO, entidad Room y modelos de dominio del usuario.
+ * Conversions between DTO, Room entity and user domain models.
  */
 object UserMapper {
 
     /**
-     * Elige la mejor URL de avatar entre varios candidatos.
+     * Picks the best avatar URL among several candidates.
      *
-     * Las fotos subidas (Cloudinary) tienen prioridad sobre el avatar por defecto de Google OAuth.
+     * Uploaded photos (Cloudinary) take priority over the default Google OAuth avatar.
      *
-     * @param candidates URLs en orden de preferencia de entrada.
-     * @return URL elegida, o `null` si no hay candidatos válidos.
+     * @param candidates URLs in order of input preference.
+     * @return chosen URL, or `null` if there are no valid candidates.
      */
     fun pickBestProfilePictureUrl(vararg candidates: String?): String? {
         val valid = candidates.mapNotNull { it?.trim()?.takeIf { s -> s.isNotEmpty() } }
@@ -41,31 +41,31 @@ object UserMapper {
     }
 
     /**
-     * Indica si la URL corresponde a una foto subida por el usuario (Cloudinary).
+     * Indicates if the URL corresponds to a photo uploaded by the user (Cloudinary).
      *
      * @param url URL a evaluar.
-     * @return `true` si el host es Cloudinary.
+     * @return `true` if the host is Cloudinary.
      */
     fun isUploadedProfilePhoto(url: String): Boolean =
         url.contains("cloudinary.com", ignoreCase = true)
 
     /**
-     * Indica si la URL es el avatar genérico de Google tras OAuth.
+     * Indicates whether the URL is the generic Google avatar after OAuth.
      *
      * @param url URL a evaluar.
-     * @return `true` si proviene de dominios de Google.
+     * @return `true` if the URL comes from Google-hosted domains.
      */
     fun isDefaultGoogleAvatar(url: String): Boolean =
         url.contains("googleusercontent.com", ignoreCase = true) ||
             url.contains("ggpht.com", ignoreCase = true)
 
     /**
-     * Resuelve la URL de avatar a partir de campos del DTO y un fallback opcional.
+     * Resolves the avatar URL from DTO fields and an optional fallback.
      *
-     * @param profilePictureUrl Campo principal de foto en el DTO.
-     * @param profileImageUrl Campo alternativo de imagen.
-     * @param fallback URL de respaldo si los anteriores están vacíos.
-     * @return Mejor URL según [pickBestProfilePictureUrl].
+     * @param profilePictureUrl Main photo field in the DTO.
+     * @param profileImageUrl Alternative image URL field on the DTO.
+     * @param fallback Fallback URL if previous ones are empty.
+     * @return Best URL according to [pickBestProfilePictureUrl].
      */
     fun resolveProfilePictureUrl(
         profilePictureUrl: String?,
@@ -74,10 +74,10 @@ object UserMapper {
     ): String? = pickBestProfilePictureUrl(profilePictureUrl, profileImageUrl, fallback)
 
     /**
-     * Mapea la respuesta de API al modelo de dominio [UserProfile].
+     * Maps the API response to the domain model [UserProfile].
      *
-     * @param fallbackPictureUrl URL usada si el DTO no trae imagen válida.
-     * @return Perfil de dominio con fechas y enums parseados.
+     * @param fallbackPictureUrl URL used if the DTO does not have a valid image.
+     * @return Domain profile with parsed dates and enums.
      */
     fun UserProfileResponseDto.toDomain(fallbackPictureUrl: String? = null): UserProfile = UserProfile(
         id = id,
@@ -106,7 +106,7 @@ object UserMapper {
         calorieTarget = calorieTarget,
     )
 
-    /** Persiste los campos esenciales del perfil en [UserProfileEntity]. */
+    /** Persists essential profile fields in [UserProfileEntity].*/
     fun UserProfile.toEntity(): UserProfileEntity = UserProfileEntity(
         id = id,
         name = name,
@@ -117,9 +117,9 @@ object UserMapper {
     )
 
     /**
-     * Reconstruye un [UserProfile] desde caché local (datos parciales).
+     * Rebuilds a [UserProfile] from local cache (partial data).
      *
-     * @return Perfil con campos no almacenados en Room en `null`.
+     * @return Profile with fields not stored in Room as `null`.
      */
     fun UserProfileEntity.toDomain(): UserProfile = UserProfile(
         id = id,
@@ -144,7 +144,7 @@ object UserMapper {
         calorieTarget = null,
     )
 
-    /** Convierte la petición de creación de perfil al DTO de red. */
+    /** Converts the profile creation request to the network DTO.*/
     fun CreateUserProfileRequest.toDto(): CreateUserProfileRequestDto = CreateUserProfileRequestDto(
         birthDate = birthDate?.toString(),
         gender = gender?.name,
@@ -162,7 +162,7 @@ object UserMapper {
         calorieTarget = calorieTarget,
     )
 
-    /** Convierte la petición de actualización de perfil al DTO de red. */
+    /** Converts the profile update request to the network DTO.*/
     fun UpdateUserProfileRequest.toDto(): UpdateUserProfileRequestDto = UpdateUserProfileRequestDto(
         name = name,
         birthDate = birthDate?.toString(),
@@ -181,7 +181,7 @@ object UserMapper {
         calorieTarget = calorieTarget,
     )
 
-    /** Mapea el resultado de onboarding (planes y objetivo nutricional) a dominio. */
+    /** Map the result of onboarding (plans and nutritional objective) to the domain.*/
     fun OnboardingResultDto.toDomain(): OnboardingResult = OnboardingResult(
         trainingPlan = trainingPlan.toDomain(),
         dietPlan = dietPlan.toDomain(),

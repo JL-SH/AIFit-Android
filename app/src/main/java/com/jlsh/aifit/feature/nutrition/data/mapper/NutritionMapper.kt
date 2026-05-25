@@ -16,14 +16,14 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
- * Convierte DTOs de red y entidades Room del módulo de nutrición al modelo de dominio y viceversa.
+ * Converts network DTOs and Room entities from the nutrition module to the domain model and vice versa.
  */
 object NutritionMapper {
 
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
     /**
-     * Mapea el registro nutricional diario de la API al modelo de dominio.
+     * Maps the daily nutrition log from the API to the domain model.
      */
     fun NutritionLogResponseDto.toDomain(): NutritionLog = NutritionLog(
         id = id,
@@ -36,7 +36,7 @@ object NutritionMapper {
     )
 
     /**
-     * Mapea una comida registrada de la API al modelo de dominio.
+     * Maps a registered meal from the API to the domain model.
      */
     fun MealLogResponseDto.toDomain(): MealLog = MealLog(
         id = id,
@@ -53,7 +53,7 @@ object NutritionMapper {
     )
 
     /**
-     * Mapea un alimento dentro de una comida registrada al modelo de dominio.
+     * Maps a food within a registered food to the domain model.
      */
     fun FoodItemLogResponseDto.toDomain(): FoodItemLog = FoodItemLog(
         id = id,
@@ -67,7 +67,7 @@ object NutritionMapper {
     )
 
     /**
-     * Mapea los objetivos nutricionales de la API al modelo de dominio.
+     * Maps nutritional objectives from the API to the domain model.
      */
     fun NutritionTargetResponseDto.toDomain(): NutritionTarget = NutritionTarget(
         id = id,
@@ -80,7 +80,7 @@ object NutritionMapper {
     )
 
     /**
-     * Persiste un registro diario en Room (totales agregados; sin comidas en la entidad).
+     * A daily record persists in Room (aggregated totals; no meals in the entity).
      */
     fun NutritionLog.toEntity(): NutritionLogEntity = NutritionLogEntity(
         id = id,
@@ -92,7 +92,7 @@ object NutritionMapper {
     )
 
     /**
-     * Restaura un registro diario desde Room; [NutritionLog.meals] queda vacío.
+     * Restores a daily log from Room; [NutritionLog.meals] remains empty.
      */
     fun NutritionLogEntity.toDomain(): NutritionLog = NutritionLog(
         id = id,
@@ -104,7 +104,7 @@ object NutritionMapper {
     )
 
     /**
-     * Persiste objetivos nutricionales en Room.
+     * Persist nutritional goals in Room.
      */
     fun NutritionTarget.toEntity(): NutritionTargetEntity = NutritionTargetEntity(
         id = id,
@@ -117,7 +117,7 @@ object NutritionMapper {
     )
 
     /**
-     * Restaura objetivos nutricionales desde Room.
+     * Restore nutritional goals from Room.
      */
     fun NutritionTargetEntity.toDomain(): NutritionTarget = NutritionTarget(
         id = id,

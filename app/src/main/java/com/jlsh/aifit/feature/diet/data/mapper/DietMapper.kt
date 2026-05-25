@@ -19,16 +19,16 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
- * Convierte DTOs de red y entidades Room del módulo de dieta al modelo de dominio y viceversa.
+ * Converts network DTOs and Room entities from the diet module to the domain model and vice versa.
  */
 object DietMapper {
 
     private val isoFormatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
 
     /**
-     * Mapea un resumen de plan de la API a [DietPlan] sin días (listados).
+     * Maps a plan summary from the API to [DietPlan] without days (listings).
      *
-     * @return Plan de dominio con [DietPlan.days] vacío.
+     * @return Domain plan with empty [DietPlan.days].
      */
     fun DietPlanSummaryResponseDto.toDomain(): DietPlan = DietPlan(
         id = id,
@@ -47,9 +47,9 @@ object DietMapper {
     )
 
     /**
-     * Mapea el detalle completo de un plan de la API, incluyendo días y comidas ordenados.
+     * Maps the full detail of an API plan, including ordered days and meals.
      *
-     * @return Plan de dominio con [DietPlan.days] poblados.
+     * @return Domain plan with [DietPlan.days] populated.
      */
     fun DietPlanResponseDto.toDomain(): DietPlan = DietPlan(
         id = id,
@@ -68,7 +68,7 @@ object DietMapper {
     )
 
     /**
-     * Mapea un día de dieta de la API al modelo de dominio.
+     * Maps a diet day from the API to the domain model.
      */
     fun DietDayResponseDto.toDomain(): DietDay = DietDay(
         id = id,
@@ -79,7 +79,7 @@ object DietMapper {
     )
 
     /**
-     * Mapea una comida planificada de la API al modelo de dominio.
+     * Maps a planned meal from the API to the domain model.
      */
     fun MealResponseDto.toDomain(): Meal = Meal(
         id = id,
@@ -94,7 +94,7 @@ object DietMapper {
     )
 
     /**
-     * Mapea un alimento dentro de una comida planificada al modelo de dominio.
+     * Maps a food within a planned meal to the domain model.
      */
     fun MealItemResponseDto.toDomain(): MealItem = MealItem(
         id = id,
@@ -108,9 +108,9 @@ object DietMapper {
     )
 
     /**
-     * Persiste un plan de dominio en Room asociado al [userId].
+     * A domain plan persists in Room associated with [userId].
      *
-     * @param userId Identificador del usuario propietario del plan.
+     * @param userId Identifier of the user who owns the plan.
      */
     fun DietPlan.toEntity(userId: String): DietPlanEntity = DietPlanEntity(
         id = id,
@@ -129,7 +129,7 @@ object DietMapper {
     )
 
     /**
-     * Restaura un plan desde Room; los días no se almacenan en la entidad de resumen.
+     * Restore a plan from Room; days are not stored in the summary entity.
      */
     fun DietPlanEntity.toDomain(): DietPlan = DietPlan(
         id = id,

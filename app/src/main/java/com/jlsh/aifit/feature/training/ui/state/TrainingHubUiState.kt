@@ -5,31 +5,31 @@ import com.jlsh.aifit.feature.training.domain.model.TrainingDay
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 
 /**
- * Estado de la UI del hub de entrenamiento: plan activo, listado y filtros.
+ * Training hub UI status: active plan, list and filters.
  */
 sealed interface TrainingHubUiState {
 
-    /** Carga inicial o refresco sin datos previos en pantalla. */
+    /** Initial load or refresh without previous data on the screen.*/
     data object Loading : TrainingHubUiState
 
     /**
-     * Error al obtener los planes.
+     * Error obtaining plans.
      *
-     * @property message Mensaje de error para mostrar al usuario.
+     * @property message Error message to display to the user.
      */
     data class Error(val message: String) : TrainingHubUiState
 
-    /** El usuario tiene planes guardados pero ninguno está activo. */
+    /** The user has saved plans but none are active.*/
     data object NoActivePlan : TrainingHubUiState
 
     /**
-     * Hay un plan activo con progreso semanal y listado de todos los planes.
+     * There is an active plan with weekly progress and listing of all plans.
      *
-     * @property plan Plan actualmente activo.
-     * @property currentWeek Semana actual dentro de la duración del plan (1-based).
-     * @property nextDay Próximo día de entrenamiento sugerido, o null si no hay días cargados.
-     * @property allPlans Todos los planes del usuario para el listado inferior.
-     * @property selectedFilter Filtro de estado aplicado al listado; null muestra todos.
+     * @property plan Currently active plan.
+     * @property currentWeek Current week within the plan duration (1-based).
+     * @property nextDay Next suggested training day, or null if there are no days loaded.
+     * @property allPlans All user plans for the list below.
+     * @property selectedFilter State filter applied to the listing; null shows all.
      */
     data class ActivePlan(
         val plan: TrainingPlan,

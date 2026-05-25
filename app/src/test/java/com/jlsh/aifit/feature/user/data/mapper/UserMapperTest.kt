@@ -106,7 +106,7 @@ class UserMapperTest {
 
         val domain = dto.toDomain()
 
-        // GoalType.fromString(null) = UNKNOWN según el companion object
+        // GoalType.fromString(null) = UNKNOWN according to companion object
         assertEquals(GoalType.UNKNOWN, domain.goalType)
     }
 
@@ -268,7 +268,7 @@ class UserMapperTest {
 
         val domain = entity.toDomain()
 
-        // fitnessLevel?.let { ... } = null cuando fitnessLevel es null
+        // fitnessLevel?.let { ... } = null when fitnessLevel is null
         assertNull(domain.fitnessLevel)
     }
 }

@@ -7,17 +7,17 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 /**
- * Caso de uso que obtiene los objetivos nutricionales vigentes del usuario.
+ * Use case that obtains the user's current nutritional goals.
  *
- * @param repository Repositorio de objetivos nutricionales.
+ * @param repository Nutritional goals repository.
  */
 class GetCurrentNutritionTargetUseCase @Inject constructor(
     private val repository: NutritionTargetRepository,
 ) {
     /**
-     * Emite el objetivo actual (calorías y macros) desde caché y/o red.
+     * Outputs current goal (calories and macros) from cache and/or network.
      *
-     * @return Flujo de [Result] con [NutritionTarget], [Result.Loading] o [Result.Error].
+     * @return Flow of [Result] with [NutritionTarget], [Result.Loading], or [Result.Error].
      */
     operator fun invoke(): Flow<Result<NutritionTarget>> =
         repository.getCurrentTarget()

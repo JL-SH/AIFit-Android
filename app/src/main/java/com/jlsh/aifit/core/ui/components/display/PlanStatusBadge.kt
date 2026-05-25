@@ -26,7 +26,7 @@ import com.jlsh.aifit.core.ui.theme.aifitSubtleBorder
 private val BadgeShape = RoundedCornerShape(6.dp)
 
 /**
- * Small badge that renders a localised label for a plan status value.
+ * Small badge that renders a localized label for a plan status value.
  */
 @Composable
 fun PlanStatusBadge(

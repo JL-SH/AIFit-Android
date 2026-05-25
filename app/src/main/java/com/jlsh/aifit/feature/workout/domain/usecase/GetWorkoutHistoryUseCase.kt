@@ -7,18 +7,18 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 /**
- * Caso de uso para observar el historial de sesiones de entrenamiento registradas.
+ * Use case to observe the history of recorded training sessions.
  */
 class GetWorkoutHistoryUseCase @Inject constructor(
     private val repository: WorkoutRepository,
 ) {
     /**
-     * Obtiene un flujo de logs filtrados opcionalmente por plan y rango de fechas.
+     * Gets a stream of logs optionally filtered by plan and date range.
      *
-     * @param planId Filtra por plan de entrenamiento; null devuelve todos los planes.
-     * @param from Fecha inicio inclusive en formato ISO (`yyyy-MM-dd`); null sin límite inferior.
-     * @param to Fecha fin inclusive en formato ISO; null sin límite superior.
-     * @return Flujo que emite caché local y luego datos de red reconciliados.
+     * @param planId Filter by training plan; null returns all plans.
+     * @param from Start date inclusive in ISO format (`yyyy-MM-dd`); null with no lower limit.
+     * @param to End date inclusive in ISO format; null with no upper limit.
+     * @return Flow that emits local cache and then reconciled network data.
      */
     operator fun invoke(
         planId: String? = null,

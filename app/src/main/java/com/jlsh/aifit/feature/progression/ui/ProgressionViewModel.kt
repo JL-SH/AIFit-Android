@@ -18,66 +18,66 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Estado de la recomendación de progresión de un ejercicio concreto.
+ * Status of the progression recommendation for a specific exercise.
  */
 sealed class RecommendationState {
-    /** Sin petición activa (p. ej. sheet cerrado). */
+    /** No active request (e.g. sheet closed).*/
     data object Idle : RecommendationState()
 
-    /** Carga de la recomendación del ejercicio. */
+    /** Loading of exercise recommendation.*/
     data object Loading : RecommendationState()
 
     /**
-     * Recomendación disponible.
+     * Recommendation available.
      *
-     * @property data Carga, repeticiones y justificación sugeridas.
+     * @property data Suggested load, repetitions and justification.
      */
     data class Success(val data: ProgressionRecommendation) : RecommendationState()
 
     /**
-     * Error al cargar la recomendación.
+     * Error loading recommendation.
      *
-     * @property message Texto para mostrar al usuario.
+     * @property message Text to display to the user.
      */
     data class Error(val message: String) : RecommendationState()
 }
 
 /**
- * Estado del resumen de progresión de un plan completo.
+ * Progression summary status of a completed plan.
  */
 sealed class PlanSummaryState {
-    /** Sin petición activa. */
+    /** No active request.*/
     data object Idle : PlanSummaryState()
 
-    /** Carga del resumen del plan. */
+    /** Plan summary upload.*/
     data object Loading : PlanSummaryState()
 
     /**
-     * Resumen del plan disponible.
+     * Plan summary available.
      *
-     * @property data Recomendaciones agrupadas por ejercicio.
+     * @property data Recommendations grouped by exercise.
      */
     data class Success(val data: PlanProgressionSummary) : PlanSummaryState()
 
     /**
-     * Error al cargar el resumen.
+     * Error loading summary.
      *
-     * @property message Texto para mostrar al usuario.
+     * @property message Text to display to the user.
      */
     data class Error(val message: String) : PlanSummaryState()
 }
 
 /**
- * ViewModel de recomendaciones de progresión por ejercicio y por plan.
+ * ViewModel of progression recommendations by exercise and by plan.
  *
- * **UiState expuesto** (sin canal de eventos; la UI observa los StateFlow):
- * - [recommendationState] — [RecommendationState]: recomendación de un ejercicio.
- * - [planSummaryState] — [PlanSummaryState]: resumen de todo el plan.
- * - [sessionCount]: número de sesiones completadas (contexto para la UI).
+ * **UiState exposed** (no event channel; UI observes StateFlows):
+ * - [recommendationState] — [RecommendationState]: recommendation of an exercise.
+ * - [planSummaryState] — [PlanSummaryState]: summary of the entire plan.
+ * - [sessionCount]: Number of sessions completed (context for the UI).
  *
- * @param getExerciseRecommendationUseCase Recomendación individual.
- * @param getPlanRecommendationsUseCase Resumen del plan.
- * @param getWorkoutHistoryUseCase Conteo de sesiones para contexto.
+ * @param getExerciseRecommendationUseCase Individual recommendation.
+ * @param getPlanRecommendationsUseCase Plan summary.
+ * @param getWorkoutHistoryUseCase Session count for context.
  */
 @HiltViewModel
 class ProgressionViewModel @Inject constructor(
@@ -87,15 +87,15 @@ class ProgressionViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _recommendationState = MutableStateFlow<RecommendationState>(RecommendationState.Idle)
-    /** Estado de la recomendación del ejercicio seleccionado. */
+    /** Status of the recommendation of the selected exercise.*/
     val recommendationState: StateFlow<RecommendationState> = _recommendationState.asStateFlow()
 
     private val _planSummaryState = MutableStateFlow<PlanSummaryState>(PlanSummaryState.Idle)
-    /** Estado del resumen de progresión del plan. */
+    /** Plan Progression Summary Status.*/
     val planSummaryState: StateFlow<PlanSummaryState> = _planSummaryState.asStateFlow()
 
     private val _sessionCount = MutableStateFlow<Int?>(null)
-    /** Número de sesiones de entrenamiento registradas, o `null` mientras se calcula. */
+    /** Number of training sessions recorded, or `null` while calculating.*/
     val sessionCount: StateFlow<Int?> = _sessionCount.asStateFlow()
 
     init {
@@ -113,9 +113,9 @@ class ProgressionViewModel @Inject constructor(
     }
 
     /**
-     * Carga la recomendación de progresión para un ejercicio.
+     * Load the progression recommendation for an exercise.
      *
-     * @param exerciseId Identificador del ejercicio.
+     * @param exerciseId Exercise identifier.
      */
     fun loadExerciseRecommendation(exerciseId: String) {
         viewModelScope.launch {
@@ -129,9 +129,9 @@ class ProgressionViewModel @Inject constructor(
     }
 
     /**
-     * Carga el resumen de progresión de todo el plan.
+     * Load the progression summary of the entire plan.
      *
-     * @param planId Identificador del plan de entrenamiento.
+     * @param planId Identifier of the training plan.
      */
     fun loadPlanRecommendations(planId: String) {
         viewModelScope.launch {
@@ -144,7 +144,7 @@ class ProgressionViewModel @Inject constructor(
         }
     }
 
-    /** Restablece [recommendationState] a [RecommendationState.Idle] (p. ej. al cerrar el sheet). */
+    /** Restablece [recommendationState] a [RecommendationState.Idle] (e.g. al cerrar el sheet). */
     fun resetRecommendationState() {
         _recommendationState.value = RecommendationState.Idle
     }

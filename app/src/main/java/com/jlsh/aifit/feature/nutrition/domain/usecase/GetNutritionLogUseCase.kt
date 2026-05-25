@@ -8,18 +8,18 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 /**
- * Caso de uso que obtiene el registro nutricional de un día concreto (caché y red).
+ * Use case that obtains the nutritional record for a specific day (cache and network).
  *
- * @param repository Repositorio del registro nutricional.
+ * @param repository Nutritional registry repository.
  */
 class GetNutritionLogUseCase @Inject constructor(
     private val repository: NutritionLogRepository,
 ) {
     /**
-     * Emite el log del día: primero caché local si existe, luego sincroniza con el servidor.
+     * Issue the log of the day: first local cache if it exists, then synchronize with the server.
      *
-     * @param date Fecha del registro a consultar.
-     * @return Flujo de [Result] con [NutritionLog], [Result.Loading] o [Result.Error].
+     * @param date Date of the record to consult.
+     * @return Flow of [Result] with [NutritionLog], [Result.Loading], or [Result.Error].
      */
     operator fun invoke(date: LocalDate): Flow<Result<NutritionLog>> =
         repository.getNutritionLog(date)

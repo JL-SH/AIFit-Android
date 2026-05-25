@@ -4,33 +4,33 @@ import com.jlsh.aifit.core.ui.components.layout.UiStateHost
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 
 /**
- * Estados de la UI del módulo de usuario (perfil, hub y formularios).
+ * UI states of the user module (profile, hub and forms).
  *
  * Consumido por [com.jlsh.aifit.feature.user.ui.UserViewModel] y pantallas asociadas.
  */
 sealed class UserUiState {
 
-    /** Sin operación de red activa; formulario editable en creación de perfil. */
+    /** No active network operation; editable form in profile creation.*/
     data object Idle : UserUiState()
 
-    /** Cargando perfil desde repositorio o caché. */
+    /** Loading profile from repository or cache.*/
     data object Loading : UserUiState(), UiStateHost.Loading
 
     /**
-     * Perfil disponible para mostrar o editar.
+     * Profile available to display or edit.
      *
-     * @property profile Datos de dominio del usuario.
+     * @property profile User domain data.
      */
     data class Success(val profile: UserProfile) : UserUiState(), UiStateHost.Success
 
     /**
-     * Fallo al cargar el perfil.
+     * Failed to load profile.
      *
-     * @property message Texto para mostrar en [com.jlsh.aifit.core.ui.components.feedback.ErrorScreen].
+     * @property message Text to display in [com.jlsh.aifit.core.ui.components.feedback.ErrorScreen].
      */
     data class Error(override val message: String) : UserUiState(), UiStateHost.Error
 
-    /** Guardando creación o actualización del perfil. */
+    /** Saving profile creation or update.*/
     data object Saving : UserUiState()
 }
 

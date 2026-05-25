@@ -6,17 +6,17 @@ import com.jlsh.aifit.feature.gamification.domain.repository.GamificationReposit
 import javax.inject.Inject
 
 /**
- * Caso de uso que obtiene los logros desbloqueados del usuario autenticado.
+ * Use case that gets the unlocked achievements from the authenticated user.
  *
- * @param repository Repositorio de gamificación.
+ * @param repository Gamification repository.
  */
 class GetUserAchievementsUseCase @Inject constructor(
     private val repository: GamificationRepository,
 ) {
     /**
-     * Recupera la lista de logros conseguidos por el usuario.
+     * Retrieves the list of achievements achieved by the user.
      *
-     * @return [Result.Success] con los logros desbloqueados, o [Result.Error] si falla la petición.
+     * @return [Result.Success] with achievements unlocked, or [Result.Error] if the request fails.
      */
     suspend operator fun invoke(): Result<List<UserAchievement>> =
         repository.getAchievements()

@@ -151,7 +151,7 @@ class HomeViewModelTest {
         )
     }
 
-    // ── Estado inicial ─────────────────────────────────────────────────────────
+    // ── Initial state ──────────────────────────── ─────────────────────────────
 
     @Test
     fun `uiState es Loading cuando no hay perfil en cache y la red no responde`() {
@@ -243,7 +243,7 @@ class HomeViewModelTest {
         assertEquals("No se pudo cargar el perfil", (state as HomeUiState.Error).message)
     }
 
-    // ── Success — sin planes ───────────────────────────────────────────────────
+    // ── Success — no plans ───────────────────────────────────────────────────
 
     @Test
     fun `uiState es Success con todayTraining null cuando no hay plan activo`() = runTest {
@@ -260,7 +260,7 @@ class HomeViewModelTest {
         assertEquals("Test User", success.userName)
     }
 
-    // ── Success — con plan activo ──────────────────────────────────────────────
+    // ── Success — with active plan ─────────────────────── ───────────────────────
 
     @Test
     fun `uiState es Success con todayTraining cuando hay plan activo con dia de hoy`() = runTest {
@@ -319,7 +319,7 @@ class HomeViewModelTest {
         assertNull(state.todayTraining)
     }
 
-    // ── Success — nutrición ────────────────────────────────────────────────────
+    // ── Success — nutrition ────────────────────────── ──────────────────────────
 
     @Test
     fun `uiState Success con todayNutrition cuando hay log y target`() = runTest {
@@ -737,7 +737,7 @@ class HomeViewModelTest {
         )
     }
 
-    // ── Resiliencia parcial: secciones independientes ──────────────────────────
+    // ── Partial resilience: independent sections ──────────────────────────
 
     @Test
     fun `uiState Success cuando solo falla nutricion pero el resto carga bien`() = runTest {
@@ -797,7 +797,7 @@ class HomeViewModelTest {
 
     @Test
     fun `onResumed detecta plan activo nuevo y actualiza el estado`() = runTest {
-        // Initial: no active plan
+        // Initial: do not activate plan
         val vm = createViewModel(
             plansFlow = flowOf(Result.Success(emptyList())),
         )
@@ -857,7 +857,7 @@ class HomeViewModelTest {
 
     @Test
     fun `onResumed muestra activePlan desde summary cuando loadPlanDetail falla`() = runTest {
-        // Initial: no active plan
+        // Initial: do not activate plan
         val vm = createViewModel(
             plansFlow = flowOf(Result.Success(emptyList())),
         )
@@ -888,7 +888,7 @@ class HomeViewModelTest {
 
     @Test
     fun `onResumed no sobreescribe activePlan con null cuando ya habia plan y detail falla`() = runTest {
-        // Initial: active plan with detail success
+        // Initial: activate plan with detail success
         val plan = fakeTrainingPlan(
             id = "plan-1",
             name = "My Plan",

@@ -6,17 +6,17 @@ import com.jlsh.aifit.feature.metabolic.domain.repository.MetabolicRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso que solicita el análisis metabólico actual del usuario.
+ * Use case that requests the user's current metabolic analysis.
  *
- * @param repository Repositorio de datos metabólicos.
+ * @param repository Metabolic data repository.
  */
 class AnalyzeMetabolicProgressUseCase @Inject constructor(
     private val repository: MetabolicRepository,
 ) {
     /**
-     * Obtiene tendencia de peso, adherencia calórica y recomendación de ajuste.
+     * Get weight trend, calorie adherence and fit recommendation.
      *
-     * @return [Result.Success] con [MetabolicAnalysis], o [Result.Error] (p. ej. datos insuficientes).
+     * @return [Result.Success] with [MetabolicAnalysis], or [Result.Error] (e.g. insufficient data).
      */
     suspend operator fun invoke(): Result<MetabolicAnalysis> =
         repository.analyzeMetabolicProgress()

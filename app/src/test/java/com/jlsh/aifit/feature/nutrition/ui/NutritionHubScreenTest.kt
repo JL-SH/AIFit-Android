@@ -86,7 +86,7 @@ class NutritionHubScreenTest {
         }
     }
 
-    // ─── Estado Loading ────────────────────────────────────────────────────────
+    // ─── Loading Status ──────────────────────────── ────────────────────────────
 
     @Test
     fun `muestra LoadingScreen cuando hubState es Loading`() {
@@ -100,7 +100,7 @@ class NutritionHubScreenTest {
         composeTestRule.onNodeWithTag("loading_screen").assertIsDisplayed()
     }
 
-    // ─── Estado Error ──────────────────────────────────────────────────────────
+    // ─── Status Error ───────────────────────────── ─────────────────────────────
 
     @Test
     fun `muestra ErrorScreen cuando hubState es Error`() {
@@ -112,7 +112,7 @@ class NutritionHubScreenTest {
         // For now, test the Success state instead.
     }
 
-    // ─── Estado Success — Tab TODAY ────────────────────────────────────────────
+    // ─── Status Success — Tab TODAY ────────────────────── ──────────────────────
 
     @Test
     fun `muestra tab Nutrition con título correcto`() {
@@ -176,7 +176,7 @@ class NutritionHubScreenTest {
         composeTestRule.onNodeWithText("Sin objetivos de hoy").assertIsDisplayed()
     }
 
-    // ─── Estado Success — Tab DIET PLAN ────────────────────────────────────────
+    // ─── Success Status — Tab DIET PLAN ──────────────────── ────────────────────
 
     @Test
     fun `muestra nombre del plan de dieta en tab DIET PLAN`() {

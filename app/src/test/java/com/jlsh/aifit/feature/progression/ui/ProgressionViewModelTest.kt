@@ -35,7 +35,7 @@ class ProgressionViewModelTest {
         getWorkoutHistoryUseCase,
     )
 
-    // ─── Estado inicial ────────────────────────────────────────────────────────
+    // ─── Initial state ──────────────────────────── ────────────────────────────
 
     @Test
     fun `estado inicial de recommendationState es Idle`() {

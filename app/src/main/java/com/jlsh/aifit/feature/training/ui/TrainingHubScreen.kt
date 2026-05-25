@@ -69,17 +69,17 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 
 /**
- * Pantalla hub de entrenamiento: plan activo destacado, listado filtrable y acceso a historial.
+ * Training hub screen: highlighted active plan, filterable list and access to history.
  *
- * Muestra estados de carga, error, vacío (sin plan activo) o contenido con tarjeta del plan
- * activo, chips de filtro y tarjetas resumen. Incluye FAB para crear plan e icono de historial.
+ * Shows statuses of loading, error, empty (no active plan), or content with plan card
+ * active, filter chips and summary cards. Includes FAB to create plan and history icon.
  *
- * @param onNavigateToDetail Navegación al detalle de un plan.
- * @param onNavigateToGenerate Navegación al flujo de generación (`adaptive`, `basePlanId` opcional).
- * @param onNavigateToWorkoutLog Navegación al registro de sesión de un plan.
- * @param onNavigateToWorkoutDetail Navegación al detalle de un log (no usado en esta pantalla).
- * @param onNavigateToWorkoutHistory Navegación al historial de workouts.
- * @param viewModel ViewModel que provee [TrainingHubUiState] y eventos de navegación.
+ * @param onNavigateToDetail Detail navigation of a plan.
+ * @param onNavigateToGenerate Navigate to the generation flow (`adaptive`, `basePlanId` optional).
+ * @param onNavigateToWorkoutLog Navigating to a plan's session log.
+ * @param onNavigateToWorkoutDetail Detail navigation of a log (not used in this screen).
+ * @param onNavigateToWorkoutHistory Navigation to workout history.
+ * @param viewModel ViewModel that provides [TrainingHubUiState] and navigation events.
  */
 @Composable
 fun TrainingHubScreen(
@@ -255,7 +255,7 @@ private fun ActivePlanContent(
         ),
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
     ) {
-        // ── Top section: Active plan card ──
+        // ── Top section: Activate plan card ──
         item(key = "active_plan_card") {
             PlanHubActiveCard(
                 planName = state.plan.name,

@@ -37,16 +37,16 @@ class NutritionLogRepositoryImplTest {
         coEvery { dao.upsert(any()) } just Runs
 
         sut.getNutritionLog(LocalDate.of(2026, 4, 6)).test {
-            // Primera emisión: Loading
+            // First broadcast: Loading
             val loading = awaitItem()
             assertTrue(loading is Result.Loading)
 
-            // Segunda emisión: cache
+            // Second broadcast: cache
             val cached = awaitItem()
             assertTrue(cached is Result.Success)
             assertEquals("nutrition-log-1", (cached as Result.Success).data.id)
 
-            // Tercera emisión: dato fresco
+            // Third issue: fresh data
             val fresh = awaitItem()
             assertTrue(fresh is Result.Success)
             assertEquals("nutrition-log-1", (fresh as Result.Success).data.id)
@@ -84,7 +84,7 @@ class NutritionLogRepositoryImplTest {
             val cached = awaitItem()
             assertTrue(cached is Result.Success)
 
-            // No debe emitir Error porque hay cache
+            // Must not emit Error when cache exists
             awaitComplete()
         }
     }

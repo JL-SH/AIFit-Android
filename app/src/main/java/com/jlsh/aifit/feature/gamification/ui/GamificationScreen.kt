@@ -64,14 +64,14 @@ import java.time.format.DateTimeFormatter
 import com.jlsh.aifit.core.ui.components.display.StreakStatus as BadgeStreakStatus
 
 /**
- * Pantalla de gamificación con rachas, logros desbloqueados/bloqueados y récords personales.
+ * Gamification screen with streaks, unlocked/locked achievements and personal bests.
  *
- * Muestra barra superior con acceso a exportación, pestañas (rachas, logros, récords) y estados
- * de carga o error. Reacciona a [GamificationUiEvent] para navegar al informe de progreso.
+ * Shows top bar with access to export, tabs (streaks, achievements, records) and statuses
+ * load or error. React to [GamificationUiEvent] to navigate to the progress report.
  *
- * @param onNavigateBack Vuelve a la pantalla anterior.
- * @param onNavigateToExport Abre la pantalla de exportación de progreso.
- * @param viewModel ViewModel de gamificación inyectado por Hilt.
+ * @param onNavigateBack Returns to the previous screen.
+ * @param onNavigateToExport Opens the progress export screen.
+ * @param viewModel Gamification ViewModel injected by Hilt.
  */
 @Composable
 fun GamificationScreen(
@@ -153,7 +153,7 @@ fun GamificationScreen(
     }
 }
 
-// ── Tab: RACHAS ──────────────────────────────────────────────────────────────
+// ── Tab: STREAKS ──────────────────────────────────────────────────────────────
 
 @Composable
 private fun StreaksTab(streaks: List<Streak>) {
@@ -232,12 +232,12 @@ private fun AchievementsTab(
     userAchievements: List<UserAchievement>,
     allDefinitions: List<AchievementDefinition>,
 ) {
-    // Los "conseguidos" vienen directamente del servidor (datos verídicos con IDs reales).
-    // NO los derivamos de allDefinitions para evitar depender de que la API funcione.
+    // The "obtained" ones come directly from the server (true data with real IDs).
+    // Do NOT derive them from allDefinitions to avoid depending on the API working.
     val unlocked: List<AchievementDefinition> = userAchievements.map { it.achievement }
     val unlockedCodes: Set<String> = unlocked.map { it.code }.toSet()
 
-    // Los "bloqueados" son las definiciones (API o fallback local) que el usuario aún no tiene.
+    // The "blocked" ones are the definitions (API or local fallback) that the user does not have yet.
     val locked: List<AchievementDefinition> = allDefinitions.filter { it.code !in unlockedCodes }
 
     if (unlocked.isEmpty() && locked.isEmpty()) {
@@ -276,7 +276,7 @@ private fun AchievementsTab(
             }
         }
 
-        // ── Próximos logros ──
+        // ── Next achievements ──
         if (locked.isNotEmpty()) {
             item(key = "header_locked") {
                 Text(
@@ -404,7 +404,7 @@ private fun AchievementCard(
     }
 }
 
-// ── Tab: RÉCORDS ─────────────────────────────────────────────────────────────
+// ── Tab: RECORDS ────────────────────────────── ───────────────────────────────
 
 @Composable
 private fun RecordsTab(records: List<PersonalRecord>) {

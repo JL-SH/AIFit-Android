@@ -51,8 +51,8 @@ class GamificationRepositoryImpl @Inject constructor(
             when {
                 r is Result.Success && r.data.isNotEmpty() ->
                     Result.Success(r.data.map { it.toDomain() })
-                // Si la API falla o devuelve vacío, usar las definiciones locales (datos estáticos
-                // del juego, al estilo Steam). Siempre habrá logros que mostrar.
+                // If the API fails or returns empty, use local definitions (static data
+                // of the game, Steam style). There will always be achievements to show.
                 else -> Result.Success(LocalAchievementDefinitions.all)
             }
         } catch (e: Exception) {

@@ -6,11 +6,11 @@ import com.jlsh.aifit.feature.workout.ui.state.SessionExercise
 import kotlin.math.abs
 
 /**
- * Estima el máximo de una repetición (1RM) con la fórmula de Epley simplificada.
+ * Estimate your one repetition maximum (1RM) with the simplified Epley formula.
  *
- * @param weight Peso levantado en la serie.
- * @param reps Repeticiones completadas; si es 0, devuelve [weight] sin ajuste.
- * @return 1RM estimado en las mismas unidades que [weight].
+ * @param weight Weight lifted in the set.
+ * @param reps Reps completed; if 0, returns [weight] without adjustment.
+ * @return 1RM estimado in the same units as [weight].
  */
 fun calculateOneRepMax(weight: Double, reps: Int): Double {
     if (reps == 0) return weight
@@ -18,12 +18,12 @@ fun calculateOneRepMax(weight: Double, reps: Int): Double {
 }
 
 /**
- * Sugiere un peso ajustado cuando el RPE real se desvía del RPE objetivo.
+ * Suggests adjusted weight when actual RPE deviates from target RPE.
  *
- * @param currentWeight Peso usado en la serie registrada.
- * @param actualRpe RPE percibido por el usuario (1–10).
- * @param targetRpe RPE prescrito para la serie.
- * @return Peso sugerido para la siguiente serie, o null si la desviación es ≤ 1 punto RPE.
+ * @param currentWeight Weight used in the recorded series.
+ * @param currentRpe User perceived RPE (1–10).
+ * @param targetRpe Prescribed RPE for the series.
+ * @return Suggested weight for the next set, or null if the deviation is ≤ 1 RPE point.
  */
 fun calculateAutoregulatedWeight(
     currentWeight: Double,
@@ -38,30 +38,30 @@ fun calculateAutoregulatedWeight(
 }
 
 /**
- * Indica si un ejercicio ha completado todas sus series objetivo.
+ * Indicates whether an exercise has completed all of its target sets.
  *
- * @param completedSets Series ya registradas.
+     * @param completedSets Sets already logged.
  * @param targetSets Series prescritas.
  */
 fun isExerciseComplete(completedSets: Int, targetSets: Int): Boolean =
     completedSets >= targetSets
 
 /**
- * Comprueba si todos los ejercicios de la sesión han completado sus series.
+ * Check if all the exercises in the session have completed their series.
  *
- * @param exercises Lista de ejercicios de la sesión activa.
- * @return true si hay al menos un ejercicio y todos tienen [SessionExercise.isComplete].
+ * @param exercises List of exercises for the active session.
+ * @return true if there is at least one exercise and they all have [SessionExercise.isComplete].
  */
 fun areAllExercisesComplete(exercises: List<SessionExercise>): Boolean =
     exercises.isNotEmpty() && exercises.all { it.isComplete }
 
 /**
- * Índice del primer ejercicio con series pendientes, o el último si todos están completos.
+ * Index of the first exercise with pending series, or the last if all are complete.
  *
- * @param completedSets Series completadas por ejercicio (misma longitud que [targetSets]).
- * @param targetSets Series objetivo por ejercicio.
- * @return Índice del ejercicio actual en la lista de la sesión.
- * @throws IllegalArgumentException si las listas no tienen el mismo tamaño.
+ * @param completedSets Series completed per exercise (same length as [targetSets]).
+ * @param targetSets Target series per exercise.
+ * @return Index of the current exercise in the session list.
+ * @throws IllegalArgumentException if the lists are not the same size.
  */
 fun resolveCurrentExerciseIndex(
     completedSets: List<Int>,
@@ -75,13 +75,13 @@ fun resolveCurrentExerciseIndex(
 }
 
 /**
- * Índice del siguiente ejercicio con series pendientes tras completar [justCompletedIndex].
+ * Index of the next exercise with pending series after completing [justCompletedIndex].
  *
- * @param completedSets Series completadas por ejercicio.
- * @param targetSets Series objetivo por ejercicio.
- * @param justCompletedIndex Índice del ejercicio que acaba de completar todas sus series.
- * @return Índice del siguiente ejercicio incompleto, o null si no queda ninguno.
- * @throws IllegalArgumentException si las listas no tienen el mismo tamaño.
+ * @param completedSets Completed sets per exercise.
+ * @param targetSets Target series per exercise.
+ * @param justCompletedIndex Index of the exercise that has just completed all its sets.
+ * @return Index of the next incomplete exercise, or null if none remain.
+ * @throws IllegalArgumentException if the lists are not the same size.
  */
 fun resolveNextExerciseIndexAfterCompletion(
     completedSets: List<Int>,
@@ -95,12 +95,12 @@ fun resolveNextExerciseIndexAfterCompletion(
 }
 
 /**
- * Suma el volumen (peso × reps) de las series que trabajan un grupo muscular dado.
+ * Sums volume (weight × reps) for sets that target a given muscle group.
  *
- * @param setLogs Series registradas en la sesión.
- * @param muscleGroup Grupo muscular a acumular.
- * @param exerciseMuscleMap Mapa de id de ejercicio de entrenamiento a [MuscleGroup].
- * @return Volumen total en unidades de peso × repeticiones.
+ * @param setLogs Series logged in the session.
+ * @param muscleGroup Muscle group to accumulate volume for.
+ * @param exerciseMuscleMap Map training exercise id to [MuscleGroup].
+ * @return Total volume in weight × reps units.
  */
 fun calculateAccumulatedVolume(
     setLogs: List<WorkoutSetLog>,

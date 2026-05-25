@@ -38,7 +38,7 @@ class AuthViewModelTest {
         viewModel = AuthViewModel(loginUseCase, registerUseCase, googleLoginUseCase)
     }
 
-    // ─── Estado inicial ────────────────────────────────────────────────────────
+    // ─── Initial state ──────────────────────────── ────────────────────────────
 
     @Test
     fun `estado inicial es Idle`() = runTest {
@@ -179,7 +179,7 @@ class AuthViewModelTest {
         viewModel.uiState.test {
             skipItems(1) // Idle
             viewModel.onLoginClicked()
-            // Loading + Success (con UnconfinedTestDispatcher ambos se emiten)
+            // Loading + Success (with UnconfinedTestDispatcher both are emitted)
             val first = awaitItem()
             when {
                 first is AuthUiState.Loading -> {
@@ -274,7 +274,7 @@ class AuthViewModelTest {
         assertTrue(viewModel.uiState.value is AuthUiState.Idle)
     }
 
-    // ─── Navegacion ────────────────────────────────────────────────────────────
+    // ─── Navigation ────────────────────────────────────────────────────────────
 
     @Test
     fun `onNavigateToRegister emite NavigateToRegister`() = runTest {

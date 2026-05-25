@@ -48,7 +48,7 @@ class SessionManager @Inject constructor(
      * One-shot events emitted when the session ends.
      *
      * `null` indicates a voluntary logout; a non-null [String] contains the
-     * human-readable reason (e.g. "Tu sesión ha caducado…") to display as a
+     * human-readable reason (e.g. "Your session has expired...") to display as a
      * Snackbar on the login screen.
      */
     val logoutEvent: SharedFlow<String?> = _logoutEvent.asSharedFlow()

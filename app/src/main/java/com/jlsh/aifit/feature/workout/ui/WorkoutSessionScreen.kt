@@ -77,15 +77,15 @@ import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionUiEvent
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutSessionUiState
 
 /**
- * Pantalla de sesión de entrenamiento: calentamiento, registro de series por ejercicio
- * y finalización con fatiga y dolor articular.
+ * Training session screen: warm-up, recording sets by exercise
+ * and ending with fatigue and joint pain.
  *
- * Muestra carga inicial, hoja de calentamiento, pager horizontal entre ejercicios,
- * overlay de descanso, diálogos de abandono/sustitución/finalización y snackbars.
+ * Shows initial load, warm-up sheet, horizontal pager between exercises,
+ * break overlay, abandon/substitution/end dialogues and snackbars.
  *
- * @param onNavigateBack Sale de la sesión (p. ej. pop al home tras abandonar o sesión bloqueada).
- * @param onSessionFinalized Navegación al resumen cuando [WorkoutSessionUiState.SessionFinalized].
- * @param viewModel Provee [WorkoutSessionUiState], temporizador y eventos de la sesión.
+ * @param onNavigateBack Exits the session (e.g. pop to home after abandoning or session locked).
+ * @param onSessionFinalized Navigation to summary when [WorkoutSessionUiState.SessionFinalized].
+ * @param viewModel Provides [WorkoutSessionUiState], timer, and session events.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -4,44 +4,44 @@ import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 
 /**
- * Estados de la UI de una sesión de entrenamiento en curso o recién finalizada.
+ * UI states of a training session in progress or just completed.
  */
 sealed interface WorkoutSessionUiState {
 
-    /** Estado inicial antes de cargar plan y día desde argumentos de navegación. */
+    /** Initial state before loading plan and day from navigation arguments.*/
     data object Idle : WorkoutSessionUiState
 
-    /** Cargando ejercicios del plan y protocolo de calentamiento. */
+    /** Loading exercises from the warm-up plan and protocol.*/
     data object LoadingWarmUp : WorkoutSessionUiState
 
     /**
-     * Calentamiento listo para mostrar en hoja inferior.
+     * Warming ready to display on bottom sheet.
      *
-     * @property protocol Protocolo de calentamiento devuelto por el backend.
+     * @property protocol Warm-up protocol returned by the backend.
      */
     data class WarmUpReady(val protocol: WarmUpProtocol) : WorkoutSessionUiState
 
     /**
-     * Sesión activa: registro de series, temporizador y volumen acumulado.
+     * Active session: record of series, timer and accumulated volume.
      *
-     * @property sessionData Datos mutables de la sesión en curso.
+     * @property sessionData Mutable data of the current session.
      */
     data class SessionActive(val sessionData: WorkoutSessionData) : WorkoutSessionUiState
 
-    /** Enviando fatiga y dolor articular al backend para cerrar la sesión. */
+    /** Sending fatigue and joint pain to the backend to log out.*/
     data object Finalizing : WorkoutSessionUiState
 
     /**
-     * Sesión cerrada correctamente; la pantalla navega al resumen.
+     * Successfully logged out; the screen navigates to the summary.
      *
-     * @property summary Log finalizado devuelto por el servidor.
+     * @property summary Finalized log returned by the server.
      */
     data class SessionFinalized(val summary: WorkoutLog) : WorkoutSessionUiState
 
     /**
-     * Error irrecuperable al cargar o preparar la sesión.
+     * Unrecoverable error loading or preparing session.
      *
-     * @property message Mensaje para mostrar al usuario.
+     * @property message Message to display to the user.
      */
     data class Error(val message: String) : WorkoutSessionUiState
 }

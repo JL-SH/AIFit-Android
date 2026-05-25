@@ -93,7 +93,7 @@ private val PREFERENCE_OPTIONS = listOf(
     "LACTOSE_FREE" to "Sin lactosa",
 )
 
-// ── Animación de carga ──────────────────────────────────────────────────────
+// ── Loading animation ─────────────────────────── ───────────────────────────
 private const val FACT_SLOTS = 4
 private const val ADAPTIVE_PROGRESS_K = 0.018f
 
@@ -297,7 +297,7 @@ fun GenerateDietScreen(
             ) {
                 Spacer(modifier = Modifier.height(AiFitSpacing.sm))
 
-                // ── Duración ─────────────────────────────────────────
+                // ── Duration ──────────────────── ─────────────────────
                 Text(
                     text = stringResource(R.string.diet_generate_duration_label),
                     style = MaterialTheme.typography.labelSmall,
@@ -315,7 +315,7 @@ fun GenerateDietScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                // ── Comidas por día ──────────────────────────────────
+                // ── Meals per day ──────────────────────────────────
                 Text(
                     text = stringResource(R.string.diet_generate_meals_label),
                     style = MaterialTheme.typography.labelSmall,
@@ -333,7 +333,7 @@ fun GenerateDietScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                // ── Objetivo ─────────────────────────────────────────
+                // ── Objective ──────────────────── ─────────────────────
                 Text(
                     text = stringResource(R.string.diet_generate_goal_label),
                     style = MaterialTheme.typography.labelSmall,
@@ -351,7 +351,7 @@ fun GenerateDietScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                // ── Preferencia alimentaria ──────────────────────────
+                // ── Dietary preference ──────────────────────────
                 Text(
                     text = stringResource(R.string.diet_generate_preference_label),
                     style = MaterialTheme.typography.labelSmall,
@@ -369,7 +369,7 @@ fun GenerateDietScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                // ── Calorías diarias ─────────────────────────────────
+                // ── Daily calories ─────────────────────────────────
                 AiFitNumberField(
                     value = dailyCalories,
                     onValueChange = { dailyCalories = it },
@@ -410,7 +410,7 @@ fun GenerateDietScreen(
     }
 }
 
-// ── Composables privados de la pantalla de carga animada ─────────────────────
+// ── Private Animated Loading Screen Composables ─────────────────────
 
 @Composable
 private fun DietPhaseHero() {

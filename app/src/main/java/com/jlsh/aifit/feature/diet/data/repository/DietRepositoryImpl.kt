@@ -18,9 +18,9 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 /**
- * Implementación de [DietRepository] con estrategia cache-first en Room y sincronización con la API.
+ * Implementation of [DietRepository] with cache-first strategy in Room and synchronization with the API.
  *
- * Gestiona condiciones de carrera en borrados concurrentes mediante [recentlyDeletedIds].
+ * Handle race conditions on concurrent deletes using [recentlyDeletedIds].
  */
 class DietRepositoryImpl @Inject constructor(
     private val apiService: DietApiService,
@@ -36,9 +36,9 @@ class DietRepositoryImpl @Inject constructor(
     private var recentlyDeletedIds = emptySet<String>()
 
     /**
-     * Emite la lista de planes: primero caché local del usuario, luego sincroniza con el servidor.
+     * Output the list of plans: first user's local cache, then sync with server.
      *
-     * @return Flujo de [Result]; [Result.Error] si no hay sesión activa.
+     * @return Flow of [Result]; [Result.Error] if there is no active session.
      */
     override fun getDietPlans(): Flow<Result<List<DietPlan>>> = flow {
         emit(Result.Loading)
@@ -82,10 +82,10 @@ class DietRepositoryImpl @Inject constructor(
     }.distinctUntilChanged()
 
     /**
-     * Obtiene el detalle de un plan por id y actualiza la caché local.
+     * Gets the details of a plan by id and updates the local cache.
      *
-     * @param planId Identificador del plan.
-     * @return [Result.Success] con el plan y sus días, o [Result.Error].
+     * @param planId Plan identifier.
+     * @return [Result.Success] with the plan and its days, or [Result.Error].
      */
     override suspend fun getDietPlanDetail(planId: String): Result<DietPlan> {
         return when (val remote = safeApiCall { apiService.getDietPlanById(planId) }) {
@@ -103,10 +103,10 @@ class DietRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Genera un plan estándar en el servidor y lo persiste en Room.
+     * Generates a standard plan on the server and persists it in Room.
      *
-     * @param request Parámetros de generación.
-     * @return [Result.Success] con el plan creado, o [Result.Error] (p. ej. sin sesión).
+     * @param request Generation parameters.
+     * @return [Result.Success] with the created plan, or [Result.Error] (e.g. no session).
      */
     override suspend fun generateDietPlan(
         request: GenerateDietPlanRequestDto,
@@ -125,10 +125,10 @@ class DietRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Genera un plan adaptativo en el servidor y lo persiste en Room.
+     * Generates an adaptive plan on the server and persists it in Room.
      *
-     * @param request Parámetros adaptativos (perfil, historial, feedback).
-     * @return [Result.Success] con el plan creado, o [Result.Error].
+     * @param request Adaptive parameters (profile, history, feedback).
+     * @return [Result.Success] with the created plan, or [Result.Error].
      */
     override suspend fun generateAdaptiveDietPlan(
         request: GenerateAdaptiveDietPlanRequestDto,
@@ -147,10 +147,10 @@ class DietRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Activa un plan en el servidor; pausa el plan activo previo en Room.
+     * Activate a plan on the server; pause the previous active plan in Room.
      *
-     * @param planId Identificador del plan a activar.
-     * @return [Result.Success] con el plan activado, o [Result.Error].
+     * @param planId Identifier of the plan to activate.
+     * @return [Result.Success] with the plan activated, or [Result.Error].
      */
     override suspend fun setActiveDietPlan(planId: String): Result<DietPlan> {
         val userId = sessionManager.getUserId()
@@ -174,10 +174,10 @@ class DietRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Pausa un plan en el servidor y actualiza su estado en Room.
+     * Pause a plan on the server and update its status in Room.
      *
-     * @param planId Identificador del plan a pausar.
-     * @return [Result.Success] con el plan pausado, o [Result.Error].
+     * @param planId Identifier of the plan to pause.
+     * @return [Result.Success] with plan paused, or [Result.Error].
      */
     override suspend fun pauseDietPlan(planId: String): Result<DietPlan> {
         val userId = sessionManager.getUserId()
@@ -199,10 +199,10 @@ class DietRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Elimina un plan: borrado optimista en Room, confirmación en API y rollback si falla la red.
+     * Delete a plan: optimistic delete in Room, confirmation in API and rollback if the network fails.
      *
-     * @param planId Identificador del plan a eliminar.
-     * @return [Result.Success] tras confirmación del servidor, o [Result.Error] con restauración de caché.
+     * @param planId Identifier of the plan to delete.
+     * @return [Result.Success] upon server confirmation, or [Result.Error] with cache restore.
      */
     override suspend fun deleteDietPlan(planId: String): Result<Unit> {
         // 1. Snapshot for rollback if the network call fails.

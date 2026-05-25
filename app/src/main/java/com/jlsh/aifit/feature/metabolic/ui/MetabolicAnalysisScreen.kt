@@ -61,15 +61,15 @@ import com.jlsh.aifit.feature.metabolic.ui.state.MetabolicUiEvent
 import com.jlsh.aifit.feature.metabolic.ui.state.MetabolicUiState
 
 /**
- * Pantalla de análisis metabólico: estado, tendencia de peso, adherencia y recomendación.
+ * Metabolic analysis screen: status, weight trend, adherence and recommendation.
  *
- * Si faltan datos muestra un estado vacío dedicado; en caso contrario presenta badge de estado,
- * tarjetas de tendencia y calorías, justificación textual, recomendación de macros con diálogo
- * de confirmación e historial de insights. Los snackbars y la recarga tras aplicar ajuste
- * se gestionan vía [MetabolicViewModel.events].
+ * If data is missing it shows a dedicated empty state; Otherwise, present a state badge,
+ * trend and calorie cards, textual justification, macro recommendation with dialogue
+ * confirmation and insight history. Snackbars and recharging after applying adjustment
+ * are managed via [MetabolicViewModel.events].
  *
- * @param onNavigateBack Callback al pulsar atrás.
- * @param viewModel Origen del [MetabolicUiState] y eventos de UI.
+ * @param onNavigateBack Callback when pressing back.
+ * @param viewModel Source of the [MetabolicUiState] and UI events.
  */
 @Composable
 fun MetabolicAnalysisScreen(
@@ -89,8 +89,8 @@ fun MetabolicAnalysisScreen(
         }
     }
 
-    // Estado específico: datos insuficientes — mostrar pantalla dedicada (puede venir por InsufficientData
-    // o por Success con status == INSUFFICIENT_DATA devuelto por el backend)
+    // Specific status: insufficient data — show dedicated screen (may come from InsufficientData
+    // or by Success with status == INSUFFICIENT_DATA returned by the backend)
     val currentState = uiState
     val isInsufficientData = currentState is MetabolicUiState.InsufficientData ||
         (currentState is MetabolicUiState.Success &&
@@ -487,7 +487,7 @@ private fun InsightRow(insight: MetabolicInsight) {
     }
 }
 
-// ── Helpers de traducción ─────────────────────────────────────────────────────
+// ── Translation Helpers ────────────────────────── ───────────────────────────
 
 @Composable
 private fun translateMetabolicStatus(status: MetabolicStatus): String = when (status) {

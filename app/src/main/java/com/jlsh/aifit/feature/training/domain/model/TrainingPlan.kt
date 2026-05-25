@@ -6,20 +6,20 @@ import com.jlsh.aifit.feature.user.domain.model.WorkoutLocation
 import java.time.LocalDateTime
 
 /**
- * Plan de entrenamiento estructurado con metadatos de configuración y días asociados.
+ * Structured training plan with configuration metadata and associated days.
  *
- * @property id Identificador único del plan.
- * @property name Nombre visible del plan.
- * @property description Descripción opcional del plan.
- * @property frequencyDaysPerWeek Días de entrenamiento por semana previstos.
- * @property durationWeeks Duración total del plan en semanas.
- * @property goalType Objetivo principal del usuario para este plan.
- * @property fitnessLevel Nivel de condición física objetivo del plan.
- * @property location Lugar habitual de entrenamiento (gimnasio, casa, etc.).
- * @property status Estado de ciclo de vida del plan ([PlanStatus]).
- * @property totalDays Número total de días de entrenamiento del plan.
- * @property createdAt Fecha y hora de creación del plan.
- * @property days Lista de días de entrenamiento; vacía en resúmenes de listado.
+ * @property id Unique identifier of the plan.
+ * @property name Display name of the plan.
+ * @property description Optional description of the plan.
+ * @property frequencyDaysPerWeek Expected training days per week.
+ * @property durationWeeks Total duration of the plan in weeks.
+ * @property goalType User's primary goal for this plan.
+ * @property fitnessLevel Plan's target fitness level.
+ * @property location Usual workout location (gym, home, etc.).
+ * @property status Plan lifecycle status ([PlanStatus]).
+ * @property totalDays Total number of training days in the plan.
+ * @property createdAt Plan creation date and time.
+ * @property days List of training days; empty in listing summaries.
  */
 data class TrainingPlan(
     val id: String,

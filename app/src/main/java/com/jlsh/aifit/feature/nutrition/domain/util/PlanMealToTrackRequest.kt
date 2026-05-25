@@ -9,7 +9,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Convierte una comida del plan de dieta en un [TrackMealRequestDto] listo para registrar.
+ * Convert a diet plan meal into a [TrackMealRequestDto] ready to record.
  */
 fun Meal.toTrackMealRequestDto(date: LocalDate = LocalDate.now()): TrackMealRequestDto {
     val resolvedTime = time.trim().let { raw ->

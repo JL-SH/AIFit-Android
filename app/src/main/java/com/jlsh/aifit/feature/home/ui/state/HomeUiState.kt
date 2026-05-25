@@ -7,36 +7,36 @@ import com.jlsh.aifit.feature.progress.domain.model.BodyWeightLog
 import com.jlsh.aifit.feature.progress.domain.model.WeeklyProgressSummary
 
 /**
- * Estado de la pantalla de inicio (dashboard diario).
+ * Home screen status (daily dashboard).
  */
 sealed class HomeUiState {
 
-    /** Carga inicial del dashboard; skeleton hasta snapshot completo. */
+    /** Initial loading of the dashboard; skeleton until full snapshot.*/
     data object Loading : HomeUiState()
 
     /**
-     * Error irrecuperable en la carga (p. ej. perfil no disponible).
+     * Unrecoverable error on upload (e.g. profile not available).
      *
-     * @property message Mensaje de error para mostrar al usuario.
+     * @property message Error message to display to the user.
      */
     data class Error(val message: String) : HomeUiState()
 
     /**
-     * Datos del dashboard listos para mostrar.
+     * Dashboard data ready to display.
      *
-     * @property userName Nombre del usuario para el saludo.
-     * @property avatarUrl URL de la foto de perfil, o null si no hay imagen.
-     * @property activePlan Resumen del plan de entrenamiento activo; null si no hay plan activo.
-     * @property todayTraining Entrenamiento de hoy; null en día de descanso o sin plan.
-     * @property todayNutrition Macros y calorías consumidas vs objetivo del día.
-     * @property nextMeal Próxima comida del plan dietético activo.
-     * @property streaks Rachas de gamificación (entrenamiento, nutrición, etc.).
-     * @property weeklySummary Resumen de adherencia semanal; null hasta cargar en segundo plano.
-     * @property weightEntries Últimos registros de peso (hasta 7 entradas recientes).
-     * @property lastAchievement Último logro desbloqueado en los últimos 7 días.
-     * @property nextAchievement Próximo logro pendiente de desbloquear.
-     * @property trainingStreakDays Días consecutivos de racha de entrenamiento.
-     * @property isTrainingHydrating Hay plan activo pero el detalle aún no está en caché (CTAs deshabilitados).
+     * @property userName Name of the user for the greeting.
+     * @property avatarUrl Profile photo URL, or null if there is no image.
+     * @property activePlan Summary of the active training plan; null if there is no active plan.
+     * @property todayTraining Today's training; null on a day of rest or without a plan.
+     * @property todayNutrition Macros and calories consumed vs goal for the day.
+     * @property nextMeal Next meal of the active diet plan.
+     * @property streaks Gamification streaks (training, nutrition, etc.).
+     * @property weeklySummary Weekly Adherence Summary; null until loaded in the background.
+     * @property weightEntries Latest weight entries (up to 7 recent entries).
+     * @property lastAchievement Last achievement unlocked in the last 7 days.
+     * @property nextAchievement Next achievement to unlock.
+     * @property trainingStreakDays Consecutive training streak days.
+     * @property isTrainingHydrating There is an active plan but the detail is not yet cached (CTAs disabled).
      */
     data class Success(
         val userName: String,
@@ -56,10 +56,10 @@ sealed class HomeUiState {
 }
 
 /**
- * Resumen ligero del plan de entrenamiento activo en [HomeUiState.Success].
+ * Light summary of the active training plan in [HomeUiState.Success].
  *
- * @property id Identificador del plan.
- * @property name Nombre visible del plan.
+ * @property id Plan identifier.
+ * @property name Display name of the plan.
  */
 data class ActivePlanSummary(
     val id: String,
@@ -67,16 +67,16 @@ data class ActivePlanSummary(
 )
 
 /**
- * Estado del entrenamiento programado para el día actual.
+ * Training status scheduled for the current day.
  *
- * @property planId Identificador del plan activo.
- * @property dayId Identificador del día de entrenamiento de hoy.
- * @property planName Nombre del plan.
- * @property dayName Nombre del día (p. ej. "Día 1 — Pecho").
- * @property exerciseCount Número total de ejercicios del día.
- * @property exerciseNames Nombres de ejercicios a mostrar en la tarjeta (recortados).
- * @property adherencePercentage Porcentaje de adherencia semanal al plan (0–100).
- * @property isCompleted True si el usuario ya completó y bloqueó el entreno de hoy.
+ * @property planId Identifier of the active plan.
+ * @property dayId Identifier of today's training day.
+ * @property planName Name of the plan.
+ * @property dayName Name of the day (e.g. "Day 1 — Chest").
+ * @property exerciseCount Total number of exercises for the day.
+ * @property exerciseNames Names of exercises to display on the card (cropped).
+ * @property adherencePercentage Percentage of weekly adherence to the plan (0–100).
+ * @property isCompleted True if the user has already completed and locked today's workout.
  */
 data class TodayTrainingState(
     val planId: String,
@@ -90,16 +90,16 @@ data class TodayTrainingState(
 )
 
 /**
- * Consumo nutricional del día frente a los objetivos configurados.
+ * Nutritional consumption of the day compared to the set objectives.
  *
- * @property caloriesConsumed Calorías registradas hoy.
- * @property calorieTarget Objetivo calórico diario.
- * @property proteinConsumed Proteína consumida (g).
- * @property proteinTarget Objetivo de proteína (g).
- * @property carbsConsumed Carbohidratos consumidos (g).
- * @property carbsTarget Objetivo de carbohidratos (g).
- * @property fatConsumed Grasas consumidas (g).
- * @property fatTarget Objetivo de grasas (g).
+ * @property caloriesConsumed Calories recorded today.
+ * @property calorieTarget Daily calorie goal.
+ * @property proteinConsumed Protein consumed (g).
+ * @property proteinTarget Protein target (g).
+ * @property carbsConsumed Carbohydrates consumed (g).
+ * @property carbsTarget Carb target (g).
+ * @property fatConsumed Fat consumed (g).
+ * @property fatTarget Fat target (g).
  */
 data class TodayNutritionState(
     val caloriesConsumed: Int,
@@ -113,25 +113,25 @@ data class TodayNutritionState(
 )
 
 /**
- * Estado de la próxima comida según el plan dietético activo.
+ * Status of the next meal according to the active diet plan.
  */
 sealed class NextMealState {
 
-    /** No hay plan dietético activo o el plan no tiene días configurados. */
+    /** There is no active diet plan or the plan does not have days set up.*/
     data object NoPlan : NextMealState()
 
-    /** Todas las comidas del día ya han pasado según la hora actual. */
+    /** All meals of the day have already passed according to the current time.*/
     data object AllDone : NextMealState()
 
     /**
-     * Hay una comida pendiente más adelante en el día.
+     * There is a meal due later in the day.
      *
-     * @property mealName Nombre de la comida.
-     * @property estimatedTime Hora estimada (texto del plan o inferida por tipo).
-     * @property calories Calorías de la comida.
-     * @property proteinG Proteína en gramos.
-     * @property carbsG Carbohidratos en gramos.
-     * @property fatG Grasas en gramos.
+     * @property mealName Name of the meal.
+     * @property estimatedTime Estimated time (plan text or inferred by type).
+     * @property calories Calories in the food.
+     * @property proteinG Protein in grams.
+     * @property carbsG Carbohydrates in grams.
+     * @property fatG Fat in grams.
      */
     data class Upcoming(
         val mealName: String,

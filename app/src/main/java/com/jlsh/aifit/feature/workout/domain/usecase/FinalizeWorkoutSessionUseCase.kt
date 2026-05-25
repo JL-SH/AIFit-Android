@@ -7,18 +7,18 @@ import com.jlsh.aifit.feature.workout.domain.repository.WorkoutRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso para cerrar una sesión de entrenamiento con fatiga y reporte articular.
+ * Use case to close a training session with fatigue and joint report.
  */
 class FinalizeWorkoutSessionUseCase @Inject constructor(
     private val repository: WorkoutRepository,
 ) {
     /**
-     * Finaliza el log bloqueando ediciones futuras y guardando métricas subjetivas.
+     * Finalize the log by blocking future edits and saving subjective metrics.
      *
-     * @param logId Identificador del log de sesión.
-     * @param systemicFatigue Fatiga sistémica reportada (escala acordada con el backend).
-     * @param jointPainReport Lista de molestias articulares por articulación.
-     * @return [Result.Success] con el [WorkoutLog] finalizado (`isLocked`), o [Result.Error].
+     * @param logId Identifier of the session log.
+     * @param systemicFatigue Reported systemic fatigue (scale agreed upon with backend).
+     * @param jointPainReport List of joint pains per joint.
+     * @return [Result.Success] with the finalized [WorkoutLog] (`isLocked`), or [Result.Error].
      */
     suspend operator fun invoke(
         logId: String,

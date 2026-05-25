@@ -6,19 +6,19 @@ import com.jlsh.aifit.feature.vision.domain.repository.VisionRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso que analiza una foto de comida para identificar alimentos y estimar macros.
+ * Use case that analyzes a food photo to identify foods and estimate macros.
  *
- * @param repository Repositorio de visión por IA.
+ * @param repository AI vision repository.
  */
 class AnalyzeFoodPhotoUseCase @Inject constructor(
     private val repository: VisionRepository,
 ) {
     /**
-     * Envía la imagen al servicio de análisis y devuelve los alimentos detectados.
+     * Send the image to the analysis service and return the detected foods.
      *
-     * @param imageBytes Contenido binario de la imagen (p. ej. JPEG comprimido).
-     * @param contentType Tipo MIME de la imagen; por defecto `image/jpeg`.
-     * @return [Result.Success] con el resultado del análisis, o [Result.Error] si falla la petición.
+     * @param imageBytes Binary content of the image (e.g. compressed JPEG).
+     * @param contentType MIME type of the image; by default `image/jpeg`.
+     * @return [Result.Success] with the result of the analysis, or [Result.Error] if the request fails.
      */
     suspend operator fun invoke(
         imageBytes: ByteArray,

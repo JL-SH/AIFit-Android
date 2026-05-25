@@ -102,22 +102,22 @@ import java.util.Locale
 import com.jlsh.aifit.core.ui.components.display.StreakStatus as BadgeStreakStatus
 
 /**
- * Pantalla principal del dashboard: saludo, entreno y nutrición de hoy, próxima comida,
- * peso, rachas y progreso semanal en un scroll vertical con barra de refresco opcional.
+ * Dashboard main screen: greeting, today's training and nutrition, next meal,
+ * weight, streaks and weekly progress in a vertical scroll with optional pull-to-refresh.
  *
- * Muestra [HomeScreenSkeleton] en carga inicial, mensaje de error con reintento, o tarjetas de
- * contenido en éxito. Gestiona la hoja de registro de peso y reacciona a [HomeUiEvent] del ViewModel.
+ * Shows [HomeScreenSkeleton] on initial load, error message with retry, or flash cards
+ * content in success. Manages the weight recording sheet and reacts to [HomeUiEvent] of the ViewModel.
  *
- * @param onNavigateToWorkoutSession Navegar a la sesión activa (plan y día).
- * @param onNavigateToTrackMeal Ir al registro de comida (`mode`: `"manual"` | `"text_analysis"`).
- * @param onNavigateToFoodVision Ir al escaneo de comida por foto.
- * @param onNavigateToProgressDashboard Abrir el panel de progreso.
- * @param onNavigateToBodyWeight Abrir historial de peso.
- * @param onNavigateToGamification Abrir gamificación con la pestaña indicada.
- * @param onNavigateToProfile Abrir el perfil del usuario.
- * @param onNavigateToGeneratePlan Ir a generar un plan de entrenamiento.
- * @param onNavigateToTrainingDetail Abrir el detalle de un plan.
- * @param viewModel ViewModel del home; por defecto se inyecta con Hilt.
+ * @param onNavigateToWorkoutSession Navigate to the active session (plan and day).
+ * @param onNavigateToTrackMeal Go to food log (`mode`: `"manual"` | `"text_analysis"`).
+ * @param onNavigateToFoodVision Go to food scanning by photo.
+ * @param onNavigateToProgressDashboard Open the progress panel.
+ * @param onNavigateToBodyWeight Open weight history.
+ * @param onNavigateToGamification Open gamification with the indicated tab.
+ * @param onNavigateToProfile Open the user's profile.
+ * @param onNavigateToGeneratePlan Go to generate a training plan.
+ * @param onNavigateToTrainingDetail Open a plan detail.
+ * @param viewModel ViewModel of home; By default it is injected with Hilt.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -615,7 +615,7 @@ private fun TodayTrainingCard(
                     )
                 }
 
-                // ── Case 3: No active plan ────────────────────────────────────
+                // ── Case 3: Do not activate plan ────────────────────────────────────
                 else -> {
                     Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                     Text(

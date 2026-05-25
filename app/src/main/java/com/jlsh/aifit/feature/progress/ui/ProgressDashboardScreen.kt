@@ -57,17 +57,17 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Pantalla del dashboard de progreso: adherencia, tendencia de peso, nutrici?n y fuerza.
+ * Progress dashboard screen: adherence, weight trend, nutrition and strength.
  *
- * Muestra un selector de periodo (chips), tarjetas con gr?ficos y barras de adherencia,
- * y accesos a registro de peso, detalle semanal y an?lisis metab?lico. Gestiona estados
- * de carga/error mediante [ScreenScaffold] y reacciona a [ProgressUiEvent] del [viewModel].
+ * Shows a period selector (chips), cards with graphs and sticky bars,
+ * and access to weight registration, weekly details and metabolic analysis. Manage states
+ * loading/error using [ScreenScaffold] and reacts to [ProgressUiEvent] of the [viewModel].
  *
- * @param onNavigateBack Callback al pulsar atr?s en la barra superior.
- * @param onNavigateToBodyWeight Navegaci?n a la pantalla de peso corporal.
- * @param onNavigateToWeeklySummary Navegaci?n al resumen semanal.
- * @param onNavigateToMetabolic Navegaci?n al an?lisis metab?lico.
- * @param viewModel Origen del [DashboardUiState] y eventos de navegaci?n.
+ * @param onNavigateBack Callback when clicking back in the top bar.
+ * @param onNavigateToBodyWeight Navigation to the body weight screen.
+ * @param onNavigateToWeeklySummary Navigating to the weekly summary.
+ * @param onNavigateToMetabolic Navigation to metabolic analysis.
+ * @param viewModel Source of the [DashboardUiState] and navigation events.
  */
 @Composable
 fun ProgressDashboardScreen(

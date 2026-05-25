@@ -10,17 +10,17 @@ import com.jlsh.aifit.feature.progression.domain.repository.ProgressionRepositor
 import javax.inject.Inject
 
 /**
- * Implementación remota de [ProgressionRepository] para recomendaciones de carga y volumen.
+ * Remote deployment of [ProgressionRepository] for load and volume recommendations.
  *
- * @param apiService Cliente HTTP de progresión.
+ * @param apiService Progression HTTP Client.
  */
 class ProgressionRepositoryImpl @Inject constructor(
     private val apiService: ProgressionApiService,
 ) : BaseRemoteDataSource(), ProgressionRepository {
 
     /**
-     * @param exerciseId Identificador del ejercicio.
-     * @return [Result.Success] con la recomendación del ejercicio, o [Result.Error] en fallo de red.
+     * @param exerciseId Exercise identifier.
+     * @return [Result.Success] with the exercise recommendation, or [Result.Error] on network failure.
      */
     override suspend fun getExerciseRecommendation(exerciseId: String): Result<ProgressionRecommendation> =
         when (val r = safeApiCall { apiService.getExerciseRecommendation(exerciseId) }) {
@@ -30,8 +30,8 @@ class ProgressionRepositoryImpl @Inject constructor(
         }
 
     /**
-     * @param planId Identificador del plan de entrenamiento.
-     * @return [Result.Success] con el resumen del plan, o [Result.Error] en fallo de red.
+     * @param planId Identifier of the training plan.
+     * @return [Result.Success] with plan summary, or [Result.Error] on network failure.
      */
     override suspend fun getPlanRecommendations(planId: String): Result<PlanProgressionSummary> =
         when (val r = safeApiCall { apiService.getPlanRecommendations(planId) }) {

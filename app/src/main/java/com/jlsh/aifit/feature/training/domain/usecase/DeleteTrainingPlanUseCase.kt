@@ -5,16 +5,16 @@ import com.jlsh.aifit.feature.training.domain.repository.TrainingRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso para eliminar un plan de entrenamiento del servidor y la caché local.
+ * Use case to delete a training plan from the server and local cache.
  */
 class DeleteTrainingPlanUseCase @Inject constructor(
     private val repository: TrainingRepository,
 ) {
     /**
-     * Elimina el plan identificado por [planId].
+     * Deletes the plan identified by [planId].
      *
-     * @param planId Identificador del plan a eliminar.
-     * @return [Result.Success] si la eliminación se confirma, o [Result.Error] si falla.
+     * @param planId Identifier of the plan to delete.
+     * @return [Result.Success] if the delete succeeds, or [Result.Error] if it fails.
      */
     suspend operator fun invoke(planId: String): Result<Unit> =
         repository.deleteTrainingPlan(planId)

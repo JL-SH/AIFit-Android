@@ -163,7 +163,7 @@ fun CreateProfileScreen(
         3 -> selectedWorkoutDays.isNotBlank()
         4 -> selectedAvailableMinutes.isNotBlank()
         5 -> true
-        6 -> true // datos físicos opcionales, se pueden rellenar desde el perfil
+        6 -> true // optional physical data, can be filled from the profile
         7 -> selectedDietPreference.isNotBlank()
         else -> false
     }

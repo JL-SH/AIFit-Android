@@ -60,14 +60,14 @@ import androidx.compose.ui.res.stringResource
 import com.jlsh.aifit.R
 
 /**
- * Pantalla de edición del perfil (modo `edit`).
+ * Profile editing screen (`edit` mode).
  *
- * Muestra avatar con selector de galería y overlay de carga, nombre, fecha de nacimiento
- * con bottom sheet, género, altura, nivel de actividad y botón guardar. Reacciona a
- * [UserUiState] y eventos de [UserViewModel].
+ * Show avatar with gallery selector and loading overlay, name, date of birth
+ * with bottom sheet, gender, height, activity level and save button. react to
+ * [UserUiState] and [UserViewModel] events.
  *
- * @param onNavigateBack Vuelve tras guardar o desde la barra superior.
- * @param viewModel ViewModel de usuario inyectado por Hilt.
+ * @param onNavigateBack Returns after saving or from the top bar.
+ * @param viewModel ViewModel of user injected by Hilt.
  */
 @Composable
 fun UserProfileScreen(
@@ -136,7 +136,7 @@ fun UserProfileScreen(
                 ) {
                     Spacer(Modifier.height(AiFitSpacing.md))
 
-                    // ── Foto de perfil ────────────────────────────────────────────
+                    // ── Profile photo ────────────────────────────────────────────
                     Box(
                         modifier = Modifier
                             .size(AvatarSize.LARGE.size)
@@ -199,7 +199,7 @@ fun UserProfileScreen(
 
                     Spacer(Modifier.height(AiFitSpacing.xs))
 
-                    // ── Nombre ────────────────────────────────────────────────────
+                    // ── Name ────────────────────────────────────────────────────
                     AiFitTextField(
                         value = name,
                         onValueChange = viewModel::onNameChanged,
@@ -207,7 +207,7 @@ fun UserProfileScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    // ── Fecha de nacimiento ───────────────────────────────────────
+                    // ── Date of birth ───────────────────────────────────────
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -227,7 +227,7 @@ fun UserProfileScreen(
                         )
                     }
 
-                    // ── Género ────────────────────────────────────────────────────
+                    // ── Gender ────────────────────────── ──────────────────────────
                     AiFitDropdown(
                         selectedValue = gender,
                         options = Gender.entries.filter { it != Gender.UNKNOWN }.map { it.name },
@@ -236,7 +236,7 @@ fun UserProfileScreen(
                         displayMapper = { it.toGenderDisplay() },
                     )
 
-                    // ── Altura ────────────────────────────────────────────────────
+                    // ── Height ────────────────────────────────────────────────────
                     AiFitNumberField(
                         value = height,
                         onValueChange = viewModel::onHeightChanged,
@@ -244,7 +244,7 @@ fun UserProfileScreen(
                         suffix = "cm",
                     )
 
-                    // ── Nivel de actividad ────────────────────────────────────────
+                    // ── Activity level ────────────────────────────────────────
                     AiFitDropdown(
                         selectedValue = activityLevel,
                         options = ActivityLevel.entries

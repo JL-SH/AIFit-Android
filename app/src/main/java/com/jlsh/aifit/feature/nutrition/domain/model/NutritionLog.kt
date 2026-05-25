@@ -3,15 +3,15 @@ package com.jlsh.aifit.feature.nutrition.domain.model
 import java.time.LocalDate
 
 /**
- * Registro nutricional agregado de un día con totales de macros y comidas registradas.
+ * Aggregate one-day nutritional log with macro totals and meals recorded.
  *
- * @property id Identificador único del registro diario.
- * @property date Fecha del registro.
- * @property totalCalories Suma de calorías consumidas en el día.
- * @property totalProteinGrams Suma de proteína consumida en gramos.
- * @property totalCarbsGrams Suma de carbohidratos consumidos en gramos.
- * @property totalFatGrams Suma de grasas consumidas en gramos.
- * @property meals Lista de comidas registradas en ese día.
+ * @property id Unique identifier of the journal.
+ * @property date Registration date.
+ * @property totalCalories Sum of calories consumed in the day.
+ * @property totalProteinGrams Sum of protein consumed in grams.
+ * @property totalCarbsGrams Sum of carbohydrates consumed in grams.
+ * @property totalFatGrams Sum of fat consumed in grams.
+ * @property meals List of meals recorded on that day.
  */
 data class NutritionLog(
     val id: String,

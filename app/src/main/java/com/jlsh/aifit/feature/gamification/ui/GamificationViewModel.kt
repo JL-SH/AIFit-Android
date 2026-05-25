@@ -26,30 +26,30 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ViewModel de la pantalla de gamificación y exportación de progreso.
+ * ViewModel of the gamification screen and progress export.
  *
- * **UiState expuesto** ([uiState] — [GamificationUiState]):
- * - [GamificationUiState.Loading]: carga paralela de rachas, logros, definiciones y récords.
- * - [GamificationUiState.Success]: datos listos con pestaña seleccionable.
- * - [GamificationUiState.Error]: mensaje de error al cargar.
+ * **UiState exposed** ([uiState] — [GamificationUiState]):
+ * - [GamificationUiState.Loading]: Parallel loading of streaks, achievements, definitions and records.
+ * - [GamificationUiState.Success]: Data ready with selectable tab.
+ * - [GamificationUiState.Error]: Error message loading.
  *
- * **UiState de exportación** ([exportState] — [ExportUiState]):
- * - [ExportUiState.Idle]: sin informe generado aún.
- * - [ExportUiState.Loading]: generando informe para el período elegido.
- * - [ExportUiState.Success]: informe listo para mostrar o compartir.
- * - [ExportUiState.Error]: fallo al generar el informe.
+ * **Export UiState** ([exportState] — [ExportUiState]):
+ * - [ExportUiState.Idle]: no report generated yet.
+ * - [ExportUiState.Loading]: generating report for the chosen period.
+ * - [ExportUiState.Success]: Report ready to display or share.
+ * - [ExportUiState.Error]: Failed to generate the report.
  *
- * **Eventos emitidos** ([events] — [GamificationUiEvent]):
- * - [GamificationUiEvent.NavigateToExport]: abrir pantalla de exportación.
- * - [GamificationUiEvent.NavigateBack]: volver atrás.
- * - [GamificationUiEvent.ShowSnackbar]: mensaje al usuario.
+ * **Emitted events** ([events] — [GamificationUiEvent]):
+ * - [GamificationUiEvent.NavigateToExport]: Open export screen.
+ * - [GamificationUiEvent.NavigateBack]: go back.
+ * - [GamificationUiEvent.ShowSnackbar]: message to user.
  *
- * @param getUserStreaksUseCase Obtiene las rachas activas del usuario.
- * @param getUserAchievementsUseCase Obtiene los logros desbloqueados.
- * @param getAllDefinitionsUseCase Obtiene todas las definiciones de logros.
- * @param getPersonalRecordsUseCase Obtiene los récords personales.
- * @param getProgressExportUseCase Genera el informe de progreso por período.
- * @param savedStateHandle Permite leer la pestaña inicial desde la ruta (`tab`).
+ * @param getUserStreaksUseCase Gets the user's active streaks.
+ * @param getUserAchievementsUseCase Gets the unlocked achievements.
+ * @param getAllDefinitionsUseCase Gets all achievement definitions.
+ * @param getPersonalRecordsUseCase Gets the personal records.
+ * @param getProgressExportUseCase Generates the progress report by period.
+ * @param savedStateHandle Read the initial tab from the path (`tab`).
  */
 @HiltViewModel
 class GamificationViewModel @Inject constructor(
@@ -63,17 +63,17 @@ class GamificationViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<GamificationUiState>(GamificationUiState.Loading)
 
-    /** Estado principal de rachas, logros y récords personales. */
+    /** Main status of streaks, achievements and personal bests.*/
     val uiState: StateFlow<GamificationUiState> = _uiState.asStateFlow()
 
     private val _exportState = MutableStateFlow<ExportUiState>(ExportUiState.Idle)
 
-    /** Estado del informe de progreso exportable (pantalla de exportación). */
+    /** Exportable progress report status (export screen).*/
     val exportState: StateFlow<ExportUiState> = _exportState.asStateFlow()
 
     private val _events = Channel<GamificationUiEvent>(Channel.BUFFERED)
 
-    /** Flujo de navegación y snackbars; consumir una vez por pantalla. */
+    /** Navigation flow and snackbars; consume once per screen.*/
     val events = _events.receiveAsFlow()
 
     private val initialTab: Int = when (savedStateHandle.get<String>("tab")) {
@@ -86,7 +86,7 @@ class GamificationViewModel @Inject constructor(
         loadAll()
     }
 
-    /** Recarga en paralelo rachas, logros, definiciones y récords personales. */
+    /** Recharge streaks, achievements, definitions and personal records in parallel.*/
     fun loadAll() {
         viewModelScope.launch {
             _uiState.value = GamificationUiState.Loading
@@ -121,9 +121,9 @@ class GamificationViewModel @Inject constructor(
     }
 
     /**
-     * Cambia la pestaña visible cuando el estado es [GamificationUiState.Success].
+     * Changes the visible tab when the state is [GamificationUiState.Success].
      *
-     * @param index Índice de pestaña: 0 rachas, 1 logros, 2 récords.
+     * @param index Tab index: 0 streaks, 1 achievements, 2 records.
      */
     fun onTabSelected(index: Int) {
         val current = _uiState.value
@@ -140,9 +140,9 @@ class GamificationViewModel @Inject constructor(
     }
 
     /**
-     * Genera el informe de progreso para el período indicado y actualiza [exportState].
+     * Generates the progress report for the indicated period and updates [exportState].
      *
-     * @param period Período temporal seleccionado por el usuario.
+     * @param period Time period selected by the user.
      */
     fun loadExport(period: ExportPeriod) {
         viewModelScope.launch {

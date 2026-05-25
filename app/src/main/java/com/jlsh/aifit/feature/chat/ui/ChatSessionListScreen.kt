@@ -56,14 +56,14 @@ import com.jlsh.aifit.feature.chat.ui.state.ChatListUiState
 import com.jlsh.aifit.feature.chat.ui.state.ChatUiEvent
 
 /**
- * Pantalla de listado de conversaciones con el AI Coach.
+ * Screen listing conversations with the AI ​​Coach.
  *
- * Muestra sesiones con deslizar para archivar/eliminar, FAB para nuevo chat, diálogos de
- * confirmación de borrado y renombrado. Reacciona a [ChatUiEvent] para navegación y snackbars.
+ * Shows sessions with swipe to archive/delete, FAB for new chat, dialogs
+ * confirmation of deletion and renaming. React to [ChatUiEvent] for navigation and snackbars.
  *
- * @param onNavigateToChat Abre una sesión existente por su identificador.
- * @param onNavigateToNewChat Abre un chat vacío sin crear sesión en backend hasta el primer envío.
- * @param viewModel ViewModel de chat inyectado por Hilt.
+ * @param onNavigateToChat Opens an existing session by its identifier.
+ * @param onNavigateToNewChat Opens an empty chat without creating a session in the backend until the first send.
+ * @param viewModel Chat viewModel injected by Hilt.
  */
 @Composable
 fun ChatSessionListScreen(
@@ -191,7 +191,7 @@ private fun SessionRow(
             .clickable(onClick = onClick)
             .padding(start = AiFitSpacing.sm, end = 0.dp, top = AiFitSpacing.xs, bottom = AiFitSpacing.xs),
     ) {
-        // ── Fila 1: título (truncado) + badge archivado ───────────────────
+        // ── Row 1: title (truncated) + archived badge ───────────────────
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -209,7 +209,7 @@ private fun SessionRow(
             }
         }
 
-        // ── Fila 2: mensajes | fecha | botones ────────────────────────────
+        // ── Row 2: messages | date | buttons ────────────────────────────
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,

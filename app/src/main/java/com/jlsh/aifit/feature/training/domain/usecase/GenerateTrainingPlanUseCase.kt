@@ -8,25 +8,25 @@ import com.jlsh.aifit.feature.training.domain.repository.TrainingRepository
 import javax.inject.Inject
 
 /**
- * Caso de uso para generar planes de entrenamiento estándar o adaptativos vía backend.
+ * Use case to generate standard or adaptive training plans via backend.
  */
 class GenerateTrainingPlanUseCase @Inject constructor(
     private val repository: TrainingRepository,
 ) {
     /**
-     * Genera un plan de entrenamiento a partir de los parámetros del cuestionario inicial.
+     * Generate a training plan based on the parameters of the initial questionnaire.
      *
-     * @param request Parámetros de generación (frecuencia, objetivo, nivel, etc.).
-     * @return [Result.Success] con el plan creado, o [Result.Error] si falla la red o la sesión.
+     * @param request Build parameters (frequency, target, level, etc.).
+     * @return [Result.Success] with the created plan, or [Result.Error] if the network or session fails.
      */
     suspend operator fun invoke(request: GenerateTrainingPlanRequestDto): Result<TrainingPlan> =
         repository.generateTrainingPlan(request)
 
     /**
-     * Genera un plan adaptativo que tiene en cuenta historial y feedback del usuario.
+     * Generates an adaptive plan that takes into account user history and feedback.
      *
-     * @param request Parámetros adaptativos, incluyendo consideraciones e historial opcional.
-     * @return [Result.Success] con el plan generado, o [Result.Error] en caso de fallo.
+     * @param request Adaptive parameters, including considerations and optional history.
+     * @return [Result.Success] with the generated plan, or [Result.Error] on failure.
      */
     suspend fun invokeAdaptive(request: GenerateAdaptiveTrainingPlanRequestDto): Result<TrainingPlan> =
         repository.generateAdaptiveTrainingPlan(request)

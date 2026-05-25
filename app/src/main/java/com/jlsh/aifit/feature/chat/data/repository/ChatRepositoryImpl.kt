@@ -18,13 +18,13 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 /**
- * Implementación de [ChatRepository] con estrategia caché primero (Room) y sincronización con la API.
+ * Implementation of [ChatRepository] with cache-first (Room) strategy and synchronization with the API.
  *
- * Emite datos locales de inmediato cuando existen; actualiza desde red y persiste en Room.
- * Si la red falla y no hay caché, propaga el error.
+ * Emit local data immediately when it exists; updates from network and persists in Room.
+ * If the network fails and there is no cache, it propagates the error.
  *
- * @param apiService Cliente HTTP de sesiones y mensajes de chat.
- * @param chatDao Acceso local a sesiones y mensajes.
+ * @param apiService HTTP client for chat sessions and messages.
+ * @param chatDao Local access to sessions and messages.
  */
 class ChatRepositoryImpl @Inject constructor(
     private val apiService: ChatApiService,

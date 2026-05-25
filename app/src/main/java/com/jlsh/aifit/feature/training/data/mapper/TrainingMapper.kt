@@ -27,16 +27,16 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
- * Mapeos entre DTOs de red, entidades Room y modelos de dominio del módulo training.
+ * Mappings between network DTOs, Room entities and domain models of the training module.
  */
 object TrainingMapper {
 
     private val isoFormatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
 
     /**
-     * Convierte un resumen de plan del API a dominio (sin días detallados).
+     * Converts a plan summary from the API to domain (without detailed days).
      *
-     * @return [TrainingPlan] con [TrainingPlan.days] vacío.
+     * @return [TrainingPlan] with [TrainingPlan.days] empty.
      */
     fun TrainingPlanSummaryResponseDto.toDomain(): TrainingPlan = TrainingPlan(
         id = id,
@@ -54,7 +54,7 @@ object TrainingMapper {
     )
 
     /**
-     * Convierte la respuesta completa del plan, incluyendo días y ejercicios.
+     * Convert the full plan answer, including days and exercises.
      */
     fun TrainingPlanResponseDto.toDomain(): TrainingPlan = TrainingPlan(
         id = id,
@@ -71,7 +71,7 @@ object TrainingMapper {
         days = days.map { it.toDomain() },
     )
 
-    /** Mapea un día de entrenamiento del DTO al modelo de dominio. */
+    /** Maps a training day from the DTO to the domain model.*/
     fun TrainingDayResponseDto.toDomain(): TrainingDay = TrainingDay(
         id = id,
         dayNumber = dayNumber,
@@ -94,7 +94,7 @@ object TrainingMapper {
         } ?: TrainingDayType.TRAINING,
     )
 
-    /** Mapea un ejercicio prescrito del DTO al modelo de dominio. */
+    /** Maps a prescribed exercise from the DTO to the domain model.*/
     fun TrainingExerciseResponseDto.toDomain(): TrainingExercise = TrainingExercise(
         id = id,
         name = name,
@@ -112,9 +112,9 @@ object TrainingMapper {
     )
 
     /**
-     * Persiste un plan de dominio como entidad Room para el usuario dado.
+     * Persists a domain plan as a Room entity for the given user.
      *
-     * @param userId Identificador del usuario propietario del plan.
+     * @param userId Identifier of the user who owns the plan.
      */
     fun TrainingPlan.toEntity(userId: String): TrainingPlanEntity = TrainingPlanEntity(
         id = id,
@@ -132,7 +132,7 @@ object TrainingMapper {
     )
 
     /**
-     * Restaura un plan desde caché local (sin días detallados).
+     * Restores a plan from local cache (without detailed days).
      */
     fun TrainingPlanEntity.toDomain(): TrainingPlan = TrainingPlan(
         id = id,
@@ -149,14 +149,14 @@ object TrainingMapper {
         days = emptyList(),
     )
 
-    /** Mapea el protocolo de calentamiento del API al dominio. */
+    /** Maps the warmup protocol from the API to the domain.*/
     fun WarmUpProtocolResponseDto.toDomain(): WarmUpProtocol = WarmUpProtocol(
         trainingDayId = trainingDayId,
         estimatedTotalLoad = estimatedTotalLoad,
         exercises = exercises.map { it.toDomain() },
     )
 
-    /** Mapea un ejercicio individual del calentamiento. */
+    /** Map an individual warm-up exercise.*/
     fun WarmUpExerciseResponseDto.toDomain(): WarmUpExercise = WarmUpExercise(
         name = name,
         description = description,
@@ -165,7 +165,7 @@ object TrainingMapper {
         durationSeconds = durationSeconds,
     )
 
-    /** Mapea una alternativa de ejercicio sugerida por el backend. */
+    /** Maps an exercise alternative suggested by the backend.*/
     fun ExerciseSubstitutionResponseDto.toDomain(): ExerciseSubstitution = ExerciseSubstitution(
         name = name,
         primaryMuscle = MuscleGroup.fromString(primaryMuscle),

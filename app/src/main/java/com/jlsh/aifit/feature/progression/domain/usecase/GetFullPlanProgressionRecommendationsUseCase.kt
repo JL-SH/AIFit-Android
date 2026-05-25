@@ -6,18 +6,18 @@ import com.jlsh.aifit.feature.progression.domain.repository.ProgressionRepositor
 import javax.inject.Inject
 
 /**
- * Caso de uso que obtiene recomendaciones de progresión para todos los ejercicios de un plan.
+ * Use case that gets progression recommendations for all exercises in a plan.
  *
- * @param repository Repositorio de progresión de entrenamiento.
+ * @param repository Training progression repository.
  */
 class GetFullPlanProgressionRecommendationsUseCase @Inject constructor(
     private val repository: ProgressionRepository,
 ) {
     /**
-     * Carga el resumen de progresión del plan completo.
+     * Load the full plan progression summary.
      *
-     * @param planId Identificador del plan de entrenamiento.
-     * @return [Result.Success] con [PlanProgressionSummary], o [Result.Error] si falla la consulta.
+     * @param planId Identifier of the training plan.
+     * @return [Result.Success] with [PlanProgressionSummary], or [Result.Error] if the query fails.
      */
     suspend operator fun invoke(planId: String): Result<PlanProgressionSummary> =
         repository.getPlanRecommendations(planId)
