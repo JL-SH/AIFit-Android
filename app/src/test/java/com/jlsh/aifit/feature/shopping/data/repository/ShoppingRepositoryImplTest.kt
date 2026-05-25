@@ -1,6 +1,7 @@
 package com.jlsh.aifit.feature.shopping.data.repository
 
 import app.cash.turbine.test
+import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.ApiResponse
 import com.jlsh.aifit.feature.shopping.data.api.ShoppingApiService
@@ -121,6 +122,19 @@ class ShoppingRepositoryImplTest {
         val result = repository.generateList(request)
 
         assertTrue(result is Result.Error)
+    }
+
+    @Test
+    fun `generateList retorna Error cuando Room falla al guardar`() = runTest {
+        val dto = fakeShoppingListResponseDto()
+        val request = fakeGenerateShoppingListRequestDto()
+        coEvery { apiService.generateList(request) } returns ApiResponse(success = true, data = dto)
+        coEvery { shoppingDao.upsertList(any()) } throws RuntimeException("DB error")
+
+        val result = repository.generateList(request)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).exception is AppException.UnknownException)
     }
 
     // ── deleteList ──────────────────────────────────────────────────────────

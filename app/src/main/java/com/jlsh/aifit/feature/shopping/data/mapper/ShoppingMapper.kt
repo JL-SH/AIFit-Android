@@ -15,31 +15,35 @@ object ShoppingMapper {
 
     fun ShoppingListResponseDto.toDomain(): ShoppingList = ShoppingList(
         id = id,
-        dietPlanId = dietPlanId,
+        dietPlanId = dietPlanId.orEmpty(),
         period = ShoppingListPeriod.fromString(period),
-        categories = categories.map { it.toDomain() },
-        generatedAt = generatedAt,
+        categories = categories.orEmpty().map { it.toDomain() },
+        generatedAt = generatedAt.orEmpty(),
     )
 
     fun ShoppingCategoryGroupResponseDto.toDomain(): ShoppingCategoryGroup =
         ShoppingCategoryGroup(
             category = ShoppingCategory.fromString(category),
-            items = items.map { it.toDomain() },
+            items = items.orEmpty().mapNotNull { it.toDomainOrNull() },
         )
 
-    fun ShoppingItemResponseDto.toDomain(): ShoppingItem = ShoppingItem(
-        name = name,
-        totalQuantity = totalQuantity,
-        unit = unit,
-        notes = notes,
-        isChecked = false,
-    )
+    fun ShoppingItemResponseDto.toDomainOrNull(): ShoppingItem? {
+        val itemName = name?.trim().orEmpty()
+        if (itemName.isEmpty()) return null
+        return ShoppingItem(
+            name = itemName,
+            totalQuantity = totalQuantity ?: 0.0,
+            unit = unit?.trim().orEmpty().ifEmpty { "unidades" },
+            notes = notes,
+            isChecked = false,
+        )
+    }
 
     fun ShoppingListResponseDto.toEntity(): ShoppingListEntity = ShoppingListEntity(
         id = id,
-        dietPlanId = dietPlanId,
+        dietPlanId = dietPlanId.orEmpty(),
         period = period,
-        generatedAt = parseInstant(generatedAt),
+        generatedAt = parseInstant(generatedAt.orEmpty()),
     )
 
     fun ShoppingListEntity.toDomain(): ShoppingList = ShoppingList(

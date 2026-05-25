@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ShoppingListResponseDto(
     val id: String,
-    val dietPlanId: String,
+    val dietPlanId: String? = null,
     val period: String,
-    val categories: List<ShoppingCategoryGroupResponseDto> = emptyList(),
-    val generatedAt: String,
+    val categories: List<ShoppingCategoryGroupResponseDto>? = null,
+    val generatedAt: String? = null,
 )
 

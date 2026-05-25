@@ -4,9 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ShoppingItemResponseDto(
-    val name: String,
-    val totalQuantity: Double,
-    val unit: String,
+    val name: String? = null,
+    val totalQuantity: Double? = null,
+    val unit: String? = null,
     val notes: String? = null,
 )
 

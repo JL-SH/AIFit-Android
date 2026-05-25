@@ -1,7 +1,10 @@
 package com.jlsh.aifit.feature.shopping.data.mapper
 
 import com.jlsh.aifit.feature.shopping.data.mapper.ShoppingMapper.toDomain
+import com.jlsh.aifit.feature.shopping.data.mapper.ShoppingMapper.toDomainOrNull
 import com.jlsh.aifit.feature.shopping.data.mapper.ShoppingMapper.toEntity
+import com.jlsh.aifit.feature.shopping.data.dto.ShoppingCategoryGroupResponseDto
+import com.jlsh.aifit.feature.shopping.data.dto.ShoppingItemResponseDto
 import com.jlsh.aifit.feature.shopping.domain.model.ShoppingCategory
 import com.jlsh.aifit.feature.shopping.domain.model.ShoppingListPeriod
 import com.jlsh.aifit.testutil.*
@@ -53,12 +56,12 @@ class ShoppingMapperTest {
         assertEquals(ShoppingCategory.UNKNOWN, result.category)
     }
 
-    // ── ShoppingItemResponseDto.toDomain ────────────────────────────────────
+    // ── ShoppingItemResponseDto.toDomainOrNull ──────────────────────────────
 
     @Test
-    fun `toDomain mapea ShoppingItemResponseDto correctamente`() {
+    fun `toDomainOrNull mapea ShoppingItemResponseDto correctamente`() {
         val dto = fakeShoppingItemResponseDto()
-        val result = dto.toDomain()
+        val result = requireNotNull(dto.toDomainOrNull())
 
         assertEquals("Chicken Breast", result.name)
         assertEquals(1.5, result.totalQuantity, 0.001)
@@ -68,11 +71,51 @@ class ShoppingMapperTest {
     }
 
     @Test
-    fun `toDomain mapea ShoppingItemResponseDto con notes null`() {
+    fun `toDomainOrNull mapea ShoppingItemResponseDto con notes null`() {
         val dto = fakeShoppingItemResponseDto(notes = null)
-        val result = dto.toDomain()
+        val result = requireNotNull(dto.toDomainOrNull())
 
         assertNull(result.notes)
+    }
+
+    @Test
+    fun `toDomainOrNull con campos null usa valores por defecto`() {
+        val dto = ShoppingItemResponseDto(name = "Eggs", totalQuantity = null, unit = null, notes = null)
+        val result = requireNotNull(dto.toDomainOrNull())
+
+        assertEquals(0.0, result.totalQuantity, 0.001)
+        assertEquals("unidades", result.unit)
+    }
+
+    @Test
+    fun `toDomainOrNull retorna null cuando name esta vacio`() {
+        val dto = ShoppingItemResponseDto(name = "  ", totalQuantity = 1.0, unit = "kg")
+        assertNull(dto.toDomainOrNull())
+    }
+
+    @Test
+    fun `toDomain ignora items sin nombre en categoria`() {
+        val dto = fakeShoppingListResponseDto(
+            categories = listOf(
+                ShoppingCategoryGroupResponseDto(
+                    category = "PROTEINS",
+                    items = listOf(
+                        fakeShoppingItemResponseDto(name = "Valid"),
+                        ShoppingItemResponseDto(name = null),
+                    ),
+                ),
+            ),
+        )
+        val result = dto.toDomain()
+
+        assertEquals(1, result.categories[0].items.size)
+        assertEquals("Valid", result.categories[0].items[0].name)
+    }
+
+    @Test
+    fun `toDomain con categories null devuelve lista vacia`() {
+        val dto = fakeShoppingListResponseDto(categories = null)
+        assertTrue(dto.toDomain().categories.isEmpty())
     }
 
     // ── ShoppingListResponseDto.toEntity ────────────────────────────────────

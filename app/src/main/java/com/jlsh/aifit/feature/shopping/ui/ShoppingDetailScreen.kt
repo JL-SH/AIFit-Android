@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -311,7 +312,10 @@ private fun ShoppingDetailContent(
             }
 
             // Server items (not deleted)
-            items(merged.serverItems, key = { "${merged.categoryName}:${it.name}" }) { item ->
+            itemsIndexed(
+                merged.serverItems,
+                key = { index, item -> "${merged.categoryName}:${item.name}:$index" },
+            ) { _, item ->
                 val checkKey = "${merged.categoryName}:${item.name}"
                 val isChecked = state.checkStates[checkKey] ?: false
 

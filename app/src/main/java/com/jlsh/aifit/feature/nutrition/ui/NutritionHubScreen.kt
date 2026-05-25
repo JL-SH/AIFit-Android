@@ -250,6 +250,7 @@ fun NutritionHubScreen(
                 )
                 2 -> ShoppingTab(
                     dietPlans = successState.dietPlans,
+                    snackbarHostState = snackbarHostState,
                     onNavigateToDetail = onNavigateToShoppingDetail,
                 )
             }
@@ -625,14 +626,16 @@ private fun DietPlanTab(
 @Composable
 private fun ShoppingTab(
     dietPlans: List<DietPlan>,
+    snackbarHostState: SnackbarHostState,
     onNavigateToDetail: (listId: String) -> Unit,
 ) {
     val shoppingViewModel: ShoppingViewModel = hiltViewModel()
     val listState by shoppingViewModel.listState.collectAsStateWithLifecycle()
     var showGenerateSheet by remember { mutableStateOf(false) }
-    var isGenerating by remember { mutableStateOf(false) }
+    var generateLoadingResetSignal by remember { mutableStateOf(0) }
     var deleteDialogListId by remember { mutableStateOf<String?>(null) }
     val generateSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         shoppingViewModel.loadLists()
@@ -642,11 +645,19 @@ private fun ShoppingTab(
         shoppingViewModel.events.collect { event ->
             when (event) {
                 is ShoppingUiEvent.ListGenerated -> {
-                    isGenerating = false
-                    showGenerateSheet = false
-                    onNavigateToDetail(event.listId)
+                    generateLoadingResetSignal++
+                    scope.launch {
+                        if (showGenerateSheet) {
+                            generateSheetState.hide()
+                        }
+                        showGenerateSheet = false
+                        onNavigateToDetail(event.listId)
+                    }
                 }
-                is ShoppingUiEvent.ShowSnackbar -> { /* handled by parent snackbar */ }
+                is ShoppingUiEvent.ShowSnackbar -> {
+                    generateLoadingResetSignal++
+                    scope.launch { snackbarHostState.showSnackbar(event.message) }
+                }
                 else -> {}
             }
         }
@@ -790,10 +801,9 @@ private fun ShoppingTab(
         GenerateShoppingListSheet(
             sheetState = generateSheetState,
             dietPlans = dietPlans,
-            isGenerating = isGenerating,
+            resetLoadingSignal = generateLoadingResetSignal,
             onDismiss = { showGenerateSheet = false },
             onGenerate = { dietPlanId, period ->
-                isGenerating = true
                 shoppingViewModel.onGenerateList(dietPlanId, period)
             },
         )
@@ -884,6 +894,7 @@ private fun NutritionHubShoppingPreview() {
         ) {
             ShoppingTab(
                 dietPlans = emptyList(),
+                snackbarHostState = remember { SnackbarHostState() },
                 onNavigateToDetail = {},
             )
         }

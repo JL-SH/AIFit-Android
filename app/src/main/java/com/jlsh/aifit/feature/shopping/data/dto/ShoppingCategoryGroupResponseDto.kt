@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ShoppingCategoryGroupResponseDto(
-    val category: String,
-    val items: List<ShoppingItemResponseDto> = emptyList(),
+    val category: String? = null,
+    val items: List<ShoppingItemResponseDto>? = null,
 )
 

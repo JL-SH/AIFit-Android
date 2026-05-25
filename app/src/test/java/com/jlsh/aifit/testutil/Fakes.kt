@@ -1537,16 +1537,16 @@ fun fakeShoppingItemResponseDto(
 )
 
 fun fakeShoppingCategoryGroupResponseDto(
-    category: String = "PROTEINS",
-    items: List<ShoppingItemResponseDto> = listOf(fakeShoppingItemResponseDto()),
+    category: String? = "PROTEINS",
+    items: List<ShoppingItemResponseDto>? = listOf(fakeShoppingItemResponseDto()),
 ) = ShoppingCategoryGroupResponseDto(category = category, items = items)
 
 fun fakeShoppingListResponseDto(
     id: String = "slist-1",
-    dietPlanId: String = "diet-plan-1",
+    dietPlanId: String? = "diet-plan-1",
     period: String = "ONE_WEEK",
-    categories: List<ShoppingCategoryGroupResponseDto> = listOf(fakeShoppingCategoryGroupResponseDto()),
-    generatedAt: String = "2026-04-06T10:00:00Z",
+    categories: List<ShoppingCategoryGroupResponseDto>? = listOf(fakeShoppingCategoryGroupResponseDto()),
+    generatedAt: String? = "2026-04-06T10:00:00Z",
 ) = ShoppingListResponseDto(
     id = id, dietPlanId = dietPlanId, period = period,
     categories = categories, generatedAt = generatedAt,

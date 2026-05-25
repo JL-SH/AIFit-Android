@@ -1,9 +1,12 @@
 package com.jlsh.aifit.feature.shopping.data.repository
 
+import android.util.Log
+import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.feature.shopping.data.api.ShoppingApiService
 import com.jlsh.aifit.feature.shopping.data.dto.GenerateShoppingListRequestDto
+import com.jlsh.aifit.feature.shopping.data.dto.ShoppingListResponseDto
 import com.jlsh.aifit.feature.shopping.data.local.ShoppingDao
 import com.jlsh.aifit.feature.shopping.data.local.ShoppingDeletedItemEntity
 import com.jlsh.aifit.feature.shopping.data.local.ShoppingItemCheckEntity
@@ -32,7 +35,7 @@ class ShoppingRepositoryImpl @Inject constructor(
 
         when (val remote = safeApiCall { apiService.getLists() }) {
             is Result.Success -> {
-                remote.data.forEach { dto -> shoppingDao.upsertList(dto.toEntity()) }
+                remote.data.forEach { cacheListEntity(it) }
                 emit(Result.Success(remote.data.map { it.toDomain() }))
             }
             is Result.Error -> {
@@ -45,21 +48,50 @@ class ShoppingRepositoryImpl @Inject constructor(
     override suspend fun getList(id: String): Result<ShoppingList> =
         when (val r = safeApiCall { apiService.getList(id) }) {
             is Result.Success -> {
-                shoppingDao.upsertList(r.data.toEntity())
-                Result.Success(r.data.toDomain())
+                cacheList(r.data)?.let { Result.Success(it) }
+                    ?: Result.Error(AppException.UnknownException("Failed to save shopping list locally"))
             }
             is Result.Error -> r
             else -> Result.Loading
         }
 
-    override suspend fun generateList(request: GenerateShoppingListRequestDto): Result<ShoppingList> =
-        when (val r = safeApiCall { apiService.generateList(request) }) {
+    override suspend fun generateList(request: GenerateShoppingListRequestDto): Result<ShoppingList> {
+        Log.d(TAG, "generateList request dietPlanId=${request.dietPlanId} period=${request.period}")
+        return when (val r = safeApiCall { apiService.generateList(request) }) {
             is Result.Success -> {
-                shoppingDao.upsertList(r.data.toEntity())
-                Result.Success(r.data.toDomain())
+                Log.d(
+                    TAG,
+                    "generateList api ok id=${r.data.id} categories=${r.data.categories?.size ?: 0}",
+                )
+                cacheList(r.data)?.let { Result.Success(it) }
+                    ?: Result.Error(AppException.UnknownException("Failed to save shopping list locally"))
             }
-            is Result.Error -> r
+            is Result.Error -> {
+                Log.w(TAG, "generateList api error: ${r.exception}")
+                r
+            }
             else -> Result.Loading
+        }
+    }
+
+    private companion object {
+        const val TAG = "AIFIT_SHOPPING"
+    }
+
+    private suspend fun cacheListEntity(dto: ShoppingListResponseDto) {
+        try {
+            shoppingDao.upsertList(dto.toEntity())
+        } catch (_: Exception) {
+            // Keep remote data available even if local cache fails
+        }
+    }
+
+    private suspend fun cacheList(dto: ShoppingListResponseDto): ShoppingList? =
+        try {
+            cacheListEntity(dto)
+            dto.toDomain()
+        } catch (_: Exception) {
+            null
         }
 
     override suspend fun deleteList(id: String): Result<Unit> =
