@@ -3,6 +3,7 @@ package com.jlsh.aifit.feature.progress.data.mapper
 import com.jlsh.aifit.feature.progress.data.dto.BestSetResponseDto
 import com.jlsh.aifit.feature.progress.data.dto.ProgressDashboardResponseDto
 import com.jlsh.aifit.feature.progress.data.dto.StrengthProgressResponseDto
+import com.jlsh.aifit.feature.progress.data.dto.WeeklyProgressSummaryResponseDto
 import com.jlsh.aifit.feature.progress.data.mapper.ProgressMapper.toDomain
 import com.jlsh.aifit.feature.progress.data.mapper.ProgressMapper.toEntity
 import com.jlsh.aifit.feature.progress.domain.model.WeightTrend
@@ -206,10 +207,42 @@ class ProgressMapperTest {
 
         assertEquals(3, result.workoutsThisWeek)
         assertEquals(4, result.workoutsTarget)
-        assertEquals(2050.0, result.averageCaloriesToday, 0.01)
+        assertEquals(2050.0, result.averageCaloriesToday!!, 0.01)
         assertEquals(2200, result.calorieTarget)
         assertEquals(5, result.currentStreak)
         assertEquals(78.5, result.bodyWeight!!, 0.01)
+    }
+
+    @Test
+    fun `WeeklyProgressSummaryResponseDto toDomain mapea averageCaloriesToday null`() {
+        val dto = fakeWeeklyProgressSummaryResponseDto(averageCaloriesToday = null)
+        val result = dto.toDomain()
+
+        assertNull(result.averageCaloriesToday)
+    }
+
+    @Test
+    fun `deserializa WeeklyProgressSummaryResponseDto con averageCaloriesToday null`() {
+        val json = Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+            isLenient = true
+        }
+        val payload = """
+            {
+              "workoutsThisWeek": 3,
+              "workoutsTarget": 4,
+              "averageCaloriesToday": null,
+              "calorieTarget": 2200,
+              "currentStreak": 5,
+              "bodyWeight": 78.5
+            }
+        """.trimIndent()
+
+        val dto = json.decodeFromString<WeeklyProgressSummaryResponseDto>(payload)
+        val result = dto.toDomain()
+
+        assertNull(result.averageCaloriesToday)
     }
 
     // ─── BodyWeightLogResponseDto.toDomain() ───────────────────────────────────

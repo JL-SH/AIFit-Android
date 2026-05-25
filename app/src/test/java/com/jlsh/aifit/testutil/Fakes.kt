@@ -800,7 +800,7 @@ fun fakeProgressDashboard(
 fun fakeWeeklyProgressSummary(
     workoutsThisWeek: Int = 3,
     workoutsTarget: Int = 4,
-    averageCaloriesToday: Double = 2050.0,
+    averageCaloriesToday: Double? = 2050.0,
     calorieTarget: Int = 2200,
     currentStreak: Int = 5,
     bodyWeight: Double? = 78.5,
@@ -934,7 +934,7 @@ fun fakeProgressDashboardResponseDto(
 fun fakeWeeklyProgressSummaryResponseDto(
     workoutsThisWeek: Int = 3,
     workoutsTarget: Int = 4,
-    averageCaloriesToday: Double = 2050.0,
+    averageCaloriesToday: Double? = 2050.0,
     calorieTarget: Int = 2200,
     currentStreak: Int = 5,
     bodyWeight: Double? = 78.5,

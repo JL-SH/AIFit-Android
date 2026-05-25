@@ -1081,23 +1081,35 @@ private fun WeeklyProgressCard(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    AnimatedMetricText(
-                        target = summary.averageCaloriesToday.toInt(),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = " / ${summary.calorieTarget}",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    val avgCalories = summary.averageCaloriesToday
+                    if (avgCalories != null) {
+                        AnimatedMetricText(
+                            target = avgCalories.toInt(),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = " / ${summary.calorieTarget}",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.nutrition_no_data_today),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
 
-            val nutritionAdherence = if (summary.calorieTarget > 0) {
-                (summary.averageCaloriesToday.toFloat() / summary.calorieTarget * 100f)
-                    .coerceIn(0f, 100f)
-            } else 0f
+            val nutritionAdherence = summary.averageCaloriesToday?.let { avg ->
+                if (summary.calorieTarget > 0) {
+                    (avg.toFloat() / summary.calorieTarget * 100f).coerceIn(0f, 100f)
+                } else {
+                    0f
+                }
+            } ?: 0f
             AdherenceBar(percentage = nutritionAdherence)
 
             // Weight row

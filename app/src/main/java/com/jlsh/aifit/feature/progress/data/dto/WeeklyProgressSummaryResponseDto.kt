@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class WeeklyProgressSummaryResponseDto(
     val workoutsThisWeek: Int,
     val workoutsTarget: Int,
-    val averageCaloriesToday: Double,
+    val averageCaloriesToday: Double? = null,
     val calorieTarget: Int,
     val currentStreak: Int,
     val bodyWeight: Double? = null,

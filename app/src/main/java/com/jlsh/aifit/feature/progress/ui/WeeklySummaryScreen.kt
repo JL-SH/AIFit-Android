@@ -94,11 +94,13 @@ private fun WeeklySummaryContent(
         0f
     }
 
-    val caloriePercentage = if (summary.calorieTarget > 0) {
-        (summary.averageCaloriesToday.toFloat() / summary.calorieTarget * 100f)
-    } else {
-        0f
-    }
+    val caloriePercentage = summary.averageCaloriesToday?.let { avg ->
+        if (summary.calorieTarget > 0) {
+            (avg.toFloat() / summary.calorieTarget * 100f)
+        } else {
+            0f
+        }
+    } ?: 0f
 
     LazyColumn(
         contentPadding = PaddingValues(
@@ -154,7 +156,8 @@ private fun WeeklySummaryContent(
                     ) {
                         Column {
                             Text(
-                                text = "${summary.averageCaloriesToday.toInt()}",
+                                text = summary.averageCaloriesToday?.toInt()?.toString()
+                                    ?: stringResource(R.string.nutrition_no_data_today),
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
