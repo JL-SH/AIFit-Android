@@ -35,7 +35,7 @@ object WorkoutMapper {
         durationMinutes = durationMinutes,
         perceivedExertion = perceivedExertion,
         notes = notes,
-        totalExercises = exercises.size,
+        totalExercises = exercises.map { it.trainingExerciseId }.distinct().size,
         completedAt = parseDateTime(completedAt),
         sets = exercises.map { it.toDomain() },
         gamificationResult = gamificationResult?.toDomain(),

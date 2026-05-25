@@ -3,6 +3,7 @@ package com.jlsh.aifit.feature.workout.ui.state
 import com.jlsh.aifit.core.ui.components.layout.UiStateHost
 import com.jlsh.aifit.feature.training.domain.model.TrainingDay
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
+import com.jlsh.aifit.feature.workout.domain.util.WorkoutSessionStats
 import java.time.DayOfWeek
 
 // --- Logging screen states ---
@@ -52,6 +53,7 @@ sealed class WorkoutDetailUiState {
     data class Error(override val message: String) : WorkoutDetailUiState(), UiStateHost.Error
     data class Success(
         val log: WorkoutLog,
+        val sessionStats: WorkoutSessionStats? = null,
     ) : WorkoutDetailUiState(), UiStateHost.Success {
         val totalVolume: Double
             get() = log.sets

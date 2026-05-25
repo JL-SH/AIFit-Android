@@ -57,6 +57,7 @@ import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
 import com.jlsh.aifit.feature.workout.domain.model.JointZone
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutSetLog
+import com.jlsh.aifit.feature.workout.domain.util.WorkoutSessionStats
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutDetailUiState
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutUiEvent
 import java.time.LocalDate
@@ -149,6 +150,7 @@ fun WorkoutDetailScreen(
     ) { paddingValues, successState ->
         WorkoutDetailContent(
             log = successState.log,
+            sessionStats = successState.sessionStats,
             totalVolume = successState.totalVolume,
             onExerciseInfoClick = { exerciseId ->
                 showExplanationConfirmForExerciseId = exerciseId
@@ -165,14 +167,19 @@ fun WorkoutDetailScreen(
 @Composable
 private fun WorkoutDetailContent(
     log: WorkoutLog,
+    sessionStats: WorkoutSessionStats? = null,
     totalVolume: Double = 0.0,
     onExerciseInfoClick: (exerciseId: String) -> Unit = {},
     onExerciseProgressionClick: (exerciseId: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val groupedSets = log.sets.groupBy { it.trainingExerciseId }
-    val completedSets = log.sets.count { it.completed }
-    val totalSets = log.sets.size
+    val completedSets = sessionStats?.loggedCompletedSets ?: log.sets.count { it.completed }
+    val totalSets = sessionStats?.planTotalSets ?: log.sets.size
+    val completedExercises = sessionStats?.completedExercises
+        ?: log.sets.map { it.trainingExerciseId }.distinct().size
+    val planExerciseCount = sessionStats?.planExerciseCount
+        ?: log.sets.map { it.trainingExerciseId }.distinct().size
 
     LazyColumn(
         modifier = modifier
@@ -254,7 +261,7 @@ private fun WorkoutDetailContent(
                         StatDivider()
                     }
                     StatCell(
-                        value = "${log.totalExercises}",
+                        value = "$completedExercises/$planExerciseCount",
                         label = stringResource(R.string.workout_detail_stat_exercises),
                         modifier = Modifier.weight(1f),
                     )
@@ -303,7 +310,7 @@ private fun WorkoutDetailContent(
                     // Exercises count
                     SummaryRow(
                         label = stringResource(R.string.workout_detail_completed_exercises),
-                        value = "${log.totalExercises}",
+                        value = "$completedExercises/$planExerciseCount",
                     )
 
                     // Duration
@@ -361,6 +368,7 @@ private fun WorkoutDetailContent(
         // ── Ejercicios agrupados ──────────────────────────────────────
         groupedSets.forEach { (exerciseId, sets) ->
             val exerciseName = sets.firstOrNull()?.exerciseName ?: "Ejercicio"
+            val targetSets = sessionStats?.targetSetsByExerciseId?.get(exerciseId) ?: sets.size
             val completedInGroup = sets.count { it.completed }
 
             item(key = "exercise_header_$exerciseId") {
@@ -388,16 +396,16 @@ private fun WorkoutDetailContent(
                         ) {
                             // Badge series completadas
                             Surface(
-                                color = if (completedInGroup == sets.size)
+                                color = if (completedInGroup >= targetSets)
                                     MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
                                 else
                                     MaterialTheme.colorScheme.surfaceContainerHigh,
                                 shape = RoundedCornerShape(6.dp),
                             ) {
                                 Text(
-                                    text = "$completedInGroup/${sets.size}",
+                                    text = "$completedInGroup/$targetSets",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (completedInGroup == sets.size)
+                                    color = if (completedInGroup >= targetSets)
                                         MaterialTheme.colorScheme.primaryContainer
                                     else
                                         MaterialTheme.colorScheme.onSurfaceVariant,

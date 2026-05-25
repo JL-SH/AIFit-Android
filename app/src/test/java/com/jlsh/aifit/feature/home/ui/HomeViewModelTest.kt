@@ -399,6 +399,7 @@ class HomeViewModelTest {
         )
         val lockedLog = fakeWorkoutLog(
             trainingPlanId = "plan-1",
+            trainingDayId = trainingDay.id,
             isLocked = true,
             date = LocalDate.now(),
         )
@@ -415,6 +416,38 @@ class HomeViewModelTest {
             assertTrue(state.todayTraining.isCompleted)
         }
         // If todayTraining is null (rest day rotation), the test is still valid
+    }
+
+    @Test
+    fun `todayTraining isCompleted false cuando el log locked es de otro trainingDayId`() = runTest {
+        val trainingDay = fakeTrainingDay(
+            id = "day-today",
+            dayType = TrainingDayType.TRAINING,
+            exercises = listOf(fakeTrainingExercise()),
+        )
+        val plan = fakeTrainingPlan(
+            id = "plan-1",
+            status = PlanStatus.ACTIVE,
+            days = listOf(trainingDay),
+        )
+        val lockedOtherDay = fakeWorkoutLog(
+            trainingPlanId = "plan-1",
+            trainingDayId = "day-other",
+            isLocked = true,
+            date = LocalDate.now(),
+        )
+
+        val vm = createViewModel(
+            plansFlow = flowOf(Result.Success(listOf(plan))),
+            planDetailResult = Result.Success(plan),
+            workoutHistoryFlow = flowOf(Result.Success(listOf(lockedOtherDay))),
+        )
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as HomeUiState.Success
+        if (state.todayTraining != null) {
+            assertFalse(state.todayTraining.isCompleted)
+        }
     }
 
     // ── Event: onStartSession ──────────────────────────────────────────────────

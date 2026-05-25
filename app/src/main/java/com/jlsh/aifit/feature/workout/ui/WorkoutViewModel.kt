@@ -14,6 +14,7 @@ import com.jlsh.aifit.feature.workout.domain.usecase.DeleteWorkoutLogUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.GetWorkoutHistoryUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.GetWorkoutLogDetailUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.LogWorkoutSessionUseCase
+import com.jlsh.aifit.feature.workout.domain.util.computeWorkoutSessionStats
 import com.jlsh.aifit.feature.workout.ui.state.LoggingUiState
 import com.jlsh.aifit.feature.workout.ui.state.SetEntryState
 import com.jlsh.aifit.feature.workout.ui.state.WorkoutDetailUiState
@@ -292,7 +293,18 @@ class WorkoutViewModel @Inject constructor(
             _detailState.value = WorkoutDetailUiState.Loading
             when (val result = getWorkoutLogDetailUseCase(logId)) {
                 is Result.Success -> {
-                    _detailState.value = WorkoutDetailUiState.Success(log = result.data)
+                    val log = result.data
+                    val sessionStats = when (val planResult = getTrainingPlanDetailUseCase(log.trainingPlanId)) {
+                        is Result.Success -> {
+                            val day = planResult.data.days.find { it.id == log.trainingDayId }
+                            day?.exercises?.let { computeWorkoutSessionStats(it, log.sets) }
+                        }
+                        else -> null
+                    }
+                    _detailState.value = WorkoutDetailUiState.Success(
+                        log = log,
+                        sessionStats = sessionStats,
+                    )
                 }
                 is Result.Error -> {
                     _detailState.value = WorkoutDetailUiState.Error(result.exception.toMessage())

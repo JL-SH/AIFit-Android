@@ -322,12 +322,16 @@ class HomeViewModel @Inject constructor(
      * No hace nada si [loadAll] sigue en curso.
      */
     fun onResumed() {
-        if (loadJob?.isActive == true) {
-            Log.d("AIFIT_HOME", "onResumed skipped — initial load in progress")
-            return
-        }
         Log.d("AIFIT_HOME", "onResumed called")
         viewModelScope.launch {
+            // Always refresh today's workout completion, even during initial loadAll().
+            launch { refreshWorkoutStatus() }
+
+            if (loadJob?.isActive == true) {
+                Log.d("AIFIT_HOME", "onResumed — skipping plan/diet sync while initial load in progress")
+                return@launch
+            }
+
             _uiState.update { cur ->
                 if (cur is HomeUiState.Success) {
                     cur.copy(isRefreshingPlan = true, isRefreshingMeal = true)
@@ -743,7 +747,6 @@ class HomeViewModel @Inject constructor(
         getWorkoutHistoryUseCase(from = today, to = today).collect { result ->
             if (result is Result.Success) {
                 latest = result.data
-                return@collect
             }
         }
         return latest
@@ -800,7 +803,11 @@ class HomeViewModel @Inject constructor(
             return null
         }
 
-        val isCompleted = todayWorkoutLogs.any { it.trainingPlanId == activePlan.id && it.isLocked }
+        val isCompleted = todayWorkoutLogs.any {
+            it.trainingPlanId == activePlan.id &&
+                it.trainingDayId == todayTrainingDay.id &&
+                it.isLocked
+        }
         // TODO: remove diagnostic logs below
         Log.d("AIFIT_HOME", "deriveTodayTraining — activePlan=${activePlan.id} todayLogs=${todayWorkoutLogs.size} isCompleted=$isCompleted")
         Log.d("AIFIT_HOME", "todayLogs detail — ${todayWorkoutLogs.map { "id=${it.id} isLocked=${it.isLocked} planId=${it.trainingPlanId}" }}")
