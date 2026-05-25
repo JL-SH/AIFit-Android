@@ -11,7 +11,7 @@ import com.jlsh.aifit.feature.progress.domain.model.WeeklyProgressSummary
  */
 sealed class HomeUiState {
 
-    /** Sin caché de perfil en Room; esperando primer dato usable. */
+    /** Carga inicial del dashboard; skeleton hasta snapshot completo. */
     data object Loading : HomeUiState()
 
     /**

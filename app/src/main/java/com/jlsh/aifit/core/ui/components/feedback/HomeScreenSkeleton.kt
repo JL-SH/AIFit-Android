@@ -112,6 +112,22 @@ fun HomeScreenSkeleton(modifier: Modifier = Modifier) {
                 shape = CardShape,
             )
         }
+        item {
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(88.dp),
+                shape = CardShape,
+            )
+        }
+        item {
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(72.dp),
+                shape = CardShape,
+            )
+        }
     }
 }
 

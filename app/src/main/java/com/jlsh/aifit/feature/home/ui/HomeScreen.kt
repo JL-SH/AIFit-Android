@@ -105,8 +105,8 @@ import com.jlsh.aifit.core.ui.components.display.StreakStatus as BadgeStreakStat
  * Pantalla principal del dashboard: saludo, entreno y nutrición de hoy, próxima comida,
  * peso, rachas y progreso semanal en un scroll vertical con barra de refresco opcional.
  *
- * Muestra [LoadingScreen] en carga, mensaje de error con reintento, o tarjetas de contenido
- * en éxito. Gestiona la hoja de registro de peso y reacciona a [HomeUiEvent] del ViewModel.
+ * Muestra [HomeScreenSkeleton] en carga inicial, mensaje de error con reintento, o tarjetas de
+ * contenido en éxito. Gestiona la hoja de registro de peso y reacciona a [HomeUiEvent] del ViewModel.
  *
  * @param onNavigateToWorkoutSession Navegar a la sesión activa (plan y día).
  * @param onNavigateToTrackMeal Ir al registro de comida (`mode`: `"manual"` | `"text_analysis"`).

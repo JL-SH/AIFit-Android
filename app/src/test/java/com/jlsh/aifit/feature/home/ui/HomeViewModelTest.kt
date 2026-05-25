@@ -164,13 +164,69 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `uiState es Success sin skeleton prolongado cuando hay perfil en cache`() = runTest {
+    fun `loadAll emite un solo Success con gamificacion en carga inicial`() = runTest {
         val vm = createViewModel(
             profileFlow = flowOf(Result.Success(fakeUserProfile())),
         )
-        advanceUntilIdle()
 
-        assertTrue(vm.uiState.value is HomeUiState.Success)
+        vm.uiState.test {
+            assertEquals(HomeUiState.Loading, awaitItem())
+            val success = awaitItem()
+            assertTrue(success is HomeUiState.Success)
+            val state = success as HomeUiState.Success
+            assertEquals("Test User", state.userName)
+            assertNotNull(state.weeklySummary)
+            assertEquals(1, state.streaks.size)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `primer Success tras Loading incluye datos de gamificacion no vacios`() = runTest {
+        val vm = createViewModel(
+            profileFlow = flowOf(Result.Success(fakeUserProfile())),
+        )
+
+        vm.uiState.test {
+            assertEquals(HomeUiState.Loading, awaitItem())
+            val firstSuccess = awaitItem()
+            assertTrue(firstSuccess is HomeUiState.Success)
+            val state = firstSuccess as HomeUiState.Success
+            assertEquals("Test User", state.userName)
+            assertNotNull(state.weeklySummary)
+            assertTrue(state.streaks.isNotEmpty())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `loadAll resuelve plan activo en primer Success cuando detail no esta en cache`() = runTest {
+        val trainingDay = fakeTrainingDay(
+            id = "day-1",
+            dayType = TrainingDayType.TRAINING,
+            exercises = listOf(fakeTrainingExercise()),
+        )
+        val plan = fakeTrainingPlan(
+            id = "plan-1",
+            name = "My Plan",
+            status = PlanStatus.ACTIVE,
+            days = listOf(trainingDay),
+        )
+
+        val vm = createViewModel(
+            plansFlow = flowOf(Result.Success(listOf(plan))),
+            planDetailResult = Result.Success(plan),
+        )
+        coEvery { getTrainingPlanDetailUseCase.fromCache("plan-1") } returns null
+
+        vm.uiState.test {
+            skipItems(1) // Loading
+            val success = awaitItem() as HomeUiState.Success
+            assertNotNull(success.activePlan)
+            assertEquals("plan-1", success.activePlan?.id)
+            assertFalse(success.isTrainingHydrating)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     // ── Error state ────────────────────────────────────────────────────────────

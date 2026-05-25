@@ -67,7 +67,7 @@ import javax.inject.Inject
  * ViewModel del dashboard de inicio: perfil, entreno y nutrición de hoy, rachas y peso.
  *
  * **UiState expuesto** ([uiState] — [HomeUiState]):
- * - [HomeUiState.Loading]: sin caché de perfil; skeleton hasta primer perfil usable.
+ * - [HomeUiState.Loading]: carga inicial del dashboard; skeleton hasta snapshot completo.
  * - [HomeUiState.Error]: fallo crítico (p. ej. perfil no cargado).
  * - [HomeUiState.Success]: dashboard con tarjetas de entreno, nutrición, próxima comida, peso y gamificación.
  *
@@ -153,60 +153,60 @@ class HomeViewModel @Inject constructor(
                 return@launch
             }
 
-            // First frame: never block the skeleton on plans/nutrition/weight network I/O.
-            _uiState.value = minimalSuccessFromProfile(profile)
+            _uiState.value = HomeUiState.Loading
 
-            val nutritionPair: Pair<NutritionLog?, NutritionTarget?>
-            val weightEntries: List<BodyWeightLog>
-            val cachedTrainingPlans: List<TrainingPlan>
-            val cachedDietPlans: List<DietPlan>
-            val todayWorkoutLogs: List<WorkoutLog>
-
+            val snapshot: HomeUiState.Success
             coroutineScope {
                 val nutritionDeferred = async { loadNutritionCacheFirst() }
                 val weightDeferred = async { firstSuccessWeightHistory() }
                 val trainingPlansDeferred = async { firstSuccessTrainingPlans() }
                 val dietPlansDeferred = async { firstSuccessDietPlans() }
                 val workoutDeferred = async { firstSuccessWorkoutHistory() }
+                val weeklyDeferred = async { loadWeeklySummary() }
+                val streaksDeferred = async { loadStreaks() }
+                val achievementsDeferred = async { loadUserAchievements() }
+                val definitionsDeferred = async { loadAchievementDefinitions() }
 
-                nutritionPair = nutritionDeferred.await()
-                weightEntries = weightDeferred.await()
-                cachedTrainingPlans = trainingPlansDeferred.await()
-                cachedDietPlans = dietPlansDeferred.await()
-                todayWorkoutLogs = workoutDeferred.await()
+                val trainingPlans = trainingPlansDeferred.await()
+                val dietPlans = dietPlansDeferred.await()
+                val initialActivePlan = trainingPlans.find { it.status == PlanStatus.ACTIVE }
+                val initialActiveDiet = dietPlans.find { it.status == PlanStatus.ACTIVE }
+
+                val planDetailDeferred = initialActivePlan?.let { plan ->
+                    async {
+                        getTrainingPlanDetailUseCase.fromCache(plan.id) ?: loadPlanDetail(plan.id)
+                    }
+                }
+                val dietDetailDeferred = initialActiveDiet?.let { diet ->
+                    async { loadDietPlanDetail(diet.id) }
+                }
+
+                snapshot = buildHomeSnapshot(
+                    profile = profile,
+                    nutritionPair = nutritionDeferred.await(),
+                    weightEntries = weightDeferred.await(),
+                    trainingPlans = trainingPlans,
+                    dietPlans = dietPlans,
+                    todayWorkoutLogs = workoutDeferred.await(),
+                    weeklySummary = weeklyDeferred.await(),
+                    streaks = streaksDeferred.await(),
+                    userAchievements = achievementsDeferred.await(),
+                    allDefinitions = definitionsDeferred.await(),
+                    planDetail = planDetailDeferred?.await(),
+                    dietDetail = dietDetailDeferred?.await(),
+                )
             }
 
-            _uiState.value = buildCachedHomeSnapshot(
-                profile = profile,
-                nutritionPair = nutritionPair,
-                weightEntries = weightEntries,
-                trainingPlans = cachedTrainingPlans,
-                dietPlans = cachedDietPlans,
-                todayWorkoutLogs = todayWorkoutLogs,
-            )
+            _uiState.value = snapshot
 
             Log.d(
                 "AIFIT_DEBUG",
-                "[VM][loadAll] cache-first Success — plans=${cachedTrainingPlans.size} activePlan=$cachedActivePlanId",
+                "[VM][loadAll] initial Success — activePlan=$cachedActivePlanId",
             )
 
             scheduleSilentRefresh()
         }
     }
-
-    private fun minimalSuccessFromProfile(profile: UserProfile): HomeUiState.Success =
-        HomeUiState.Success(
-            userName = profile.name,
-            avatarUrl = profile.profilePictureUrl,
-            activePlan = null,
-            todayTraining = null,
-            todayNutrition = null,
-            nextMeal = NextMealState.NoPlan,
-            streaks = emptyList(),
-            weeklySummary = null,
-            weightEntries = emptyList(),
-            isTrainingHydrating = false,
-        )
 
     /**
      * Inicia la sesión de entreno del día si hay [TodayTrainingState] disponible.
@@ -344,41 +344,47 @@ class HomeViewModel @Inject constructor(
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
             if (_uiState.value !is HomeUiState.Success) return@launch
-            coroutineScope {
-                launch { refreshProfileLastSuccess() }
-                launch { refreshTrainingAndDiet() }
-                launch { refreshNutritionSilent() }
-                launch { refreshWorkoutFreshSilent() }
-                launch { refreshGamification() }
-            }
+            performSilentRefresh()
         }
     }
 
-    private suspend fun buildCachedHomeSnapshot(
+    private suspend fun buildHomeSnapshot(
         profile: UserProfile,
         nutritionPair: Pair<NutritionLog?, NutritionTarget?>,
         weightEntries: List<BodyWeightLog>,
         trainingPlans: List<TrainingPlan>,
         dietPlans: List<DietPlan>,
         todayWorkoutLogs: List<WorkoutLog>,
+        weeklySummary: WeeklyProgressSummary?,
+        streaks: List<Streak>,
+        userAchievements: List<UserAchievement>,
+        allDefinitions: List<AchievementDefinition>,
+        planDetail: TrainingPlan?,
+        dietDetail: DietPlan?,
     ): HomeUiState.Success {
         val initialActivePlan = trainingPlans.find { it.status == PlanStatus.ACTIVE }
         val initialActiveDiet = dietPlans.find { it.status == PlanStatus.ACTIVE }
 
         cachedActivePlanId = initialActivePlan?.id
-        cachedActivePlanSummary = initialActivePlan?.let { ActivePlanSummary(it.id, it.name) }
-        cachedActiveDietId = initialActiveDiet?.id
-
-        val planDetail = initialActivePlan?.id?.let { getTrainingPlanDetailUseCase.fromCache(it) }
-        if (planDetail != null) {
-            cachedActivePlanDetail = planDetail
-            cachedActivePlanSummary = ActivePlanSummary(planDetail.id, planDetail.name)
+        cachedActivePlanDetail = planDetail
+        cachedActivePlanSummary = when {
+            planDetail != null -> ActivePlanSummary(planDetail.id, planDetail.name)
+            initialActivePlan != null -> ActivePlanSummary(initialActivePlan.id, initialActivePlan.name)
+            else -> null
         }
 
-        val todayTraining = deriveTodayTraining(planDetail, cachedWeeklySummary, todayWorkoutLogs)
-        val isTrainingHydrating = initialActivePlan != null && planDetail == null
+        cachedActiveDietId = initialActiveDiet?.id
+        cachedActiveDietDetail = dietDetail
 
-        val nextMeal = deriveNextMeal(cachedActiveDietDetail)
+        cachedWeeklySummary = weeklySummary
+
+        val motivation = deriveMotivation(userAchievements, allDefinitions, streaks)
+        val todayTraining = deriveTodayTraining(planDetail, weeklySummary, todayWorkoutLogs)
+        val isTrainingHydrating = initialActivePlan != null && planDetail == null
+        val nextMeal = when {
+            initialActiveDiet == null -> NextMealState.NoPlan
+            else -> deriveNextMeal(dietDetail)
+        }
 
         return HomeUiState.Success(
             userName = profile.name,
@@ -387,21 +393,52 @@ class HomeViewModel @Inject constructor(
             todayTraining = todayTraining,
             todayNutrition = deriveNutrition(nutritionPair.first, nutritionPair.second),
             nextMeal = nextMeal,
-            streaks = emptyList(),
-            weeklySummary = null,
+            streaks = streaks,
+            weeklySummary = weeklySummary,
             weightEntries = weightEntries,
+            lastAchievement = motivation.lastAchievement,
+            nextAchievement = motivation.nextAchievement,
+            trainingStreakDays = motivation.trainingStreakDays,
             isTrainingHydrating = isTrainingHydrating,
         )
     }
 
-    private suspend fun refreshTrainingAndDiet() {
+    /**
+     * Reconciles all dashboard sections from network/cache and applies a single [HomeUiState] update.
+     */
+    private suspend fun performSilentRefresh() {
+        if (_uiState.value !is HomeUiState.Success) return
+
+        val profile: UserProfile?
         val freshTrainingPlans: List<TrainingPlan>
         val freshDietPlans: List<DietPlan>
+        val nutritionPair: Pair<NutritionLog?, NutritionTarget?>
+        val freshWorkoutLogs: List<WorkoutLog>
+        val weeklySummary: WeeklyProgressSummary?
+        val streaks: List<Streak>
+        val userAchievements: List<UserAchievement>
+        val allDefinitions: List<AchievementDefinition>
+
         coroutineScope {
+            val profileDeferred = async { loadProfileLastSuccess() }
             val trainingDeferred = async { awaitFreshPlans() }
             val dietDeferred = async { awaitFreshDietPlans() }
+            val nutritionDeferred = async { loadNutritionCacheFirst() }
+            val workoutDeferred = async { loadTodayWorkoutHistoryFresh() }
+            val weeklyDeferred = async { loadWeeklySummary() }
+            val streaksDeferred = async { loadStreaks() }
+            val achievementsDeferred = async { loadUserAchievements() }
+            val definitionsDeferred = async { loadAchievementDefinitions() }
+
+            profile = profileDeferred.await()
             freshTrainingPlans = trainingDeferred.await()
             freshDietPlans = dietDeferred.await()
+            nutritionPair = nutritionDeferred.await()
+            freshWorkoutLogs = workoutDeferred.await()
+            weeklySummary = weeklyDeferred.await()
+            streaks = streaksDeferred.await()
+            userAchievements = achievementsDeferred.await()
+            allDefinitions = definitionsDeferred.await()
         }
 
         val resolvedActivePlan = freshTrainingPlans.find { it.status == PlanStatus.ACTIVE }
@@ -411,42 +448,14 @@ class HomeViewModel @Inject constructor(
             cachedActivePlanDetail = null
             cachedActivePlanId = null
             cachedActivePlanSummary = null
-            _uiState.update { cur ->
-                if (cur is HomeUiState.Success) {
-                    cur.copy(
-                        activePlan = null,
-                        todayTraining = null,
-                        isTrainingHydrating = false,
-                    )
-                } else cur
-            }
         } else if (resolvedActivePlan != null) {
             cachedActivePlanId = resolvedActivePlan.id
-            cachedActivePlanSummary = ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
-
             val swrDetail = getTrainingPlanDetailUseCase.fromCache(resolvedActivePlan.id)
             if (swrDetail != null) {
                 cachedActivePlanDetail = swrDetail
-                val swrTraining = deriveTodayTraining(
-                    swrDetail,
-                    cachedWeeklySummary,
-                    firstSuccessWorkoutHistory(),
-                )
-                _uiState.update { cur ->
-                    if (cur is HomeUiState.Success) {
-                        cur.copy(
-                            activePlan = cachedActivePlanSummary,
-                            todayTraining = swrTraining,
-                            isTrainingHydrating = false,
-                        )
-                    } else cur
-                }
-            } else if (resolvedActivePlan.id != cachedActivePlanDetail?.id) {
-                _uiState.update { cur ->
-                    if (cur is HomeUiState.Success) {
-                        cur.copy(isTrainingHydrating = true)
-                    } else cur
-                }
+                cachedActivePlanSummary = ActivePlanSummary(swrDetail.id, swrDetail.name)
+            } else {
+                cachedActivePlanSummary = ActivePlanSummary(resolvedActivePlan.id, resolvedActivePlan.name)
             }
         }
 
@@ -454,7 +463,11 @@ class HomeViewModel @Inject constructor(
         val dietDetail: DietPlan?
 
         coroutineScope {
-            val planDetailDeferred = resolvedActivePlan?.let { plan -> async { loadPlanDetail(plan.id) } }
+            val planDetailDeferred = resolvedActivePlan?.let { plan ->
+                async {
+                    getTrainingPlanDetailUseCase.fromCache(plan.id) ?: loadPlanDetail(plan.id)
+                }
+            }
             val dietDetailDeferred = resolvedActiveDiet?.let { diet -> async { loadDietPlanDetail(diet.id) } }
             planDetail = planDetailDeferred?.await()
             dietDetail = dietDetailDeferred?.await()
@@ -477,19 +490,20 @@ class HomeViewModel @Inject constructor(
             cachedActiveDietDetail = null
         }
 
-        val workoutLogs = firstSuccessWorkoutHistory()
+        cachedWeeklySummary = weeklySummary
+        val motivation = deriveMotivation(userAchievements, allDefinitions, streaks)
         val todayTraining = deriveTodayTraining(
             cachedActivePlanDetail,
-            cachedWeeklySummary,
-            workoutLogs,
+            weeklySummary,
+            freshWorkoutLogs,
         )
         val nextMeal = if (resolvedActiveDiet == null && cachedActiveDietId == null) {
             NextMealState.NoPlan
         } else {
             deriveNextMeal(cachedActiveDietDetail)
         }
-
         val isTrainingHydrating = resolvedActivePlan != null && cachedActivePlanDetail == null
+        val todayNutrition = deriveNutrition(nutritionPair.first, nutritionPair.second)
 
         Log.d(
             "AIFIT_DEBUG",
@@ -499,91 +513,19 @@ class HomeViewModel @Inject constructor(
         _uiState.update { cur ->
             if (cur is HomeUiState.Success) {
                 cur.copy(
+                    userName = profile?.name ?: cur.userName,
+                    avatarUrl = profile?.profilePictureUrl ?: cur.avatarUrl,
                     activePlan = cachedActivePlanSummary,
                     todayTraining = todayTraining,
                     nextMeal = nextMeal,
-                    isTrainingHydrating = isTrainingHydrating,
-                )
-            } else cur
-        }
-    }
-
-    private suspend fun refreshGamification() {
-        val weeklySummary: WeeklyProgressSummary?
-        val streaks: List<Streak>
-        val userAchievements: List<UserAchievement>
-        val allDefinitions: List<AchievementDefinition>
-
-        coroutineScope {
-            val weeklyDeferred = async { loadWeeklySummary() }
-            val streaksDeferred = async { loadStreaks() }
-            val achievementsDeferred = async { loadUserAchievements() }
-            val definitionsDeferred = async { loadAchievementDefinitions() }
-            weeklySummary = weeklyDeferred.await()
-            streaks = streaksDeferred.await()
-            userAchievements = achievementsDeferred.await()
-            allDefinitions = definitionsDeferred.await()
-        }
-
-        cachedWeeklySummary = weeklySummary
-        val motivation = deriveMotivation(userAchievements, allDefinitions, streaks)
-        val workoutLogs = firstSuccessWorkoutHistory()
-        val todayTraining = deriveTodayTraining(
-            cachedActivePlanDetail,
-            weeklySummary,
-            workoutLogs,
-        )
-
-        _uiState.update { cur ->
-            if (cur is HomeUiState.Success) {
-                cur.copy(
+                    todayNutrition = todayNutrition,
                     weeklySummary = weeklySummary,
                     streaks = streaks,
                     lastAchievement = motivation.lastAchievement,
                     nextAchievement = motivation.nextAchievement,
                     trainingStreakDays = motivation.trainingStreakDays,
-                    todayTraining = todayTraining ?: cur.todayTraining,
+                    isTrainingHydrating = isTrainingHydrating,
                 )
-            } else cur
-        }
-    }
-
-    private suspend fun refreshNutritionSilent() {
-        val nutritionPair = loadNutritionCacheFirst()
-        val todayNutrition = deriveNutrition(nutritionPair.first, nutritionPair.second)
-        _uiState.update { cur ->
-            if (cur is HomeUiState.Success) cur.copy(todayNutrition = todayNutrition) else cur
-        }
-    }
-
-    private suspend fun refreshWorkoutFreshSilent() {
-        if (_uiState.value !is HomeUiState.Success) return
-        val freshWorkoutLogs = loadTodayWorkoutHistoryFresh()
-        val todayTraining = deriveTodayTraining(
-            cachedActivePlanDetail,
-            cachedWeeklySummary,
-            freshWorkoutLogs,
-        )
-        val freshActivePlanSummary = cachedActivePlanDetail
-            ?.let { ActivePlanSummary(it.id, it.name) }
-            ?: cachedActivePlanSummary
-            ?: (_uiState.value as? HomeUiState.Success)?.activePlan
-        _uiState.update { current ->
-            if (current is HomeUiState.Success) {
-                current.copy(
-                    todayTraining = todayTraining,
-                    activePlan = freshActivePlanSummary,
-                    isTrainingHydrating = cachedActivePlanId != null && cachedActivePlanDetail == null,
-                )
-            } else current
-        }
-    }
-
-    private suspend fun refreshProfileLastSuccess() {
-        val profile = loadProfileLastSuccess() ?: return
-        _uiState.update { cur ->
-            if (cur is HomeUiState.Success) {
-                cur.copy(userName = profile.name, avatarUrl = profile.profilePictureUrl)
             } else cur
         }
     }
