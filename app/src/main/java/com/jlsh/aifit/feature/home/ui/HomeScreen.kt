@@ -56,6 +56,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.display.AdherenceBar
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.CardVariant
@@ -181,24 +182,10 @@ fun HomeScreen(
             }
 
             is HomeUiState.Error -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(AiFitSpacing.md),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = state.message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                    Spacer(modifier = Modifier.height(AiFitSpacing.md))
-                    SecondaryButton(
-                        text = stringResource(R.string.common_retry),
-                        onClick = { viewModel.loadAll() },
-                    )
-                }
+                ErrorScreen(
+                    message = state.message,
+                    onRetry = { viewModel.loadAll() },
+                )
             }
 
             is HomeUiState.Success -> {

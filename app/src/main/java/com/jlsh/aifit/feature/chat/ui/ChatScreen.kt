@@ -44,6 +44,7 @@ import com.jlsh.aifit.core.ui.components.chat.ChatBubble
 import com.jlsh.aifit.core.ui.components.chat.ChatInputBar
 import com.jlsh.aifit.core.ui.components.chat.TypingIndicator
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.LocalBottomBarVisibility
@@ -122,18 +123,11 @@ fun ChatScreen(
             when {
                 chatState.isLoading -> LoadingScreen()
                 chatState.error != null -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = chatState.error ?: "",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
+                    ErrorScreen(
+                        message = chatState.error ?: "",
+                        onRetry = viewModel::retrySessionLoad,
+                        modifier = Modifier.padding(paddingValues),
+                    )
                 }
                 else -> {
                     ChatContent(

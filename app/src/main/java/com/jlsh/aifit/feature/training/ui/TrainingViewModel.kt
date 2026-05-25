@@ -567,7 +567,6 @@ class TrainingViewModel @Inject constructor(
                     // TODO: remove diagnostic log below
                     Log.d("AIFIT_GENERATE", "Generation ERROR — msg=${result.exception.message} elapsed=$elapsed ms")
                     _generateUiState.value = GeneratePlanUiState.Error(result.exception.toMessage())
-                    emitEvent(TrainingUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
                 else -> Unit
             }
@@ -599,7 +598,6 @@ class TrainingViewModel @Inject constructor(
                     // TODO: remove diagnostic log below
                     Log.d("AIFIT_GENERATE", "Generation ERROR — msg=${result.exception.message} elapsed=$elapsed ms")
                     _generateUiState.value = GeneratePlanUiState.Error(result.exception.toMessage())
-                    emitEvent(TrainingUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
                 else -> Unit
             }

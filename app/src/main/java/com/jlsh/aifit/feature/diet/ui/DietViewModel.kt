@@ -220,7 +220,6 @@ class DietViewModel @Inject constructor(
                 is Result.Error -> {
                     ensureMinAnimationDuration(startTime)
                     _generateUiState.value = GenerateDietUiState.Error(result.exception.toMessage())
-                    emitEvent(DietUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
                 else -> Unit
             }
@@ -246,7 +245,6 @@ class DietViewModel @Inject constructor(
                 is Result.Error -> {
                     ensureMinAnimationDuration(startTime)
                     _generateUiState.value = GenerateDietUiState.Error(result.exception.toMessage())
-                    emitEvent(DietUiEvent.ShowSnackbar(result.exception.toMessage()))
                 }
                 else -> Unit
             }

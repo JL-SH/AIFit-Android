@@ -28,6 +28,42 @@ import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 
 /**
+ * Centered error UI with icon, message and retry action. Use inside sheets or partial layouts.
+ */
+@Composable
+fun ErrorContent(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Icon(
+            imageVector = PhosphorIcons.Regular.XCircle,
+            contentDescription = stringResource(R.string.component_error_icon_cd),
+            modifier = Modifier.size(36.dp),
+            tint = MaterialTheme.colorScheme.error,
+        )
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            maxLines = 6,
+            modifier = Modifier.widthIn(max = 280.dp),
+        )
+        SecondaryButton(
+            text = stringResource(R.string.common_retry),
+            onClick = onRetry,
+            modifier = Modifier.width(160.dp),
+        )
+    }
+}
+
+/**
  * Full-screen error state composed of an error icon, a human-readable message
  * and a [SecondaryButton] that lets the user retry the failed operation.
  *
@@ -51,30 +87,7 @@ fun ErrorScreen(
             .testTag("error_screen"),
         contentAlignment = Alignment.Center,
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Icon(
-                imageVector = PhosphorIcons.Regular.XCircle,
-                contentDescription = stringResource(R.string.component_error_icon_cd),
-                modifier = Modifier.size(36.dp),
-                tint = MaterialTheme.colorScheme.error,
-            )
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                maxLines = 4,
-                modifier = Modifier.widthIn(max = 240.dp),
-            )
-            SecondaryButton(
-                text = stringResource(R.string.common_retry),
-                onClick = onRetry,
-                modifier = Modifier.width(160.dp),
-            )
-        }
+        ErrorContent(message = message, onRetry = onRetry)
     }
 }
 

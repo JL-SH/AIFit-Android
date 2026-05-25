@@ -60,6 +60,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.AiGenerateButton
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
@@ -147,6 +148,44 @@ fun GenerateDietScreen(
     }
 
     val isLoading = generateState is GenerateDietUiState.Generating
+    val errorState = generateState as? GenerateDietUiState.Error
+
+    val submitPlan: () -> Unit = {
+        val weeks = selectedDuration.firstOrNull()?.toIntOrNull() ?: 4
+        val meals = selectedMeals.firstOrNull()?.toIntOrNull() ?: 4
+        val goal = selectedGoal.firstOrNull()
+        val preference = selectedPreference.firstOrNull() ?: "NONE"
+        val calories = dailyCalories.toIntOrNull()
+        val allergiesVal = allergies.ifBlank { null }
+        val notesVal = additionalNotes.ifBlank { null }
+
+        if (adaptive) {
+            viewModel.onGenerateAdaptivePlan(
+                GenerateAdaptiveDietPlanRequestDto(
+                    durationWeeks = weeks,
+                    mealsPerDay = meals,
+                    dietPreference = preference,
+                    goalType = goal,
+                    dailyCalories = calories,
+                    allergies = allergiesVal,
+                    additionalNotes = notesVal,
+                    includeNutritionHistory = true,
+                ),
+            )
+        } else {
+            viewModel.onGeneratePlan(
+                GenerateDietPlanRequestDto(
+                    durationWeeks = weeks,
+                    mealsPerDay = meals,
+                    dietPreference = preference,
+                    goalType = goal,
+                    dailyCalories = calories,
+                    allergies = allergiesVal,
+                    additionalNotes = notesVal,
+                ),
+            )
+        }
+    }
 
     // Manage animation while loading
     LaunchedEffect(isLoading) {
@@ -200,12 +239,18 @@ fun GenerateDietScreen(
         topBar = {
             AiFitTopBar(
                 title = if (adaptive) stringResource(R.string.diet_generate_title_adaptive) else stringResource(R.string.diet_generate_title),
-                onBack = if (isLoading) null else onNavigateBack,
+                onBack = if (isLoading && errorState == null) null else onNavigateBack,
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
-        if (isLoading) {
+        if (errorState != null) {
+            ErrorScreen(
+                message = errorState.message,
+                onRetry = submitPlan,
+                modifier = Modifier.padding(paddingValues),
+            )
+        } else if (isLoading) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -355,42 +400,7 @@ fun GenerateDietScreen(
                     text = stringResource(R.string.diet_generate_btn),
                     loadingText = stringResource(R.string.diet_generate_loading_text),
                     isLoading = isLoading,
-                    onClick = {
-                        val weeks = selectedDuration.firstOrNull()?.toIntOrNull() ?: 4
-                        val meals = selectedMeals.firstOrNull()?.toIntOrNull() ?: 4
-                        val goal = selectedGoal.firstOrNull()
-                        val preference = selectedPreference.firstOrNull() ?: "NONE"
-                        val calories = dailyCalories.toIntOrNull()
-                        val allergiesVal = allergies.ifBlank { null }
-                        val notesVal = additionalNotes.ifBlank { null }
-
-                        if (adaptive) {
-                            viewModel.onGenerateAdaptivePlan(
-                                GenerateAdaptiveDietPlanRequestDto(
-                                    durationWeeks = weeks,
-                                    mealsPerDay = meals,
-                                    dietPreference = preference,
-                                    goalType = goal,
-                                    dailyCalories = calories,
-                                    allergies = allergiesVal,
-                                    additionalNotes = notesVal,
-                                    includeNutritionHistory = true,
-                                ),
-                            )
-                        } else {
-                            viewModel.onGeneratePlan(
-                                GenerateDietPlanRequestDto(
-                                    durationWeeks = weeks,
-                                    mealsPerDay = meals,
-                                    dietPreference = preference,
-                                    goalType = goal,
-                                    dailyCalories = calories,
-                                    allergies = allergiesVal,
-                                    additionalNotes = notesVal,
-                                ),
-                            )
-                        }
-                    },
+                    onClick = submitPlan,
                     modifier = Modifier.fillMaxWidth(),
                 )
 

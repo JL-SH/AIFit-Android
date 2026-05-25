@@ -1,5 +1,6 @@
 package com.jlsh.aifit.core.network
 
+import com.jlsh.aifit.core.common.ApiErrorCode
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import kotlinx.serialization.Serializable
@@ -14,12 +15,14 @@ import retrofit2.Response
  * @property data Optional response payload; present when [success] is `true`.
  * @property message Optional human-readable message from the server,
  *   typically an error description when [success] is `false`.
+ * @property errorCode Optional machine-readable code when [success] is `false`.
  */
 @Serializable
 data class ApiResponse<T>(
     val success: Boolean = false,
     val data: T? = null,
-    val message: String? = null
+    val message: String? = null,
+    val errorCode: String? = null,
 )
 
 /**
@@ -49,16 +52,18 @@ open class BaseRemoteDataSource {
             if (response.success && response.data != null) {
                 Result.Success(response.data)
             } else {
-                Result.Error(
-                    AppException.UnknownException(
-                        response.message ?: "Unknown server error"
-                    )
-                )
+                Result.Error(mapApiFailure(response.message, response.errorCode))
             }
         } catch (e: Exception) {
             Result.Error(NetworkErrorMapper.map(e))
         }
     }
+
+    private fun mapApiFailure(message: String?, errorCode: String?): AppException =
+        when (errorCode) {
+            ApiErrorCode.AI_OVERLOADED -> AppException.AiOverloadedException
+            else -> AppException.UnknownException(message ?: "Unknown server error")
+        }
 
     /**
      * Executes [apiCall] for endpoints that return HTTP 204 No Content,

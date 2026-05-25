@@ -1,5 +1,6 @@
 package com.jlsh.aifit.core.network
 
+import com.jlsh.aifit.core.common.ApiErrorCode
 import com.jlsh.aifit.core.common.AppException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -34,9 +35,13 @@ object NetworkErrorMapper {
         else -> AppException.UnknownException(throwable.message ?: "Unknown error")
     }
 
-    private fun mapHttpException(exception: HttpException): AppException =
-        when (exception.code()) {
-            400 -> parseValidationErrors(exception)
+    private fun mapHttpException(exception: HttpException): AppException {
+        val parsed = parseApiErrorBody(exception)
+        if (parsed?.errorCode == ApiErrorCode.AI_OVERLOADED) {
+            return AppException.AiOverloadedException
+        }
+        return when (exception.code()) {
+            400 -> parseValidationErrors(exception, parsed)
             401 -> AppException.UnauthorizedException
             403 -> AppException.ForbiddenException
             404 -> AppException.NotFoundException("Resource")
@@ -45,8 +50,15 @@ object NetworkErrorMapper {
             in 500..599 -> AppException.ServerException
             else -> AppException.UnknownException("HTTP ${exception.code()}")
         }
+    }
 
-    private fun parseValidationErrors(exception: HttpException): AppException.ValidationException {
+    private fun parseValidationErrors(
+        exception: HttpException,
+        parsed: ParsedApiError?,
+    ): AppException.ValidationException {
+        if (parsed?.message != null) {
+            return AppException.ValidationException(mapOf("general" to parsed.message))
+        }
         return try {
             val errorBody = exception.response()?.errorBody()?.string() ?: ""
             val jsonElement = json.parseToJsonElement(errorBody)
@@ -56,4 +68,23 @@ object NetworkErrorMapper {
             AppException.ValidationException(emptyMap())
         }
     }
+
+    private fun parseApiErrorBody(exception: HttpException): ParsedApiError? {
+        return try {
+            val errorBody = exception.response()?.errorBody()?.string() ?: return null
+            if (errorBody.isBlank()) return null
+            val jsonElement = json.parseToJsonElement(errorBody).jsonObject
+            ParsedApiError(
+                message = jsonElement["message"]?.jsonPrimitive?.content,
+                errorCode = jsonElement["errorCode"]?.jsonPrimitive?.content,
+            )
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private data class ParsedApiError(
+        val message: String?,
+        val errorCode: String?,
+    )
 }

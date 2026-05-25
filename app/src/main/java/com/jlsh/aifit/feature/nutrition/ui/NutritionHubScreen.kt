@@ -63,6 +63,7 @@ import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.components.feedback.NutritionHubSkeleton
 import com.jlsh.aifit.core.ui.components.plans.PlanFilterChipGroup
@@ -678,18 +679,10 @@ private fun ShoppingTab(
                 }
             }
             is ShoppingListUiState.Error -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = AiFitSpacing.xxl),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    EmptyStateView(
-                        icon = PhosphorIcons.Regular.ShoppingCartSimple,
-                        title = stringResource(R.string.nutrition_hub_shopping_error_title),
-                        subtitle = state.message,
-                    )
-                }
+                ErrorScreen(
+                    message = state.message,
+                    onRetry = { shoppingViewModel.loadLists() },
+                )
             }
             is ShoppingListUiState.Success -> {
                 if (state.lists.isEmpty()) {

@@ -97,6 +97,21 @@ class BaseRemoteDataSourceTest {
     }
 
     @Test
+    fun `safeApiCall maps success false with AI_OVERLOADED to AiOverloadedException`() = runTest {
+        val result = sut.safeApiCall<String> {
+            ApiResponse(
+                success = false,
+                data = null,
+                message = "La IA está experimentando alta demanda en este momento.",
+                errorCode = "AI_OVERLOADED",
+            )
+        }
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).exception is AppException.AiOverloadedException)
+    }
+
+    @Test
     fun `safeApiCall maps HTTP 500 to ServerException`() = runTest {
         val retrofitError = retrofit2.Response.error<ApiResponse<String>>(
             "".toResponseBody(null),

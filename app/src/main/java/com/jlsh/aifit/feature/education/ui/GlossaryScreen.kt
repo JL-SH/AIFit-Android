@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
+import com.jlsh.aifit.core.ui.components.feedback.ErrorContent
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
@@ -153,23 +154,13 @@ fun GlossaryScreen(
                     }
 
                     is GlossaryState.Error -> {
-                        Column(
+                        ErrorContent(
+                            message = state.message,
+                            onRetry = { viewModel.loadGlossaryTerm(searchQuery.trim()) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = AiFitSpacing.lg),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Text(
-                                text = state.message,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.error,
-                            )
-                         TextButton(
-                                onClick = { viewModel.loadGlossaryTerm(searchQuery.trim()) },
-                            ) {
-                                Text(stringResource(R.string.education_glossary_retry))
-                            }
-                        }
+                        )
                     }
                 }
             }

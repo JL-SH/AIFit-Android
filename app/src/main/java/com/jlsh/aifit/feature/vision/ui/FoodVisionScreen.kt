@@ -58,6 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.buttons.SecondaryButton
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
@@ -186,25 +187,11 @@ fun FoodVisionScreen(
                         onTryAgain = viewModel::onTryAgain,
                     )
                     is VisionUiState.Error -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(paddingValues),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = state.message,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.error,
-                                )
-                                Spacer(modifier = Modifier.height(AiFitSpacing.md))
-                                SecondaryButton(
-                                    text = stringResource(R.string.vision_retry),
-                                    onClick = viewModel::onTryAgain,
-                                )
-                            }
-                        }
+                        ErrorScreen(
+                            message = state.message,
+                            onRetry = viewModel::onTryAgain,
+                            modifier = Modifier.padding(paddingValues),
+                        )
                     }
                 }
             }

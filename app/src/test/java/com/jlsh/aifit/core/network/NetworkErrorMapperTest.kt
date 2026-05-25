@@ -99,6 +99,20 @@ class NetworkErrorMapperTest {
     }
 
     @Test
+    fun `HTTP 503 with AI_OVERLOADED errorCode maps to AiOverloadedException`() {
+        val body = """{"success":false,"message":"La IA está experimentando alta demanda en este momento. Esto es temporal, inténtalo de nuevo en unos segundos.","errorCode":"AI_OVERLOADED"}"""
+        val result = NetworkErrorMapper.map(httpException(503, body))
+        assertTrue(result is AppException.AiOverloadedException)
+    }
+
+    @Test
+    fun `HTTP 500 with AI_OVERLOADED errorCode maps to AiOverloadedException`() {
+        val body = """{"success":false,"message":"overload","errorCode":"AI_OVERLOADED"}"""
+        val result = NetworkErrorMapper.map(httpException(500, body))
+        assertTrue(result is AppException.AiOverloadedException)
+    }
+
+    @Test
     fun `HTTP 418 unknown code maps to UnknownException`() {
         val result = NetworkErrorMapper.map(httpException(418))
         assertTrue(result is AppException.UnknownException)

@@ -17,6 +17,7 @@
     <string name="common_or">o</string>
     <string name="common_back">Atrás</string>
     <string name="common_error_generic">Ha ocurrido un error. Inténtalo de nuevo.</string>
+    <string name="error_ai_overloaded">La IA está experimentando alta demanda en este momento. Esto es temporal, inténtalo de nuevo en unos segundos.</string>
     <string name="common_no_data">No hay datos disponibles</string>
 
     <!-- Días de la semana (alias cortos) -->

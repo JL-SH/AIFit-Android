@@ -36,7 +36,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +45,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.R
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.core.ui.theme.FullShape
@@ -88,9 +89,9 @@ fun OnboardingGeneratingScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val progress = remember { Animatable(0f) }
-    val retryLabel = stringResource(R.string.common_retry)
-
+    val scope = rememberCoroutineScope()
     val fitnessFacts = stringArrayResource(R.array.onboarding_fitness_facts).toList()
+    val errorState = state as? OnboardingState.Error
     val onboardingPhases = listOf(
         OnboardingPhaseUi(
             title = stringResource(R.string.onboarding_phase_profile_title),
@@ -223,16 +224,6 @@ fun OnboardingGeneratingScreen(
                 progressJob?.cancel()
                 timerJob?.cancel()
                 factsJob?.cancel()
-                val result = snackbarHostState.showSnackbar(
-                    message = currentState.message,
-                    actionLabel = retryLabel,
-                )
-                if (result == SnackbarResult.ActionPerformed) {
-                    resetVisualState()
-                    progress.snapTo(0f)
-                    shouldHandleGeneratingState = true
-                    viewModel.generatePlan()
-                }
             }
             else -> Unit
         }
@@ -243,6 +234,17 @@ fun OnboardingGeneratingScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
+        if (errorState != null) {
+            ErrorScreen(
+                message = errorState.message,
+                onRetry = {
+                    resetVisualState()
+                    scope.launch { progress.snapTo(0f) }
+                    shouldHandleGeneratingState = true
+                    viewModel.generatePlan()
+                },
+            )
+        } else {
         Scaffold(
             containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -292,6 +294,7 @@ fun OnboardingGeneratingScreen(
 
                 Spacer(modifier = Modifier.height(AiFitSpacing.xl))
             }
+        }
         }
     }
 }

@@ -38,6 +38,9 @@ sealed class AppException(override val message: String) : Exception(message) {
     /** The backend returned an HTTP 5xx response. */
     data object ServerException : AppException("Server error")
 
+    /** Gemini or upstream AI is temporarily overloaded (errorCode AI_OVERLOADED). */
+    data object AiOverloadedException : AppException(AI_OVERLOADED_MESSAGE)
+
     /** The device has no network connectivity or the connection timed out. */
     data object NetworkException : AppException("Network error")
 
@@ -50,4 +53,15 @@ sealed class AppException(override val message: String) : Exception(message) {
      * @property message A developer-facing description of the unexpected error.
      */
     data class UnknownException(override val message: String) : AppException(message)
+
+    companion object {
+        /** User-facing message when the free Gemini API is under high demand. */
+        const val AI_OVERLOADED_MESSAGE =
+            "La IA está experimentando alta demanda en este momento. Esto es temporal, inténtalo de nuevo en unos segundos."
+    }
+}
+
+/** Machine-readable error codes returned by the backend in [com.jlsh.aifit.core.network.ApiResponse]. */
+object ApiErrorCode {
+    const val AI_OVERLOADED = "AI_OVERLOADED"
 }

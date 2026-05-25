@@ -222,6 +222,11 @@ class ChatViewModel @Inject constructor(
      *
      * @param id Identificador de la sesión de chat.
      */
+    /** Reintenta cargar la sesión activa tras un error de red o servidor. */
+    fun retrySessionLoad() {
+        effectiveSessionId?.let { loadSession(it) }
+    }
+
     fun loadSession(id: String) {
         viewModelScope.launch {
             _chatState.update { it.copy(isLoading = true, error = null) }

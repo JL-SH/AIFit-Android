@@ -34,6 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
+import com.jlsh.aifit.core.ui.components.feedback.ErrorContent
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
@@ -156,19 +157,11 @@ fun ProgressExportScreen(
                     }
 
                     is ExportUiState.Error -> {
-                        Column(
+                        ErrorContent(
+                            message = state.message,
+                            onRetry = { viewModel.loadExport(selectedPeriod) },
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Text(
-                                text = state.message,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.error,
-                            )
-                            TextButton(onClick = { viewModel.loadExport(selectedPeriod) }) {
-                                Text(stringResource(R.string.gamification_export_retry))
-                            }
-                        }
+                        )
                     }
                 }
             }

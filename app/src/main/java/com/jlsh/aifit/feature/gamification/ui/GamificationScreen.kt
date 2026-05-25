@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
 import com.jlsh.aifit.core.ui.components.display.StreakBadge
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
@@ -122,20 +123,10 @@ fun GamificationScreen(
             }
 
             is GamificationUiState.Error -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(AiFitSpacing.md),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = state.message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center,
-                    )
-                }
+                ErrorScreen(
+                    message = state.message,
+                    onRetry = { viewModel.loadAll() },
+                )
             }
 
             is GamificationUiState.Success -> {

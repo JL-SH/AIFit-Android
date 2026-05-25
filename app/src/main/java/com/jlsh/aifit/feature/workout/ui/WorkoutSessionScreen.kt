@@ -200,6 +200,9 @@ fun WorkoutSessionScreen(
                             showSubstitutionExerciseId = null
                         },
                         onDismiss = { showSubstitutionExerciseId = null },
+                        onRetry = {
+                            showSubstitutionExerciseId?.let { viewModel.loadSubstitutions(it) }
+                        },
                     )
                 }
 

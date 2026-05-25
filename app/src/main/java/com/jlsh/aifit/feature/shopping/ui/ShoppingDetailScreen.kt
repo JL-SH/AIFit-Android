@@ -47,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.ConfirmationDialog
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.feedback.LoadingScreen
 import com.jlsh.aifit.core.ui.components.inputs.AiFitDropdown
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
@@ -131,18 +132,11 @@ fun ShoppingDetailScreen(
         when {
             detailState.isLoading -> LoadingScreen()
             detailState.error != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = detailState.error ?: "",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
+                ErrorScreen(
+                    message = detailState.error ?: "",
+                    onRetry = viewModel::retryDetailLoad,
+                    modifier = Modifier.padding(paddingValues),
+                )
             }
             detailState.list != null -> {
                 ShoppingDetailContent(

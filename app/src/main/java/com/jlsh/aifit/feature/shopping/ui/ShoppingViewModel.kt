@@ -163,6 +163,11 @@ class ShoppingViewModel @Inject constructor(
      *
      * @param id Identificador de la lista de la compra.
      */
+    /** Reintenta cargar el detalle de la lista activa tras un error. */
+    fun retryDetailLoad() {
+        listId?.let { loadDetail(it) }
+    }
+
     fun loadDetail(id: String) {
         viewModelScope.launch {
             _detailState.update { it.copy(isLoading = true, error = null) }

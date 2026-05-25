@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.R
+import com.jlsh.aifit.core.ui.components.feedback.ErrorContent
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
@@ -42,6 +43,7 @@ fun SubstitutionSheet(
     state: SubstitutionLoadState,
     onSelect: (ExerciseSubstitution) -> Unit,
     onDismiss: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -54,6 +56,7 @@ fun SubstitutionSheet(
             state = state,
             onSelect = onSelect,
             onDismiss = onDismiss,
+            onRetry = onRetry,
         )
     }
 }
@@ -63,6 +66,7 @@ private fun SubstitutionSheetContent(
     state: SubstitutionLoadState,
     onSelect: (ExerciseSubstitution) -> Unit,
     onDismiss: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -105,22 +109,13 @@ private fun SubstitutionSheetContent(
             }
 
             is SubstitutionLoadState.Error -> {
-                Column(
+                ErrorContent(
+                    message = state.message,
+                    onRetry = onRetry,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = AiFitSpacing.lg),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-                ) {
-                    Text(
-                        text = state.message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                    TextButton(onClick = onDismiss) {
-                        Text(text = stringResource(R.string.common_retry))
-                    }
-                }
+                )
             }
         }
 
@@ -202,6 +197,7 @@ private fun SubstitutionSheetSuccessPreview() {
             ),
             onSelect = {},
             onDismiss = {},
+            onRetry = {},
         )
     }
 }
@@ -218,6 +214,7 @@ private fun SubstitutionSheetLoadingPreview() {
             state = SubstitutionLoadState.Loading,
             onSelect = {},
             onDismiss = {},
+            onRetry = {},
         )
     }
 }
@@ -243,6 +240,7 @@ private fun SubstitutionSheetLightPreview() {
             ),
             onSelect = {},
             onDismiss = {},
+            onRetry = {},
         )
     }
 }

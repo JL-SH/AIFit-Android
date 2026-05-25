@@ -60,6 +60,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.AiGenerateButton
+import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
 import com.jlsh.aifit.core.ui.components.inputs.AiFitChipGroup
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
@@ -172,11 +173,56 @@ fun GeneratePlanScreen(
     }
 
     val isLoading = generateState is GeneratePlanUiState.Loading
+    val errorState = generateState as? GeneratePlanUiState.Error
 
     // Success es un estado transitorio puro (emitido justo antes de navegar).
     // Mantener la pantalla de carga visible evita que el formulario flashee ~1 s
     // durante el tiempo que tarda el evento de navegación en ser consumido.
     val showLoadingScreen = isLoading || generateState is GeneratePlanUiState.Success
+
+    val submitPlan: () -> Unit = {
+        val frequencyVal = selectedFrequency.firstOrNull()?.toIntOrNull() ?: 4
+        val sessionDurationVal = selectedSessionDuration.firstOrNull()?.toIntOrNull() ?: 60
+        val durationWeeksVal = selectedDurationWeeks.firstOrNull()?.toIntOrNull() ?: 8
+        val goalTypeVal = selectedGoal.firstOrNull() ?: GoalType.GAIN_MUSCLE.name
+        val locationVal = selectedLocation.firstOrNull() ?: WorkoutLocation.GYM.name
+        val injuriesVal = injuries.ifBlank { null }
+        val notesVal = additionalNotes.ifBlank { null }
+
+        if (adaptive) {
+            viewModel.onGenerateAdaptivePlan(
+                GenerateAdaptiveTrainingPlanRequestDto(
+                    frequencyDaysPerWeek = frequencyVal,
+                    sessionDurationMinutes = sessionDurationVal,
+                    durationWeeks = durationWeeksVal,
+                    goalType = goalTypeVal,
+                    fitnessLevel = userFitnessLevel,
+                    location = locationVal,
+                    injuries = injuriesVal,
+                    additionalNotes = notesVal,
+                    includeAthleteHistory = true,
+                    focusAreas = focusAreas.toList().ifEmpty { null },
+                    avoidExercises = avoidExercises.ifBlank { null }
+                        ?.split(",")
+                        ?.map { it.trim() }
+                        ?.filter { it.isNotBlank() },
+                ),
+            )
+        } else {
+            viewModel.onGeneratePlan(
+                GenerateTrainingPlanRequestDto(
+                    frequencyDaysPerWeek = frequencyVal,
+                    sessionDurationMinutes = sessionDurationVal,
+                    durationWeeks = durationWeeksVal,
+                    goalType = goalTypeVal,
+                    fitnessLevel = userFitnessLevel,
+                    location = locationVal,
+                    injuries = injuriesVal,
+                    additionalNotes = notesVal,
+                ),
+            )
+        }
+    }
 
     // Gestionar animación mientras carga
     LaunchedEffect(isLoading) {
@@ -230,12 +276,18 @@ fun GeneratePlanScreen(
         topBar = {
             AiFitTopBar(
                 title = if (adaptive) stringResource(R.string.training_generate_adaptive_title) else stringResource(R.string.training_generate_title),
-                onBack = if (showLoadingScreen) null else onNavigateBack,
+                onBack = if (showLoadingScreen && errorState == null) null else onNavigateBack,
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
-        if (showLoadingScreen) {
+        if (errorState != null) {
+            ErrorScreen(
+                message = errorState.message,
+                onRetry = submitPlan,
+                modifier = Modifier.padding(paddingValues),
+            )
+        } else if (showLoadingScreen) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -421,49 +473,7 @@ fun GeneratePlanScreen(
                 text = stringResource(R.string.training_generate_button),
                 loadingText = stringResource(R.string.training_generate_loading_button),
                 isLoading = isLoading,
-                onClick = {
-                    val frequencyVal = selectedFrequency.firstOrNull()?.toIntOrNull() ?: 4
-                    val sessionDurationVal = selectedSessionDuration.firstOrNull()?.toIntOrNull() ?: 60
-                    val durationWeeksVal = selectedDurationWeeks.firstOrNull()?.toIntOrNull() ?: 8
-                    val goalTypeVal = selectedGoal.firstOrNull() ?: GoalType.GAIN_MUSCLE.name
-                    val locationVal = selectedLocation.firstOrNull() ?: WorkoutLocation.GYM.name
-                    val injuriesVal = injuries.ifBlank { null }
-                    val notesVal = additionalNotes.ifBlank { null }
-
-                    if (adaptive) {
-                        viewModel.onGenerateAdaptivePlan(
-                            GenerateAdaptiveTrainingPlanRequestDto(
-                                frequencyDaysPerWeek = frequencyVal,
-                                sessionDurationMinutes = sessionDurationVal,
-                                durationWeeks = durationWeeksVal,
-                                goalType = goalTypeVal,
-                                fitnessLevel = userFitnessLevel,
-                                location = locationVal,
-                                injuries = injuriesVal,
-                                additionalNotes = notesVal,
-                                includeAthleteHistory = true,
-                                focusAreas = focusAreas.toList().ifEmpty { null },
-                                avoidExercises = avoidExercises.ifBlank { null }
-                                    ?.split(",")
-                                    ?.map { it.trim() }
-                                    ?.filter { it.isNotBlank() },
-                            ),
-                        )
-                    } else {
-                        viewModel.onGeneratePlan(
-                            GenerateTrainingPlanRequestDto(
-                                frequencyDaysPerWeek = frequencyVal,
-                                sessionDurationMinutes = sessionDurationVal,
-                                durationWeeks = durationWeeksVal,
-                                goalType = goalTypeVal,
-                                fitnessLevel = userFitnessLevel,
-                                location = locationVal,
-                                injuries = injuriesVal,
-                                additionalNotes = notesVal,
-                            ),
-                        )
-                    }
-                },
+                onClick = submitPlan,
                 modifier = Modifier.fillMaxWidth(),
             )
 

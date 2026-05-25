@@ -69,6 +69,14 @@ class AppExceptionExtensionsTest {
         assertFalse("ServerException message must not be blank", result.isBlank())
     }
 
+    // ─── AiOverloadedException ─────────────────────────────────────────────
+
+    @Test
+    fun `AiOverloadedException toMessage mentions high demand`() {
+        val result = AppException.AiOverloadedException.toMessage()
+        assertTrue(result.contains("alta demanda"))
+    }
+
     // ─── UnknownException ──────────────────────────────────────────────────
 
     @Test
