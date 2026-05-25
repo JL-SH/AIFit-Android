@@ -51,8 +51,10 @@ import com.jlsh.aifit.feature.progress.domain.model.WeightTrend
 import com.jlsh.aifit.feature.progress.domain.model.WorkoutAdherence
 import com.jlsh.aifit.feature.progress.ui.state.DashboardUiState
 import com.jlsh.aifit.feature.progress.ui.state.ProgressUiEvent
+import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * Pantalla del dashboard de progreso: adherencia, tendencia de peso, nutrici?n y fuerza.
@@ -127,6 +129,12 @@ private fun DashboardContent(
 ) {
     val dashboard = state.dashboard
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd/MM") }
+    val strengthWeightFormatter = remember {
+        NumberFormat.getNumberInstance(Locale.getDefault()).apply {
+            minimumFractionDigits = 1
+            maximumFractionDigits = 1
+        }
+    }
     val periodOptions = listOf(
         stringResource(R.string.progress_dashboard_period_7d),
         stringResource(R.string.progress_dashboard_period_30d),
@@ -307,7 +315,11 @@ private fun DashboardContent(
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = "${String.format("%.1f", progress.startMax)} ùùù ${String.format("%.1f", progress.currentMax)} kg",
+                                text = stringResource(
+                                    R.string.progress_dashboard_strength_range,
+                                    strengthWeightFormatter.format(progress.startMax),
+                                    strengthWeightFormatter.format(progress.currentMax),
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -409,3 +421,4 @@ private fun ProgressDashboardPreview() {
         }
     }
 }
+

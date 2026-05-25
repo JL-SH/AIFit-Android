@@ -11,7 +11,7 @@ import com.jlsh.aifit.feature.progress.domain.model.WeeklyProgressSummary
  */
 sealed class HomeUiState {
 
-    /** Carga inicial o recarga completa de datos del home. */
+    /** Sin caché de perfil en Room; esperando primer dato usable. */
     data object Loading : HomeUiState()
 
     /**
@@ -36,8 +36,7 @@ sealed class HomeUiState {
      * @property lastAchievement Último logro desbloqueado en los últimos 7 días.
      * @property nextAchievement Próximo logro pendiente de desbloquear.
      * @property trainingStreakDays Días consecutivos de racha de entrenamiento.
-     * @property isRefreshingPlan Indica recarga del plan de entrenamiento en curso (barra superior).
-     * @property isRefreshingMeal Indica recarga del plan dietético / próxima comida en curso.
+     * @property isTrainingHydrating Hay plan activo pero el detalle aún no está en caché (CTAs deshabilitados).
      */
     data class Success(
         val userName: String,
@@ -52,8 +51,7 @@ sealed class HomeUiState {
         val lastAchievement: UserAchievement? = null,
         val nextAchievement: AchievementDefinition? = null,
         val trainingStreakDays: Int = 0,
-        val isRefreshingPlan: Boolean = false,
-        val isRefreshingMeal: Boolean = false,
+        val isTrainingHydrating: Boolean = false,
     ) : HomeUiState()
 }
 

@@ -119,6 +119,9 @@ class HomeViewModelTest {
         every { getUserProfileUseCase() } returns profileFlow
         every { getTrainingPlansUseCase() } returns plansFlow
         coEvery { getTrainingPlanDetailUseCase(any()) } returns planDetailResult
+        coEvery { getTrainingPlanDetailUseCase.fromCache(any()) } coAnswers {
+            if (planDetailResult is Result.Success) planDetailResult.data else null
+        }
         every { getDietPlansUseCase() } returns dietPlansFlow
         coEvery { getDietPlanDetailUseCase(any()) } returns dietPlanDetailResult
         every { getNutritionLogUseCase(any()) } returns nutritionLogFlow
@@ -151,13 +154,23 @@ class HomeViewModelTest {
     // ── Estado inicial ─────────────────────────────────────────────────────────
 
     @Test
-    fun `uiState es Loading inicialmente cuando los datos no han cargado`() {
+    fun `uiState es Loading cuando no hay perfil en cache y la red no responde`() {
         val vm = createViewModel(
             profileFlow = flow { emit(Result.Loading); awaitCancellation() },
             plansFlow = flow { emit(Result.Loading); awaitCancellation() },
         )
 
         assertTrue(vm.uiState.value is HomeUiState.Loading)
+    }
+
+    @Test
+    fun `uiState es Success sin skeleton prolongado cuando hay perfil en cache`() = runTest {
+        val vm = createViewModel(
+            profileFlow = flowOf(Result.Success(fakeUserProfile())),
+        )
+        advanceUntilIdle()
+
+        assertTrue(vm.uiState.value is HomeUiState.Success)
     }
 
     // ── Error state ────────────────────────────────────────────────────────────
@@ -908,6 +921,36 @@ class HomeViewModelTest {
         val state = vm.uiState.value as HomeUiState.Success
         assertEquals("María", state.userName)
         assertEquals("https://img.url/avatar.png", state.avatarUrl)
+    }
+
+    @Test
+    fun `loadAll marca entreno completado desde cache de workout en primer Success`() = runTest {
+        val trainingDay = fakeTrainingDay(
+            id = "day-1",
+            dayType = TrainingDayType.TRAINING,
+            exercises = listOf(fakeTrainingExercise()),
+        )
+        val plan = fakeTrainingPlan(
+            id = "plan-1",
+            status = PlanStatus.ACTIVE,
+            days = listOf(trainingDay),
+        )
+        val lockedLog = fakeWorkoutLog(
+            trainingPlanId = "plan-1",
+            trainingDayId = "day-1",
+            isLocked = true,
+            date = LocalDate.now(),
+        )
+        val vm = createViewModel(
+            plansFlow = flowOf(Result.Success(listOf(plan))),
+            planDetailResult = Result.Success(plan),
+            workoutHistoryFlow = flowOf(Result.Success(listOf(lockedLog))),
+        )
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as HomeUiState.Success
+        assertNotNull(state.todayTraining)
+        assertTrue(state.todayTraining!!.isCompleted)
     }
 
     @Test

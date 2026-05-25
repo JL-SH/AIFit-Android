@@ -9,7 +9,6 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,7 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -287,19 +285,6 @@ private fun HomeContent(
     onCreatePlan: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // Subtle progress bar shown while the active plan is being re-fetched on resume
-        AnimatedVisibility(
-            visible = state.isRefreshingPlan || state.isRefreshingMeal,
-            enter = fadeIn(tween(200)),
-            exit = fadeOut(tween(300)),
-        ) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            )
-        }
-
         LazyColumn(
             contentPadding = PaddingValues(
                 start = AiFitSpacing.md,
@@ -321,6 +306,7 @@ private fun HomeContent(
                     TodayTrainingCard(
                         training = state.todayTraining,
                         activePlan = state.activePlan,
+                        isTrainingHydrating = state.isTrainingHydrating,
                         onStartSession = onStartSession,
                         onViewDetail = onViewDetail,
                         onCreatePlan = onCreatePlan,
@@ -448,6 +434,7 @@ private fun GreetingHeader(
 private fun TodayTrainingCard(
     training: TodayTrainingState?,
     activePlan: ActivePlanSummary?,
+    isTrainingHydrating: Boolean,
     onStartSession: (String) -> Unit,
     onViewDetail: (String) -> Unit,
     onCreatePlan: () -> Unit,
@@ -580,7 +567,29 @@ private fun TodayTrainingCard(
                     }
                 }
 
-                // ── Case 2: Active plan + rest day today ─────────────────────
+                // ── Case 2a: Active plan, detail still loading ───────────────
+                activePlan != null && isTrainingHydrating -> {
+                    Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                    Text(
+                        text = activePlan.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = stringResource(R.string.home_training_loading_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(AiFitSpacing.xs))
+                    SecondaryButton(
+                        text = stringResource(R.string.home_view_plan_btn),
+                        onClick = { onViewDetail(activePlan.id) },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = false,
+                    )
+                }
+
+                // ── Case 2b: Active plan + rest day today ────────────────────
                 activePlan != null -> {
                     Spacer(modifier = Modifier.height(AiFitSpacing.xs))
                     Text(

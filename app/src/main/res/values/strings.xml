@@ -756,6 +756,7 @@
     <string name="progress_dashboard_avg_kcal">KCAL PROM.</string>
     <string name="progress_dashboard_goal">OBJETIVO</string>
     <string name="progress_dashboard_strength">PROGRESO DE FUERZA</string>
+    <string name="progress_dashboard_strength_range">%1$s kg → %2$s kg</string>
     <string name="progress_dashboard_log_weight_btn">REGISTRAR PESO</string>
     <string name="progress_dashboard_weekly_detail_btn">DETALLE SEMANAL</string>
     <string name="progress_dashboard_metabolic_btn">ANÁLISIS METABÓLICO</string>
@@ -992,6 +993,7 @@
     <string name="home_start_session_btn">COMENZAR SESIÓN</string>
     <string name="home_rest_day_title">Hoy toca descanso 💤</string>
     <string name="home_rest_day_subtitle">El descanso es parte esencial del progreso. ¡Descansa bien!</string>
+    <string name="home_training_loading_subtitle">Preparando tu entreno de hoy…</string>
     <string name="home_view_plan_btn">VER PLAN</string>
     <string name="home_create_plan_btn">CREAR PLAN</string>
     <string name="home_log_meal_btn">REGISTRAR COMIDA</string>
