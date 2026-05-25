@@ -53,7 +53,6 @@ import com.jlsh.aifit.core.ui.components.inputs.AiFitDropdown
 import com.jlsh.aifit.core.ui.components.inputs.AiFitNumberField
 import com.jlsh.aifit.core.ui.components.inputs.AiFitTextField
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
-import com.jlsh.aifit.core.ui.components.list.SwipeableListItem
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
 import com.jlsh.aifit.feature.diet.domain.model.MealType
@@ -325,14 +324,12 @@ fun TrackMealScreen(
                                 items[0] = FoodItemEntry()
                             }
                         }
-                        SwipeableListItem(onDelete = removeThisItem) {
-                            FoodItemForm(
-                                item = item,
-                                onItemChanged = { items[index] = it },
-                                onRemove = removeThisItem,
-                                index = index + 1,
-                            )
-                        }
+                        FoodItemForm(
+                            item = item,
+                            onItemChanged = { items[index] = it },
+                            onRemove = removeThisItem,
+                            index = index + 1,
+                        )
                         if (index < items.lastIndex) {
                             HorizontalDivider(
                                 color = MaterialTheme.colorScheme.outlineVariant,
