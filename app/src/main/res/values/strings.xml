@@ -216,6 +216,7 @@
 
     <!-- Workout Detail -->
     <string name="workout_detail_title">Sesión de entrenamiento</string>
+    <string name="workout_log_finalized">Sesión finalizada</string>
     <string name="workout_detail_summary">RESUMEN</string>
     <string name="workout_detail_exercises">EJERCICIOS</string>
     <string name="workout_detail_set_header">SERIE</string>

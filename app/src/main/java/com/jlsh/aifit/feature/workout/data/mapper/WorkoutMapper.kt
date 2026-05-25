@@ -1,6 +1,5 @@
 package com.jlsh.aifit.feature.workout.data.mapper
 
-import android.util.Log
 import com.jlsh.aifit.feature.workout.data.dto.GamificationResultResponseDto
 import com.jlsh.aifit.feature.workout.data.dto.JointPainEntryDto
 import com.jlsh.aifit.feature.workout.data.dto.PersonalRecordResponseDto
@@ -113,10 +112,7 @@ object WorkoutMapper {
         note = note,
     )
 
-    fun WorkoutLog.toEntity(): WorkoutLogEntity {
-        // TODO: remove diagnostic log below
-        Log.d("AIFIT_MAPPER", "toEntity — id=$id isLocked=$isLocked")
-        return WorkoutLogEntity(
+    fun WorkoutLog.toEntity(): WorkoutLogEntity = WorkoutLogEntity(
             id = id,
             trainingPlanId = trainingPlanId,
             trainingDayId = trainingDayId,
@@ -127,12 +123,8 @@ object WorkoutMapper {
             completedAt = completedAt.toInstant(ZoneOffset.UTC).toEpochMilli(),
             isLocked = isLocked,
         )
-    }
 
-    fun WorkoutLogEntity.toDomain(): WorkoutLog {
-        // TODO: remove diagnostic log below
-        Log.d("AIFIT_MAPPER", "toDomain — id=$id isLocked=$isLocked")
-        return WorkoutLog(
+    fun WorkoutLogEntity.toDomain(): WorkoutLog = WorkoutLog(
             id = id,
             trainingPlanId = trainingPlanId,
             trainingDayId = trainingDayId,
@@ -144,7 +136,6 @@ object WorkoutMapper {
             completedAt = Instant.ofEpochMilli(completedAt).atZone(ZoneOffset.UTC).toLocalDateTime(),
             isLocked = isLocked,
         )
-    }
 
     private fun parseDateTime(raw: String): LocalDateTime =
         runCatching { LocalDateTime.parse(raw, isoDateTimeFormatter) }

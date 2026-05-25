@@ -37,7 +37,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
-import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateKind
 import com.jlsh.aifit.core.ui.components.feedback.EmptyStateView
 import com.jlsh.aifit.core.ui.components.feedback.ErrorScreen
@@ -366,23 +365,12 @@ private fun WorkoutLogCard(
             modifier = Modifier.padding(AiFitSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
         ) {
-            // Row 1: Date with day name + status badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "$dayLabel, ${log.date.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                if (log.isLocked) {
-                    PlanStatusBadge(status = "COMPLETED")
-                } else {
-                    PlanStatusBadge(status = "DRAFT")
-                }
-            }
+            // Row 1: Date with day name
+            Text(
+                text = "$dayLabel, ${log.date.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
 
             // Row 2: Plan name
             if (planName != null) {

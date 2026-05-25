@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
 import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
@@ -205,7 +204,11 @@ private fun WorkoutDetailContent(
                         tint = MaterialTheme.colorScheme.tertiaryContainer,
                         modifier = Modifier.size(20.dp),
                     )
-                    PlanStatusBadge(status = "COMPLETED")
+                    Text(
+                        text = stringResource(R.string.workout_log_finalized),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
