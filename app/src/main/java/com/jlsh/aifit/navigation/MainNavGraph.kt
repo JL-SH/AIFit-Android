@@ -145,14 +145,23 @@ private fun MainNavScreen() {
                                     launchSingleTop = true
                                 }
                             },
-                            onNavigateToTrackMeal = {
-                                // Navigate to Nutrition tab first so Back lands on NutritionHub
+                            onNavigateToTrackMeal = { mode ->
                                 tabNavController.navigate(NutritionRoutes.GRAPH) {
                                     popUpTo(tabNavController.graph.startDestinationId) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
                                 }
-                                tabNavController.navigate(NutritionRoutes.trackMealRoute()) {
+                                tabNavController.navigate(NutritionRoutes.trackMealRoute(mode = mode)) {
+                                    launchSingleTop = true
+                                }
+                            },
+                            onNavigateToFoodVision = {
+                                tabNavController.navigate(NutritionRoutes.GRAPH) {
+                                    popUpTo(tabNavController.graph.startDestinationId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                                tabNavController.navigate(NutritionRoutes.FOOD_VISION) {
                                     launchSingleTop = true
                                 }
                             },

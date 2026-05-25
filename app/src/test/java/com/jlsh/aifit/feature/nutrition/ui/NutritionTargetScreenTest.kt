@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
+import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTargetUseCase
@@ -48,10 +49,14 @@ class NutritionTargetScreenTest {
         every { getTarget() } returns targetFlow
         every { getDietPlans() } returns flowOf(Result.Success(emptyList()))
 
+        val getDietPlanDetail: GetDietPlanDetailUseCase = mockk()
+        io.mockk.coEvery { getDietPlanDetail(any()) } returns Result.Success(fakeDietPlan())
+
         return NutritionViewModel(
             getNutritionLogUseCase = getNutritionLog,
             getCurrentNutritionTargetUseCase = getTarget,
             getDietPlansUseCase = getDietPlans,
+            getDietPlanDetailUseCase = getDietPlanDetail,
             trackMealUseCase = mockk(),
             analyzeMealFromTextUseCase = mockk(),
             deleteMealLogUseCase = mockk(),

@@ -7,9 +7,12 @@ import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.lastSuccessOrNull
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
+import com.jlsh.aifit.feature.diet.domain.model.Meal
 import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
+import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.SetActiveDietPlanUseCase
+import com.jlsh.aifit.feature.diet.domain.util.mealsForToday
 import com.jlsh.aifit.feature.nutrition.data.dto.AnalyzeMealFromTextRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.TrackMealRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.UpdateNutritionTargetRequestDto
@@ -19,6 +22,7 @@ import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetNutritionLogUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.TrackMealUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.UpdateNutritionTargetUseCase
+import com.jlsh.aifit.feature.nutrition.domain.util.toTrackMealRequestDto
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionHubUiState
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionTargetUiState
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionUiEvent
@@ -59,6 +63,7 @@ class NutritionViewModel @Inject constructor(
     private val getNutritionLogUseCase: GetNutritionLogUseCase,
     private val getCurrentNutritionTargetUseCase: GetCurrentNutritionTargetUseCase,
     private val getDietPlansUseCase: GetDietPlansUseCase,
+    private val getDietPlanDetailUseCase: GetDietPlanDetailUseCase,
     private val trackMealUseCase: TrackMealUseCase,
     private val analyzeMealFromTextUseCase: AnalyzeMealFromTextUseCase,
     private val deleteMealLogUseCase: DeleteMealLogUseCase,
@@ -94,6 +99,11 @@ class NutritionViewModel @Inject constructor(
      * [NutritionUiEvent.ShowSnackbar], [NutritionUiEvent.MealDeleted], etc.
      */
     val events = _events.receiveAsFlow()
+
+    private val _planPickerMeals = MutableStateFlow<List<Meal>>(emptyList())
+
+    /** Comidas del plan activo para hoy; se cargan al abrir el picker desde el plan. */
+    val planPickerMeals: StateFlow<List<Meal>> = _planPickerMeals.asStateFlow()
 
     private var fetchDietPlansJob: Job? = null
     private var isDeletingPlan = false
@@ -353,6 +363,34 @@ class NutritionViewModel @Inject constructor(
         emitEvent(NutritionUiEvent.ShowTrackMealSheet)
     }
 
+    /** Carga las comidas de hoy del plan activo y abre el picker. */
+    fun onShowPlanMealPicker() {
+        viewModelScope.launch {
+            _planPickerMeals.value = loadActivePlanMealsForToday()
+            emitEvent(NutritionUiEvent.ShowPlanMealPicker)
+        }
+    }
+
+    /**
+     * Registra una comida del plan de dieta activo y refresca el hub.
+     *
+     * @param meal Comida seleccionada en el picker.
+     */
+    fun onTrackMealFromPlan(meal: Meal) {
+        viewModelScope.launch {
+            when (val result = trackMealUseCase(meal.toTrackMealRequestDto())) {
+                is Result.Success -> {
+                    fetchHubData()
+                    emitEvent(NutritionUiEvent.ShowSnackbar("Comida del plan registrada"))
+                }
+                is Result.Error -> {
+                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                is Result.Loading -> Unit
+            }
+        }
+    }
+
     /**
      * Emite [NutritionUiEvent.NavigateToDietDetail] con el plan seleccionado.
      *
@@ -450,6 +488,21 @@ class NutritionViewModel @Inject constructor(
     }
 
     // ===== HELPERS =====
+
+    private suspend fun loadActivePlanMealsForToday(): List<Meal> {
+        val hub = _hubState.value as? NutritionHubUiState.Success ?: return emptyList()
+        val activePlan = hub.dietPlans.firstOrNull { it.status == PlanStatus.ACTIVE }
+            ?: return emptyList()
+        val planWithDays = if (activePlan.days.isNotEmpty()) {
+            activePlan
+        } else {
+            when (val result = getDietPlanDetailUseCase(activePlan.id)) {
+                is Result.Success -> result.data
+                else -> return emptyList()
+            }
+        }
+        return planWithDays.mealsForToday()
+    }
 
     private fun emitEvent(event: NutritionUiEvent) {
         viewModelScope.launch { _events.send(event) }

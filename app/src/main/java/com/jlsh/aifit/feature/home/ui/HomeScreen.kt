@@ -41,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -84,6 +85,9 @@ import com.jlsh.aifit.feature.gamification.domain.model.StreakStatus
 import com.jlsh.aifit.feature.gamification.domain.model.StreakType
 import com.jlsh.aifit.feature.gamification.domain.model.UserAchievement
 import com.jlsh.aifit.feature.home.ui.components.LogWeightSheet
+import com.jlsh.aifit.feature.nutrition.ui.components.SelectPlanMealSheet
+import com.jlsh.aifit.feature.nutrition.ui.components.TrackMealSheet
+import kotlinx.coroutines.launch
 import com.jlsh.aifit.feature.home.ui.state.HomeUiEvent
 import com.jlsh.aifit.feature.home.ui.state.HomeUiState
 import com.jlsh.aifit.feature.home.ui.state.ActivePlanSummary
@@ -107,7 +111,8 @@ import com.jlsh.aifit.core.ui.components.display.StreakStatus as BadgeStreakStat
  * en éxito. Gestiona la hoja de registro de peso y reacciona a [HomeUiEvent] del ViewModel.
  *
  * @param onNavigateToWorkoutSession Navegar a la sesión activa (plan y día).
- * @param onNavigateToTrackMeal Ir al registro de comida.
+ * @param onNavigateToTrackMeal Ir al registro de comida (`mode`: `"manual"` | `"text_analysis"`).
+ * @param onNavigateToFoodVision Ir al escaneo de comida por foto.
  * @param onNavigateToProgressDashboard Abrir el panel de progreso.
  * @param onNavigateToBodyWeight Abrir historial de peso.
  * @param onNavigateToGamification Abrir gamificación con la pestaña indicada.
@@ -120,7 +125,8 @@ import com.jlsh.aifit.core.ui.components.display.StreakStatus as BadgeStreakStat
 @Composable
 fun HomeScreen(
     onNavigateToWorkoutSession: (planId: String, dayId: String) -> Unit,
-    onNavigateToTrackMeal: () -> Unit,
+    onNavigateToTrackMeal: (mode: String) -> Unit,
+    onNavigateToFoodVision: () -> Unit,
     onNavigateToProgressDashboard: () -> Unit,
     onNavigateToBodyWeight: () -> Unit,
     onNavigateToGamification: (tab: String) -> Unit,
@@ -134,8 +140,14 @@ fun HomeScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
 
     var showWeightSheet by rememberSaveable { mutableStateOf(false) }
+    var showTrackMealSheet by rememberSaveable { mutableStateOf(false) }
+    var showPlanMealSheet by rememberSaveable { mutableStateOf(false) }
     var showWeightSuccessOverlay by remember { mutableStateOf(false) }
     val weightSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val trackMealSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val planMealSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val planPickerMeals by viewModel.planPickerMeals.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -150,7 +162,8 @@ fun HomeScreen(
                     onNavigateToWorkoutSession(event.planId, event.dayId)
                 is HomeUiEvent.NavigateToWorkoutLog -> Unit
                 is HomeUiEvent.NavigateToTrainingDetail -> onNavigateToTrainingDetail(event.planId)
-                is HomeUiEvent.NavigateToTrackMeal -> onNavigateToTrackMeal()
+                is HomeUiEvent.ShowTrackMealSheet -> showTrackMealSheet = true
+                is HomeUiEvent.ShowPlanMealPicker -> showPlanMealSheet = true
                 is HomeUiEvent.NavigateToProgressDashboard -> onNavigateToProgressDashboard()
                 is HomeUiEvent.NavigateToBodyWeight -> onNavigateToBodyWeight()
                 is HomeUiEvent.NavigateToGamification -> onNavigateToGamification(event.tab)
@@ -213,6 +226,46 @@ fun HomeScreen(
             onConfirm = { weight ->
                 showWeightSheet = false
                 viewModel.onSaveWeight(weight)
+            },
+        )
+    }
+
+    if (showTrackMealSheet) {
+        TrackMealSheet(
+            sheetState = trackMealSheetState,
+            onDismiss = { showTrackMealSheet = false },
+            onManual = {
+                scope.launch { trackMealSheetState.hide() }
+                showTrackMealSheet = false
+                onNavigateToTrackMeal("manual")
+            },
+            onScanPhoto = {
+                scope.launch { trackMealSheetState.hide() }
+                showTrackMealSheet = false
+                onNavigateToFoodVision()
+            },
+            onAnalyzeText = {
+                scope.launch { trackMealSheetState.hide() }
+                showTrackMealSheet = false
+                onNavigateToTrackMeal("text_analysis")
+            },
+            onFromPlan = {
+                scope.launch { trackMealSheetState.hide() }
+                showTrackMealSheet = false
+                viewModel.onShowPlanMealPicker()
+            },
+        )
+    }
+
+    if (showPlanMealSheet) {
+        SelectPlanMealSheet(
+            sheetState = planMealSheetState,
+            meals = planPickerMeals,
+            onDismiss = { showPlanMealSheet = false },
+            onMealSelected = { meal ->
+                scope.launch { planMealSheetState.hide() }
+                showPlanMealSheet = false
+                viewModel.onTrackMealFromPlan(meal)
             },
         )
     }

@@ -18,6 +18,7 @@ import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTargetUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetNutritionLogUseCase
+import com.jlsh.aifit.feature.nutrition.domain.usecase.TrackMealUseCase
 import com.jlsh.aifit.feature.progress.domain.model.BodyWeightLog
 import com.jlsh.aifit.feature.progress.domain.model.WeeklyProgressSummary
 import com.jlsh.aifit.feature.progress.domain.usecase.GetBodyWeightHistoryUseCase
@@ -70,6 +71,7 @@ class HomeViewModelTest {
     private val getBodyWeightHistoryUseCase: GetBodyWeightHistoryUseCase = mockk()
     private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase = mockk()
     private val logBodyWeightUseCase: LogBodyWeightUseCase = mockk()
+    private val trackMealUseCase: TrackMealUseCase = mockk()
 
     @Before
     fun setUp() {
@@ -142,6 +144,7 @@ class HomeViewModelTest {
             getBodyWeightHistoryUseCase,
             getWorkoutHistoryUseCase,
             logBodyWeightUseCase,
+            trackMealUseCase,
         )
     }
 
@@ -468,14 +471,14 @@ class HomeViewModelTest {
     // ── Event: onLogMeal ───────────────────────────────────────────────────────
 
     @Test
-    fun `onLogMeal emite NavigateToTrackMeal`() = runTest {
+    fun `onLogMeal emite ShowTrackMealSheet`() = runTest {
         val vm = createViewModel()
         advanceUntilIdle()
 
         vm.events.test {
             vm.onLogMeal()
             val event = awaitItem()
-            assertTrue(event is HomeUiEvent.NavigateToTrackMeal)
+            assertTrue(event is HomeUiEvent.ShowTrackMealSheet)
             cancelAndIgnoreRemainingEvents()
         }
     }

@@ -82,6 +82,7 @@ import com.jlsh.aifit.feature.nutrition.domain.model.MealLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.model.TargetSource
+import com.jlsh.aifit.feature.nutrition.ui.components.SelectPlanMealSheet
 import com.jlsh.aifit.feature.nutrition.ui.components.TrackMealSheet
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionHubUiState
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionUiEvent
@@ -139,9 +140,12 @@ fun NutritionHubScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val lifecycleOwner = LocalLifecycleOwner.current
     var showSheet by remember { mutableStateOf(false) }
+    var showPlanMealSheet by remember { mutableStateOf(false) }
     var mealToDeleteId by remember { mutableStateOf<String?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val planMealSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val planPickerMeals by viewModel.planPickerMeals.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(lifecycleOwner) {
@@ -154,6 +158,7 @@ fun NutritionHubScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is NutritionUiEvent.ShowTrackMealSheet -> showSheet = true
+                is NutritionUiEvent.ShowPlanMealPicker -> showPlanMealSheet = true
                 is NutritionUiEvent.NavigateToTrackMeal -> onNavigateToTrackMeal(event.mode)
                 is NutritionUiEvent.NavigateToNutritionTarget -> onNavigateToNutritionTarget()
                 is NutritionUiEvent.NavigateToDietDetail -> onNavigateToDietDetail(event.planId)
@@ -293,6 +298,24 @@ fun NutritionHubScreen(
                 scope.launch { sheetState.hide() }
                 showSheet = false
                 onNavigateToTrackMeal("text_analysis")
+            },
+            onFromPlan = {
+                scope.launch { sheetState.hide() }
+                showSheet = false
+                viewModel.onShowPlanMealPicker()
+            },
+        )
+    }
+
+    if (showPlanMealSheet) {
+        SelectPlanMealSheet(
+            sheetState = planMealSheetState,
+            meals = planPickerMeals,
+            onDismiss = { showPlanMealSheet = false },
+            onMealSelected = { meal ->
+                scope.launch { planMealSheetState.hide() }
+                showPlanMealSheet = false
+                viewModel.onTrackMealFromPlan(meal)
             },
         )
     }

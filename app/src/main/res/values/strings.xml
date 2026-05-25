@@ -1036,6 +1036,12 @@
     <string name="nutrition_track_scan_desc">Haz una foto de tu comida para que la IA la analice</string>
     <string name="nutrition_track_text_title">Analizar texto</string>
     <string name="nutrition_track_text_desc">Describe tu comida con texto libre</string>
+    <string name="nutrition_track_plan_title">Desde el plan del día</string>
+    <string name="nutrition_track_plan_desc">Registra una comida de tu plan de dieta activo</string>
+    <string name="nutrition_select_plan_meal_title">Comidas de hoy</string>
+    <string name="nutrition_select_plan_meal_empty_title">Sin comidas en el plan</string>
+    <string name="nutrition_select_plan_meal_empty_subtitle">Activa un plan de dieta con comidas para hoy o elige otro modo de registro.</string>
+    <string name="nutrition_plan_meal_logged">Comida del plan registrada</string>
 
     <!-- ── Login ──────────────────────────────────────────────────────────── -->
     <string name="login_tagline">Tu entrenador de IA personal</string>

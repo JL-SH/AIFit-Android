@@ -7,7 +7,9 @@ import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.lastSuccessOrNull
 import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
+import com.jlsh.aifit.feature.diet.domain.model.Meal
 import com.jlsh.aifit.feature.diet.domain.model.MealType
+import com.jlsh.aifit.feature.diet.domain.util.mealsForToday
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.gamification.domain.model.AchievementDefinition
@@ -27,6 +29,8 @@ import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTargetUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetNutritionLogUseCase
+import com.jlsh.aifit.feature.nutrition.domain.usecase.TrackMealUseCase
+import com.jlsh.aifit.feature.nutrition.domain.util.toTrackMealRequestDto
 import com.jlsh.aifit.feature.progress.data.dto.LogBodyWeightRequestDto
 import com.jlsh.aifit.feature.progress.domain.model.BodyWeightLog
 import com.jlsh.aifit.feature.progress.domain.model.WeeklyProgressSummary
@@ -69,7 +73,7 @@ import javax.inject.Inject
  * **Eventos emitidos** ([events] — [HomeUiEvent]):
  * - [HomeUiEvent.NavigateToWorkoutSession]: iniciar sesión de entreno (planId, dayId).
  * - [HomeUiEvent.NavigateToTrainingDetail]: detalle del plan de entrenamiento.
- * - [HomeUiEvent.NavigateToTrackMeal]: registrar comida.
+ * - [HomeUiEvent.ShowTrackMealSheet]: abrir selector de modo de registro de comida.
  * - [HomeUiEvent.NavigateToProgressDashboard]: panel de progreso semanal.
  * - [HomeUiEvent.NavigateToBodyWeight]: historial de peso corporal.
  * - [HomeUiEvent.NavigateToGamification]: pantalla de logros/rachas (tab).
@@ -94,6 +98,7 @@ class HomeViewModel @Inject constructor(
     private val getBodyWeightHistoryUseCase: GetBodyWeightHistoryUseCase,
     private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
     private val logBodyWeightUseCase: LogBodyWeightUseCase,
+    private val trackMealUseCase: TrackMealUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -105,6 +110,11 @@ class HomeViewModel @Inject constructor(
 
     /** Eventos de navegación y UI de un solo uso; consumir en [HomeScreen]. */
     val events = _events.receiveAsFlow()
+
+    private val _planPickerMeals = MutableStateFlow<List<Meal>>(emptyList())
+
+    /** Comidas del plan activo para el día actual; se cargan al abrir el picker. */
+    val planPickerMeals: StateFlow<List<Meal>> = _planPickerMeals.asStateFlow()
 
     private var loadJob: Job? = null
     private var cachedActivePlanDetail: TrainingPlan? = null
@@ -207,9 +217,43 @@ class HomeViewModel @Inject constructor(
         emitEvent(HomeUiEvent.NavigateToTrainingDetail(planId))
     }
 
-    /** Solicita navegación a la pantalla de registro de comida. */
+    /** Abre el bottom sheet para elegir el modo de registro de comida. */
     fun onLogMeal() {
-        emitEvent(HomeUiEvent.NavigateToTrackMeal)
+        emitEvent(HomeUiEvent.ShowTrackMealSheet)
+    }
+
+    /** Carga las comidas de hoy del plan activo y abre el picker. */
+    fun onShowPlanMealPicker() {
+        viewModelScope.launch {
+            _planPickerMeals.value = resolveTodayPlanMeals()
+            emitEvent(HomeUiEvent.ShowPlanMealPicker)
+        }
+    }
+
+    /**
+     * Registra una comida del plan de dieta activo y actualiza el resumen nutricional del home.
+     *
+     * @param meal Comida seleccionada en el picker.
+     */
+    fun onTrackMealFromPlan(meal: Meal) {
+        viewModelScope.launch {
+            when (val result = trackMealUseCase(meal.toTrackMealRequestDto())) {
+                is Result.Success -> {
+                    val nutritionPair = loadNutrition()
+                    val todayNutrition = deriveNutrition(nutritionPair.first, nutritionPair.second)
+                    _uiState.update { current ->
+                        if (current is HomeUiState.Success) {
+                            current.copy(todayNutrition = todayNutrition)
+                        } else current
+                    }
+                    emitEvent(HomeUiEvent.ShowSnackbar("Comida del plan registrada"))
+                }
+                is Result.Error -> {
+                    emitEvent(HomeUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                is Result.Loading -> Unit
+            }
+        }
     }
 
     /** Abre la hoja modal para registrar el peso corporal. */
@@ -850,6 +894,14 @@ class HomeViewModel @Inject constructor(
             fatConsumed = log?.totalFatGrams ?: 0.0,
             fatTarget = target?.fatTarget ?: 0.0,
         )
+    }
+
+    private suspend fun resolveTodayPlanMeals(): List<Meal> {
+        val plan = cachedActiveDietDetail
+            ?: cachedActiveDietId?.let { planId ->
+                loadDietPlanDetail(planId)?.also { cachedActiveDietDetail = it }
+            }
+        return plan?.mealsForToday() ?: emptyList()
     }
 
     private fun emitEvent(event: HomeUiEvent) {

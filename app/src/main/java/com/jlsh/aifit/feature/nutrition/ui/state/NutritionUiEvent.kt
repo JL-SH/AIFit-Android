@@ -6,6 +6,7 @@ sealed class NutritionUiEvent {
     data class NavigateToDietDetail(val planId: String) : NutritionUiEvent()
     data object NavigateToGenerateDiet : NutritionUiEvent()
     data object ShowTrackMealSheet : NutritionUiEvent()
+    data object ShowPlanMealPicker : NutritionUiEvent()
     data object NavigateBack : NutritionUiEvent()
     data object NavigateToHome : NutritionUiEvent()
     data class ShowSnackbar(val message: String) : NutritionUiEvent()

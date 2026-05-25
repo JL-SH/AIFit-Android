@@ -4,9 +4,12 @@ import app.cash.turbine.test
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
+import com.jlsh.aifit.feature.diet.domain.model.Meal
 import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
+import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.SetActiveDietPlanUseCase
+import com.jlsh.aifit.feature.diet.domain.util.mealsForToday
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
@@ -42,6 +45,7 @@ class NutritionViewModelTest {
     private val getNutritionLogUseCase: GetNutritionLogUseCase = mockk()
     private val getCurrentNutritionTargetUseCase: GetCurrentNutritionTargetUseCase = mockk()
     private val getDietPlansUseCase: GetDietPlansUseCase = mockk()
+    private val getDietPlanDetailUseCase: GetDietPlanDetailUseCase = mockk()
     private val trackMealUseCase: TrackMealUseCase = mockk()
     private val analyzeMealFromTextUseCase: AnalyzeMealFromTextUseCase = mockk()
     private val deleteMealLogUseCase: DeleteMealLogUseCase = mockk()
@@ -57,10 +61,12 @@ class NutritionViewModelTest {
         every { getNutritionLogUseCase(any()) } returns logFlow
         every { getCurrentNutritionTargetUseCase() } returns targetFlow
         every { getDietPlansUseCase() } returns dietPlansFlow
+        coEvery { getDietPlanDetailUseCase(any()) } returns Result.Success(fakeDietPlan())
         return NutritionViewModel(
             getNutritionLogUseCase,
             getCurrentNutritionTargetUseCase,
             getDietPlansUseCase,
+            getDietPlanDetailUseCase,
             trackMealUseCase,
             analyzeMealFromTextUseCase,
             deleteMealLogUseCase,
@@ -467,6 +473,54 @@ class NutritionViewModelTest {
     }
 
     // ─── Navigation events ─────────────────────────────────────────────────────
+
+    @Test
+    fun `onTrackMealFromPlan emite snackbar y refresca hub cuando exitoso`() = runTest {
+        val todayMeal = fakeMeal(id = "plan-meal-1", name = "Comida del plan")
+        val planWithDays = fakeDietPlan(
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeDietDay(meals = listOf(todayMeal))),
+        )
+        val vm = createViewModel(
+            dietPlansFlow = flowOf(Result.Success(listOf(planWithDays))),
+        )
+        coEvery { trackMealUseCase(any()) } returns Result.Success(fakeMealLog())
+        advanceUntilIdle()
+
+        vm.events.test {
+            vm.onTrackMealFromPlan(todayMeal)
+            advanceUntilIdle()
+
+            val snackbar = awaitItem()
+            assertTrue(snackbar is NutritionUiEvent.ShowSnackbar)
+            assertEquals("Comida del plan registrada", (snackbar as NutritionUiEvent.ShowSnackbar).message)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onShowPlanMealPicker emite ShowPlanMealPicker y carga comidas del plan activo`() = runTest {
+        val todayMeal = fakeMeal(id = "plan-meal-2")
+        val planWithDays = fakeDietPlan(
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeDietDay(meals = listOf(todayMeal))),
+        )
+        val vm = createViewModel(
+            dietPlansFlow = flowOf(Result.Success(listOf(planWithDays))),
+        )
+        advanceUntilIdle()
+
+        vm.events.test {
+            vm.onShowPlanMealPicker()
+            advanceUntilIdle()
+
+            assertEquals(listOf(todayMeal), vm.planPickerMeals.value)
+            assertTrue(awaitItem() is NutritionUiEvent.ShowPlanMealPicker)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 
     @Test
     fun `onFabClicked emite ShowTrackMealSheet`() = runTest {

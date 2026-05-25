@@ -5,6 +5,7 @@ import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
+import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTargetUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetNutritionLogUseCase
@@ -42,10 +43,14 @@ class NutritionScreenshotTest {
         every { getTarget() } returns flowOf(Result.Success(fakeNutritionTarget()))
         every { getDietPlans() } returns flowOf(Result.Success(listOf(fakeDietPlan())))
 
+        val getDietPlanDetail: GetDietPlanDetailUseCase = mockk()
+        io.mockk.coEvery { getDietPlanDetail(any()) } returns Result.Success(fakeDietPlan())
+
         return NutritionViewModel(
             getNutritionLogUseCase = getNutritionLog,
             getCurrentNutritionTargetUseCase = getTarget,
             getDietPlansUseCase = getDietPlans,
+            getDietPlanDetailUseCase = getDietPlanDetail,
             trackMealUseCase = mockk(),
             analyzeMealFromTextUseCase = mockk(),
             deleteMealLogUseCase = mockk(),
@@ -87,10 +92,14 @@ class NutritionScreenshotTest {
         every { getTarget() } returns flow { emit(Result.Loading); awaitCancellation() }
         every { getDietPlans() } returns flow { emit(Result.Loading); awaitCancellation() }
 
+        val getDietPlanDetail: GetDietPlanDetailUseCase = mockk()
+        io.mockk.coEvery { getDietPlanDetail(any()) } returns Result.Success(fakeDietPlan())
+
         val vm = NutritionViewModel(
             getNutritionLogUseCase = getNutritionLog,
             getCurrentNutritionTargetUseCase = getTarget,
             getDietPlansUseCase = getDietPlans,
+            getDietPlanDetailUseCase = getDietPlanDetail,
             trackMealUseCase = mockk(),
             analyzeMealFromTextUseCase = mockk(),
             deleteMealLogUseCase = mockk(),
