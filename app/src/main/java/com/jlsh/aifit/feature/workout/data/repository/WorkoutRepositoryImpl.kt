@@ -14,8 +14,10 @@ import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toEntity
 import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 import com.jlsh.aifit.feature.workout.domain.repository.WorkoutRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.util.Collections
 import javax.inject.Inject
@@ -96,14 +98,20 @@ class WorkoutRepositoryImpl @Inject constructor(
 
         val fromEpochDay = from?.let { LocalDate.parse(it).toEpochDay() }
         val toEpochDay = to?.let { LocalDate.parse(it).toEpochDay() }
-        val cached = dao.getAll()
-            .filter { entity ->
-                entity.id !in pendingDeleteIds &&
-                (fromEpochDay == null || entity.date >= fromEpochDay) &&
-                    (toEpochDay == null || entity.date <= toEpochDay) &&
-                    (planId == null || entity.trainingPlanId == planId)
+        val cached = withContext(Dispatchers.IO) {
+            val entities = when {
+                fromEpochDay != null && toEpochDay != null ->
+                    dao.getByDateRange(fromEpochDay, toEpochDay)
+                else ->
+                    dao.getAll()
             }
-            .map { it.toDomain() }
+            entities
+                .filter { entity ->
+                    entity.id !in pendingDeleteIds &&
+                        (planId == null || entity.trainingPlanId == planId)
+                }
+                .map { it.toDomain() }
+        }
         // TODO: remove diagnostic log below
         Log.d("AIFIT_REPO", "getHistory cache emission — count=${cached.size}, logs=${cached.map { "id=${it.id} isLocked=${it.isLocked} date=${it.date}" }}")
         if (cached.isNotEmpty()) {

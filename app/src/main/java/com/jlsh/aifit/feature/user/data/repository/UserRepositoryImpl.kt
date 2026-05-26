@@ -21,8 +21,10 @@ import com.jlsh.aifit.feature.user.domain.model.UpdateUserProfileRequest
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import com.jlsh.aifit.feature.user.domain.repository.UserRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -54,9 +56,12 @@ class UserRepositoryImpl @Inject constructor(
     override fun getProfile(): Flow<Result<UserProfile>> = flow {
         emit(Result.Loading)
 
-        val userId = authDataStore.getUserId()
-        val cached = if (userId != null) dao.getById(userId) else null
-        val persistedAvatarUrl = authDataStore.getAvatarUrl(userId)
+        val (userId, cached, persistedAvatarUrl) = withContext(Dispatchers.IO) {
+            val uid = authDataStore.getUserId()
+            val entity = if (uid != null) dao.getById(uid) else null
+            val avatarUrl = authDataStore.getAvatarUrl(uid)
+            Triple(uid, entity, avatarUrl)
+        }
         val cachedPictureUrl = cached?.profilePictureUrl?.takeIf { it.isNotBlank() }
 
         if (cached != null) {
@@ -84,7 +89,9 @@ class UserRepositoryImpl @Inject constructor(
                     persistedAvatarUrl = persistedAvatarUrl,
                 )
                 persistAvatarUrlIfBetter(userId, profile.profilePictureUrl)
-                dao.upsert(profile.toEntity())
+                withContext(Dispatchers.IO) {
+                    dao.upsert(profile.toEntity())
+                }
                 Log.d(
                     "AIFIT_DEBUG",
                     "getProfile: API success, profile=${profile.id} avatarUrl=${profile.profilePictureUrl}" +

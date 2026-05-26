@@ -10,6 +10,11 @@ interface WorkoutLogDao {
     @Query("SELECT * FROM workout_logs ORDER BY date DESC")
     suspend fun getAll(): List<WorkoutLogEntity>
 
+    @Query(
+        "SELECT * FROM workout_logs WHERE date >= :fromEpochDay AND date <= :toEpochDay ORDER BY date DESC",
+    )
+    suspend fun getByDateRange(fromEpochDay: Long, toEpochDay: Long): List<WorkoutLogEntity>
+
     @Query("SELECT * FROM workout_logs ORDER BY date DESC LIMIT :limit")
     suspend fun getRecent(limit: Int): List<WorkoutLogEntity>
 

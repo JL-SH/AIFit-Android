@@ -36,7 +36,7 @@ import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
  * diet plans, workout and nutrition logs, body-weight entries, AI chat
  * history, and shopping list data.
  *
- * **Schema version**: 12. Schema export is disabled; migrations are handled
+ * **Schema version**: 13. Schema export is disabled; migrations are handled
  * manually in the Hilt `DatabaseModule`.
  */
 @Database(
@@ -56,7 +56,7 @@ import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
         ShoppingLocalItemEntity::class,
         ShoppingDeletedItemEntity::class,
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -11,6 +11,8 @@ import com.jlsh.aifit.feature.gamification.domain.model.Streak
 import com.jlsh.aifit.feature.gamification.domain.usecase.GetAllAchievementDefinitionsUseCase
 import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserAchievementsUseCase
 import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserStreaksUseCase
+import com.jlsh.aifit.feature.home.domain.model.HomeBootstrap
+import com.jlsh.aifit.feature.home.domain.usecase.GetHomeBootstrapUseCase
 import com.jlsh.aifit.feature.home.ui.state.HomeUiEvent
 import com.jlsh.aifit.feature.home.ui.state.HomeUiState
 import com.jlsh.aifit.feature.home.ui.state.NextMealState
@@ -72,6 +74,7 @@ class HomeViewModelTest {
     private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase = mockk()
     private val logBodyWeightUseCase: LogBodyWeightUseCase = mockk()
     private val trackMealUseCase: TrackMealUseCase = mockk()
+    private val getHomeBootstrapUseCase: GetHomeBootstrapUseCase = mockk()
 
     @Before
     fun setUp() {
@@ -132,6 +135,18 @@ class HomeViewModelTest {
         coEvery { getAllDefinitionsUseCase() } returns Result.Success(emptyList())
         every { getBodyWeightHistoryUseCase(any(), any()) } returns weightHistoryFlow
         every { getWorkoutHistoryUseCase(any(), any(), any()) } returns workoutHistoryFlow
+        coEvery { getHomeBootstrapUseCase() } returns Result.Success(
+            HomeBootstrap(
+                profile = fakeUserProfile(),
+                activeTrainingPlan = null,
+                nutritionLog = fakeNutritionLog(),
+                nutritionTarget = fakeNutritionTarget(),
+                weeklySummary = fakeWeeklyProgressSummary(),
+                streaks = listOf(fakeStreak()),
+                achievements = emptyList(),
+                todayWorkouts = emptyList(),
+            ),
+        )
         return HomeViewModel(
             getUserProfileUseCase,
             getTrainingPlansUseCase,
@@ -148,6 +163,7 @@ class HomeViewModelTest {
             getWorkoutHistoryUseCase,
             logBodyWeightUseCase,
             trackMealUseCase,
+            getHomeBootstrapUseCase,
         )
     }
 
@@ -175,10 +191,13 @@ class HomeViewModelTest {
             assertTrue(success is HomeUiState.Success)
             val state = success as HomeUiState.Success
             assertEquals("Test User", state.userName)
-            assertNotNull(state.weeklySummary)
-            assertEquals(1, state.streaks.size)
             cancelAndIgnoreRemainingEvents()
         }
+
+        advanceUntilIdle()
+        val state = vm.uiState.value as HomeUiState.Success
+        assertNotNull(state.weeklySummary)
+        assertEquals(1, state.streaks.size)
     }
 
     @Test
@@ -193,10 +212,13 @@ class HomeViewModelTest {
             assertTrue(firstSuccess is HomeUiState.Success)
             val state = firstSuccess as HomeUiState.Success
             assertEquals("Test User", state.userName)
-            assertNotNull(state.weeklySummary)
-            assertTrue(state.streaks.isNotEmpty())
             cancelAndIgnoreRemainingEvents()
         }
+
+        advanceUntilIdle()
+        val state = vm.uiState.value as HomeUiState.Success
+        assertNotNull(state.weeklySummary)
+        assertTrue(state.streaks.isNotEmpty())
     }
 
     @Test
@@ -213,20 +235,64 @@ class HomeViewModelTest {
             days = listOf(trainingDay),
         )
 
+        coEvery { getHomeBootstrapUseCase() } returns Result.Success(
+            HomeBootstrap(
+                profile = fakeUserProfile(),
+                activeTrainingPlan = plan,
+                nutritionLog = fakeNutritionLog(),
+                nutritionTarget = fakeNutritionTarget(),
+                weeklySummary = fakeWeeklyProgressSummary(),
+                streaks = listOf(fakeStreak()),
+                achievements = emptyList(),
+                todayWorkouts = emptyList(),
+            ),
+        )
         val vm = createViewModel(
             plansFlow = flowOf(Result.Success(listOf(plan))),
             planDetailResult = Result.Success(plan),
         )
         coEvery { getTrainingPlanDetailUseCase.fromCache("plan-1") } returns null
 
-        vm.uiState.test {
-            skipItems(1) // Loading
-            val success = awaitItem() as HomeUiState.Success
-            assertNotNull(success.activePlan)
-            assertEquals("plan-1", success.activePlan?.id)
-            assertFalse(success.isTrainingHydrating)
-            cancelAndIgnoreRemainingEvents()
-        }
+        advanceUntilIdle()
+        val state = vm.uiState.value as HomeUiState.Success
+        assertNotNull(state.activePlan)
+        assertEquals("plan-1", state.activePlan?.id)
+        assertFalse(state.isTrainingHydrating)
+        assertNotNull(state.todayTraining)
+    }
+
+    @Test
+    fun `loadAll marca entreno completado desde cache de workout sin esperar red`() = runTest {
+        val trainingDay = fakeTrainingDay(
+            id = "day-1",
+            dayType = TrainingDayType.TRAINING,
+            exercises = listOf(fakeTrainingExercise()),
+        )
+        val plan = fakeTrainingPlan(
+            id = "plan-1",
+            status = PlanStatus.ACTIVE,
+            days = listOf(trainingDay),
+        )
+        val lockedLog = fakeWorkoutLog(
+            trainingPlanId = "plan-1",
+            trainingDayId = "day-1",
+            isLocked = true,
+            date = LocalDate.now(),
+        )
+        val staleLog = lockedLog.copy(isLocked = false)
+        val vm = createViewModel(
+            plansFlow = flowOf(Result.Success(listOf(plan))),
+            planDetailResult = Result.Success(plan),
+            workoutHistoryFlow = flow {
+                emit(Result.Success(listOf(lockedLog)))
+                emit(Result.Success(listOf(staleLog)))
+            },
+        )
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as HomeUiState.Success
+        assertNotNull(state.todayTraining)
+        assertTrue(state.todayTraining!!.isCompleted)
     }
 
     // ── Error state ────────────────────────────────────────────────────────────

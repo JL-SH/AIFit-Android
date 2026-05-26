@@ -216,6 +216,7 @@ class TrainingViewModel @Inject constructor(
             when (val result = setActivePlanUseCase(planId)) {
                 is Result.Success -> {
                     Log.d("AIFIT_PLANS", "onActivatePlan SUCCESS — planId=$planId")
+                    viewModelScope.launch { getTrainingPlanDetailUseCase(planId) }
                     fetchPlans()
                     // Clear activation overlay after fetchPlans completes
                     _uiState.update { cur ->
@@ -271,6 +272,7 @@ class TrainingViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = setActivePlanUseCase(planId)) {
                 is Result.Success -> {
+                    viewModelScope.launch { getTrainingPlanDetailUseCase(planId) }
                     fetchPlans()
                     emitEvent(TrainingUiEvent.PlanApproved)
                 }

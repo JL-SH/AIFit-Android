@@ -20,9 +20,11 @@ import com.jlsh.aifit.feature.training.domain.model.ExerciseSubstitution
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
 import com.jlsh.aifit.feature.training.domain.repository.TrainingRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
@@ -67,9 +69,11 @@ class TrainingRepositoryImpl @Inject constructor(
             return@flow
         }
 
-        val cached = dao.getAllByUserId(userId)
-            .map { it.toDomain() }
-            .filter { it.id !in recentlyDeletedIds }
+        val cached = withContext(Dispatchers.IO) {
+            dao.getAllByUserId(userId)
+                .map { it.toDomain() }
+                .filter { it.id !in recentlyDeletedIds }
+        }
         if (cached.isNotEmpty()) {
             // TODO: remove diagnostic log below
             Log.d("AIFIT_PLANS", "EMIT CACHE — count=${cached.size} ids=${cached.map { it.id }.take(3)}")
@@ -126,10 +130,12 @@ class TrainingRepositoryImpl @Inject constructor(
      * @return Domain plan or null if there is no cached entry or the JSON is invalid.
      */
     override suspend fun getCachedTrainingPlanDetail(planId: String): TrainingPlan? =
-        detailCacheDao.getById(planId)?.let { entity ->
-            runCatching {
-                detailJson.decodeFromString<TrainingPlanResponseDto>(entity.detailJson).toDomain()
-            }.getOrNull()
+        withContext(Dispatchers.IO) {
+            detailCacheDao.getById(planId)?.let { entity ->
+                runCatching {
+                    detailJson.decodeFromString<TrainingPlanResponseDto>(entity.detailJson).toDomain()
+                }.getOrNull()
+            }
         }
 
     /**
