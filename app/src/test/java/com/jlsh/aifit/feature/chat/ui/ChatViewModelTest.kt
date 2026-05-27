@@ -8,8 +8,10 @@ import com.jlsh.aifit.feature.chat.domain.model.ChatMessageRole
 import com.jlsh.aifit.feature.chat.domain.model.ChatSessionStatus
 import com.jlsh.aifit.feature.chat.domain.usecase.ArchiveChatSessionUseCase
 import com.jlsh.aifit.feature.chat.domain.usecase.DeleteChatSessionUseCase
+import com.jlsh.aifit.feature.chat.domain.usecase.GenerateChatSessionTitleUseCase
 import com.jlsh.aifit.feature.chat.domain.usecase.GetChatSessionUseCase
 import com.jlsh.aifit.feature.chat.domain.usecase.GetChatSessionsUseCase
+import com.jlsh.aifit.feature.chat.domain.usecase.RenameChatSessionUseCase
 import com.jlsh.aifit.feature.chat.domain.usecase.SendChatMessageUseCase
 import com.jlsh.aifit.feature.chat.domain.usecase.StartChatSessionUseCase
 import com.jlsh.aifit.feature.chat.ui.state.ChatListUiState
@@ -38,6 +40,8 @@ class ChatViewModelTest {
     private val sendChatMessageUseCase: SendChatMessageUseCase = mockk()
     private val archiveChatSessionUseCase: ArchiveChatSessionUseCase = mockk()
     private val deleteChatSessionUseCase: DeleteChatSessionUseCase = mockk()
+    private val renameChatSessionUseCase: RenameChatSessionUseCase = mockk()
+    private val generateChatSessionTitleUseCase: GenerateChatSessionTitleUseCase = mockk()
 
     private fun buildViewModel(sessionId: String? = null): ChatViewModel {
         val savedState = SavedStateHandle().apply {
@@ -51,6 +55,8 @@ class ChatViewModelTest {
             sendChatMessageUseCase = sendChatMessageUseCase,
             archiveChatSessionUseCase = archiveChatSessionUseCase,
             deleteChatSessionUseCase = deleteChatSessionUseCase,
+            renameChatSessionUseCase = renameChatSessionUseCase,
+            generateChatSessionTitleUseCase = generateChatSessionTitleUseCase,
         )
     }
 

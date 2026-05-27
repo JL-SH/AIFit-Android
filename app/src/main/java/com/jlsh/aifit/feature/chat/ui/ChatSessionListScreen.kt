@@ -266,11 +266,11 @@ private fun RenameSessionDialog(
         },
         confirmButton = {
             TextButton(onClick = { if (text.isNotBlank()) onConfirm(text) }) {
-                Text(stringResource(R.string.chat_rename_confirm))
+                Text(stringResource(R.string.chat_rename_confirm).uppercase())
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel).uppercase()) }
         },
     )
 }

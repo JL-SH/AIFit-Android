@@ -63,9 +63,11 @@ class CreateProfileScreenTest {
             getUserProfileUseCase = getUserProfile,
             createUserProfileUseCase = createProfile,
             updateUserProfileUseCase = mockk(),
+            uploadProfilePhotoUseCase = mockk(relaxed = true),
             getUserStreaksUseCase = streaks,
             getUserAchievementsUseCase = achievements,
             getPersonalRecordsUseCase = records,
+            logBodyWeightUseCase = mockk(relaxed = true),
             userPreferencesDataStore = prefs,
             sessionManager = mockk(relaxed = true),
             savedStateHandle = SavedStateHandle(mapOf("mode" to "create")),
@@ -102,7 +104,7 @@ class CreateProfileScreenTest {
     }
 
     @Test
-    fun `seleccionar opcion y pulsar Continuar avanza al siguiente paso`() {
+    fun `seleccionar opcion y pulsar CONTINUAR avanza al siguiente paso`() {
         composeTestRule.setContent {
             AIFitTheme {
                 CreateProfileScreen(
@@ -113,7 +115,7 @@ class CreateProfileScreenTest {
         }
 
         composeTestRule.onNodeWithText("Perder grasa").performClick()
-        composeTestRule.onNodeWithText("Continuar").performClick()
+        composeTestRule.onNodeWithText("CONTINUAR").performClick()
 
         composeTestRule.onNodeWithText("2 / 8").assertIsDisplayed()
     }
@@ -132,26 +134,26 @@ class CreateProfileScreenTest {
 
         // Step 0: Objective
         composeTestRule.onNodeWithText("Perder grasa").performClick()
-        composeTestRule.onNodeWithText("Continuar").performClick()
+        composeTestRule.onNodeWithText("CONTINUAR").performClick()
         // Step 1: Experiencia
         composeTestRule.onNodeWithText("Nunca he entrenado").performClick()
-        composeTestRule.onNodeWithText("Continuar").performClick()
+        composeTestRule.onNodeWithText("CONTINUAR").performClick()
         // Step 2: Location
         composeTestRule.onNodeWithText("En casa").performClick()
-        composeTestRule.onNodeWithText("Continuar").performClick()
+        composeTestRule.onNodeWithText("CONTINUAR").performClick()
         // Step 3: Training days
         composeTestRule.onNodeWithText("3 días").performClick()
-        composeTestRule.onNodeWithText("Continuar").performClick()
+        composeTestRule.onNodeWithText("CONTINUAR").performClick()
         // Step 4: Time per session
         composeTestRule.onNodeWithText("30 min").performClick()
-        composeTestRule.onNodeWithText("Continuar").performClick()
+        composeTestRule.onNodeWithText("CONTINUAR").performClick()
         // Step 5: Lesiones (siempre habilitado)
-        composeTestRule.onNodeWithText("Continuar").performClick()
+        composeTestRule.onNodeWithText("CONTINUAR").performClick()
         // Step 6: Physical data (optional)
-        composeTestRule.onNodeWithText("Continuar").performClick()
+        composeTestRule.onNodeWithText("CONTINUAR").performClick()
         // Step 7: Dietary preference
         composeTestRule.onNodeWithText("Sin restricciones").performClick()
-        composeTestRule.onNodeWithText("Empezar").performClick()
+        composeTestRule.onNodeWithText("EMPEZAR").performClick()
 
         assert(navigated)
     }

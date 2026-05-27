@@ -9,9 +9,11 @@ import com.jlsh.aifit.core.session.SessionManager
 import com.jlsh.aifit.feature.gamification.domain.usecase.GetPersonalRecordsUseCase
 import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserAchievementsUseCase
 import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserStreaksUseCase
+import com.jlsh.aifit.feature.progress.domain.usecase.LogBodyWeightUseCase
 import com.jlsh.aifit.feature.user.domain.usecase.CreateUserProfileUseCase
 import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import com.jlsh.aifit.feature.user.domain.usecase.UpdateUserProfileUseCase
+import com.jlsh.aifit.feature.user.domain.usecase.UploadProfilePhotoUseCase
 import com.jlsh.aifit.feature.user.ui.state.UserUiEvent
 import com.jlsh.aifit.feature.user.ui.state.UserUiState
 import com.jlsh.aifit.testutil.MainDispatcherRule
@@ -56,6 +58,8 @@ class UserViewModelTest {
         coEvery { setDarkTheme(any()) } returns Unit
     }
     private val defaultSession: SessionManager = mockk(relaxed = true)
+    private val defaultUploadPhoto: UploadProfilePhotoUseCase = mockk(relaxed = true)
+    private val defaultLogBodyWeight: LogBodyWeightUseCase = mockk(relaxed = true)
 
     private fun createViewModel(
         mode: String = "create",
@@ -67,13 +71,17 @@ class UserViewModelTest {
         records: GetPersonalRecordsUseCase = defaultRecords,
         prefs: UserPreferencesDataStore = defaultPrefs,
         session: SessionManager = defaultSession,
+        uploadPhoto: UploadProfilePhotoUseCase = defaultUploadPhoto,
+        logBodyWeight: LogBodyWeightUseCase = defaultLogBodyWeight,
     ) = UserViewModel(
         getUserProfileUseCase = getUserProfile,
         createUserProfileUseCase = createProfile,
         updateUserProfileUseCase = updateProfile,
+        uploadProfilePhotoUseCase = uploadPhoto,
         getUserStreaksUseCase = streaks,
         getUserAchievementsUseCase = achievements,
         getPersonalRecordsUseCase = records,
+        logBodyWeightUseCase = logBodyWeight,
         userPreferencesDataStore = prefs,
         sessionManager = session,
         savedStateHandle = SavedStateHandle(mapOf("mode" to mode)),

@@ -68,9 +68,11 @@ class ProfileHubScreenTest {
             getUserProfileUseCase = getUserProfile,
             createUserProfileUseCase = mockk(),
             updateUserProfileUseCase = mockk(),
+            uploadProfilePhotoUseCase = mockk(relaxed = true),
             getUserStreaksUseCase = streaks,
             getUserAchievementsUseCase = achievements,
             getPersonalRecordsUseCase = records,
+            logBodyWeightUseCase = mockk(relaxed = true),
             userPreferencesDataStore = prefs,
             sessionManager = session,
             savedStateHandle = SavedStateHandle(mapOf("mode" to "edit")),
@@ -213,7 +215,7 @@ class ProfileHubScreenTest {
         composeTestRule.onNodeWithTag("profile_hub_list")
             .performScrollToNode(hasText("Cerrar sesión"))
         composeTestRule.onNodeWithText("Cerrar sesión").performClick()
-        composeTestRule.onNodeWithText("Confirmar").performClick()
+        composeTestRule.onNodeWithText("CONFIRMAR").performClick()
 
         verify(exactly = 1) { session.logout() }
     }

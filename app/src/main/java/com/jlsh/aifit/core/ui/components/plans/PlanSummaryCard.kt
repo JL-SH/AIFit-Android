@@ -74,7 +74,7 @@ fun PlanSummaryCard(
             if (status != PlanStatus.ACTIVE && status != PlanStatus.COMPLETED) {
                 TextButton(onClick = onActivate) {
                     Text(
-                        text = activateButtonText,
+                        text = activateButtonText.uppercase(),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primaryContainer,
                     )

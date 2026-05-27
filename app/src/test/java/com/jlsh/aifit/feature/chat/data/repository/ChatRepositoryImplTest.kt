@@ -14,6 +14,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
+import retrofit2.Response
 import org.junit.Before
 import org.junit.Test
 
@@ -243,7 +244,7 @@ class ChatRepositoryImplTest {
 
     @Test
     fun `deleteSession retorna Success y limpia cache`() = runTest {
-        coEvery { apiService.deleteSession("session-1") } returns ApiResponse(success = true, data = Unit)
+        coEvery { apiService.deleteSession("session-1") } returns Response.success(Unit)
 
         val result = repository.deleteSession("session-1")
 

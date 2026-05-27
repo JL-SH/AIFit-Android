@@ -281,7 +281,7 @@ private fun WorkoutSessionContent(
                         if (hasRegisteredSets) {
                             TextButton(onClick = onFinalize) {
                                 Text(
-                                    text = stringResource(R.string.workout_session_finalize),
+                                    text = stringResource(R.string.workout_session_finalize).uppercase(),
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                 )
                             }

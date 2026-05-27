@@ -61,9 +61,11 @@ class UserProfileScreenTest {
             getUserProfileUseCase = getUserProfile,
             createUserProfileUseCase = mockk(),
             updateUserProfileUseCase = mockk(),
+            uploadProfilePhotoUseCase = mockk(relaxed = true),
             getUserStreaksUseCase = streaks,
             getUserAchievementsUseCase = achievements,
             getPersonalRecordsUseCase = records,
+            logBodyWeightUseCase = mockk(relaxed = true),
             userPreferencesDataStore = prefs,
             sessionManager = mockk(relaxed = true),
             savedStateHandle = SavedStateHandle(mapOf("mode" to "edit")),
@@ -96,7 +98,7 @@ class UserProfileScreenTest {
     }
 
     @Test
-    fun `muestra boton Guardar en el formulario`() {
+    fun `muestra boton GUARDAR en el formulario`() {
         val vm = buildViewModel(flowOf(Result.Success(fakeUserProfile())))
         composeTestRule.setContent {
             AIFitTheme {
@@ -104,7 +106,7 @@ class UserProfileScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Guardar").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("GUARDAR").performScrollTo().assertIsDisplayed()
     }
 
     @Test

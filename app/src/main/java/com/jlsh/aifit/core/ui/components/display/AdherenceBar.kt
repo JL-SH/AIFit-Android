@@ -43,7 +43,7 @@ fun AdherenceBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Adherence",
+                text = "Adherencia",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

@@ -8,11 +8,14 @@ import com.jlsh.aifit.testutil.FAKE_TOKEN
 import com.jlsh.aifit.testutil.FAKE_USER_ID
 import com.jlsh.aifit.testutil.MainDispatcherRule
 import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -35,7 +38,7 @@ class SessionManagerTest {
     fun setUp() {
         // Default: no token present
         every { authDataStore.hasToken() } returns false
-        every { localDataCleaner.clearAllLocalData() } just Runs
+        coEvery { localDataCleaner.clearAllLocalData() } just Runs
     }
 
     private fun buildSut() = SessionManager(authDataStore, localDataCleaner)
@@ -102,9 +105,9 @@ class SessionManagerTest {
         val sut = buildSut()
 
         sut.logout()
+        advanceUntilIdle()
 
-        every { localDataCleaner.clearAllLocalData() } just Runs
-        // Verify clearAllLocalData was invoked
+        coVerify { localDataCleaner.clearAllLocalData() }
         verify { authDataStore.clear() }
     }
 
@@ -155,12 +158,13 @@ class SessionManagerTest {
     }
 
     @Test
-    fun `invalidateSession clears all local data`() {
+    fun `invalidateSession clears all local data`() = runTest {
         val sut = buildSut()
 
         sut.invalidateSession()
+        advanceUntilIdle()
 
-        verify { localDataCleaner.clearAllLocalData() }
+        coVerify { localDataCleaner.clearAllLocalData() }
     }
 
     @Test

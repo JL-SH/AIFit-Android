@@ -98,7 +98,7 @@ private fun SolidPrimaryButton(
             )
         } else {
             Text(
-                text = text,
+                text = text.uppercase(),
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
@@ -144,7 +144,7 @@ private fun GradientPrimaryButton(
             )
         } else {
             Text(
-                text = text,
+                text = text.uppercase(),
                 style = MaterialTheme.typography.labelLarge,
                 color = contentColor,
                 textAlign = TextAlign.Center,

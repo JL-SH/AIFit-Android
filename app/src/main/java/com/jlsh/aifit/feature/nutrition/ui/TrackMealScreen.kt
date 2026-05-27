@@ -185,12 +185,12 @@ fun TrackMealScreen(
                     mealTime = String.format("%02d:%02d", timePickerState.hour, timePickerState.minute)
                     showTimePicker = false
                 }) {
-                    Text(stringResource(R.string.common_accept))
+                    Text(stringResource(R.string.common_accept).uppercase())
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text(stringResource(R.string.common_cancel))
+                    Text(stringResource(R.string.common_cancel).uppercase())
                 }
             },
             text = {
@@ -347,7 +347,7 @@ fun TrackMealScreen(
                             tint = MaterialTheme.colorScheme.primaryContainer,
                         )
                         Text(
-                            text = stringResource(R.string.nutrition_track_add_food_item),
+                            text = stringResource(R.string.nutrition_track_add_food_item).uppercase(),
                             color = MaterialTheme.colorScheme.primaryContainer,
                         )
                     }
