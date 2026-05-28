@@ -43,6 +43,7 @@ import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlansUseCase
+import com.jlsh.aifit.feature.user.data.mapper.UserMapper.pickBestProfilePictureUrl
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
@@ -318,6 +319,7 @@ class HomeViewModel @Inject constructor(
                 return@launch
             }
             if (loadJob?.isActive == true) return@launch
+            refreshProfileHeader()
             scheduleBootstrapRefresh()
         }
     }
@@ -352,8 +354,11 @@ class HomeViewModel @Inject constructor(
             if (_uiState.value !is HomeUiState.Success) return@launch
             val updated = refreshFromBootstrapInternal() ?: return@launch
             val current = _uiState.value as? HomeUiState.Success ?: return@launch
-            if (!hasHomeStateChange(current, updated)) return@launch
-            applySuccessState(updated, "bootstrap_refresh")
+            val merged = updated.copy(
+                avatarUrl = pickBestProfilePictureUrl(updated.avatarUrl, current.avatarUrl),
+            )
+            if (!hasHomeStateChange(current, merged)) return@launch
+            applySuccessState(merged, "bootstrap_refresh")
         }
     }
 
@@ -375,6 +380,28 @@ class HomeViewModel @Inject constructor(
         current: HomeUiState.Success,
         updated: HomeUiState.Success,
     ): Boolean = current != updated
+
+    /**
+     * Re-reads name and avatar from the profile repository (Room cache + API).
+     * Called when returning to Home so a photo uploaded on [UserProfileScreen] is reflected
+     * in the greeting header without restarting the app.
+     */
+    private suspend fun refreshProfileHeader() {
+        if (_uiState.value !is HomeUiState.Success) return
+        var bestAvatar: String? = (_uiState.value as HomeUiState.Success).avatarUrl
+        getUserProfileUseCase().collect { result ->
+            if (result is Result.Success) {
+                val profile = result.data
+                bestAvatar = pickBestProfilePictureUrl(profile.profilePictureUrl, bestAvatar)
+                updateSuccessIfSuccess("profile_header_refresh") { current ->
+                    current.copy(
+                        userName = profile.name,
+                        avatarUrl = bestAvatar,
+                    )
+                }
+            }
+        }
+    }
 
     /**
      * Resolves training plan detail from Room JSON cache, optionally waiting for network.

@@ -1118,6 +1118,35 @@ class HomeViewModelTest {
         val state = vm.uiState.value as HomeUiState.Success
         assertEquals(cloudinaryUrl, state.avatarUrl)
     }
+
+    @Test
+    fun `onResumed actualiza avatarUrl tras cambio de foto de perfil`() = runTest {
+        val oldUrl = "https://res.cloudinary.com/demo/old.jpg"
+        val newUrl = "https://res.cloudinary.com/demo/new.jpg"
+        val vm = createViewModel(
+            profileFlow = flowOf(
+                Result.Loading,
+                Result.Success(fakeUserProfile(profilePictureUrl = oldUrl)),
+            ),
+        )
+        advanceUntilIdle()
+
+        val before = vm.uiState.value as HomeUiState.Success
+        assertEquals(oldUrl, before.avatarUrl)
+
+        every { getUserProfileUseCase() } returns flowOf(
+            Result.Loading,
+            Result.Success(fakeUserProfile(profilePictureUrl = newUrl)),
+        )
+
+        vm.onResumed()
+        advanceUntilIdle()
+        vm.onResumed()
+        advanceUntilIdle()
+
+        val after = vm.uiState.value as HomeUiState.Success
+        assertEquals(newUrl, after.avatarUrl)
+    }
 }
 
 
