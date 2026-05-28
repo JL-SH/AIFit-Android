@@ -1,6 +1,5 @@
 package com.jlsh.aifit.feature.shopping.data.repository
 
-import android.util.Log
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
@@ -56,18 +55,15 @@ class ShoppingRepositoryImpl @Inject constructor(
         }
 
     override suspend fun generateList(request: GenerateShoppingListRequestDto): Result<ShoppingList> {
-        Log.d(TAG, "generateList request dietPlanId=${request.dietPlanId} period=${request.period}")
+        safeLogDebug("generateList request dietPlanId=${request.dietPlanId} period=${request.period}")
         return when (val r = safeApiCall { apiService.generateList(request) }) {
             is Result.Success -> {
-                Log.d(
-                    TAG,
-                    "generateList api ok id=${r.data.id} categories=${r.data.categories?.size ?: 0}",
-                )
+                safeLogDebug("generateList api ok id=${r.data.id} categories=${r.data.categories?.size ?: 0}")
                 cacheList(r.data)?.let { Result.Success(it) }
                     ?: Result.Error(AppException.UnknownException("Failed to save shopping list locally"))
             }
             is Result.Error -> {
-                Log.w(TAG, "generateList api error: ${r.exception}")
+                safeLogWarn("generateList api error: ${r.exception}")
                 r
             }
             else -> Result.Loading
@@ -76,6 +72,14 @@ class ShoppingRepositoryImpl @Inject constructor(
 
     private companion object {
         const val TAG = "AIFIT_SHOPPING"
+    }
+
+    private fun safeLogDebug(message: String) {
+        runCatching { android.util.Log.d(TAG, message) }
+    }
+
+    private fun safeLogWarn(message: String) {
+        runCatching { android.util.Log.w(TAG, message) }
     }
 
     private suspend fun cacheListEntity(dto: ShoppingListResponseDto) {
@@ -88,7 +92,7 @@ class ShoppingRepositoryImpl @Inject constructor(
 
     private suspend fun cacheList(dto: ShoppingListResponseDto): ShoppingList? =
         try {
-            cacheListEntity(dto)
+            shoppingDao.upsertList(dto.toEntity())
             dto.toDomain()
         } catch (_: Exception) {
             null

@@ -80,12 +80,13 @@ class GamificationRepositoryImplTest {
     }
 
     @Test
-    fun `getAllDefinitions retorna Error cuando API falla`() = runTest {
+    fun `getAllDefinitions retorna Success local cuando API falla`() = runTest {
         coEvery { apiService.getAllAchievementDefinitions() } throws RuntimeException("error")
 
         val result = sut.getAllDefinitions()
 
-        assertIs<Result.Error>(result)
+        assertIs<Result.Success<*>>(result)
+        assertTrue((result as Result.Success).data.isNotEmpty())
     }
 
     // ── getPersonalRecords ─────────────────────────────────────────────────────

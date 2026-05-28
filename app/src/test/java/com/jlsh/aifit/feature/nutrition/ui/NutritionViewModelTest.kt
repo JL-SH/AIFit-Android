@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -52,6 +53,11 @@ class NutritionViewModelTest {
     private val updateNutritionTargetUseCase: UpdateNutritionTargetUseCase = mockk()
     private val setActiveDietPlanUseCase: SetActiveDietPlanUseCase = mockk()
     private val deleteDietPlanUseCase: DeleteDietPlanUseCase = mockk()
+
+    @Before
+    fun resetMocks() {
+        clearAllMocks()
+    }
 
     private fun createViewModel(
         logFlow: Flow<Result<NutritionLog>> = flowOf(Result.Success(fakeNutritionLog())),
@@ -243,12 +249,8 @@ class NutritionViewModelTest {
             vm.onTrackMeal(request)
             advanceUntilIdle()
 
-            val snackbar = awaitItem()
-            assertTrue(snackbar is NutritionUiEvent.ShowSnackbar)
-            assertEquals("Comida registrada", (snackbar as NutritionUiEvent.ShowSnackbar).message)
-
-            val back = awaitItem()
-            assertTrue(back is NutritionUiEvent.NavigateBack)
+            val nav = awaitItem()
+            assertTrue(nav is NutritionUiEvent.NavigateToHome)
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -364,12 +366,12 @@ class NutritionViewModelTest {
             vm.onUpdateTarget("2500", "165", "250", "73")
             advanceUntilIdle()
 
-            val snackbar = awaitItem()
-            assertTrue(snackbar is NutritionUiEvent.ShowSnackbar)
-            assertEquals("Targets updated", (snackbar as NutritionUiEvent.ShowSnackbar).message)
-
             val back = awaitItem()
             assertTrue(back is NutritionUiEvent.NavigateBack)
+
+            val snackbar = awaitItem()
+            assertTrue(snackbar is NutritionUiEvent.ShowSnackbar)
+            assertEquals("Objetivos actualizados", (snackbar as NutritionUiEvent.ShowSnackbar).message)
 
             cancelAndIgnoreRemainingEvents()
         }

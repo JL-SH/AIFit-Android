@@ -65,7 +65,7 @@ class EducationViewModelTest {
     @Test
     fun `loadExerciseExplanation cuando useCase retorna Success, state es Success`() = runTest {
         val explanation = fakeContextualExplanation()
-        coEvery { getExerciseExplanationUseCase(any()) } returns Result.Success(explanation)
+        coEvery { getExerciseExplanationUseCase.invoke(any()) } returns Result.Success(explanation)
         val vm = createViewModel()
 
         vm.loadExerciseExplanation("exercise-1")
@@ -78,7 +78,7 @@ class EducationViewModelTest {
 
     @Test
     fun `loadExerciseExplanation cuando useCase falla, state es Error`() = runTest {
-        coEvery { getExerciseExplanationUseCase(any()) } returns
+        coEvery { getExerciseExplanationUseCase.invoke(any()) } returns
                 Result.Error(AppException.NetworkException)
         val vm = createViewModel()
 
@@ -93,7 +93,7 @@ class EducationViewModelTest {
     @Test
     fun `loadMealExplanation cuando useCase retorna Success, state es Success`() = runTest {
         val explanation = fakeContextualExplanation()
-        coEvery { getMealExplanationUseCase(any()) } returns Result.Success(explanation)
+        coEvery { getMealExplanationUseCase.invoke(any()) } returns Result.Success(explanation)
         val vm = createViewModel()
 
         vm.loadMealExplanation("meal-1")
@@ -104,7 +104,7 @@ class EducationViewModelTest {
 
     @Test
     fun `loadMealExplanation cuando useCase falla, state es Error`() = runTest {
-        coEvery { getMealExplanationUseCase(any()) } returns
+        coEvery { getMealExplanationUseCase.invoke(any()) } returns
                 Result.Error(AppException.ServerException)
         val vm = createViewModel()
 
@@ -119,7 +119,7 @@ class EducationViewModelTest {
     @Test
     fun `loadWhyThisExercise cuando useCase retorna Success, state es Success`() = runTest {
         val explanation = fakeWhyThisExplanation()
-        coEvery { getWhyThisExerciseUseCase(any()) } returns Result.Success(explanation)
+        coEvery { getWhyThisExerciseUseCase.invoke(any()) } returns Result.Success(explanation)
         val vm = createViewModel()
 
         vm.loadWhyThisExercise("exercise-1")
@@ -132,7 +132,7 @@ class EducationViewModelTest {
 
     @Test
     fun `loadWhyThisExercise cuando useCase falla, state es Error`() = runTest {
-        coEvery { getWhyThisExerciseUseCase(any()) } returns
+        coEvery { getWhyThisExerciseUseCase.invoke(any()) } returns
                 Result.Error(AppException.NetworkException)
         val vm = createViewModel()
 
@@ -147,7 +147,7 @@ class EducationViewModelTest {
     @Test
     fun `loadWhyThisMeal cuando useCase retorna Success, state es Success`() = runTest {
         val explanation = fakeWhyThisExplanation()
-        coEvery { getWhyThisMealUseCase(any()) } returns Result.Success(explanation)
+        coEvery { getWhyThisMealUseCase.invoke(any()) } returns Result.Success(explanation)
         val vm = createViewModel()
 
         vm.loadWhyThisMeal("meal-1")
@@ -158,7 +158,7 @@ class EducationViewModelTest {
 
     @Test
     fun `loadWhyThisMeal cuando useCase falla, state es Error`() = runTest {
-        coEvery { getWhyThisMealUseCase(any()) } returns
+        coEvery { getWhyThisMealUseCase.invoke(any()) } returns
                 Result.Error(AppException.ServerException)
         val vm = createViewModel()
 
@@ -173,7 +173,7 @@ class EducationViewModelTest {
     @Test
     fun `loadGlossaryTerm cuando useCase retorna Success, state es Success`() = runTest {
         val definition = fakeGlossaryDefinition()
-        coEvery { getGlossaryTermUseCase(any()) } returns Result.Success(definition)
+        coEvery { getGlossaryTermUseCase.invoke(any()) } returns Result.Success(definition)
         val vm = createViewModel()
 
         vm.loadGlossaryTerm("Hypertrophy")
@@ -186,7 +186,7 @@ class EducationViewModelTest {
 
     @Test
     fun `loadGlossaryTerm cuando useCase falla, state es Error`() = runTest {
-        coEvery { getGlossaryTermUseCase(any()) } returns
+        coEvery { getGlossaryTermUseCase.invoke(any()) } returns
                 Result.Error(AppException.NetworkException)
         val vm = createViewModel()
 
@@ -201,7 +201,7 @@ class EducationViewModelTest {
     @Test
     fun `resetExplanationState vuelve a Idle`() = runTest {
         val explanation = fakeContextualExplanation()
-        coEvery { getExerciseExplanationUseCase(any()) } returns Result.Success(explanation)
+        coEvery { getExerciseExplanationUseCase.invoke(any()) } returns Result.Success(explanation)
         val vm = createViewModel()
 
         vm.loadExerciseExplanation("exercise-1")
@@ -216,7 +216,7 @@ class EducationViewModelTest {
     @Test
     fun `resetWhyThisState vuelve a Idle`() = runTest {
         val explanation = fakeWhyThisExplanation()
-        coEvery { getWhyThisExerciseUseCase(any()) } returns Result.Success(explanation)
+        coEvery { getWhyThisExerciseUseCase.invoke(any()) } returns Result.Success(explanation)
         val vm = createViewModel()
 
         vm.loadWhyThisExercise("exercise-1")
@@ -231,7 +231,7 @@ class EducationViewModelTest {
     @Test
     fun `resetGlossaryState vuelve a Idle`() = runTest {
         val definition = fakeGlossaryDefinition()
-        coEvery { getGlossaryTermUseCase(any()) } returns Result.Success(definition)
+        coEvery { getGlossaryTermUseCase.invoke(any()) } returns Result.Success(definition)
         val vm = createViewModel()
 
         vm.loadGlossaryTerm("Hypertrophy")

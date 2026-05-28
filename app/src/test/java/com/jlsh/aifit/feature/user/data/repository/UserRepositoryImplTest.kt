@@ -1,6 +1,7 @@
 package com.jlsh.aifit.feature.user.data.repository
 
 import android.content.Context
+import android.util.Log
 import app.cash.turbine.test
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.ApiResponse
@@ -19,11 +20,14 @@ import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
@@ -42,12 +46,22 @@ class UserRepositoryImplTest {
 
     @Before
     fun setUp() {
+        mockkStatic(Log::class)
+        every { Log.d(any(), any()) } returns 0
+        every { Log.w(any<String>(), any<String>()) } returns 0
+        every { Log.e(any(), any()) } returns 0
         every { authDataStore.getUserId() } returns FAKE_USER_ID
         every { authDataStore.getAvatarUrl(FAKE_USER_ID) } returns null
         every { authDataStore.getName() } returns "Test User"
         every { authDataStore.getEmail() } returns "test@aifit.com"
+        coEvery { dao.getById(any()) } returns null
         coJustRun { authDataStore.saveAvatarUrl(any(), any()) }
         sut = UserRepositoryImpl(apiService, dao, authDataStore, context)
+    }
+
+    @After
+    fun tearDown() {
+        unmockkStatic(Log::class)
     }
 
     // ─── getProfile — cache-first ──────────────────────────────────────────────

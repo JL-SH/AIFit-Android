@@ -90,7 +90,7 @@ class RegisterScreenTest {
             ) }
         }
 
-        composeTestRule.onNodeWithText("CREAR CUENTA").assertIsDisplayed()
+        composeTestRule.onNodeWithText("CREAR CUENTA", substring = true).performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -118,7 +118,7 @@ class RegisterScreenTest {
             ) }
         }
 
-        composeTestRule.onNodeWithText("CREAR CUENTA").performClick()
+        composeTestRule.onNodeWithText("CREAR CUENTA", substring = true).performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("El email es obligatorio").assertIsDisplayed()
     }
@@ -142,7 +142,7 @@ class RegisterScreenTest {
         composeTestRule.onNodeWithText("Email").performTextInput("new@aifit.com")
         composeTestRule.onNodeWithText("Contraseña").performTextInput("password123")
         composeTestRule.onNodeWithText("Nombre completo").performTextInput("Test User")
-        composeTestRule.onNodeWithText("CREAR CUENTA").performClick()
+        composeTestRule.onNodeWithText("CREAR CUENTA", substring = true).performScrollTo().performClick()
 
         assert(navigated)
     }

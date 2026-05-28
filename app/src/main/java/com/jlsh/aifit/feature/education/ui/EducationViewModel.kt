@@ -1,10 +1,9 @@
 package com.jlsh.aifit.feature.education.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
-import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.education.domain.usecase.GetExerciseExplanationUseCase
 import com.jlsh.aifit.feature.education.domain.usecase.GetGlossaryTermUseCase
 import com.jlsh.aifit.feature.education.domain.usecase.GetMealExplanationUseCase
@@ -80,16 +79,16 @@ class EducationViewModel @Inject constructor(
      */
     fun loadExerciseExplanation(exerciseId: String) {
         viewModelScope.launch {
-            Log.d("AIFIT_DEBUG", "education: llamando exerciseExplanation id=$exerciseId")
+            safeLogDebug("education: llamando exerciseExplanation id=$exerciseId")
             _explanationState.value = ExplanationState.Loading
             when (val result = getExerciseExplanationUseCase(exerciseId)) {
                 is Result.Success -> {
-                    Log.d("AIFIT_DEBUG", "education: exerciseExplanation OK data=${result.data}")
+                    safeLogDebug("education: exerciseExplanation OK data=${result.data}")
                     _explanationState.value = ExplanationState.Success(result.data)
                 }
                 is Result.Error -> {
-                    Log.e("AIFIT_DEBUG", "education: exerciseExplanation ERROR=${result.exception}", result.exception)
-                    _explanationState.value = ExplanationState.Error(result.exception.toMessage())
+                    safeLogError("education: exerciseExplanation ERROR=${result.exception}")
+                    _explanationState.value = ExplanationState.Error(result.exception.userMessage())
                 }
                 else -> Unit
             }
@@ -103,16 +102,16 @@ class EducationViewModel @Inject constructor(
      */
     fun loadMealExplanation(mealId: String) {
         viewModelScope.launch {
-            Log.d("AIFIT_DEBUG", "education: llamando mealExplanation id=$mealId")
+            safeLogDebug("education: llamando mealExplanation id=$mealId")
             _explanationState.value = ExplanationState.Loading
             when (val result = getMealExplanationUseCase(mealId)) {
                 is Result.Success -> {
-                    Log.d("AIFIT_DEBUG", "education: mealExplanation OK data=${result.data}")
+                    safeLogDebug("education: mealExplanation OK data=${result.data}")
                     _explanationState.value = ExplanationState.Success(result.data)
                 }
                 is Result.Error -> {
-                    Log.e("AIFIT_DEBUG", "education: mealExplanation ERROR=${result.exception}", result.exception)
-                    _explanationState.value = ExplanationState.Error(result.exception.toMessage())
+                    safeLogError("education: mealExplanation ERROR=${result.exception}")
+                    _explanationState.value = ExplanationState.Error(result.exception.userMessage())
                 }
                 else -> Unit
             }
@@ -126,16 +125,16 @@ class EducationViewModel @Inject constructor(
      */
     fun loadWhyThisExercise(exerciseId: String) {
         viewModelScope.launch {
-            Log.d("AIFIT_DEBUG", "education: llamando whyThisExercise id=$exerciseId")
+            safeLogDebug("education: llamando whyThisExercise id=$exerciseId")
             _whyThisState.value = WhyThisState.Loading
             when (val result = getWhyThisExerciseUseCase(exerciseId)) {
                 is Result.Success -> {
-                    Log.d("AIFIT_DEBUG", "education: whyThisExercise OK data=${result.data}")
+                    safeLogDebug("education: whyThisExercise OK data=${result.data}")
                     _whyThisState.value = WhyThisState.Success(result.data)
                 }
                 is Result.Error -> {
-                    Log.e("AIFIT_DEBUG", "education: whyThisExercise ERROR=${result.exception}", result.exception)
-                    _whyThisState.value = WhyThisState.Error(result.exception.toMessage())
+                    safeLogError("education: whyThisExercise ERROR=${result.exception}")
+                    _whyThisState.value = WhyThisState.Error(result.exception.userMessage())
                 }
                 else -> Unit
             }
@@ -149,16 +148,16 @@ class EducationViewModel @Inject constructor(
      */
     fun loadWhyThisMeal(mealId: String) {
         viewModelScope.launch {
-            Log.d("AIFIT_DEBUG", "education: llamando whyThisMeal id=$mealId")
+            safeLogDebug("education: llamando whyThisMeal id=$mealId")
             _whyThisState.value = WhyThisState.Loading
             when (val result = getWhyThisMealUseCase(mealId)) {
                 is Result.Success -> {
-                    Log.d("AIFIT_DEBUG", "education: whyThisMeal OK data=${result.data}")
+                    safeLogDebug("education: whyThisMeal OK data=${result.data}")
                     _whyThisState.value = WhyThisState.Success(result.data)
                 }
                 is Result.Error -> {
-                    Log.e("AIFIT_DEBUG", "education: whyThisMeal ERROR=${result.exception}", result.exception)
-                    _whyThisState.value = WhyThisState.Error(result.exception.toMessage())
+                    safeLogError("education: whyThisMeal ERROR=${result.exception}")
+                    _whyThisState.value = WhyThisState.Error(result.exception.userMessage())
                 }
                 else -> Unit
             }
@@ -172,16 +171,16 @@ class EducationViewModel @Inject constructor(
      */
     fun loadGlossaryTerm(term: String) {
         viewModelScope.launch {
-            Log.d("AIFIT_DEBUG", "education: llamando glossary term=$term")
+            safeLogDebug("education: llamando glossary term=$term")
             _glossaryState.value = GlossaryState.Loading
             when (val result = getGlossaryTermUseCase(term)) {
                 is Result.Success -> {
-                    Log.d("AIFIT_DEBUG", "education: glossary OK data=${result.data}")
+                    safeLogDebug("education: glossary OK data=${result.data}")
                     _glossaryState.value = GlossaryState.Success(result.data)
                 }
                 is Result.Error -> {
-                    Log.e("AIFIT_DEBUG", "education: glossary ERROR=${result.exception}", result.exception)
-                    _glossaryState.value = GlossaryState.Error(result.exception.toMessage())
+                    safeLogError("education: glossary ERROR=${result.exception}")
+                    _glossaryState.value = GlossaryState.Error(result.exception.userMessage())
                 }
                 else -> Unit
             }
@@ -201,6 +200,27 @@ class EducationViewModel @Inject constructor(
     /** Restablece [glossaryState] a [GlossaryState.Idle]. */
     fun resetGlossaryState() {
         _glossaryState.value = GlossaryState.Idle
+    }
+
+    private fun safeLogDebug(message: String) {
+        runCatching { android.util.Log.d("AIFIT_DEBUG", message) }
+    }
+
+    private fun safeLogError(message: String) {
+        runCatching { android.util.Log.e("AIFIT_DEBUG", message) }
+    }
+
+    private fun AppException.userMessage(): String = when (this) {
+        is AppException.NetworkException -> "Sin conexión. Comprueba tu internet."
+        is AppException.UnauthorizedException -> "Sesión expirada. Vuelve a iniciar sesión."
+        is AppException.ForbiddenException -> "No tienes permisos para realizar esta acción."
+        is AppException.NotFoundException -> "No se encontró $resource."
+        is AppException.ValidationException -> errors.values.firstOrNull() ?: "Datos inválidos."
+        is AppException.ConflictException -> "El recurso ya existe o hay un conflicto."
+        is AppException.ServerException -> "Error del servidor. Inténtalo más tarde."
+        is AppException.AiOverloadedException -> AppException.AI_OVERLOADED_MESSAGE
+        is AppException.UnknownException -> message.ifBlank { "Error inesperado. Inténtalo de nuevo." }
+        is AppException.InsufficientDataException -> "Necesitas más datos para realizar este análisis. Registra al menos 2 semanas de peso y entrenamientos."
     }
 }
 

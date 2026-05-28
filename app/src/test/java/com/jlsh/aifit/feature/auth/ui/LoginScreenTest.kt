@@ -91,7 +91,7 @@ class LoginScreenTest {
             ) }
         }
 
-        composeTestRule.onNodeWithText("CONTINUAR CON GOOGLE").assertIsDisplayed()
+        composeTestRule.onNodeWithText("CONTINUAR CON GOOGLE", substring = true).performScrollTo().assertIsDisplayed()
     }
 
     @Test

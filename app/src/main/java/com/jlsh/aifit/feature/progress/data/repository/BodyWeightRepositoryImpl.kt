@@ -10,9 +10,8 @@ import com.jlsh.aifit.feature.progress.data.mapper.ProgressMapper.toEntity
 import com.jlsh.aifit.feature.progress.domain.model.BodyWeightLog
 import com.jlsh.aifit.feature.progress.domain.repository.BodyWeightRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -44,38 +43,20 @@ class BodyWeightRepositoryImpl @Inject constructor(
         val fromEpoch = runCatching { LocalDate.parse(from, dateFormatter).toEpochDay() }.getOrDefault(0L)
         val toEpoch = runCatching { LocalDate.parse(to, dateFormatter).toEpochDay() }.getOrDefault(Long.MAX_VALUE)
 
-        return channelFlow {
-            send(Result.Loading)
-
-            // Observe Room reactively — any insert/update automatically re-emits
-            launch {
-                dao.observeByDateRange(fromEpoch, toEpoch)
-                    .map { entities -> Result.Success(entities.map { it.toDomain() }) as Result<List<BodyWeightLog>> }
-                    .collect { send(it) }
+        return flow {
+            emit(Result.Loading)
+            val cached = dao.observeByDateRange(fromEpoch, toEpoch).first().map { it.toDomain() }
+            emit(Result.Success(cached))
+            when (val remote = safeApiCall { apiService.getHistory(from, to) }) {
+                is Result.Success -> {
+                    val logs = remote.data.map { it.toDomain() }
+                    dao.upsertAll(logs.map { it.toEntity() })
+                }
+                is Result.Error -> {
+                    // Keep cache-only behavior in offline errors.
+                }
+                else -> Unit
             }
-
-            // Trigger network refresh in a child coroutine — results go into Room,
-            // which auto-triggers the observer above so the UI gets the latest data.
-            launch {
-                refreshFromNetwork(from, to)
-            }
-        }
-    }
-
-    /**
-     * Fetches the latest data from the API and upserts into Room.
-     * Called from within channelFlow so [safeApiCall] (from [BaseRemoteDataSource]) is accessible.
-     */
-    private suspend fun refreshFromNetwork(from: String, to: String) {
-        when (val remote = safeApiCall { apiService.getHistory(from, to) }) {
-            is Result.Success -> {
-                val logs = remote.data.map { it.toDomain() }
-                dao.upsertAll(logs.map { it.toEntity() })
-            }
-            is Result.Error -> {
-                // Room observer already emitted cached data (if any).
-            }
-            else -> Unit
         }
     }
 

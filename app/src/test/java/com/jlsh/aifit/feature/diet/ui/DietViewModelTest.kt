@@ -259,7 +259,7 @@ class DietViewModelTest {
             advanceUntilIdle()
 
             val event = awaitItem()
-            assertTrue(event is DietUiEvent.NavigateBack)
+            assertTrue(event is DietUiEvent.PlanApproved)
             cancelAndIgnoreRemainingEvents()
         }
     }

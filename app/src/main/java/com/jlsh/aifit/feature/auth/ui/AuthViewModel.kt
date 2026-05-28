@@ -1,10 +1,9 @@
 package com.jlsh.aifit.feature.auth.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
-import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.auth.domain.usecase.GoogleLoginUseCase
 import com.jlsh.aifit.feature.auth.domain.usecase.LoginUseCase
 import com.jlsh.aifit.feature.auth.domain.usecase.RegisterUseCase
@@ -144,12 +143,12 @@ class AuthViewModel @Inject constructor(
 
     /** Emite [AuthUiEvent.NavigateToRegister]. */
     fun onNavigateToRegister() {
-        emitEvent(AuthUiEvent.NavigateToRegister)
+        viewModelScope.launch { emitEvent(AuthUiEvent.NavigateToRegister) }
     }
 
     /** Emite [AuthUiEvent.NavigateBack]. */
     fun onNavigateBack() {
-        emitEvent(AuthUiEvent.NavigateBack)
+        viewModelScope.launch { emitEvent(AuthUiEvent.NavigateBack) }
     }
 
     // 6. PRIVATE HELPERS
@@ -200,7 +199,7 @@ class AuthViewModel @Inject constructor(
                 }
                 is Result.Error -> {
                     _uiState.value = AuthUiState.Idle
-                    emitEvent(AuthUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    emitEvent(AuthUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 is Result.Loading -> Unit
             }
@@ -217,7 +216,7 @@ class AuthViewModel @Inject constructor(
                 }
                 is Result.Error -> {
                     _uiState.value = AuthUiState.Idle
-                    emitEvent(AuthUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    emitEvent(AuthUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 is Result.Loading -> Unit
             }
@@ -226,11 +225,11 @@ class AuthViewModel @Inject constructor(
 
     private fun performGoogleLogin(idToken: String) {
         viewModelScope.launch {
-            Log.d("AIFIT", "AuthViewModel: performGoogleLogin — enviando token al backend")
+            safeLogDebug("AuthViewModel: performGoogleLogin — enviando token al backend")
             _uiState.value = AuthUiState.Loading
             when (val result = googleLoginUseCase(idToken)) {
                 is Result.Success -> {
-                    Log.d("AIFIT", "AuthViewModel: Google login exitoso — profileComplete=${result.data.profileComplete}")
+                    safeLogDebug("AuthViewModel: Google login exitoso — profileComplete=${result.data.profileComplete}")
                     _uiState.value = AuthUiState.Success(result.data)
                     if (result.data.profileComplete) {
                         emitEvent(AuthUiEvent.NavigateToMain)
@@ -239,17 +238,38 @@ class AuthViewModel @Inject constructor(
                     }
                 }
                 is Result.Error -> {
-                    Log.e("AIFIT", "AuthViewModel: Google login falló — ${result.exception}")
+                    safeLogError("AuthViewModel: Google login falló — ${result.exception}")
                     _uiState.value = AuthUiState.Idle
-                    emitEvent(AuthUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    emitEvent(AuthUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 is Result.Loading -> Unit
             }
         }
     }
 
-    private fun emitEvent(event: AuthUiEvent) {
-        viewModelScope.launch { _events.send(event) }
+    private suspend fun emitEvent(event: AuthUiEvent) {
+        _events.send(event)
+    }
+
+    private fun safeLogDebug(message: String) {
+        runCatching { android.util.Log.d("AIFIT", message) }
+    }
+
+    private fun safeLogError(message: String) {
+        runCatching { android.util.Log.e("AIFIT", message) }
+    }
+
+    private fun AppException.userMessage(): String = when (this) {
+        is AppException.NetworkException -> "Sin conexión. Comprueba tu internet."
+        is AppException.UnauthorizedException -> "Sesión expirada. Vuelve a iniciar sesión."
+        is AppException.ForbiddenException -> "No tienes permisos para realizar esta acción."
+        is AppException.NotFoundException -> "No se encontró $resource."
+        is AppException.ValidationException -> errors.values.firstOrNull() ?: "Datos inválidos."
+        is AppException.ConflictException -> "El recurso ya existe o hay un conflicto."
+        is AppException.ServerException -> "Error del servidor. Inténtalo más tarde."
+        is AppException.AiOverloadedException -> AppException.AI_OVERLOADED_MESSAGE
+        is AppException.UnknownException -> message.ifBlank { "Error inesperado. Inténtalo de nuevo." }
+        is AppException.InsufficientDataException -> "Necesitas más datos para realizar este análisis. Registra al menos 2 semanas de peso y entrenamientos."
     }
 
     companion object {

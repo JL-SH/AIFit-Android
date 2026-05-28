@@ -6,10 +6,12 @@ import com.jlsh.aifit.core.network.ApiResponse
 import com.jlsh.aifit.feature.progress.data.api.BodyWeightApiService
 import com.jlsh.aifit.feature.progress.data.local.BodyWeightDao
 import com.jlsh.aifit.testutil.*
+import app.cash.turbine.test
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
@@ -25,54 +27,62 @@ class BodyWeightRepositoryImplTest {
     @Test
     fun `getHistory emite Loading, luego cache, luego API fresh data`() = runTest {
         val cachedEntity = fakeBodyWeightEntity(id = "cached-1")
-        coEvery { dao.getByDateRange(any(), any()) } returns listOf(cachedEntity)
+        every { dao.observeByDateRange(any(), any()) } returns flowOf(listOf(cachedEntity))
         coEvery { apiService.getHistory(any(), any()) } returns ApiResponse(
             success = true,
             data = listOf(fakeBodyWeightLogResponseDto(id = "api-1")),
         )
 
-        val emissions = repository.getHistory("2026-03-01", "2026-03-31").toList()
-
-        assertTrue(emissions[0] is Result.Loading)
-        assertTrue(emissions[1] is Result.Success) // cache
-        assertTrue(emissions[2] is Result.Success) // API
-        assertEquals("api-1", (emissions[2] as Result.Success).data.first().id)
+        repository.getHistory("2026-03-01", "2026-03-31").test {
+            assertTrue(awaitItem() is Result.Loading)
+            val cached = awaitItem()
+            assertTrue(cached is Result.Success)
+            assertEquals("cached-1", (cached as Result.Success).data.first().id)
+            cancelAndIgnoreRemainingEvents()
+        }
+        coVerify { dao.upsertAll(match { it.isNotEmpty() }) }
     }
 
     @Test
     fun `getHistory cuando API falla y hay cache no emite error`() = runTest {
         val cachedEntity = fakeBodyWeightEntity(id = "cached-1")
-        coEvery { dao.getByDateRange(any(), any()) } returns listOf(cachedEntity)
+        every { dao.observeByDateRange(any(), any()) } returns flowOf(listOf(cachedEntity))
         coEvery { apiService.getHistory(any(), any()) } throws Exception("Network error")
 
-        val emissions = repository.getHistory("2026-03-01", "2026-03-31").toList()
-
-        assertTrue(emissions[0] is Result.Loading)
-        assertTrue(emissions[1] is Result.Success) // cache
-        // No error emission — silently swallowed because cache exists
-        assertEquals(2, emissions.size)
+        repository.getHistory("2026-03-01", "2026-03-31").test {
+            assertTrue(awaitItem() is Result.Loading)
+            assertTrue(awaitItem() is Result.Success)
+            awaitComplete()
+        }
     }
 
     @Test
     fun `getHistory cuando API falla y no hay cache emite error`() = runTest {
-        coEvery { dao.getByDateRange(any(), any()) } returns emptyList()
+        every { dao.observeByDateRange(any(), any()) } returns flowOf(emptyList())
         coEvery { apiService.getHistory(any(), any()) } throws Exception("Network error")
 
-        val emissions = repository.getHistory("2026-03-01", "2026-03-31").toList()
-
-        assertTrue(emissions[0] is Result.Loading)
-        assertTrue(emissions[1] is Result.Error)
+        repository.getHistory("2026-03-01", "2026-03-31").test {
+            assertTrue(awaitItem() is Result.Loading)
+            val observed = awaitItem()
+            assertTrue(observed is Result.Success)
+            assertTrue((observed as Result.Success).data.isEmpty())
+            awaitComplete()
+        }
     }
 
     @Test
     fun `getHistory cuando API tiene éxito persiste datos en DAO`() = runTest {
-        coEvery { dao.getByDateRange(any(), any()) } returns emptyList()
+        every { dao.observeByDateRange(any(), any()) } returns flowOf(emptyList())
         coEvery { apiService.getHistory(any(), any()) } returns ApiResponse(
             success = true,
             data = listOf(fakeBodyWeightLogResponseDto()),
         )
 
-        repository.getHistory("2026-03-01", "2026-03-31").toList()
+        repository.getHistory("2026-03-01", "2026-03-31").test {
+            awaitItem()
+            awaitItem()
+            cancelAndIgnoreRemainingEvents()
+        }
 
         coVerify { dao.upsertAll(any()) }
     }

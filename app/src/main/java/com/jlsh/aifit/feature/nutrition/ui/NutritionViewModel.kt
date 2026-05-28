@@ -1,19 +1,17 @@
 package com.jlsh.aifit.feature.nutrition.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
-import com.jlsh.aifit.core.common.lastSuccessOrNull
-import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.model.Meal
 import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.SetActiveDietPlanUseCase
-import com.jlsh.aifit.feature.diet.domain.util.mealsForToday
 import com.jlsh.aifit.feature.nutrition.data.dto.AnalyzeMealFromTextRequestDto
+import com.jlsh.aifit.feature.nutrition.data.dto.TrackFoodItemRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.TrackMealRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.UpdateNutritionTargetRequestDto
 import com.jlsh.aifit.feature.nutrition.domain.usecase.AnalyzeMealFromTextUseCase
@@ -22,7 +20,6 @@ import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetNutritionLogUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.TrackMealUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.UpdateNutritionTargetUseCase
-import com.jlsh.aifit.feature.nutrition.domain.util.toTrackMealRequestDto
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionHubUiState
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionTargetUiState
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionUiEvent
@@ -125,7 +122,7 @@ class NutritionViewModel @Inject constructor(
         fetchDietPlansJob?.cancel()
         fetchDietPlansJob = viewModelScope.launch {
             val logDeferred = async {
-                getNutritionLogUseCase(LocalDate.now()).lastSuccessOrNull()
+                lastSuccessFromFlow(getNutritionLogUseCase(LocalDate.now()))
             }
             val targetDeferred = async {
                 getCurrentNutritionTargetUseCase()
@@ -144,7 +141,7 @@ class NutritionViewModel @Inject constructor(
                 when (result) {
                     is Result.Success -> {
                         val plans = sortDietPlans(result.data)
-                        Log.d("AIFIT_DEBUG", "[NutritionVM] fetchHubData: dietPlans=${plans.size}")
+                        safeLogDebug("fetchHubData: dietPlans=${plans.size}")
                         val current = _hubState.value
                         val filter = (current as? NutritionHubUiState.Success)?.selectedDietPlanFilter
                         _hubState.value = NutritionHubUiState.Success(
@@ -156,9 +153,15 @@ class NutritionViewModel @Inject constructor(
                         )
                     }
                     is Result.Error -> {
-                        if (_hubState.value is NutritionHubUiState.Loading) {
-                            _hubState.value = NutritionHubUiState.Error(result.exception.toMessage())
-                        }
+                        val current = _hubState.value
+                        val filter = (current as? NutritionHubUiState.Success)?.selectedDietPlanFilter
+                        _hubState.value = NutritionHubUiState.Success(
+                            todayState = TodayState(nutritionLog = log, target = target),
+                            dietPlans = emptyList(),
+                            selectedTabIndex = _selectedTabIndex.value,
+                            selectedDietPlanFilter = filter,
+                            isActivatingPlan = false,
+                        )
                     }
                     is Result.Loading -> {
                         if (_hubState.value !is NutritionHubUiState.Success) {
@@ -227,7 +230,7 @@ class NutritionViewModel @Inject constructor(
                     emitEvent(NutritionUiEvent.ShowSnackbar("Comida eliminada"))
                     fetchHubData()
                 }
-                is Result.Error -> emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                is Result.Error -> emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.userMessage()))
                 else -> Unit
             }
         }
@@ -250,8 +253,8 @@ class NutritionViewModel @Inject constructor(
                     emitEvent(NutritionUiEvent.NavigateToHome)
                 }
                 is Result.Error -> {
-                    _trackMealState.value = TrackMealUiState.Error(result.exception.toMessage())
-                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    _trackMealState.value = TrackMealUiState.Error(result.exception.userMessage())
+                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 else -> Unit
             }
@@ -277,8 +280,8 @@ class NutritionViewModel @Inject constructor(
                 }
                 is Result.Error -> {
                     ensureMinAnimationDuration(startTime)
-                    _trackMealState.value = TrackMealUiState.Error(result.exception.toMessage())
-                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    _trackMealState.value = TrackMealUiState.Error(result.exception.userMessage())
+                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 else -> Unit
             }
@@ -309,7 +312,7 @@ class NutritionViewModel @Inject constructor(
                         )
                     }
                     is Result.Error -> {
-                        _targetState.value = NutritionTargetUiState.Error(result.exception.toMessage())
+                        _targetState.value = NutritionTargetUiState.Error(result.exception.userMessage())
                     }
                     else -> Unit
                 }
@@ -349,7 +352,7 @@ class NutritionViewModel @Inject constructor(
                     if (current is NutritionTargetUiState.Ready) {
                         _targetState.value = current.copy(isSaving = false)
                     }
-                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 else -> Unit
             }
@@ -378,13 +381,13 @@ class NutritionViewModel @Inject constructor(
      */
     fun onTrackMealFromPlan(meal: Meal) {
         viewModelScope.launch {
-            when (val result = trackMealUseCase(meal.toTrackMealRequestDto())) {
+            when (val result = trackMealUseCase(mealToTrackMealRequestDto(meal))) {
                 is Result.Success -> {
                     fetchHubData()
                     emitEvent(NutritionUiEvent.ShowSnackbar("Comida del plan registrada"))
                 }
                 is Result.Error -> {
-                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 is Result.Loading -> Unit
             }
@@ -433,7 +436,7 @@ class NutritionViewModel @Inject constructor(
                 }
                 is Result.Error -> {
                     _hubState.value = previousState.copy(isActivatingPlan = false)
-                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 else -> Unit
             }
@@ -470,7 +473,7 @@ class NutritionViewModel @Inject constructor(
                     _hubState.value = current
                     fetchHubData()
                     isDeletingPlan = false
-                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 else -> Unit
             }
@@ -501,7 +504,7 @@ class NutritionViewModel @Inject constructor(
                 else -> return emptyList()
             }
         }
-        return planWithDays.mealsForToday()
+        return mealsForToday(planWithDays)
     }
 
     private fun emitEvent(event: NutritionUiEvent) {
@@ -513,6 +516,85 @@ class NutritionViewModel @Inject constructor(
         if (elapsed < MIN_ANIMATION_DURATION) {
             delay(MIN_ANIMATION_DURATION - elapsed)
         }
+    }
+
+    private fun safeLogDebug(message: String) {
+        runCatching { android.util.Log.d("AIFIT_DEBUG", "[NutritionVM] $message") }
+    }
+
+    private suspend fun <T> lastSuccessFromFlow(flow: kotlinx.coroutines.flow.Flow<Result<T>>): T? {
+        var latest: T? = null
+        flow.collect { if (it is Result.Success) latest = it.data }
+        return latest
+    }
+
+    private fun mealsForToday(plan: DietPlan): List<Meal> {
+        if (plan.days.isEmpty()) return emptyList()
+        val dayOfWeek = LocalDate.now().dayOfWeek.value
+        val todayDietDay = plan.days.getOrNull((dayOfWeek - 1) % plan.days.size) ?: return emptyList()
+        return todayDietDay.meals
+    }
+
+    private fun mealToTrackMealRequestDto(meal: Meal, date: LocalDate = LocalDate.now()): TrackMealRequestDto {
+        val resolvedTime = meal.time.trim().ifBlank { estimatedTimeForMealType(meal.mealType) }
+        val items = if (meal.items.isNotEmpty()) {
+            meal.items.map { item ->
+                TrackFoodItemRequestDto(
+                    name = item.name,
+                    quantity = item.quantity.toDouble(),
+                    unit = item.unit,
+                    calories = item.calories,
+                    proteinGrams = item.proteinGrams.toDouble(),
+                    carbsGrams = item.carbsGrams.toDouble(),
+                    fatGrams = item.fatGrams.toDouble(),
+                    macrosPer100g = false,
+                )
+            }
+        } else {
+            listOf(
+                TrackFoodItemRequestDto(
+                    name = meal.name,
+                    quantity = 1.0,
+                    unit = "unit",
+                    calories = meal.calories,
+                    proteinGrams = meal.proteinGrams.toDouble(),
+                    carbsGrams = meal.carbsGrams.toDouble(),
+                    fatGrams = meal.fatGrams.toDouble(),
+                    macrosPer100g = false,
+                ),
+            )
+        }
+        return TrackMealRequestDto(
+            date = date.toString(),
+            mealType = meal.mealType.name,
+            name = meal.name,
+            time = resolvedTime,
+            items = items,
+        )
+    }
+
+    private fun estimatedTimeForMealType(type: com.jlsh.aifit.feature.diet.domain.model.MealType): String = when (type) {
+        com.jlsh.aifit.feature.diet.domain.model.MealType.BREAKFAST -> "08:00"
+        com.jlsh.aifit.feature.diet.domain.model.MealType.MID_MORNING -> "10:30"
+        com.jlsh.aifit.feature.diet.domain.model.MealType.LUNCH -> "13:00"
+        com.jlsh.aifit.feature.diet.domain.model.MealType.AFTERNOON_SNACK -> "16:30"
+        com.jlsh.aifit.feature.diet.domain.model.MealType.DINNER -> "20:00"
+        com.jlsh.aifit.feature.diet.domain.model.MealType.PRE_WORKOUT -> "17:00"
+        com.jlsh.aifit.feature.diet.domain.model.MealType.POST_WORKOUT -> "19:00"
+        com.jlsh.aifit.feature.diet.domain.model.MealType.UNKNOWN -> "12:00"
+    }
+
+    private fun AppException.userMessage(): String = when (this) {
+        is AppException.NetworkException -> "Sin conexión. Comprueba tu internet."
+        is AppException.UnauthorizedException -> "Sesión expirada. Vuelve a iniciar sesión."
+        is AppException.ForbiddenException -> "No tienes permisos para realizar esta acción."
+        is AppException.NotFoundException -> "No se encontró $resource."
+        is AppException.ValidationException -> errors.values.firstOrNull() ?: "Datos inválidos."
+        is AppException.ConflictException -> "El recurso ya existe o hay un conflicto."
+        is AppException.ServerException -> "Error del servidor. Inténtalo más tarde."
+        is AppException.AiOverloadedException -> AppException.AI_OVERLOADED_MESSAGE
+        is AppException.UnknownException -> message.ifBlank { "Error inesperado. Inténtalo de nuevo." }
+        is AppException.InsufficientDataException -> "Necesitas más datos para realizar este análisis. Registra al menos 2 semanas de peso y entrenamientos."
     }
 
     companion object {

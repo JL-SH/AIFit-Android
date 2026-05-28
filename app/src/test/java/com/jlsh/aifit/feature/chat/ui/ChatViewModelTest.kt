@@ -20,6 +20,7 @@ import com.jlsh.aifit.testutil.*
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.coVerify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -114,9 +115,8 @@ class ChatViewModelTest {
     // ── onNewSession ────────────────────────────────────────────────────────
 
     @Test
-    fun `onNewSession exitoso envia evento SessionCreated`() = runTest {
+    fun `onNewSession envia NavigateToNewChat sin crear sesion`() = runTest {
         every { getChatSessionsUseCase() } returns flowOf(Result.Success(emptyList()))
-        coEvery { startChatSessionUseCase(any()) } returns Result.Success(fakeChatSession(id = "new-session"))
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -126,17 +126,16 @@ class ChatViewModelTest {
             advanceUntilIdle()
 
             val event = awaitItem()
-            assertTrue(event is ChatUiEvent.SessionCreated)
-            assertEquals("new-session", (event as ChatUiEvent.SessionCreated).sessionId)
+            assertTrue(event is ChatUiEvent.NavigateToNewChat)
+            coVerify(exactly = 0) { startChatSessionUseCase(any()) }
 
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `onNewSession fallido envia snackbar de error`() = runTest {
+    fun `onNewSession no emite snackbar de error porque no llama backend`() = runTest {
         every { getChatSessionsUseCase() } returns flowOf(Result.Success(emptyList()))
-        coEvery { startChatSessionUseCase(any()) } returns Result.Error(AppException.ServerException)
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -146,7 +145,8 @@ class ChatViewModelTest {
             advanceUntilIdle()
 
             val event = awaitItem()
-            assertTrue(event is ChatUiEvent.ShowSnackbar)
+            assertTrue(event is ChatUiEvent.NavigateToNewChat)
+            coVerify(exactly = 0) { startChatSessionUseCase(any()) }
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -238,7 +238,7 @@ class ChatViewModelTest {
 
     @Test
     fun `con sessionId, init carga sesion y actualiza chatState`() = runTest {
-        val session = fakeChatSession(id = "s1", title = "My Chat")
+        val session = fakeChatSession(id = "s1", title = "My Chat", messages = emptyList())
         every { getChatSessionUseCase("s1") } returns flowOf(Result.Success(session))
 
         val vm = buildViewModel(sessionId = "s1")
@@ -277,7 +277,7 @@ class ChatViewModelTest {
 
     @Test
     fun `onInputChanged actualiza inputText en chatState`() = runTest {
-        every { getChatSessionUseCase("s1") } returns flowOf(Result.Success(fakeChatSession()))
+        every { getChatSessionUseCase("s1") } returns flowOf(Result.Success(fakeChatSession(messages = emptyList())))
 
         val vm = buildViewModel(sessionId = "s1")
         advanceUntilIdle()
@@ -294,7 +294,8 @@ class ChatViewModelTest {
         val session = fakeChatSession(id = "s1", messages = emptyList())
         val assistantMsg = fakeChatMessage(id = "resp-1", role = ChatMessageRole.ASSISTANT, content = "Sure!")
         every { getChatSessionUseCase("s1") } returns flowOf(Result.Success(session))
-        coEvery { sendChatMessageUseCase("s1", "Hello") } returns Result.Success(assistantMsg)
+        coEvery { sendChatMessageUseCase("s1", "Hello", null) } returns Result.Success(assistantMsg)
+        coEvery { generateChatSessionTitleUseCase("s1") } returns Result.Success("My Chat")
 
         val vm = buildViewModel(sessionId = "s1")
         advanceUntilIdle()
@@ -316,7 +317,7 @@ class ChatViewModelTest {
     fun `onSendMessage con error restaura isWaitingResponse y envia snackbar`() = runTest {
         val session = fakeChatSession(id = "s1", messages = emptyList())
         every { getChatSessionUseCase("s1") } returns flowOf(Result.Success(session))
-        coEvery { sendChatMessageUseCase("s1", "Hello") } returns Result.Error(AppException.NetworkException)
+        coEvery { sendChatMessageUseCase("s1", "Hello", null) } returns Result.Error(AppException.NetworkException)
 
         val vm = buildViewModel(sessionId = "s1")
         advanceUntilIdle()
@@ -338,8 +339,12 @@ class ChatViewModelTest {
     }
 
     @Test
-    fun `onSendMessage no hace nada sin sessionId`() = runTest {
+    fun `onSendMessage sin sessionId crea sesion lazy y envia mensaje`() = runTest {
         every { getChatSessionsUseCase() } returns flowOf(Result.Success(emptyList()))
+        coEvery { startChatSessionUseCase() } returns Result.Success(fakeChatSession(id = "new-session"))
+        val assistantMsg = fakeChatMessage(id = "resp-1", role = ChatMessageRole.ASSISTANT, content = "Hola")
+        coEvery { sendChatMessageUseCase("new-session", "Hello", null) } returns Result.Success(assistantMsg)
+        coEvery { generateChatSessionTitleUseCase("new-session") } returns Result.Success("Nuevo Chat")
 
         val vm = buildViewModel(sessionId = null)
         advanceUntilIdle()
@@ -348,13 +353,13 @@ class ChatViewModelTest {
         vm.onSendMessage()
         advanceUntilIdle()
 
-        // chatState messages should remain empty
-        assertTrue(vm.chatState.value.messages.isEmpty())
+        // USER optimista + ASSISTANT respuesta
+        assertEquals(2, vm.chatState.value.messages.size)
     }
 
     @Test
     fun `onSendMessage no hace nada con texto vacio`() = runTest {
-        every { getChatSessionUseCase("s1") } returns flowOf(Result.Success(fakeChatSession(id = "s1")))
+        every { getChatSessionUseCase("s1") } returns flowOf(Result.Success(fakeChatSession(id = "s1", messages = emptyList())))
 
         val vm = buildViewModel(sessionId = "s1")
         advanceUntilIdle()

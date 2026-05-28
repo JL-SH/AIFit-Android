@@ -12,6 +12,7 @@ import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.testutil.*
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.*
@@ -32,6 +33,7 @@ class TrainingRepositoryImplTest {
         mockkStatic(Log::class)
         every { Log.d(any(), any()) } returns 0
         every { Log.e(any(), any()) } returns 0
+        coEvery { detailCacheDao.getById(any()) } returns null
 
         sut = TrainingRepositoryImpl(apiService, dao, detailCacheDao, sessionManager)
     }
@@ -191,8 +193,8 @@ class TrainingRepositoryImplTest {
 
     @Test
     fun `deletePlan elimina de cache y retorna Success`() = runTest {
-        val mockResponse = Response.success<Unit>(Unit)
-        coEvery { apiService.deleteTrainingPlan("p-1") } returns mockResponse
+        coEvery { apiService.deleteTrainingPlan("p-1") } returns Response.success(Unit)
+        coEvery { dao.getById("p-1") } returns null
 
         val result = sut.deleteTrainingPlan("p-1")
 
@@ -202,13 +204,19 @@ class TrainingRepositoryImplTest {
 
     @Test
     fun `deletePlan retorna Error cuando API falla`() = runTest {
-        val errorResponse = Response.error<Unit>(500, "error".toResponseBody(null))
-        coEvery { apiService.deleteTrainingPlan(any()) } returns errorResponse
+        val snapshot = fakeTrainingPlanEntity(id = "p-1")
+        coEvery { dao.getById("p-1") } returns snapshot
+        coEvery { apiService.deleteTrainingPlan(any()) } returns
+            Response.error(
+                500,
+                "{\"message\":\"error\"}".toResponseBody("application/json".toMediaType()),
+            )
 
         val result = sut.deleteTrainingPlan("p-1")
 
         assertTrue(result is Result.Error)
-        coVerify(exactly = 0) { dao.deleteById(any()) }
+        coVerify(exactly = 1) { dao.deleteById("p-1") }
+        coVerify { dao.upsertAll(match { it.any { e -> e.id == "p-1" } }) }
     }
 
     // ─── activatePlan ──────────────────────────────────────────────────────────

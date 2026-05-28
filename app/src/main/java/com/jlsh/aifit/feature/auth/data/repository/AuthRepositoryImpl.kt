@@ -1,6 +1,5 @@
 package com.jlsh.aifit.feature.auth.data.repository
 
-import android.util.Log
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.core.session.SessionManager
@@ -24,6 +23,9 @@ class AuthRepositoryImpl @Inject constructor(
     private val apiService: AuthApiService,
     private val sessionManager: SessionManager,
 ) : BaseRemoteDataSource(), AuthRepository {
+    private companion object {
+        const val LOG_TAG = "AIFIT"
+    }
 
     /**
      * Authenticate with email and password via API and persist the session if successful.
@@ -57,9 +59,9 @@ class AuthRepositoryImpl @Inject constructor(
      * @return Domain token or error.
      */
     override suspend fun googleLogin(idToken: String): Result<AuthToken> {
-        Log.d("AIFIT", "AuthRepository: googleLogin — llamando a POST auth/google con idToken (${idToken.length} chars)")
+        logDebug("AuthRepository: googleLogin - calling POST auth/google with idToken (${idToken.length} chars)")
         val result = safeApiCall { apiService.googleLogin(GoogleLoginRequestDto(idToken)) }
-        Log.d("AIFIT", "AuthRepository: googleLogin — resultado: ${result::class.simpleName}" +
+        logDebug("AuthRepository: googleLogin - result: ${result::class.simpleName}" +
                 if (result is Result.Error) " → ${result.exception}" else "")
         return handleAuthResult(result)
     }
@@ -88,6 +90,12 @@ class AuthRepositoryImpl @Inject constructor(
             }
             is Result.Error -> result
             is Result.Loading -> result
+        }
+    }
+
+    private fun logDebug(message: String) {
+        runCatching {
+            android.util.Log.d(LOG_TAG, message)
         }
     }
 }

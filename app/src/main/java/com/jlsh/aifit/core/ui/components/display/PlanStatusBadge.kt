@@ -13,12 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitGradients
 import com.jlsh.aifit.core.ui.theme.aifitSubtleBorder
@@ -63,14 +61,7 @@ fun PlanStatusBadge(
 
 @Composable
 private fun statusDisplayName(status: String): String {
-    return when (status.uppercase()) {
-        "ACTIVE" -> stringResource(R.string.status_active)
-        "COMPLETED" -> stringResource(R.string.status_completed)
-        "DRAFT" -> stringResource(R.string.status_draft)
-        "ARCHIVED" -> stringResource(R.string.status_archived)
-        "PAUSED" -> stringResource(R.string.status_paused)
-        else -> status
-    }
+    return status.uppercase()
 }
 
 @Composable

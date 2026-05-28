@@ -97,7 +97,7 @@ class NutritionHubScreenTest {
         )
         setScreen(vm)
 
-        composeTestRule.onNodeWithTag("loading_screen").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Nutrición").assertIsDisplayed()
     }
 
     // ─── Status Error ───────────────────────────── ─────────────────────────────
@@ -119,7 +119,7 @@ class NutritionHubScreenTest {
         val vm = createViewModel()
         setScreen(vm)
 
-        composeTestRule.onNodeWithText("Nutrition").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Nutrición").assertIsDisplayed()
     }
 
     @Test
@@ -127,9 +127,9 @@ class NutritionHubScreenTest {
         val vm = createViewModel()
         setScreen(vm)
 
-        composeTestRule.onNodeWithText("TODAY").assertIsDisplayed()
-        composeTestRule.onNodeWithText("DIET PLAN").assertIsDisplayed()
-        composeTestRule.onNodeWithText("SHOPPING").assertIsDisplayed()
+        composeTestRule.onNodeWithText("HOY").assertIsDisplayed()
+        composeTestRule.onNodeWithText("PLAN DIETA").assertIsDisplayed()
+        composeTestRule.onNodeWithText("COMPRA").assertIsDisplayed()
     }
 
     @Test
@@ -183,7 +183,7 @@ class NutritionHubScreenTest {
         val vm = createViewModel()
         setScreen(vm)
 
-        composeTestRule.onNodeWithText("DIET PLAN").performClick()
+        composeTestRule.onNodeWithText("PLAN DIETA").performClick()
         composeTestRule.onNodeWithText("Test Diet").assertIsDisplayed()
     }
 
@@ -192,7 +192,7 @@ class NutritionHubScreenTest {
         val vm = createViewModel(dietPlansFlow = flowOf(Result.Success(emptyList())))
         setScreen(vm)
 
-        composeTestRule.onNodeWithText("DIET PLAN").performClick()
+        composeTestRule.onNodeWithText("PLAN DIETA").performClick()
         composeTestRule.onNodeWithText("Sin planes de dieta").assertIsDisplayed()
     }
 
@@ -202,7 +202,7 @@ class NutritionHubScreenTest {
         val vm = createViewModel(dietPlansFlow = flowOf(Result.Success(listOf(draftOnly))))
         setScreen(vm)
 
-        composeTestRule.onNodeWithText("DIET PLAN").performClick()
+        composeTestRule.onNodeWithText("PLAN DIETA").performClick()
         composeTestRule.onNodeWithText("Sin planes activos").assertIsDisplayed()
     }
 
@@ -211,7 +211,7 @@ class NutritionHubScreenTest {
         val vm = createViewModel()
         setScreen(vm)
 
-        composeTestRule.onNodeWithText("DIET PLAN").performClick()
+        composeTestRule.onNodeWithText("PLAN DIETA").performClick()
         composeTestRule.onNodeWithText("Todos").assertIsDisplayed()
         composeTestRule.onNodeWithText("Activo").assertIsDisplayed()
     }

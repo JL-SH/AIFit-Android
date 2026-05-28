@@ -65,6 +65,7 @@ class NutritionTargetRepositoryImplTest {
 
     @Test
     fun `getCurrentTarget emite Error cuando API falla`() = runTest {
+        coEvery { dao.getCurrent() } returns null
         coEvery { apiService.getCurrentTarget() } throws java.io.IOException("fail")
 
         sut.getCurrentTarget().test {

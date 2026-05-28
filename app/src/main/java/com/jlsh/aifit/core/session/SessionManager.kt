@@ -1,6 +1,5 @@
 package com.jlsh.aifit.core.session
 
-import android.util.Log
 import com.jlsh.aifit.core.datastore.AuthDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +32,9 @@ class SessionManager @Inject constructor(
     private val authDataStore: AuthDataStore,
     private val localDataCleaner: LocalDataCleaner,
 ) {
+    private companion object {
+        const val LOG_TAG = "AIFIT"
+    }
     private val _isLoggedIn = MutableStateFlow(authDataStore.hasToken())
 
     /**
@@ -119,7 +121,8 @@ class SessionManager @Inject constructor(
      * AFTER the cleanup is complete so no stale data is ever shown post-logout.
      */
     fun logout() {
-        Log.d("AIFIT", "logout() — clearing session data")
+        logDebug("logout() - clearing session data")
+        _isLoggedIn.value = false
         scope.launch {
             clearSessionInternal()
             _logoutEvent.tryEmit(null)
@@ -133,10 +136,11 @@ class SessionManager @Inject constructor(
      */
     fun invalidateSession() {
         if (!invalidating.compareAndSet(false, true)) {
-            Log.d("AIFIT", "invalidateSession() already in progress — skipping duplicate")
+            logDebug("invalidateSession() already in progress - skipping duplicate")
             return
         }
-        Log.w("AIFIT", "invalidateSession() — token expired, clearing session")
+        logWarn("invalidateSession() - token expired, clearing session")
+        _isLoggedIn.value = false
         scope.launch {
             clearSessionInternal()
             _logoutEvent.tryEmit("Tu sesión ha caducado. Por favor, inicia sesión de nuevo.")
@@ -170,4 +174,16 @@ class SessionManager @Inject constructor(
      * if no session is active.
      */
     fun getUserName(): String? = authDataStore.getName()
+
+    private fun logDebug(message: String) {
+        runCatching {
+            android.util.Log.d(LOG_TAG, message)
+        }
+    }
+
+    private fun logWarn(message: String) {
+        runCatching {
+            android.util.Log.w(LOG_TAG, message)
+        }
+    }
 }

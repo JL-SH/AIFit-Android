@@ -292,9 +292,7 @@ class TrainingViewModelTest {
         vm.events.test {
             vm.onGeneratePlan(fakeGenerateTrainingPlanRequestDto())
             advanceUntilIdle()
-
-            val event = awaitItem()
-            assertTrue(event is TrainingUiEvent.ShowSnackbar)
+            expectNoEvents()
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -373,6 +371,7 @@ class TrainingViewModelTest {
         // Mock activation success
         val activePlan = fakeTrainingPlan(id = "plan-1", status = PlanStatus.ACTIVE)
         coEvery { setActivePlanUseCase("plan-1") } returns Result.Success(activePlan)
+        coEvery { getTrainingPlanDetailUseCase("plan-1") } returns Result.Success(activePlan)
         // After activation, fetchPlans returns the plan as ACTIVE
         every { getTrainingPlansUseCase() } returns
             flowOf(Result.Success(listOf(activePlan)))
@@ -385,7 +384,7 @@ class TrainingViewModelTest {
             assertTrue(vm.hubUiState.value is TrainingHubUiState.ActivePlan)
 
             val event = awaitItem()
-            assertTrue(event is TrainingUiEvent.NavigateBack)
+            assertTrue(event is TrainingUiEvent.PlanApproved)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -420,6 +419,7 @@ class TrainingViewModelTest {
         // Mock activation success
         val activePlan = fakeTrainingPlan(id = "plan-1", status = PlanStatus.ACTIVE)
         coEvery { setActivePlanUseCase("plan-1") } returns Result.Success(activePlan)
+        coEvery { getTrainingPlanDetailUseCase("plan-1") } returns Result.Success(activePlan)
         every { getTrainingPlansUseCase() } returns
             flowOf(Result.Success(listOf(activePlan)))
 

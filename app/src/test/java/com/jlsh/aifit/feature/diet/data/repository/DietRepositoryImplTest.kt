@@ -115,6 +115,7 @@ class DietRepositoryImplTest {
     @Test
     fun `getPlanDetail retorna plan con days cuando API tiene éxito`() = runTest {
         val dto = fakeDietPlanResponseDto(id = "dp-1")
+        every { sessionManager.getUserId() } returns FAKE_USER_ID
         coEvery { apiService.getDietPlanById("dp-1") } returns
             ApiResponse(success = true, data = dto)
 
@@ -174,6 +175,7 @@ class DietRepositoryImplTest {
 
     @Test
     fun `deletePlan retorna Success y borra de Room inmediatamente`() = runTest {
+        coEvery { dao.getById("dp-1") } returns fakeDietPlanEntity(id = "dp-1")
         coEvery { apiService.deleteDietPlan("dp-1") } returns
             ApiResponse(success = true, data = Unit)
 
@@ -192,8 +194,8 @@ class DietRepositoryImplTest {
         val result = sut.deleteDietPlan("dp-1")
 
         assertTrue(result is Result.Error)
+        coVerify { dao.deleteById("dp-1") }
         coVerify { dao.upsertAll(listOf(backup)) }
-        coVerify(exactly = 0) { dao.deleteById(any()) }
     }
 }
 

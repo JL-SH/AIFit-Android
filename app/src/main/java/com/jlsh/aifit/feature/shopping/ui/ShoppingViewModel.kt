@@ -1,6 +1,5 @@
 package com.jlsh.aifit.feature.shopping.ui
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -128,21 +127,21 @@ class ShoppingViewModel @Inject constructor(
     fun onGenerateList(dietPlanId: String?, period: String) {
         viewModelScope.launch {
             try {
-                Log.d(TAG, "onGenerateList start dietPlanId=$dietPlanId period=$period")
+                safeLogDebug("onGenerateList start dietPlanId=$dietPlanId period=$period")
                 val request = GenerateShoppingListRequestDto(dietPlanId = dietPlanId, period = period)
                 when (val r = generateShoppingListUseCase(request)) {
                     is Result.Success -> {
-                        Log.d(TAG, "onGenerateList success listId=${r.data.id}")
+                        safeLogDebug("onGenerateList success listId=${r.data.id}")
                         _events.send(ShoppingUiEvent.ListGenerated(r.data.id))
                     }
                     is Result.Error -> {
-                        Log.w(TAG, "onGenerateList error: ${r.exception.toMessage()}")
+                        safeLogWarn("onGenerateList error: ${r.exception.toMessage()}")
                         _events.send(ShoppingUiEvent.ShowSnackbar(r.exception.toMessage()))
                     }
                     else -> Unit
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "onGenerateList uncaught", e)
+                safeLogError("onGenerateList uncaught", e)
                 _events.send(
                     ShoppingUiEvent.ShowSnackbar(
                         e.message ?: "Error al generar la lista de la compra",
@@ -154,6 +153,18 @@ class ShoppingViewModel @Inject constructor(
 
     private companion object {
         const val TAG = "AIFIT_SHOPPING"
+    }
+
+    private fun safeLogDebug(message: String) {
+        runCatching { android.util.Log.d(TAG, message) }
+    }
+
+    private fun safeLogWarn(message: String) {
+        runCatching { android.util.Log.w(TAG, message) }
+    }
+
+    private fun safeLogError(message: String, error: Throwable) {
+        runCatching { android.util.Log.e(TAG, message, error) }
     }
 
     // ── Detail ───────────────────────────────────────────────────────────────

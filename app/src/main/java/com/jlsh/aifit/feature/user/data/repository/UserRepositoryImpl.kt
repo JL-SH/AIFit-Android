@@ -289,7 +289,6 @@ class UserRepositoryImpl @Inject constructor(
         if (userId == null || url.isNullOrBlank()) return
         val existing = authDataStore.getAvatarUrl(userId)
         val best = pickBestProfilePictureUrl(url, existing) ?: return
-        if (existing == best) return
         authDataStore.saveAvatarUrl(userId, best)
     }
 }

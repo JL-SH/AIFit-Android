@@ -5,15 +5,33 @@ import com.jlsh.aifit.core.network.ApiResponse
 import com.jlsh.aifit.feature.education.data.api.EducationApiService
 import com.jlsh.aifit.testutil.*
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 
 class EducationRepositoryImplTest {
 
     private val apiService: EducationApiService = mockk()
     private val repository = EducationRepositoryImpl(apiService)
+
+    @Before
+    fun setUp() {
+        mockkStatic(android.util.Log::class)
+        every { android.util.Log.d(any(), any()) } returns 0
+        every { android.util.Log.e(any(), any()) } returns 0
+        every { android.util.Log.e(any(), any(), any()) } returns 0
+    }
+
+    @After
+    fun tearDown() {
+        unmockkStatic(android.util.Log::class)
+    }
 
     // ─── getExerciseExplanation ────────────────────────────────────────────────
 

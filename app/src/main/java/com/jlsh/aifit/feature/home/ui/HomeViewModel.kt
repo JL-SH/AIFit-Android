@@ -3,14 +3,13 @@ package com.jlsh.aifit.feature.home.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.home.domain.model.HomeBootstrap
 import com.jlsh.aifit.feature.home.domain.usecase.GetHomeBootstrapUseCase
-import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.model.Meal
 import com.jlsh.aifit.feature.diet.domain.model.MealType
-import com.jlsh.aifit.feature.diet.domain.util.mealsForToday
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.gamification.domain.model.AchievementDefinition
@@ -31,7 +30,8 @@ import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTargetUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetNutritionLogUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.TrackMealUseCase
-import com.jlsh.aifit.feature.nutrition.domain.util.toTrackMealRequestDto
+import com.jlsh.aifit.feature.nutrition.data.dto.TrackFoodItemRequestDto
+import com.jlsh.aifit.feature.nutrition.data.dto.TrackMealRequestDto
 import com.jlsh.aifit.feature.progress.data.dto.LogBodyWeightRequestDto
 import com.jlsh.aifit.feature.progress.domain.model.BodyWeightLog
 import com.jlsh.aifit.feature.progress.domain.model.WeeklyProgressSummary
@@ -228,7 +228,7 @@ class HomeViewModel @Inject constructor(
      */
     fun onTrackMealFromPlan(meal: Meal) {
         viewModelScope.launch {
-            when (val result = trackMealUseCase(meal.toTrackMealRequestDto())) {
+            when (val result = trackMealUseCase(mealToTrackMealRequestDto(meal))) {
                 is Result.Success -> {
                     val nutritionPair = loadNutritionCacheFirst()
                     val todayNutrition = deriveNutrition(nutritionPair.first, nutritionPair.second)
@@ -238,7 +238,7 @@ class HomeViewModel @Inject constructor(
                     emitEvent(HomeUiEvent.ShowSnackbar("Comida del plan registrada"))
                 }
                 is Result.Error -> {
-                    emitEvent(HomeUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    emitEvent(HomeUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 is Result.Loading -> Unit
             }
@@ -267,10 +267,11 @@ class HomeViewModel @Inject constructor(
                     updateSuccessIfSuccess("save_weight") { current ->
                         current.copy(weightEntries = newWeightEntries)
                     }
+                    emitEvent(HomeUiEvent.ShowSnackbar("✓ Peso guardado"))
                     emitEvent(HomeUiEvent.WeightLoggedSuccessfully)
                 }
                 is Result.Error -> {
-                    emitEvent(HomeUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    emitEvent(HomeUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 is Result.Loading -> Unit
             }
@@ -518,7 +519,7 @@ class HomeViewModel @Inject constructor(
         val networkStart = System.currentTimeMillis()
         val bootstrap = when (val result = getHomeBootstrapUseCase()) {
             is Result.Success -> result.data
-            else -> return null
+            else -> return refreshFromLegacyInternal()
         }
         mark("profile_network_done")
         mark("workout_history_network_done")
@@ -546,6 +547,52 @@ class HomeViewModel @Inject constructor(
         )
         perfLog("bootstrap_network", networkStart)
         return snapshot
+    }
+
+    /**
+     * Legacy fallback path used when bootstrap fails:
+     * builds a full snapshot from independent use-cases using last-success semantics.
+     */
+    private suspend fun refreshFromLegacyInternal(): HomeUiState.Success? = coroutineScope {
+        val profile = loadProfileLastSuccess() ?: return@coroutineScope null
+        val nutritionDeferred = async { loadNutritionLastSuccess() }
+        val trainingPlansDeferred = async { awaitFreshPlans() }
+        val dietPlansDeferred = async { awaitFreshDietPlans() }
+        val weeklyDeferred = async { loadWeeklySummary() ?: cachedWeeklySummary }
+        val streaksDeferred = async { loadStreaks() }
+        val achievementsDeferred = async { loadUserAchievements() }
+        val definitionsDeferred = async { loadAchievementDefinitions() }
+        val weightEntriesDeferred = async { firstSuccessWeightHistory() }
+        val workoutsDeferred = async { loadTodayWorkoutHistoryFresh() }
+
+        val trainingPlans = trainingPlansDeferred.await()
+        val activePlan = trainingPlans.find { it.status == PlanStatus.ACTIVE }
+        val planDetail = when (activePlan) {
+            null -> null
+            else -> resolveActivePlanDetail(planId = activePlan.id, awaitNetwork = true) ?: activePlan
+        }
+
+        val dietPlans = dietPlansDeferred.await()
+        val activeDiet = dietPlans.find { it.status == PlanStatus.ACTIVE }
+        val dietDetail = when (activeDiet) {
+            null -> null
+            else -> loadDietPlanDetail(activeDiet.id) ?: activeDiet
+        }
+
+        buildHomeSnapshot(
+            profile = profile,
+            nutritionPair = nutritionDeferred.await(),
+            weightEntries = weightEntriesDeferred.await(),
+            trainingPlans = trainingPlans,
+            dietPlans = dietPlans,
+            todayWorkoutLogs = workoutsDeferred.await(),
+            weeklySummary = weeklyDeferred.await(),
+            streaks = streaksDeferred.await(),
+            userAchievements = achievementsDeferred.await(),
+            allDefinitions = definitionsDeferred.await(),
+            planDetail = planDetail,
+            dietDetail = dietDetail,
+        )
     }
 
     /** Latest weight from bootstrap weekly summary (full history stays on body-weight screen). */
@@ -669,6 +716,26 @@ class HomeViewModel @Inject constructor(
         mark("nutrition_target_done")
         perfLog("nutrition_parallel_total", totalStart)
         pair
+    }
+
+    /** Last-success semantics for refreshes (collects cache + network emissions). */
+    private suspend fun loadNutritionLastSuccess(): Pair<NutritionLog?, NutritionTarget?> = coroutineScope {
+        val today = LocalDate.now()
+        val logDeferred = async {
+            var log: NutritionLog? = null
+            getNutritionLogUseCase(today).collect { result ->
+                if (result is Result.Success) log = result.data
+            }
+            log
+        }
+        val targetDeferred = async {
+            var target: NutritionTarget? = null
+            getCurrentNutritionTargetUseCase().collect { result ->
+                if (result is Result.Success) target = result.data
+            }
+            target
+        }
+        logDeferred.await() to targetDeferred.await()
     }
 
     private suspend fun loadWeeklySummary(): WeeklyProgressSummary? =
@@ -845,7 +912,7 @@ class HomeViewModel @Inject constructor(
             ?: cachedActiveDietId?.let { planId ->
                 loadDietPlanDetail(planId)?.also { cachedActiveDietDetail = it }
             }
-        return plan?.mealsForToday() ?: emptyList()
+        return plan?.let { mealsForToday(it) } ?: emptyList()
     }
 
     private fun emitEvent(event: HomeUiEvent) {
@@ -898,6 +965,66 @@ class HomeViewModel @Inject constructor(
             nextAchievement = nextAchievement,
             trainingStreakDays = trainingStreakDays,
         )
+    }
+
+    private fun mealsForToday(plan: DietPlan): List<Meal> {
+        if (plan.days.isEmpty()) return emptyList()
+        val dayOfWeek = LocalDate.now().dayOfWeek.value
+        val todayDietDay = plan.days.getOrNull((dayOfWeek - 1) % plan.days.size) ?: return emptyList()
+        return todayDietDay.meals
+    }
+
+    private fun mealToTrackMealRequestDto(meal: Meal, date: LocalDate = LocalDate.now()): TrackMealRequestDto {
+        val resolvedTime = meal.time.trim().let { raw ->
+            if (raw.isNotBlank()) raw else estimatedTimeForMealType(meal.mealType)
+        }
+        val items = if (meal.items.isNotEmpty()) {
+            meal.items.map { item ->
+                TrackFoodItemRequestDto(
+                    name = item.name,
+                    quantity = item.quantity.toDouble(),
+                    unit = item.unit,
+                    calories = item.calories,
+                    proteinGrams = item.proteinGrams.toDouble(),
+                    carbsGrams = item.carbsGrams.toDouble(),
+                    fatGrams = item.fatGrams.toDouble(),
+                    macrosPer100g = false,
+                )
+            }
+        } else {
+            listOf(
+                TrackFoodItemRequestDto(
+                    name = meal.name,
+                    quantity = 1.0,
+                    unit = "unit",
+                    calories = meal.calories,
+                    proteinGrams = meal.proteinGrams.toDouble(),
+                    carbsGrams = meal.carbsGrams.toDouble(),
+                    fatGrams = meal.fatGrams.toDouble(),
+                    macrosPer100g = false,
+                ),
+            )
+        }
+        return TrackMealRequestDto(
+            date = date.toString(),
+            mealType = meal.mealType.name,
+            name = meal.name,
+            time = resolvedTime,
+            items = items,
+        )
+    }
+
+    private fun AppException.userMessage(): String = when (this) {
+        is AppException.NetworkException -> "Sin conexión. Comprueba tu internet."
+        is AppException.UnauthorizedException -> "Sesión expirada. Vuelve a iniciar sesión."
+        is AppException.ForbiddenException -> "No tienes permisos para realizar esta acción."
+        is AppException.NotFoundException -> "No se encontró $resource."
+        is AppException.ValidationException -> errors.values.firstOrNull() ?: "Datos inválidos."
+        is AppException.ConflictException -> "El recurso ya existe o hay un conflicto."
+        is AppException.ServerException -> "Error del servidor. Inténtalo más tarde."
+        is AppException.AiOverloadedException -> AppException.AI_OVERLOADED_MESSAGE
+        is AppException.UnknownException -> message.ifBlank { "Error inesperado. Inténtalo de nuevo." }
+        is AppException.InsufficientDataException -> "Necesitas más datos para realizar este análisis. Registra al menos 2 semanas de peso y entrenamientos."
     }
 
     companion object {

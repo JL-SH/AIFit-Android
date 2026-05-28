@@ -101,8 +101,8 @@ class NutritionTargetScreenTest {
         val vm = createViewModel()
         setScreen(vm)
 
-        composeTestRule.onNodeWithText("Nutrition Targets").assertIsDisplayed()
-        composeTestRule.onNodeWithText("SAVE").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Objetivos nutricionales").assertIsDisplayed()
+        composeTestRule.onNodeWithText("GUARDAR").performScrollTo().assertIsDisplayed()
     }
 
     @Test

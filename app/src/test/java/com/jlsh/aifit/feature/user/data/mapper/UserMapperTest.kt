@@ -178,7 +178,7 @@ class UserMapperTest {
     }
 
     @Test
-    fun `toDomain prefiere profilePictureUrl sobre profileImageUrl`() {
+    fun `toDomain prefiere URL de Cloudinary aunque venga en profileImageUrl`() {
         val legacyUrl = "https://example.com/legacy.jpg"
         val cloudinaryUrl = "https://res.cloudinary.com/demo/new.jpg"
         val dto = fakeUserProfileResponseDto(
@@ -188,7 +188,7 @@ class UserMapperTest {
 
         val domain = dto.toDomain()
 
-        assertEquals(legacyUrl, domain.profilePictureUrl)
+        assertEquals(cloudinaryUrl, domain.profilePictureUrl)
     }
 
     // ─── UserProfile.toEntity() ───────────────────────────────────────────────

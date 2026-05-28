@@ -149,7 +149,7 @@ class ProgressViewModelTest {
     }
 
     @Test
-    fun `onLogWeight con peso válido llama a logBodyWeightUseCase y envía ShowSnackbar`() = runTest {
+    fun `onLogWeight con peso válido llama a logBodyWeightUseCase y envía WeightLoggedSuccessfully`() = runTest {
         coEvery { logBodyWeightUseCase(any()) } returns Result.Success(fakeBodyWeightLog())
         every { getBodyWeightHistoryUseCase(any(), any()) } returns
                 flowOf(Result.Success(listOf(fakeBodyWeightLog())))
@@ -163,8 +163,7 @@ class ProgressViewModelTest {
             advanceUntilIdle()
 
             val event = awaitItem()
-            assertTrue(event is ProgressUiEvent.ShowSnackbar)
-            assertEquals("Peso registrado", (event as ProgressUiEvent.ShowSnackbar).message)
+            assertEquals(ProgressUiEvent.WeightLoggedSuccessfully, event)
         }
 
         // Form should be reset

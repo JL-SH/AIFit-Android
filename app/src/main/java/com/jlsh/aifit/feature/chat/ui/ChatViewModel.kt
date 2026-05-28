@@ -3,12 +3,11 @@ package com.jlsh.aifit.feature.chat.ui
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
-import com.jlsh.aifit.core.common.toMessage
 import com.jlsh.aifit.feature.chat.domain.model.ChatMessage
 import com.jlsh.aifit.feature.chat.domain.model.ChatMessageRole
 import com.jlsh.aifit.feature.chat.domain.usecase.ArchiveChatSessionUseCase
@@ -124,7 +123,7 @@ class ChatViewModel @Inject constructor(
                         )
                     }
                     is Result.Error -> {
-                        _listState.value = ChatListUiState.Error(result.exception.toMessage())
+                        _listState.value = ChatListUiState.Error(result.exception.userMessage())
                     }
                     is Result.Loading -> {
                         _listState.value = ChatListUiState.Loading
@@ -167,7 +166,7 @@ class ChatViewModel @Inject constructor(
                     // Rollback on error
                     pendingDeleteIds.remove(id)
                     _listState.value = previousState
-                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 else -> Unit
             }
@@ -187,7 +186,7 @@ class ChatViewModel @Inject constructor(
                     _events.send(ChatUiEvent.ShowSnackbar("Sesión archivada"))
                 }
                 is Result.Error -> {
-                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 else -> Unit
             }
@@ -208,7 +207,7 @@ class ChatViewModel @Inject constructor(
                     _events.send(ChatUiEvent.ShowSnackbar("Conversación renombrada"))
                 }
                 is Result.Error -> {
-                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 else -> Unit
             }
@@ -244,7 +243,7 @@ class ChatViewModel @Inject constructor(
                     }
                     is Result.Error -> {
                         _chatState.update {
-                            it.copy(isLoading = false, error = result.exception.toMessage())
+                            it.copy(isLoading = false, error = result.exception.userMessage())
                         }
                     }
                     is Result.Loading -> {
@@ -272,7 +271,7 @@ class ChatViewModel @Inject constructor(
     fun onImageSelected(rawBytes: ByteArray) {
         viewModelScope.launch(Dispatchers.Default) {
             val compressed = compressImageBytes(rawBytes)
-            Log.d("AIFIT_DEBUG", "onImageSelected: raw=${rawBytes.size / 1024}KB → compressed=${compressed.size / 1024}KB")
+            safeLogDebug("onImageSelected: raw=${rawBytes.size / 1024}KB → compressed=${compressed.size / 1024}KB")
             _chatState.update { it.copy(pendingImageBytes = compressed) }
         }
     }
@@ -315,7 +314,7 @@ class ChatViewModel @Inject constructor(
         val content = _chatState.value.inputText.trim()
         val imageBytes = _chatState.value.pendingImageBytes
         if ((content.isBlank() && imageBytes == null) || content.length > 4000) {
-            Log.w("AIFIT_DEBUG", "onSendMessage: contenido inválido (blank=${content.isBlank()}, hasImage=${imageBytes != null}, len=${content.length})")
+            safeLogWarn("onSendMessage: contenido inválido (blank=${content.isBlank()}, hasImage=${imageBytes != null}, len=${content.length})")
             return
         }
 
@@ -346,16 +345,16 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             // If there is no session yet, create it now (first message)
             if (isNewSession) {
-                Log.d("AIFIT_DEBUG", "onSendMessage: creando sesión lazy…")
+                safeLogDebug("onSendMessage: creando sesión lazy…")
                 when (val created = startChatSessionUseCase()) {
                     is Result.Success -> {
                         effectiveSessionId = created.data.id
-                        Log.d("AIFIT_DEBUG", "onSendMessage: sesión creada — id=${effectiveSessionId}")
+                        safeLogDebug("onSendMessage: sesión creada — id=${effectiveSessionId}")
                     }
                     is Result.Error -> {
-                        Log.e("AIFIT_DEBUG", "onSendMessage: error al crear sesión — ${created.exception}")
+                        safeLogError("onSendMessage: error al crear sesión — ${created.exception}")
                         _chatState.update { it.copy(isWaitingResponse = false) }
-                        _events.send(ChatUiEvent.ShowSnackbar(created.exception.toMessage()))
+                        _events.send(ChatUiEvent.ShowSnackbar(created.exception.userMessage()))
                         return@launch
                     }
                     else -> return@launch
@@ -364,13 +363,13 @@ class ChatViewModel @Inject constructor(
 
             val sid = effectiveSessionId ?: return@launch
 
-            Log.d("AIFIT_DEBUG", "onSendMessage: enviando mensaje — sid=$sid, hasImage=${imageBase64 != null}, content='${content.take(80)}…'")
+            safeLogDebug("onSendMessage: enviando mensaje — sid=$sid, hasImage=${imageBase64 != null}, content='${content.take(80)}…'")
             val startTime = System.currentTimeMillis()
 
             when (val result = sendChatMessageUseCase(sid, content.ifBlank { "📷" }, imageBase64)) {
                 is Result.Success -> {
                     val elapsed = System.currentTimeMillis() - startTime
-                    Log.d("AIFIT_DEBUG", "onSendMessage: SUCCESS en ${elapsed}ms")
+                    safeLogDebug("onSendMessage: SUCCESS en ${elapsed}ms")
                     _chatState.update {
                         it.copy(messages = it.messages + result.data, isWaitingResponse = false)
                     }
@@ -379,14 +378,14 @@ class ChatViewModel @Inject constructor(
                         when (val titleResult = generateChatSessionTitleUseCase(sid)) {
                             is Result.Success -> {
                                 _chatState.update { it.copy(sessionTitle = titleResult.data) }
-                                Log.d("AIFIT_DEBUG", "onSendMessage: título por IA → '${titleResult.data}'")
+                                safeLogDebug("onSendMessage: título por IA → '${titleResult.data}'")
                             }
                             is Result.Error -> {
                                 // Fallback: use truncated first message as title
                                 val fallback = generateAutoTitle(content)
                                 renameChatSessionUseCase(sid, fallback)
                                 _chatState.update { it.copy(sessionTitle = fallback) }
-                                Log.w("AIFIT_DEBUG", "onSendMessage: error título IA, usando fallback → '$fallback'")
+                                safeLogWarn("onSendMessage: error título IA, usando fallback → '$fallback'")
                             }
                             else -> Unit
                         }
@@ -394,11 +393,11 @@ class ChatViewModel @Inject constructor(
                 }
                 is Result.Error -> {
                     val elapsed = System.currentTimeMillis() - startTime
-                    Log.e("AIFIT_DEBUG", "onSendMessage: ERROR en ${elapsed}ms — ${result.exception}")
+                    safeLogError("onSendMessage: ERROR en ${elapsed}ms — ${result.exception}")
                     _chatState.update { it.copy(isWaitingResponse = false) }
-                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
-                else -> Log.w("AIFIT_DEBUG", "onSendMessage: resultado inesperado")
+                else -> safeLogWarn("onSendMessage: resultado inesperado")
             }
         }
     }
@@ -419,7 +418,7 @@ class ChatViewModel @Inject constructor(
                     _events.send(ChatUiEvent.NavigateBack)
                 }
                 is Result.Error -> {
-                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.toMessage()))
+                    _events.send(ChatUiEvent.ShowSnackbar(result.exception.userMessage()))
                 }
                 else -> Unit
             }
@@ -429,5 +428,30 @@ class ChatViewModel @Inject constructor(
     companion object {
         private const val MAX_IMAGE_PX = 800   // max. dimension in pixels
         private const val IMAGE_QUALITY = 70   // calidad JPEG (0-100)
+    }
+
+    private fun safeLogDebug(message: String) {
+        runCatching { android.util.Log.d("AIFIT_DEBUG", message) }
+    }
+
+    private fun safeLogWarn(message: String) {
+        runCatching { android.util.Log.w("AIFIT_DEBUG", message) }
+    }
+
+    private fun safeLogError(message: String) {
+        runCatching { android.util.Log.e("AIFIT_DEBUG", message) }
+    }
+
+    private fun AppException.userMessage(): String = when (this) {
+        is AppException.NetworkException -> "Sin conexión. Comprueba tu internet."
+        is AppException.UnauthorizedException -> "Sesión expirada. Vuelve a iniciar sesión."
+        is AppException.ForbiddenException -> "No tienes permisos para realizar esta acción."
+        is AppException.NotFoundException -> "No se encontró $resource."
+        is AppException.ValidationException -> errors.values.firstOrNull() ?: "Datos inválidos."
+        is AppException.ConflictException -> "El recurso ya existe o hay un conflicto."
+        is AppException.ServerException -> "Error del servidor. Inténtalo más tarde."
+        is AppException.AiOverloadedException -> AppException.AI_OVERLOADED_MESSAGE
+        is AppException.UnknownException -> message.ifBlank { "Error inesperado. Inténtalo de nuevo." }
+        is AppException.InsufficientDataException -> "Necesitas más datos para realizar este análisis. Registra al menos 2 semanas de peso y entrenamientos."
     }
 }
