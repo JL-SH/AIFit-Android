@@ -1,6 +1,9 @@
 package com.jlsh.aifit.feature.progression.ui.components
 
 import android.content.res.Configuration
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.TrendUp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,21 +11,24 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jlsh.aifit.R
+import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.feedback.ErrorContent
 import com.jlsh.aifit.core.ui.components.feedback.InlineLoadingIndicator
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
@@ -38,6 +44,7 @@ import com.jlsh.aifit.feature.user.ui.toStringRes
  *
  * @param state Current state of the recommendation ([RecommendationState]).
  * @param onDismiss Callback when closing the sheet (swipe or out of area).
+ * @param onConfirmGenerate Invoked when the user confirms generation in [RecommendationState.PromptConfirm].
  * @param onRetry Retry the load when [state] is [RecommendationState.Error].
  * @param sheetState Animation state of the [ModalBottomSheet]; by default expanded.
  */
@@ -46,6 +53,7 @@ import com.jlsh.aifit.feature.user.ui.toStringRes
 fun ProgressionRecommendationSheet(
     state: RecommendationState,
     onDismiss: () -> Unit,
+    onConfirmGenerate: () -> Unit = {},
     onRetry: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
 ) {
@@ -62,6 +70,58 @@ fun ProgressionRecommendationSheet(
             verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
             when (state) {
+                is RecommendationState.PromptConfirm -> {
+                    ProgressionSheetHeader()
+
+                    Text(
+                        text = stringResource(R.string.progression_intro_description1),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    Text(
+                        text = stringResource(R.string.progression_intro_description2),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    Spacer(modifier = Modifier.height(AiFitSpacing.sm))
+
+                    PrimaryButton(
+                        text = stringResource(R.string.progression_intro_confirm),
+                        onClick = onConfirmGenerate,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
+                is RecommendationState.InsufficientData -> {
+                    ProgressionSheetHeader()
+
+                    Text(
+                        text = stringResource(
+                            R.string.progression_intro_not_enough,
+                            state.requiredSessions,
+                            state.currentSessions,
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    Spacer(modifier = Modifier.height(AiFitSpacing.sm))
+
+                    PrimaryButton(
+                        text = stringResource(R.string.progression_intro_understood),
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
                 is RecommendationState.Loading -> {
                     InlineLoadingIndicator(
                         message = stringResource(R.string.progression_loading),
@@ -181,6 +241,28 @@ fun ProgressionRecommendationSheet(
                 is RecommendationState.Idle -> Unit
             }
         }
+    }
+}
+
+@Composable
+private fun ProgressionSheetHeader() {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+    ) {
+        Icon(
+            imageVector = PhosphorIcons.Regular.TrendUp,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(48.dp),
+        )
+        Text(
+            text = stringResource(R.string.progression_intro_title),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 

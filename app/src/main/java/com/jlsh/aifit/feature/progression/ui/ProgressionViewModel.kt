@@ -4,16 +4,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
+import com.jlsh.aifit.feature.progression.domain.ProgressionRequirements.MIN_SESSIONS_REQUIRED
 import com.jlsh.aifit.feature.progression.domain.model.PlanProgressionSummary
 import com.jlsh.aifit.feature.progression.domain.model.ProgressionRecommendation
+import com.jlsh.aifit.feature.progression.domain.model.ProgressionType
 import com.jlsh.aifit.feature.progression.domain.usecase.GetExerciseProgressionRecommendationUseCase
 import com.jlsh.aifit.feature.progression.domain.usecase.GetFullPlanProgressionRecommendationsUseCase
-import com.jlsh.aifit.feature.workout.domain.usecase.GetWorkoutHistoryUseCase
+import com.jlsh.aifit.feature.workout.domain.usecase.GetExerciseLoggedSessionCountUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,6 +25,20 @@ import javax.inject.Inject
 sealed class RecommendationState {
     /** No active request (e.g. sheet closed).*/
     data object Idle : RecommendationState()
+
+    /** User may confirm generation after the intro copy (enough sessions recorded).*/
+    data object PromptConfirm : RecommendationState()
+
+    /**
+     * Not enough workout history to request a recommendation.
+     *
+     * @property requiredSessions Minimum sessions required.
+     * @property currentSessions Sessions the user has logged so far.
+     */
+    data class InsufficientData(
+        val requiredSessions: Int,
+        val currentSessions: Int,
+    ) : RecommendationState()
 
     /** Loading of exercise recommendation.*/
     data object Loading : RecommendationState()
@@ -73,17 +89,17 @@ sealed class PlanSummaryState {
  * **UiState exposed** (no event channel; UI observes StateFlows):
  * - [recommendationState] — [RecommendationState]: recommendation of an exercise.
  * - [planSummaryState] — [PlanSummaryState]: summary of the entire plan.
- * - [sessionCount]: Number of sessions completed (context for the UI).
+ * - [exerciseSessionCounts]: Logged sessions per exercise id (for list affordances).
  *
  * @param getExerciseRecommendationUseCase Individual recommendation.
  * @param getPlanRecommendationsUseCase Plan summary.
- * @param getWorkoutHistoryUseCase Session count for context.
+ * @param getExerciseLoggedSessionCountUseCase Per-exercise session count from workout history.
  */
 @HiltViewModel
 class ProgressionViewModel @Inject constructor(
     private val getExerciseRecommendationUseCase: GetExerciseProgressionRecommendationUseCase,
     private val getPlanRecommendationsUseCase: GetFullPlanProgressionRecommendationsUseCase,
-    private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
+    private val getExerciseLoggedSessionCountUseCase: GetExerciseLoggedSessionCountUseCase,
 ) : ViewModel() {
 
     private val _recommendationState = MutableStateFlow<RecommendationState>(RecommendationState.Idle)
@@ -94,21 +110,40 @@ class ProgressionViewModel @Inject constructor(
     /** Plan Progression Summary Status.*/
     val planSummaryState: StateFlow<PlanSummaryState> = _planSummaryState.asStateFlow()
 
-    private val _sessionCount = MutableStateFlow<Int?>(null)
-    /** Number of training sessions recorded, or `null` while calculating.*/
-    val sessionCount: StateFlow<Int?> = _sessionCount.asStateFlow()
+    private val _exerciseSessionCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
+    /** Distinct logged sessions per training exercise id.*/
+    val exerciseSessionCounts: StateFlow<Map<String, Int>> = _exerciseSessionCounts.asStateFlow()
 
-    init {
-        loadSessionCount()
+    private var pendingExerciseId: String? = null
+
+    /**
+     * Opens the progression sheet for [exerciseId].
+     * Resolves how many sessions include logged sets for this exercise before showing confirm or insufficient UI.
+     */
+    fun openExerciseProgression(exerciseId: String) {
+        pendingExerciseId = exerciseId
+        viewModelScope.launch {
+            _recommendationState.value = RecommendationState.Loading
+            val count = resolveExerciseSessionCount(exerciseId)
+            cacheExerciseSessionCount(exerciseId, count)
+            _recommendationState.value = recommendationStateForSessionCount(count)
+        }
     }
 
-    private fun loadSessionCount() {
+    /** Requests the AI recommendation after the user confirms in [RecommendationState.PromptConfirm]. */
+    fun confirmExerciseProgression() {
+        val exerciseId = pendingExerciseId ?: return
         viewModelScope.launch {
-            when (val result = getWorkoutHistoryUseCase().first { it !is Result.Loading }) {
-                is Result.Success -> _sessionCount.value = result.data.size
-                is Result.Error -> _sessionCount.value = 0
-                else -> Unit
+            val count = resolveExerciseSessionCount(exerciseId)
+            cacheExerciseSessionCount(exerciseId, count)
+            if (count < MIN_SESSIONS_REQUIRED) {
+                _recommendationState.value = RecommendationState.InsufficientData(
+                    requiredSessions = MIN_SESSIONS_REQUIRED,
+                    currentSessions = count,
+                )
+                return@launch
             }
+            loadExerciseRecommendation(exerciseId)
         }
     }
 
@@ -118,10 +153,22 @@ class ProgressionViewModel @Inject constructor(
      * @param exerciseId Exercise identifier.
      */
     fun loadExerciseRecommendation(exerciseId: String) {
+        pendingExerciseId = exerciseId
         viewModelScope.launch {
             _recommendationState.value = RecommendationState.Loading
             when (val result = getExerciseRecommendationUseCase(exerciseId)) {
-                is Result.Success -> _recommendationState.value = RecommendationState.Success(result.data)
+                is Result.Success -> {
+                    val data = result.data
+                    cacheExerciseSessionCount(exerciseId, data.basedOnSessions)
+                    _recommendationState.value = if (data.type == ProgressionType.INSUFFICIENT_DATA) {
+                        RecommendationState.InsufficientData(
+                            requiredSessions = MIN_SESSIONS_REQUIRED,
+                            currentSessions = data.basedOnSessions,
+                        )
+                    } else {
+                        RecommendationState.Success(data)
+                    }
+                }
                 is Result.Error -> _recommendationState.value = RecommendationState.Error(result.exception.toMessage())
                 else -> Unit
             }
@@ -146,6 +193,7 @@ class ProgressionViewModel @Inject constructor(
 
     /** Restablece [recommendationState] a [RecommendationState.Idle] (e.g. al cerrar el sheet). */
     fun resetRecommendationState() {
+        pendingExerciseId = null
         _recommendationState.value = RecommendationState.Idle
     }
 
@@ -153,5 +201,24 @@ class ProgressionViewModel @Inject constructor(
     fun resetPlanSummaryState() {
         _planSummaryState.value = PlanSummaryState.Idle
     }
-}
 
+    private suspend fun resolveExerciseSessionCount(exerciseId: String): Int =
+        when (val result = getExerciseLoggedSessionCountUseCase(exerciseId)) {
+            is Result.Success -> result.data
+            else -> 0
+        }
+
+    private fun cacheExerciseSessionCount(exerciseId: String, count: Int) {
+        _exerciseSessionCounts.update { current -> current + (exerciseId to count) }
+    }
+
+    private fun recommendationStateForSessionCount(count: Int): RecommendationState =
+        if (count >= MIN_SESSIONS_REQUIRED) {
+            RecommendationState.PromptConfirm
+        } else {
+            RecommendationState.InsufficientData(
+                requiredSessions = MIN_SESSIONS_REQUIRED,
+                currentSessions = count,
+            )
+        }
+}

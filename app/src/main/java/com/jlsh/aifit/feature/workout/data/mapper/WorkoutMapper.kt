@@ -1,6 +1,8 @@
 package com.jlsh.aifit.feature.workout.data.mapper
 
+import com.jlsh.aifit.feature.workout.data.dto.ExerciseProgressionResponseDto
 import com.jlsh.aifit.feature.workout.data.dto.GamificationResultResponseDto
+import com.jlsh.aifit.feature.workout.data.dto.ProgressionEntryResponseDto
 import com.jlsh.aifit.feature.workout.data.dto.JointPainEntryDto
 import com.jlsh.aifit.feature.workout.data.dto.PersonalRecordResponseDto
 import com.jlsh.aifit.feature.workout.data.dto.UserAchievementResponseDto
@@ -9,6 +11,8 @@ import com.jlsh.aifit.feature.workout.data.dto.WorkoutLogSummaryResponseDto
 import com.jlsh.aifit.feature.workout.data.dto.WorkoutSetLogResponseDto
 import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
 import com.jlsh.aifit.feature.workout.domain.model.Achievement
+import com.jlsh.aifit.feature.workout.domain.model.ExerciseProgressionEntry
+import com.jlsh.aifit.feature.workout.domain.model.ExerciseProgressionHistory
 import com.jlsh.aifit.feature.workout.domain.model.GamificationResult
 import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
 import com.jlsh.aifit.feature.workout.domain.model.JointZone
@@ -54,6 +58,19 @@ object WorkoutMapper {
         totalExercises = totalExercises,
         completedAt = parseDateTime(completedAt),
         isLocked = isLocked,
+    )
+
+    fun ExerciseProgressionResponseDto.toDomain(): ExerciseProgressionHistory = ExerciseProgressionHistory(
+        trainingExerciseId = trainingExerciseId,
+        exerciseName = exerciseName,
+        entries = entries.map { it.toDomain() },
+    )
+
+    fun ProgressionEntryResponseDto.toDomain(): ExerciseProgressionEntry = ExerciseProgressionEntry(
+        date = date,
+        exerciseSetNumber = exerciseSetNumber,
+        repsCompleted = repsCompleted,
+        weightUsed = weightUsed,
     )
 
     fun WorkoutSetLogResponseDto.toDomain(): WorkoutSetLog = WorkoutSetLog(

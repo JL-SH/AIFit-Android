@@ -132,6 +132,7 @@ fun WorkoutDetailScreen(
                 showProgressionForExerciseId = null
                 progressionViewModel.resetRecommendationState()
             },
+            onConfirmGenerate = { progressionViewModel.confirmExerciseProgression() },
             onRetry = { showProgressionForExerciseId?.let { progressionViewModel.loadExerciseRecommendation(it) } },
         )
     }
@@ -156,7 +157,7 @@ fun WorkoutDetailScreen(
             },
             onExerciseProgressionClick = { exerciseId ->
                 showProgressionForExerciseId = exerciseId
-                progressionViewModel.loadExerciseRecommendation(exerciseId)
+                progressionViewModel.openExerciseProgression(exerciseId)
             },
             modifier = Modifier.padding(paddingValues),
         )

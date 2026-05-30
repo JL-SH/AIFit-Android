@@ -2,15 +2,15 @@ package com.jlsh.aifit.feature.progression.ui
 
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
+import com.jlsh.aifit.feature.progression.domain.ProgressionRequirements.MIN_SESSIONS_REQUIRED
+import com.jlsh.aifit.feature.progression.domain.model.ProgressionType
 import com.jlsh.aifit.feature.progression.domain.usecase.GetExerciseProgressionRecommendationUseCase
 import com.jlsh.aifit.feature.progression.domain.usecase.GetFullPlanProgressionRecommendationsUseCase
-import com.jlsh.aifit.feature.workout.domain.usecase.GetWorkoutHistoryUseCase
+import com.jlsh.aifit.feature.workout.domain.usecase.GetExerciseLoggedSessionCountUseCase
 import com.jlsh.aifit.testutil.*
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
@@ -25,14 +25,12 @@ class ProgressionViewModelTest {
 
     private val getExerciseRecommendationUseCase: GetExerciseProgressionRecommendationUseCase = mockk()
     private val getPlanRecommendationsUseCase: GetFullPlanProgressionRecommendationsUseCase = mockk()
-    private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase = mockk {
-        every { this@mockk.invoke(any(), any(), any()) } returns flowOf(Result.Success(emptyList()))
-    }
+    private val getExerciseLoggedSessionCountUseCase: GetExerciseLoggedSessionCountUseCase = mockk()
 
     private fun createViewModel() = ProgressionViewModel(
         getExerciseRecommendationUseCase,
         getPlanRecommendationsUseCase,
-        getWorkoutHistoryUseCase,
+        getExerciseLoggedSessionCountUseCase,
     )
 
     // ─── Initial state ──────────────────────────── ────────────────────────────
@@ -49,6 +47,61 @@ class ProgressionViewModelTest {
         assertTrue(vm.planSummaryState.value is PlanSummaryState.Idle)
     }
 
+    // ─── openExerciseProgression ─────────────────────────────────────────────────
+
+    @Test
+    fun `openExerciseProgression con pocas sesiones del ejercicio emite InsufficientData`() = runTest {
+        coEvery { getExerciseLoggedSessionCountUseCase("exercise-1") } returns Result.Success(1)
+        val vm = createViewModel()
+
+        vm.openExerciseProgression("exercise-1")
+        advanceUntilIdle()
+
+        val state = vm.recommendationState.value
+        assertTrue(state is RecommendationState.InsufficientData)
+        assertEquals(1, (state as RecommendationState.InsufficientData).currentSessions)
+        assertEquals(1, vm.exerciseSessionCounts.value["exercise-1"])
+    }
+
+    @Test
+    fun `openExerciseProgression con suficientes sesiones del ejercicio emite PromptConfirm`() = runTest {
+        coEvery { getExerciseLoggedSessionCountUseCase("exercise-1") } returns Result.Success(MIN_SESSIONS_REQUIRED)
+        val vm = createViewModel()
+
+        vm.openExerciseProgression("exercise-1")
+        advanceUntilIdle()
+
+        assertTrue(vm.recommendationState.value is RecommendationState.PromptConfirm)
+    }
+
+    @Test
+    fun `confirmExerciseProgression sin sesiones suficientes no llama al useCase de recomendacion`() = runTest {
+        coEvery { getExerciseLoggedSessionCountUseCase("exercise-1") } returns Result.Success(2)
+        val vm = createViewModel()
+
+        vm.openExerciseProgression("exercise-1")
+        advanceUntilIdle()
+        vm.confirmExerciseProgression()
+        advanceUntilIdle()
+
+        assertTrue(vm.recommendationState.value is RecommendationState.InsufficientData)
+    }
+
+    @Test
+    fun `confirmExerciseProgression tras PromptConfirm carga la recomendacion`() = runTest {
+        coEvery { getExerciseLoggedSessionCountUseCase("exercise-1") } returns Result.Success(MIN_SESSIONS_REQUIRED)
+        val recommendation = fakeProgressionRecommendation()
+        coEvery { getExerciseRecommendationUseCase("exercise-1") } returns Result.Success(recommendation)
+        val vm = createViewModel()
+
+        vm.openExerciseProgression("exercise-1")
+        advanceUntilIdle()
+        vm.confirmExerciseProgression()
+        advanceUntilIdle()
+
+        assertTrue(vm.recommendationState.value is RecommendationState.Success)
+    }
+
     // ─── loadExerciseRecommendation ────────────────────────────────────────────
 
     @Test
@@ -63,6 +116,18 @@ class ProgressionViewModelTest {
         val state = vm.recommendationState.value
         assertTrue(state is RecommendationState.Success)
         assertEquals(recommendation, (state as RecommendationState.Success).data)
+    }
+
+    @Test
+    fun `loadExerciseRecommendation cuando el tipo es INSUFFICIENT_DATA emite InsufficientData`() = runTest {
+        val recommendation = fakeProgressionRecommendation(type = ProgressionType.INSUFFICIENT_DATA, basedOnSessions = 1)
+        coEvery { getExerciseRecommendationUseCase(any()) } returns Result.Success(recommendation)
+        val vm = createViewModel()
+
+        vm.loadExerciseRecommendation("exercise-1")
+        advanceUntilIdle()
+
+        assertTrue(vm.recommendationState.value is RecommendationState.InsufficientData)
     }
 
     @Test
@@ -138,4 +203,3 @@ class ProgressionViewModelTest {
         assertTrue(vm.planSummaryState.value is PlanSummaryState.Idle)
     }
 }
-

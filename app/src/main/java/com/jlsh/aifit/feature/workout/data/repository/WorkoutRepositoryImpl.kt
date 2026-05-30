@@ -12,6 +12,7 @@ import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toDomain
 import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toDto
 import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toEntity
 import com.jlsh.aifit.feature.workout.domain.WorkoutHistoryNotifier
+import com.jlsh.aifit.feature.workout.domain.model.ExerciseProgressionHistory
 import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 import com.jlsh.aifit.feature.workout.domain.repository.WorkoutRepository
@@ -312,4 +313,11 @@ class WorkoutRepositoryImpl @Inject constructor(
             else -> Result.Loading
         }
     }
+
+    override suspend fun getExerciseProgression(exerciseId: String): Result<ExerciseProgressionHistory> =
+        when (val remote = safeApiCall { apiService.getExerciseProgression(exerciseId) }) {
+            is Result.Success -> Result.Success(remote.data.toDomain())
+            is Result.Error -> remote
+            else -> Result.Loading
+        }
 }
