@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -50,6 +51,7 @@ import com.jlsh.aifit.core.ui.components.layout.AiFitTopBar
 import com.jlsh.aifit.core.ui.components.layout.LocalBottomBarVisibility
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.core.ui.theme.CardShape
 import com.jlsh.aifit.feature.chat.domain.model.ChatMessage
 import com.jlsh.aifit.feature.chat.domain.model.ChatMessageRole
 import com.jlsh.aifit.feature.chat.ui.state.ChatState
@@ -121,7 +123,9 @@ fun ChatScreen(
             snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { paddingValues ->
             when {
-                chatState.isLoading -> LoadingScreen()
+                chatState.isLoading -> {
+                    LoadingScreen(modifier = Modifier.padding(paddingValues))
+                }
                 chatState.error != null -> {
                     ErrorScreen(
                         message = chatState.error ?: "",
@@ -179,73 +183,78 @@ private fun ChatContent(
         }
     }
 
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues),
+            .padding(paddingValues)
+            .padding(horizontal = AiFitSpacing.md, vertical = AiFitSpacing.sm),
+        shape = CardShape,
+        color = MaterialTheme.colorScheme.surface,
     ) {
-        // Messages
-        LazyColumn(
-            state = listState,
-            reverseLayout = true,
-            contentPadding = PaddingValues(
-                start = AiFitSpacing.md,
-                end = AiFitSpacing.md,
-                top = AiFitSpacing.sm,
-                bottom = AiFitSpacing.sm,
-            ),
-            modifier = Modifier.weight(1f),
-        ) {
-            // Typing indicator (appears first visually = bottom)
-            if (state.isWaitingResponse) {
-                item(key = "typing") {
-                    TypingIndicator(
-                        modifier = Modifier.padding(vertical = AiFitSpacing.sm),
-                    )
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Messages
+            LazyColumn(
+                state = listState,
+                reverseLayout = true,
+                contentPadding = PaddingValues(
+                    start = AiFitSpacing.md,
+                    end = AiFitSpacing.md,
+                    top = AiFitSpacing.sm,
+                    bottom = AiFitSpacing.sm,
+                ),
+                modifier = Modifier.weight(1f),
+            ) {
+                // Typing indicator (appears first visually = bottom)
+                if (state.isWaitingResponse) {
+                    item(key = "typing") {
+                        TypingIndicator(
+                            modifier = Modifier.padding(vertical = AiFitSpacing.sm),
+                        )
+                    }
                 }
-            }
 
-            // Messages in reverse order (newest first for reverseLayout)
-            items(
-                items = state.messages.reversed(),
-                key = { it.id },
-            ) { message ->
-                ChatBubble(
-                    content = message.content,
-                    isUser = message.role == ChatMessageRole.USER,
-                    timestamp = formatTimestamp(message.createdAt),
-                    isMarkdown = message.role == ChatMessageRole.ASSISTANT,
-                    imageBase64 = message.imageBase64,
-                    modifier = Modifier.padding(vertical = AiFitSpacing.xs),
-                )
-            }
-
-            // Welcome message shown at the bottom (reverseLayout) when chat is empty
-            if (state.messages.isEmpty() && !state.isWaitingResponse) {
-                item(key = "welcome") {
+                // Messages in reverse order (newest first for reverseLayout)
+                items(
+                    items = state.messages.reversed(),
+                    key = { it.id },
+                ) { message ->
                     ChatBubble(
-                        content = stringResource(R.string.chat_welcome_message),
-                        isUser = false,
-                        timestamp = "",
-                        isMarkdown = true,
+                        content = message.content,
+                        isUser = message.role == ChatMessageRole.USER,
+                        timestamp = formatTimestamp(message.createdAt),
+                        isMarkdown = message.role == ChatMessageRole.ASSISTANT,
+                        imageBase64 = message.imageBase64,
                         modifier = Modifier.padding(vertical = AiFitSpacing.xs),
                     )
                 }
-            }
-        }
 
-        // Input bar (sticky bottom)
-        ChatInputBar(
-            value = state.inputText,
-            onValueChange = onInputChanged,
-            onSend = onSend,
-            isLoading = state.isWaitingResponse,
-            placeholder = stringResource(R.string.chat_input_placeholder),
-            pendingImageBytes = state.pendingImageBytes,
-            onAttachImage = onAttachImage,
-            onRemoveImage = onRemoveImage,
-            modifier = Modifier.fillMaxWidth(),
-        )
+                // Welcome message shown at the bottom (reverseLayout) when chat is empty
+                if (state.messages.isEmpty() && !state.isWaitingResponse) {
+                    item(key = "welcome") {
+                        ChatBubble(
+                            content = stringResource(R.string.chat_welcome_message),
+                            isUser = false,
+                            timestamp = "",
+                            isMarkdown = true,
+                            modifier = Modifier.padding(vertical = AiFitSpacing.xs),
+                        )
+                    }
+                }
+            }
+
+            // Input bar (sticky bottom)
+            ChatInputBar(
+                value = state.inputText,
+                onValueChange = onInputChanged,
+                onSend = onSend,
+                isLoading = state.isWaitingResponse,
+                placeholder = stringResource(R.string.chat_input_placeholder),
+                pendingImageBytes = state.pendingImageBytes,
+                onAttachImage = onAttachImage,
+                onRemoveImage = onRemoveImage,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }
 

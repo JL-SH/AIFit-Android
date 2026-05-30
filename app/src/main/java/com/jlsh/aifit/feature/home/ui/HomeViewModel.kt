@@ -6,10 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.home.domain.model.HomeBootstrap
+import com.jlsh.aifit.feature.home.domain.usecase.GetCachedHomeBootstrapUseCase
 import com.jlsh.aifit.feature.home.domain.usecase.GetHomeBootstrapUseCase
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.model.Meal
 import com.jlsh.aifit.feature.diet.domain.model.MealType
+import com.jlsh.aifit.feature.diet.domain.DietActivePlanNotifier
+import com.jlsh.aifit.feature.diet.domain.usecase.GetCachedDietPlansUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.gamification.domain.model.AchievementDefinition
@@ -25,6 +28,7 @@ import com.jlsh.aifit.feature.home.ui.state.ActivePlanSummary
 import com.jlsh.aifit.feature.home.ui.state.NextMealState
 import com.jlsh.aifit.feature.home.ui.state.TodayNutritionState
 import com.jlsh.aifit.feature.home.ui.state.TodayTrainingState
+import com.jlsh.aifit.feature.nutrition.domain.NutritionLogChangeNotifier
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTargetUseCase
@@ -41,12 +45,18 @@ import com.jlsh.aifit.feature.progress.domain.usecase.LogBodyWeightUseCase
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
+import com.jlsh.aifit.feature.training.domain.ActiveTrainingPlanChange
+import com.jlsh.aifit.feature.training.domain.TrainingActivePlanNotifier
+import com.jlsh.aifit.feature.training.domain.usecase.GetCachedTrainingPlansUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlansUseCase
+import com.jlsh.aifit.feature.training.domain.usecase.PrefetchTrainingPlanDetailsUseCase
 import com.jlsh.aifit.feature.user.data.mapper.UserMapper.pickBestProfilePictureUrl
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
+import com.jlsh.aifit.feature.workout.domain.WorkoutHistoryNotifier
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
+import com.jlsh.aifit.feature.workout.domain.usecase.GetCachedWorkoutLogsUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.GetWorkoutHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -104,7 +114,23 @@ class HomeViewModel @Inject constructor(
     private val logBodyWeightUseCase: LogBodyWeightUseCase,
     private val trackMealUseCase: TrackMealUseCase,
     private val getHomeBootstrapUseCase: GetHomeBootstrapUseCase,
+    private val getCachedHomeBootstrapUseCase: GetCachedHomeBootstrapUseCase,
+    private val getCachedTrainingPlansUseCase: GetCachedTrainingPlansUseCase,
+    private val trainingActivePlanNotifier: TrainingActivePlanNotifier,
+    private val prefetchTrainingPlanDetailsUseCase: PrefetchTrainingPlanDetailsUseCase,
+    private val getCachedDietPlansUseCase: GetCachedDietPlansUseCase,
+    private val dietActivePlanNotifier: DietActivePlanNotifier,
+    private val workoutHistoryNotifier: WorkoutHistoryNotifier,
+    private val nutritionLogChangeNotifier: NutritionLogChangeNotifier,
+    private val getCachedWorkoutLogsUseCase: GetCachedWorkoutLogsUseCase,
 ) : ViewModel() {
+
+    /** Guards bootstrap from overwriting a fresher local/optimistic training card. */
+    private var localTrainingPlanRevisionMs: Long = 0L
+    private var lastLocalTrainingPlanId: String? = null
+
+    /** Guards bootstrap from clearing a just-completed workout on the home card. */
+    private var localWorkoutCompletionRevisionMs: Long = 0L
 
     private var bootstrapJob: Job? = null
 
@@ -142,6 +168,33 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadAll()
+        viewModelScope.launch {
+            trainingActivePlanNotifier.activePlanChanges.collect { change ->
+                when {
+                    change.isRevert -> refreshTrainingFromLocalCache()
+                    change.isOptimistic -> applyOptimisticActiveTrainingPlan(
+                        planId = change.planId,
+                        planName = change.planName,
+                    )
+                    else -> refreshTrainingFromLocalCache()
+                }
+            }
+        }
+        viewModelScope.launch {
+            dietActivePlanNotifier.activePlanChanges.collect {
+                refreshNutritionFromLocalCache()
+            }
+        }
+        viewModelScope.launch {
+            workoutHistoryNotifier.changes.collect { change ->
+                applyWorkoutFinalized(change.log)
+            }
+        }
+        viewModelScope.launch {
+            nutritionLogChangeNotifier.changes.collect { log ->
+                applyNutritionLogChanged(log)
+            }
+        }
     }
 
     /** Reload home: Room cache first, then a single bootstrap API call for network data.*/
@@ -157,33 +210,36 @@ class HomeViewModel @Inject constructor(
             mark("loadAll_start")
             _uiState.value = HomeUiState.Loading
 
+            val bootstrapCacheSnapshot = loadBootstrapCacheSnapshot()
+            if (bootstrapCacheSnapshot != null) {
+                onFirstSuccessEmitted()
+                applySuccessState(bootstrapCacheSnapshot, "loadAll_bootstrap_cache")
+                hasCompletedInitialLoad = true
+                suppressResumeRefreshOnce = true
+                refreshBootstrapInBackground()
+                return@launch
+            }
+
             val cacheSnapshot = loadCacheFirstSnapshot()
             if (cacheSnapshot != null) {
                 onFirstSuccessEmitted()
                 applySuccessState(cacheSnapshot, "loadAll_cache")
                 hasCompletedInitialLoad = true
                 suppressResumeRefreshOnce = true
+                refreshBootstrapInBackground()
+                return@launch
             }
 
             val networkSnapshot = refreshFromBootstrapInternal()
             when {
                 networkSnapshot != null -> {
-                    if (cacheSnapshot == null) {
-                        onFirstSuccessEmitted()
-                    }
+                    onFirstSuccessEmitted()
                     applySuccessState(networkSnapshot, "loadAll_bootstrap")
-                    if (!hasCompletedInitialLoad) {
-                        hasCompletedInitialLoad = true
-                        suppressResumeRefreshOnce = true
-                    }
-                }
-                cacheSnapshot == null -> {
-                    _uiState.value = HomeUiState.Error("No se pudo cargar el perfil")
-                    return@launch
+                    hasCompletedInitialLoad = true
+                    suppressResumeRefreshOnce = true
                 }
                 else -> {
-                    // Cache snapshot shown; bootstrap failed (e.g. 500) — retry in background.
-                    scheduleBootstrapRefresh()
+                    _uiState.value = HomeUiState.Error("No se pudo cargar el perfil")
                 }
             }
         }
@@ -310,6 +366,13 @@ class HomeViewModel @Inject constructor(
 
     /** Silent refresh when returning to the screen (RESUMED cycle).*/
     fun onResumed() {
+        if (hasCompletedInitialLoad && _uiState.value is HomeUiState.Success) {
+            viewModelScope.launch {
+                refreshTrainingFromLocalCache()
+                refreshNutritionFromLocalCache()
+                refreshTodayTrainingFromLocalCache()
+            }
+        }
         resumeDebounceJob?.cancel()
         resumeDebounceJob = viewModelScope.launch {
             delay(RESUME_DEBOUNCE_MS)
@@ -325,6 +388,289 @@ class HomeViewModel @Inject constructor(
     }
 
     // ── Private helpers ──
+
+    private fun markLocalTrainingPlanChange(planId: String) {
+        lastLocalTrainingPlanId = planId
+        localTrainingPlanRevisionMs = System.currentTimeMillis()
+    }
+
+    private fun shouldPreserveLocalTraining(incoming: HomeUiState.Success): Boolean {
+        val guardPlanId = lastLocalTrainingPlanId ?: cachedActivePlanId ?: return false
+        if (incoming.activePlan?.id == guardPlanId) return false
+        val ageMs = System.currentTimeMillis() - localTrainingPlanRevisionMs
+        return localTrainingPlanRevisionMs > 0L && ageMs in 0..LOCAL_TRAINING_GUARD_MS
+    }
+
+    private fun markLocalWorkoutCompletion() {
+        localWorkoutCompletionRevisionMs = System.currentTimeMillis()
+    }
+
+    private fun shouldPreserveLocalWorkoutCompletion(incoming: HomeUiState.Success): Boolean {
+        val current = _uiState.value as? HomeUiState.Success ?: return false
+        val wasCompleted = current.todayTraining?.isCompleted == true
+        val incomingCompleted = incoming.todayTraining?.isCompleted == true
+        if (!wasCompleted || incomingCompleted) return false
+        val ageMs = System.currentTimeMillis() - localWorkoutCompletionRevisionMs
+        return localWorkoutCompletionRevisionMs > 0L && ageMs in 0..LOCAL_WORKOUT_GUARD_MS
+    }
+
+    /**
+     * Marks today's session complete immediately when a workout is finalized (Room already updated).
+     */
+    private fun applyNutritionLogChanged(log: NutritionLog) {
+        if (log.date != LocalDate.now()) return
+        val current = _uiState.value as? HomeUiState.Success ?: return
+        val previous = current.todayNutrition
+        val updated = deriveNutrition(log, null)?.let { fresh ->
+            if (previous == null) return@let fresh
+            fresh.copy(
+                calorieTarget = previous.calorieTarget,
+                proteinTarget = previous.proteinTarget,
+                carbsTarget = previous.carbsTarget,
+                fatTarget = previous.fatTarget,
+            )
+        } ?: return
+        if (current.todayNutrition == updated) return
+        updateSuccessIfSuccess("nutrition_log_changed") { state ->
+            state.copy(todayNutrition = updated)
+        }
+    }
+
+    private fun applyWorkoutFinalized(log: WorkoutLog) {
+        if (!log.isLocked) {
+            viewModelScope.launch { refreshTodayTrainingFromLocalCache() }
+            return
+        }
+        val current = _uiState.value as? HomeUiState.Success ?: return
+        val training = current.todayTraining
+        if (training != null &&
+            log.trainingPlanId == training.planId &&
+            log.trainingDayId == training.dayId
+        ) {
+            markLocalWorkoutCompletion()
+            updateSuccessIfSuccess("workout_finalized") { state ->
+                state.copy(todayTraining = training.copy(isCompleted = true))
+            }
+            return
+        }
+        viewModelScope.launch { refreshTodayTrainingFromLocalCache() }
+    }
+
+    /** Rebuilds [TodayTrainingState] from Room workout logs (no network). */
+    private suspend fun refreshTodayTrainingFromLocalCache() {
+        val current = _uiState.value as? HomeUiState.Success ?: return
+        val today = LocalDate.now().toString()
+        val todayLogs = getCachedWorkoutLogsUseCase(from = today, to = today)
+        val planDetail = cachedActivePlanDetail
+            ?: cachedActivePlanId?.let { getTrainingPlanDetailUseCase.fromCache(it) }
+        val updatedTodayTraining = deriveTodayTraining(
+            planDetail,
+            current.weeklySummary,
+            todayLogs,
+        ) ?: return
+        if (updatedTodayTraining.isCompleted) {
+            markLocalWorkoutCompletion()
+        }
+        if (current.todayTraining == updatedTodayTraining) return
+        updateSuccessIfSuccess("workout_cache_refresh") { state ->
+            state.copy(todayTraining = updatedTodayTraining)
+        }
+    }
+
+    /**
+     * Instant Home update when the user taps activate in Training (before API/Room confirm).
+     */
+    private suspend fun applyOptimisticActiveTrainingPlan(planId: String, planName: String?) {
+        val current = _uiState.value as? HomeUiState.Success ?: return
+        markLocalTrainingPlanChange(planId)
+
+        val cachedDetail = getTrainingPlanDetailUseCase.fromCache(planId)
+        val summary = ActivePlanSummary(
+            id = planId,
+            name = planName?.takeIf { it.isNotBlank() } ?: cachedDetail?.name ?: "",
+        )
+        cachedActivePlanId = planId
+        cachedActivePlanSummary = summary
+        cachedActivePlanDetail = cachedDetail?.takeIf { it.days.isNotEmpty() }
+
+        val detailForTraining = cachedDetail?.takeIf { it.days.isNotEmpty() }
+        val todayWorkoutLogs = loadTodayWorkoutHistoryCacheFirst()
+        val todayTraining = deriveTodayTraining(
+            detailForTraining,
+            current.weeklySummary,
+            todayWorkoutLogs,
+        )
+
+        updateSuccessIfSuccess("training_optimistic") { state ->
+            state.copy(
+                activePlan = summary,
+                todayTraining = todayTraining,
+                isTrainingHydrating = detailForTraining == null,
+            )
+        }
+
+        viewModelScope.launch {
+            prefetchTrainingPlanDetailsUseCase(listOf(planId))
+            applyCachedTrainingDetailIfStillActive(planId)
+        }
+    }
+
+    /** Applies warmed detail cache without re-reading Room active status (avoids reverting optimistic UI). */
+    private suspend fun applyCachedTrainingDetailIfStillActive(planId: String) {
+        val current = _uiState.value as? HomeUiState.Success ?: return
+        if (current.activePlan?.id != planId) return
+        val cachedDetail = getTrainingPlanDetailUseCase.fromCache(planId) ?: return
+        if (cachedDetail.days.isEmpty()) return
+
+        cachedActivePlanDetail = cachedDetail
+        val todayWorkoutLogs = loadTodayWorkoutHistoryCacheFirst()
+        val todayTraining = deriveTodayTraining(
+            cachedDetail,
+            current.weeklySummary,
+            todayWorkoutLogs,
+        )
+        updateSuccessIfSuccess("training_detail_prefetch") { state ->
+            state.copy(
+                todayTraining = todayTraining,
+                isTrainingHydrating = false,
+            )
+        }
+    }
+
+    /**
+     * Updates training card fields from Room after active-plan changes (no bootstrap wait).
+     */
+    private suspend fun refreshTrainingFromLocalCache() {
+        val current = _uiState.value as? HomeUiState.Success ?: return
+        val trainingPlans = getCachedTrainingPlansUseCase()
+        val roomActive = trainingPlans.find { it.status == PlanStatus.ACTIVE }
+        val optimisticId = lastLocalTrainingPlanId
+        val inOptimisticWindow = optimisticId != null &&
+            localTrainingPlanRevisionMs > 0L &&
+            System.currentTimeMillis() - localTrainingPlanRevisionMs < LOCAL_TRAINING_GUARD_MS
+
+        val activePlanId = when {
+            inOptimisticWindow && roomActive?.id != optimisticId -> optimisticId
+            roomActive != null -> roomActive.id
+            inOptimisticWindow -> optimisticId
+            else -> null
+        }
+
+        if (activePlanId == null) {
+            if (cachedActivePlanId == null) return
+            cachedActivePlanId = null
+            cachedActivePlanDetail = null
+            cachedActivePlanSummary = null
+            lastLocalTrainingPlanId = null
+            localTrainingPlanRevisionMs = 0L
+            updateSuccessIfSuccess("training_cache_clear") { state ->
+                state.copy(
+                    activePlan = null,
+                    todayTraining = null,
+                    isTrainingHydrating = false,
+                )
+            }
+            return
+        }
+
+        val planId = activePlanId
+        if (planId == cachedActivePlanId && !cachedActivePlanDetail?.days.isNullOrEmpty()) {
+            return
+        }
+
+        markLocalTrainingPlanChange(planId)
+
+        val roomSummary = roomActive?.takeIf { it.id == planId }
+        val planDetail = resolveActivePlanDetail(planId = planId, awaitNetwork = false) ?: roomSummary
+        if (planDetail == null) {
+            val summary = current.activePlan?.takeIf { it.id == planId } ?: return
+            markLocalTrainingPlanChange(planId)
+            cachedActivePlanId = planId
+            cachedActivePlanSummary = summary
+            updateSuccessIfSuccess("training_cache_summary_only") { state ->
+                state.copy(activePlan = summary, isTrainingHydrating = true)
+            }
+            prefetchPlanDetail(planId)
+            return
+        }
+
+        cachedActivePlanId = planId
+        cachedActivePlanDetail = planDetail.takeIf { it.days.isNotEmpty() }
+        cachedActivePlanSummary = ActivePlanSummary(planDetail.id, planDetail.name)
+
+        val detailForTraining = planDetail.takeIf { it.days.isNotEmpty() }
+        val todayWorkoutLogs = loadTodayWorkoutHistoryCacheFirst()
+        val todayTraining = deriveTodayTraining(
+            detailForTraining,
+            current.weeklySummary,
+            todayWorkoutLogs,
+        )
+        val isTrainingHydrating = detailForTraining == null
+
+        updateSuccessIfSuccess("training_cache_refresh") { state ->
+            state.copy(
+                activePlan = cachedActivePlanSummary,
+                todayTraining = todayTraining,
+                isTrainingHydrating = isTrainingHydrating,
+            )
+        }
+
+        if (detailForTraining == null) {
+            prefetchPlanDetail(planId)
+        }
+    }
+
+    /** Updates next-meal card from Room after active diet plan changes. */
+    private suspend fun refreshNutritionFromLocalCache() {
+        if (_uiState.value !is HomeUiState.Success) return
+        val dietPlans = getCachedDietPlansUseCase()
+        val activeDiet = dietPlans.find { it.status == PlanStatus.ACTIVE }
+
+        if (activeDiet == null) {
+            if (cachedActiveDietId == null) return
+            cachedActiveDietId = null
+            cachedActiveDietDetail = null
+            updateSuccessIfSuccess("diet_cache_clear") { state ->
+                state.copy(nextMeal = NextMealState.NoPlan)
+            }
+            return
+        }
+
+        val planId = activeDiet.id
+        if (planId == cachedActiveDietId && !cachedActiveDietDetail?.days.isNullOrEmpty()) {
+            return
+        }
+
+        val planDetail = getDietPlanDetailUseCase.fromCache(planId)
+            ?: activeDiet.takeIf { it.days.isNotEmpty() }
+
+        cachedActiveDietId = planId
+        cachedActiveDietDetail = planDetail?.takeIf { it.days.isNotEmpty() }
+
+        val detailForMeal = planDetail?.takeIf { it.days.isNotEmpty() }
+        val nextMeal = when {
+            detailForMeal != null -> deriveNextMeal(detailForMeal)
+            else -> NextMealState.NoPlan
+        }
+
+        updateSuccessIfSuccess("diet_cache_refresh") { state ->
+            state.copy(nextMeal = nextMeal)
+        }
+
+        if (detailForMeal == null) {
+            viewModelScope.launch {
+                when (val result = getDietPlanDetailUseCase(planId)) {
+                    is Result.Success -> {
+                        cachedActiveDietDetail = result.data
+                        updateSuccessIfSuccess("diet_detail_prefetch") { state ->
+                            state.copy(nextMeal = deriveNextMeal(result.data))
+                        }
+                    }
+                    else -> Unit
+                }
+            }
+        }
+    }
 
     private fun mark(label: String) {
         perfMarks.add(label to System.currentTimeMillis())
@@ -346,6 +692,51 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private suspend fun loadBootstrapCacheSnapshot(): HomeUiState.Success? {
+        val bootstrap = getCachedHomeBootstrapUseCase() ?: return null
+        mark("bootstrap_cache_hit")
+        return buildSnapshotFromBootstrap(bootstrap)
+    }
+
+    /** Refreshes dashboard data from the network without blocking the initial cache paint. */
+    private fun refreshBootstrapInBackground() {
+        bootstrapJob?.cancel()
+        bootstrapJob = viewModelScope.launch {
+            val networkSnapshot = refreshFromBootstrapInternal()
+            if (networkSnapshot == null) {
+                if (_uiState.value is HomeUiState.Success) {
+                    scheduleBootstrapRefresh()
+                }
+                return@launch
+            }
+            val current = _uiState.value as? HomeUiState.Success
+            val merged = current?.let { mergeBootstrapWithCurrent(it, networkSnapshot) } ?: networkSnapshot
+            if (current == null || hasHomeStateChange(current, merged)) {
+                applySuccessState(merged, "loadAll_bootstrap")
+            }
+        }
+    }
+
+    private suspend fun buildSnapshotFromBootstrap(bootstrap: HomeBootstrap): HomeUiState.Success {
+        val trainingPlans = bootstrap.activeTrainingPlan?.let { listOf(it) } ?: emptyList()
+        val dietPlans = bootstrap.activeDietPlan?.let { listOf(it) } ?: emptyList()
+        val todayWorkoutLogs = mergeTodayWorkoutLogsWithLocalCache(bootstrap.todayWorkouts)
+        return buildHomeSnapshot(
+            profile = bootstrap.profile,
+            nutritionPair = bootstrap.nutritionLog to bootstrap.nutritionTarget,
+            weightEntries = weightEntriesFromWeeklySummary(bootstrap.weeklySummary),
+            trainingPlans = trainingPlans,
+            dietPlans = dietPlans,
+            todayWorkoutLogs = todayWorkoutLogs,
+            weeklySummary = bootstrap.weeklySummary,
+            streaks = bootstrap.streaks,
+            userAchievements = bootstrap.achievements,
+            allDefinitions = bootstrap.achievementDefinitions,
+            planDetail = bootstrap.activeTrainingPlan,
+            dietDetail = bootstrap.activeDietPlan,
+        )
+    }
+
     private fun scheduleBootstrapRefresh() {
         if (!hasCompletedInitialLoad) return
         bootstrapJob?.cancel()
@@ -354,16 +745,79 @@ class HomeViewModel @Inject constructor(
             if (_uiState.value !is HomeUiState.Success) return@launch
             val updated = refreshFromBootstrapInternal() ?: return@launch
             val current = _uiState.value as? HomeUiState.Success ?: return@launch
-            val merged = updated.copy(
-                avatarUrl = pickBestProfilePictureUrl(updated.avatarUrl, current.avatarUrl),
-            )
+            val merged = mergeBootstrapWithCurrent(current, updated)
             if (!hasHomeStateChange(current, merged)) return@launch
             applySuccessState(merged, "bootstrap_refresh")
         }
     }
 
+    private fun mergeBootstrapWithCurrent(
+        current: HomeUiState.Success,
+        bootstrap: HomeUiState.Success,
+    ): HomeUiState.Success {
+        val withAvatar = bootstrap.copy(
+            avatarUrl = pickBestProfilePictureUrl(bootstrap.avatarUrl, current.avatarUrl),
+        )
+        val preservedTraining = if (shouldPreserveLocalTraining(withAvatar)) {
+            withAvatar.copy(
+                activePlan = current.activePlan,
+                todayTraining = current.todayTraining,
+                isTrainingHydrating = current.isTrainingHydrating,
+            )
+        } else {
+            withAvatar
+        }
+        return if (shouldPreserveLocalWorkoutCompletion(preservedTraining)) {
+            preservedTraining.copy(todayTraining = current.todayTraining)
+        } else {
+            preservedTraining
+        }
+    }
+
+    /** Prefer locked logs from Room when bootstrap/history responses are still stale. */
+    private suspend fun mergeTodayWorkoutLogsWithLocalCache(
+        remoteLogs: List<WorkoutLog>,
+    ): List<WorkoutLog> {
+        val today = LocalDate.now().toString()
+        val cached = getCachedWorkoutLogsUseCase(from = today, to = today)
+        if (cached.isEmpty()) return remoteLogs
+        val byId = remoteLogs.associateBy { it.id }.toMutableMap()
+        for (log in cached) {
+            if (log.isLocked) {
+                byId[log.id] = log
+            }
+        }
+        return byId.values.toList()
+    }
+
     private fun applySuccessState(state: HomeUiState.Success, @Suppress("UNUSED_PARAMETER") source: String) {
-        _uiState.value = state
+        val current = _uiState.value as? HomeUiState.Success
+        if (state.todayTraining?.isCompleted == true && current?.todayTraining?.isCompleted != true) {
+            markLocalWorkoutCompletion()
+        }
+        var resolved = when {
+            current != null && shouldPreserveLocalTraining(state) -> state.copy(
+                activePlan = current.activePlan,
+                todayTraining = current.todayTraining,
+                isTrainingHydrating = current.isTrainingHydrating,
+                avatarUrl = pickBestProfilePictureUrl(state.avatarUrl, current.avatarUrl),
+            )
+            else -> state
+        }
+        if (current != null && shouldPreserveLocalWorkoutCompletion(resolved)) {
+            resolved = resolved.copy(todayTraining = current.todayTraining)
+        }
+        if (resolved.activePlan?.id == lastLocalTrainingPlanId &&
+            source in setOf("bootstrap_refresh", "loadAll_bootstrap", "training_cache_refresh")
+        ) {
+            localTrainingPlanRevisionMs = 0L
+        }
+        if (resolved.todayTraining?.isCompleted == true &&
+            source in setOf("bootstrap_refresh", "loadAll_bootstrap", "workout_cache_refresh", "workout_finalized")
+        ) {
+            localWorkoutCompletionRevisionMs = 0L
+        }
+        _uiState.value = resolved
     }
 
     private fun updateSuccessIfSuccess(
@@ -556,22 +1010,7 @@ class HomeViewModel @Inject constructor(
         } else {
             mark("no_active_plan")
         }
-        val trainingPlans = bootstrap.activeTrainingPlan?.let { listOf(it) } ?: emptyList()
-        val dietPlans = bootstrap.activeDietPlan?.let { listOf(it) } ?: emptyList()
-        val snapshot = buildHomeSnapshot(
-            profile = bootstrap.profile,
-            nutritionPair = bootstrap.nutritionLog to bootstrap.nutritionTarget,
-            weightEntries = weightEntriesFromWeeklySummary(bootstrap.weeklySummary),
-            trainingPlans = trainingPlans,
-            dietPlans = dietPlans,
-            todayWorkoutLogs = bootstrap.todayWorkouts,
-            weeklySummary = bootstrap.weeklySummary,
-            streaks = bootstrap.streaks,
-            userAchievements = bootstrap.achievements,
-            allDefinitions = bootstrap.achievementDefinitions,
-            planDetail = bootstrap.activeTrainingPlan,
-            dietDetail = bootstrap.activeDietPlan,
-        )
+        val snapshot = buildSnapshotFromBootstrap(bootstrap)
         perfLog("bootstrap_network", networkStart)
         return snapshot
     }
@@ -790,16 +1229,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /** First non-[Result.Loading] emission (Room cache when available); does not wait for network. */
+    /** Reads today's workout logs from Room only (no network). */
     private suspend fun loadTodayWorkoutHistoryCacheFirst(): List<WorkoutLog> {
         val today = LocalDate.now().toString()
-        val result = when (
-            val r = getWorkoutHistoryUseCase(from = today, to = today)
-                .first { it !is Result.Loading }
-        ) {
-            is Result.Success -> r.data
-            else -> emptyList()
-        }
+        val result = getCachedWorkoutLogsUseCase(from = today, to = today)
         mark("workout_history_cache_emit")
         return result
     }
@@ -935,8 +1368,11 @@ class HomeViewModel @Inject constructor(
     }
 
     private suspend fun resolveTodayPlanMeals(): List<Meal> {
-        val plan = cachedActiveDietDetail
-            ?: cachedActiveDietId?.let { planId ->
+        val activeId = cachedActiveDietId
+            ?: getCachedDietPlansUseCase().find { it.status == PlanStatus.ACTIVE }?.id
+        val plan = activeId?.let { getDietPlanDetailUseCase.fromCache(it) }
+            ?: cachedActiveDietDetail
+            ?: activeId?.let { planId ->
                 loadDietPlanDetail(planId)?.also { cachedActiveDietDetail = it }
             }
         return plan?.let { mealsForToday(it) } ?: emptyList()
@@ -1060,6 +1496,8 @@ class HomeViewModel @Inject constructor(
         private const val PLAN_DETAIL_NETWORK_TIMEOUT_MS = 10_000L
         private const val BOOTSTRAP_DEBOUNCE_MS = 800L
         private const val RESUME_DEBOUNCE_MS = 300L
+        private const val LOCAL_TRAINING_GUARD_MS = 30_000L
+        private const val LOCAL_WORKOUT_GUARD_MS = 30_000L
 
         private fun perfLog(label: String, startMs: Long) {
             Log.d(TAG_PERF, "$label: ${System.currentTimeMillis() - startMs}ms")

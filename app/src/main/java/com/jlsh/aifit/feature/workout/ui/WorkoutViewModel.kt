@@ -294,12 +294,14 @@ class WorkoutViewModel @Inject constructor(
             when (val result = getWorkoutLogDetailUseCase(logId)) {
                 is Result.Success -> {
                     val log = result.data
-                    val sessionStats = when (val planResult = getTrainingPlanDetailUseCase(log.trainingPlanId)) {
-                        is Result.Success -> {
-                            val day = planResult.data.days.find { it.id == log.trainingDayId }
-                            day?.exercises?.let { computeWorkoutSessionStats(it, log.sets) }
+                    val sessionStats = log.trainingPlanId?.let { planId ->
+                        when (val planResult = getTrainingPlanDetailUseCase(planId)) {
+                            is Result.Success -> {
+                                val day = planResult.data.days.find { it.id == log.trainingDayId }
+                                day?.exercises?.let { computeWorkoutSessionStats(it, log.sets) }
+                            }
+                            else -> null
                         }
-                        else -> null
                     }
                     _detailState.value = WorkoutDetailUiState.Success(
                         log = log,

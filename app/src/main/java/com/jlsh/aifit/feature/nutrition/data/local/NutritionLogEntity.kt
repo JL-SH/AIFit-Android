@@ -11,5 +11,7 @@ data class NutritionLogEntity(
     val totalProteinGrams: Double,
     val totalCarbsGrams: Double,
     val totalFatGrams: Double,
+    /** JSON array of [MealLogResponseDto] for instant offline meal list display. */
+    val mealsJson: String? = null,
 )
 

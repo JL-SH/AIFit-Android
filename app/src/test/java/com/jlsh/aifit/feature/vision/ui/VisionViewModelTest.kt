@@ -3,12 +3,15 @@ package com.jlsh.aifit.feature.vision.ui
 import app.cash.turbine.test
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
+import com.jlsh.aifit.feature.nutrition.domain.usecase.TrackMealUseCase
 import com.jlsh.aifit.feature.vision.domain.usecase.AnalyzeFoodPhotoUseCase
 import com.jlsh.aifit.feature.vision.ui.state.VisionUiEvent
 import com.jlsh.aifit.feature.vision.ui.state.VisionUiState
 import com.jlsh.aifit.testutil.*
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -23,8 +26,12 @@ class VisionViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val analyzeUseCase: AnalyzeFoodPhotoUseCase = mockk()
+    private val trackMealUseCase: TrackMealUseCase = mockk()
 
-    private fun buildViewModel(): VisionViewModel = VisionViewModel(analyzeUseCase)
+    private fun buildViewModel(): VisionViewModel = VisionViewModel(
+        analyzeFoodPhotoUseCase = analyzeUseCase,
+        trackMealUseCase = trackMealUseCase,
+    )
 
     @Test
     fun `estado inicial es Idle`() = runTest {
@@ -75,9 +82,36 @@ class VisionViewModelTest {
     }
 
     @Test
-    fun `onLogMeal envia NavigateToTrackMeal cuando hay Result`() = runTest {
+    fun `onLogMeal guarda comida y emite MealLogged y NavigateBack`() = runTest {
+        val analysisResult = fakeFoodPhotoAnalysisResult(identifiedFoodName = "Ensalada")
+        coEvery { analyzeUseCase(any(), any()) } returns Result.Success(analysisResult)
+        coEvery { trackMealUseCase(any()) } returns Result.Success(fakeMealLog())
+
+        val vm = buildViewModel()
+        vm.onSelectFromGallery(byteArrayOf(1, 2, 3))
+        advanceUntilIdle()
+
+        vm.events.test {
+            vm.onLogMeal()
+            advanceUntilIdle()
+
+            assertEquals(VisionUiEvent.MealLogged, awaitItem())
+            assertEquals(VisionUiEvent.NavigateBack, awaitItem())
+
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        val requestSlot = slot<com.jlsh.aifit.feature.nutrition.data.dto.TrackMealRequestDto>()
+        coVerify { trackMealUseCase(capture(requestSlot)) }
+        assertEquals("Ensalada", requestSlot.captured.name)
+        assertTrue(requestSlot.captured.items.isNotEmpty())
+    }
+
+    @Test
+    fun `onLogMeal con error muestra snackbar y mantiene resultado`() = runTest {
         val analysisResult = fakeFoodPhotoAnalysisResult()
         coEvery { analyzeUseCase(any(), any()) } returns Result.Success(analysisResult)
+        coEvery { trackMealUseCase(any()) } returns Result.Error(AppException.ServerException)
 
         val vm = buildViewModel()
         vm.onSelectFromGallery(byteArrayOf(1, 2, 3))
@@ -88,11 +122,14 @@ class VisionViewModelTest {
             advanceUntilIdle()
 
             val event = awaitItem()
-            assertTrue(event is VisionUiEvent.NavigateToTrackMeal)
-            assertTrue((event as VisionUiEvent.NavigateToTrackMeal).prefilled.isNotBlank())
+            assertTrue(event is VisionUiEvent.ShowSnackbar)
 
             cancelAndIgnoreRemainingEvents()
         }
+
+        val state = vm.uiState.value as VisionUiState.Result
+        assertFalse(state.isSaving)
+        assertEquals(analysisResult, state.result)
     }
 
     @Test
@@ -100,11 +137,10 @@ class VisionViewModelTest {
         val vm = buildViewModel()
         assertTrue(vm.uiState.value is VisionUiState.Idle)
 
-        // Should be a no-op
         vm.onLogMeal()
         advanceUntilIdle()
 
         assertTrue(vm.uiState.value is VisionUiState.Idle)
+        coVerify(exactly = 0) { trackMealUseCase(any()) }
     }
 }
-

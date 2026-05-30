@@ -10,5 +10,8 @@ class GetDietPlanDetailUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(planId: String): Result<DietPlan> =
         repository.getDietPlanDetail(planId)
+
+    suspend fun fromCache(planId: String): DietPlan? =
+        repository.getCachedDietPlanDetail(planId)
 }
 

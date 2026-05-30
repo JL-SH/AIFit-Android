@@ -7,7 +7,11 @@ import com.jlsh.aifit.feature.chat.data.local.ChatDao
 import com.jlsh.aifit.feature.chat.data.local.ChatMessageEntity
 import com.jlsh.aifit.feature.chat.data.local.ChatSessionEntity
 import com.jlsh.aifit.feature.diet.data.local.DietPlanDao
+import com.jlsh.aifit.feature.diet.data.local.DietPlanDetailCacheDao
+import com.jlsh.aifit.feature.diet.data.local.DietPlanDetailCacheEntity
 import com.jlsh.aifit.feature.diet.data.local.DietPlanEntity
+import com.jlsh.aifit.feature.home.data.local.HomeBootstrapCacheDao
+import com.jlsh.aifit.feature.home.data.local.HomeBootstrapCacheEntity
 import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogDao
 import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogEntity
 import com.jlsh.aifit.feature.nutrition.data.local.NutritionTargetDao
@@ -36,18 +40,20 @@ import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
  * diet plans, workout and nutrition logs, body-weight entries, AI chat
  * history, and shopping list data.
  *
- * **Schema version**: 13. Schema export is disabled; migrations are handled
- * manually in the Hilt `DatabaseModule`.
+ * **Schema version**: 17. Schema export is disabled; migrations are handled
+ * in [com.jlsh.aifit.core.local.DatabaseMigrations].
  */
 @Database(
     entities = [
         UserProfileEntity::class,
+        HomeBootstrapCacheEntity::class,
         TrainingPlanEntity::class,
         DietPlanEntity::class,
         WorkoutLogEntity::class,
         NutritionLogEntity::class,
         NutritionTargetEntity::class,
         TrainingPlanDetailCacheEntity::class,
+        DietPlanDetailCacheEntity::class,
         BodyWeightEntity::class,
         ChatSessionEntity::class,
         ChatMessageEntity::class,
@@ -56,11 +62,14 @@ import com.jlsh.aifit.feature.workout.data.local.WorkoutLogEntity
         ShoppingLocalItemEntity::class,
         ShoppingDeletedItemEntity::class,
     ],
-    version = 13,
+    version = 17,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AiFitDatabase : RoomDatabase() {
+
+    /** @return The DAO for [HomeBootstrapCacheEntity] read/write operations. */
+    abstract fun homeBootstrapCacheDao(): HomeBootstrapCacheDao
 
     /** @return The DAO for [UserProfileEntity] read/write operations. */
     abstract fun userProfileDao(): UserProfileDao
@@ -82,6 +91,9 @@ abstract class AiFitDatabase : RoomDatabase() {
 
     /** @return The DAO for [TrainingPlanDetailCacheEntity] read/write operations. */
     abstract fun trainingPlanDetailCacheDao(): TrainingPlanDetailCacheDao
+
+    /** @return The DAO for [DietPlanDetailCacheEntity] read/write operations. */
+    abstract fun dietPlanDetailCacheDao(): DietPlanDetailCacheDao
 
     /** @return The DAO for [BodyWeightEntity] read/write operations. */
     abstract fun bodyWeightDao(): BodyWeightDao

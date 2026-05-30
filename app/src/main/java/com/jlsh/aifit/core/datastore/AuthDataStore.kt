@@ -36,6 +36,11 @@ class AuthDataStore @Inject constructor(
 
     private val prefs: SharedPreferences = createPrefs()
 
+    /** Touches encrypted prefs once so later reads on the main thread are faster. */
+    fun warmup() {
+        prefs.contains(KEY_TOKEN)
+    }
+
     private fun createPrefs(): SharedPreferences {
         return try {
             EncryptedSharedPreferences.create(

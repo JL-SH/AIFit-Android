@@ -5,11 +5,13 @@ import com.jlsh.aifit.feature.nutrition.data.dto.AnalyzeMealFromTextRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.MealLogResponseDto
 import com.jlsh.aifit.feature.nutrition.data.dto.NutritionLogResponseDto
 import com.jlsh.aifit.feature.nutrition.data.dto.TrackMealRequestDto
+import com.jlsh.aifit.feature.nutrition.data.dto.UpdateMealRequestDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.PATCH
 import retrofit2.http.Query
 
 interface NutritionLogApiService {
@@ -31,5 +33,11 @@ interface NutritionLogApiService {
 
     @DELETE("nutrition-logs/meals/{mealId}")
     suspend fun deleteMealLog(@Path("mealId") mealId: String): ApiResponse<Unit>
+
+    @PATCH("nutrition-logs/meals/{mealId}")
+    suspend fun updateMealLog(
+        @Path("mealId") mealId: String,
+        @Body request: UpdateMealRequestDto,
+    ): ApiResponse<MealLogResponseDto>
 }
 

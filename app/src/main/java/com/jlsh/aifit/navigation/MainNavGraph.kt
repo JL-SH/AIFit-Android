@@ -445,8 +445,8 @@ private fun MainNavScreen() {
                             mode = mode,
                             onNavigateBack = { tabNavController.popBackStack() },
                             onNavigateToHome = {
-                                tabNavController.navigate(HomeRoutes.GRAPH) {
-                                    popUpTo(tabNavController.graph.startDestinationId) {
+                                tabNavController.navigate(HomeRoutes.HOME) {
+                                    popUpTo(HomeRoutes.GRAPH) {
                                         saveState = true
                                     }
                                     launchSingleTop = true
@@ -458,11 +458,6 @@ private fun MainNavScreen() {
                     aifitComposable(NutritionRoutes.FOOD_VISION) {
                         FoodVisionScreen(
                             onNavigateBack = { tabNavController.popBackStack() },
-                            onNavigateToTrackMeal = { prefilled ->
-                                tabNavController.navigate(
-                                    NutritionRoutes.trackMealRoute(mode = "manual", prefilled = prefilled)
-                                )
-                            },
                         )
                     }
                     aifitComposable(NutritionRoutes.TARGET) {

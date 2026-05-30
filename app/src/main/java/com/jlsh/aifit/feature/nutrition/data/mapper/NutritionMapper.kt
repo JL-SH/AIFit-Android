@@ -12,6 +12,8 @@ import com.jlsh.aifit.feature.nutrition.domain.model.MealLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.model.TargetSource
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -21,6 +23,8 @@ import java.time.format.DateTimeFormatter
 object NutritionMapper {
 
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
+    private val mealsJson = Json { ignoreUnknownKeys = true }
+    private val mealsListSerializer = ListSerializer(MealLogResponseDto.serializer())
 
     /**
      * Maps the daily nutrition log from the API to the domain model.
@@ -79,8 +83,33 @@ object NutritionMapper {
         setBy = TargetSource.fromString(setBy),
     )
 
+    fun MealLog.toResponseDto(): MealLogResponseDto = MealLogResponseDto(
+        id = id,
+        mealType = mealType.name,
+        name = name,
+        time = time,
+        calories = calories,
+        proteinGrams = proteinGrams,
+        carbsGrams = carbsGrams,
+        fatGrams = fatGrams,
+        aiGenerated = aiGenerated,
+        rawInputText = rawInputText,
+        items = items.map { it.toResponseDto() },
+    )
+
+    fun FoodItemLog.toResponseDto(): FoodItemLogResponseDto = FoodItemLogResponseDto(
+        id = id,
+        name = name,
+        quantity = quantity,
+        unit = unit,
+        calories = calories,
+        proteinGrams = proteinGrams,
+        carbsGrams = carbsGrams,
+        fatGrams = fatGrams,
+    )
+
     /**
-     * A daily record persists in Room (aggregated totals; no meals in the entity).
+     * Persists a daily record in Room including serialized meals for offline display.
      */
     fun NutritionLog.toEntity(): NutritionLogEntity = NutritionLogEntity(
         id = id,
@@ -89,10 +118,11 @@ object NutritionMapper {
         totalProteinGrams = totalProteinGrams,
         totalCarbsGrams = totalCarbsGrams,
         totalFatGrams = totalFatGrams,
+        mealsJson = encodeMealsJson(meals),
     )
 
     /**
-     * Restores a daily log from Room; [NutritionLog.meals] remains empty.
+     * Restores a daily log from Room, including cached meals when available.
      */
     fun NutritionLogEntity.toDomain(): NutritionLog = NutritionLog(
         id = id,
@@ -101,7 +131,20 @@ object NutritionMapper {
         totalProteinGrams = totalProteinGrams,
         totalCarbsGrams = totalCarbsGrams,
         totalFatGrams = totalFatGrams,
+        meals = decodeMealsJson(mealsJson),
     )
+
+    fun encodeMealsJson(meals: List<MealLog>): String? {
+        if (meals.isEmpty()) return null
+        return mealsJson.encodeToString(mealsListSerializer, meals.map { it.toResponseDto() })
+    }
+
+    fun decodeMealsJson(raw: String?): List<MealLog> {
+        if (raw.isNullOrBlank()) return emptyList()
+        return runCatching {
+            mealsJson.decodeFromString(mealsListSerializer, raw).map { it.toDomain() }
+        }.getOrDefault(emptyList())
+    }
 
     /**
      * Persist nutritional goals in Room.

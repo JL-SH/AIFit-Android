@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.common.toMessage
+import com.jlsh.aifit.feature.nutrition.domain.usecase.TrackMealUseCase
+import com.jlsh.aifit.feature.nutrition.domain.util.toTrackMealRequestDto
 import com.jlsh.aifit.feature.vision.domain.usecase.AnalyzeFoodPhotoUseCase
 import com.jlsh.aifit.feature.vision.ui.state.VisionUiEvent
 import com.jlsh.aifit.feature.vision.ui.state.VisionUiState
@@ -15,13 +17,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
 @HiltViewModel
 class VisionViewModel @Inject constructor(
     private val analyzeFoodPhotoUseCase: AnalyzeFoodPhotoUseCase,
+    private val trackMealUseCase: TrackMealUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<VisionUiState>(VisionUiState.Idle)
@@ -45,28 +47,23 @@ class VisionViewModel @Inject constructor(
 
     fun onLogMeal() {
         val current = _uiState.value
-        if (current !is VisionUiState.Result) return
+        if (current !is VisionUiState.Result || current.isSaving) return
 
         viewModelScope.launch {
-            // Serialize the items as a JSON string for nav argument
-            val itemsSerialized = try {
-                Json.encodeToString(
-                    current.result.items.map { item ->
-                        mapOf(
-                            "name" to item.name,
-                            "quantity" to item.quantity.toString(),
-                            "unit" to item.unit,
-                            "calories" to item.calories.toString(),
-                            "proteinGrams" to item.proteinGrams.toString(),
-                            "carbsGrams" to item.carbsGrams.toString(),
-                            "fatGrams" to item.fatGrams.toString(),
-                        )
-                    }
-                )
-            } catch (_: Exception) {
-                ""
+            _uiState.value = current.copy(isSaving = true)
+            when (val result = trackMealUseCase(current.result.toTrackMealRequestDto())) {
+                is Result.Success -> {
+                    _events.send(VisionUiEvent.MealLogged)
+                    _events.send(VisionUiEvent.NavigateBack)
+                }
+                is Result.Error -> {
+                    _uiState.value = current.copy(isSaving = false)
+                    _events.send(VisionUiEvent.ShowSnackbar(result.exception.toMessage()))
+                }
+                else -> {
+                    _uiState.value = current.copy(isSaving = false)
+                }
             }
-            _events.send(VisionUiEvent.NavigateToTrackMeal(itemsSerialized))
         }
     }
 
@@ -91,5 +88,3 @@ class VisionViewModel @Inject constructor(
         return stream.toByteArray()
     }
 }
-
-

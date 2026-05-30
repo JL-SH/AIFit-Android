@@ -8,6 +8,8 @@ import com.jlsh.aifit.core.session.SessionManager
 import com.jlsh.aifit.feature.training.data.api.TrainingApiService
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanDao
 import com.jlsh.aifit.feature.training.data.local.TrainingPlanDetailCacheDao
+import com.jlsh.aifit.feature.training.data.local.TrainingPlanDetailCacheEntity
+import com.jlsh.aifit.feature.training.domain.TrainingActivePlanNotifier
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.testutil.*
 import io.mockk.*
@@ -26,6 +28,7 @@ class TrainingRepositoryImplTest {
     private val dao: TrainingPlanDao = mockk(relaxUnitFun = true)
     private val detailCacheDao: TrainingPlanDetailCacheDao = mockk(relaxUnitFun = true)
     private val sessionManager: SessionManager = mockk()
+    private val activePlanNotifier: TrainingActivePlanNotifier = mockk(relaxUnitFun = true)
     private lateinit var sut: TrainingRepositoryImpl
 
     @Before
@@ -35,7 +38,7 @@ class TrainingRepositoryImplTest {
         every { Log.e(any(), any()) } returns 0
         coEvery { detailCacheDao.getById(any()) } returns null
 
-        sut = TrainingRepositoryImpl(apiService, dao, detailCacheDao, sessionManager)
+        sut = TrainingRepositoryImpl(apiService, dao, detailCacheDao, sessionManager, activePlanNotifier)
     }
 
     @After
@@ -241,6 +244,50 @@ class TrainingRepositoryImplTest {
         val result = sut.activatePlan("p-1")
 
         assertTrue(result is Result.Error)
+    }
+
+    @Test
+    fun `activatePlan notifica cambio y guarda detail cache cuando respuesta tiene days`() = runTest {
+        val dto = fakeTrainingPlanResponseDto(id = "p-1", status = "ACTIVE")
+        every { sessionManager.getUserId() } returns FAKE_USER_ID
+        coEvery { dao.getAllByUserId(FAKE_USER_ID) } returns emptyList()
+        coEvery { apiService.activatePlan("p-1") } returns ApiResponse(success = true, data = dto)
+
+        val result = sut.activatePlan("p-1")
+
+        assertTrue(result is Result.Success)
+        verify { activePlanNotifier.notifyActivePlanChanged("p-1") }
+        coVerify {
+            detailCacheDao.upsert(
+                match<TrainingPlanDetailCacheEntity> { it.planId == "p-1" && it.detailJson.isNotBlank() },
+            )
+        }
+    }
+
+    @Test
+    fun `activatePlan no guarda detail cache cuando respuesta no tiene days`() = runTest {
+        val dto = fakeTrainingPlanResponseDto(id = "p-1", status = "ACTIVE", days = emptyList())
+        every { sessionManager.getUserId() } returns FAKE_USER_ID
+        coEvery { dao.getAllByUserId(FAKE_USER_ID) } returns emptyList()
+        coEvery { apiService.activatePlan("p-1") } returns ApiResponse(success = true, data = dto)
+
+        sut.activatePlan("p-1")
+
+        verify { activePlanNotifier.notifyActivePlanChanged("p-1") }
+        coVerify(exactly = 0) { detailCacheDao.upsert(any()) }
+    }
+
+    @Test
+    fun `getCachedTrainingPlans lee solo Room sin llamar API`() = runTest {
+        val cached = listOf(fakeTrainingPlanEntity(id = "cached-1"))
+        every { sessionManager.getUserId() } returns FAKE_USER_ID
+        coEvery { dao.getAllByUserId(FAKE_USER_ID) } returns cached
+
+        val result = sut.getCachedTrainingPlans()
+
+        assertEquals(1, result.size)
+        assertEquals("cached-1", result[0].id)
+        coVerify(exactly = 0) { apiService.getTrainingPlans() }
     }
 
     // ─── Reconciliation scoped to userId ────────────────────────────────────────

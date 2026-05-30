@@ -10,8 +10,11 @@ import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
+import com.jlsh.aifit.feature.diet.domain.DietActivePlanNotifier
+import com.jlsh.aifit.feature.diet.domain.usecase.GetCachedDietPlansUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
+import com.jlsh.aifit.feature.nutrition.domain.NutritionLogChangeNotifier
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTargetUseCase
@@ -62,11 +65,15 @@ class NutritionHubScreenTest {
             getDietPlansUseCase = getDietPlans,
             getDietPlanDetailUseCase = getDietPlanDetail,
             trackMealUseCase = mockk(),
+            updateMealLogUseCase = mockk(),
             analyzeMealFromTextUseCase = mockk(),
             deleteMealLogUseCase = mockk(),
             updateNutritionTargetUseCase = mockk(),
             setActiveDietPlanUseCase = mockk(),
             deleteDietPlanUseCase = mockk(),
+            getCachedDietPlansUseCase = mockk(relaxed = true),
+            dietActivePlanNotifier = DietActivePlanNotifier(),
+            nutritionLogChangeNotifier = NutritionLogChangeNotifier(),
         )
     }
 

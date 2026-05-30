@@ -3,9 +3,10 @@ package com.jlsh.aifit.app
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.jlsh.aifit.core.util.wrapWithAppLocale
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.jlsh.aifit.core.util.wrapWithAppLocale
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.jlsh.aifit.core.datastore.UserPreferencesDataStore
@@ -38,6 +39,7 @@ class MainActivity : ComponentActivity() {
      * @param savedInstanceState Saved state of the activity, if it exists.
      */
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {

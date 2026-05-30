@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey
 )
 data class WorkoutLogEntity(
     @PrimaryKey val id: String,
-    val trainingPlanId: String,
+    val trainingPlanId: String?,
     val trainingDayId: String,
     val date: Long,
     val durationMinutes: Int?,

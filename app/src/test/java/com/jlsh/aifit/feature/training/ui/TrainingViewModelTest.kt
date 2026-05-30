@@ -9,7 +9,10 @@ import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
 import com.jlsh.aifit.feature.training.domain.usecase.DeleteTrainingPlanUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GenerateTrainingPlanUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
+import com.jlsh.aifit.feature.training.domain.usecase.GetCachedTrainingPlansUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlansUseCase
+import com.jlsh.aifit.feature.training.domain.TrainingActivePlanNotifier
+import com.jlsh.aifit.feature.training.domain.usecase.PrefetchTrainingPlanDetailsUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.SetActivePlanUseCase
 import com.jlsh.aifit.feature.training.ui.state.GeneratePlanUiState
 import com.jlsh.aifit.feature.training.ui.state.TrainingDetailUiState
@@ -37,11 +40,14 @@ class TrainingViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val getTrainingPlansUseCase: GetTrainingPlansUseCase = mockk()
+    private val getCachedTrainingPlansUseCase: GetCachedTrainingPlansUseCase = mockk()
     private val getTrainingPlanDetailUseCase: GetTrainingPlanDetailUseCase = mockk()
     private val generateTrainingPlanUseCase: GenerateTrainingPlanUseCase = mockk()
     private val deleteTrainingPlanUseCase: DeleteTrainingPlanUseCase = mockk()
     private val setActivePlanUseCase: SetActivePlanUseCase = mockk()
     private val getUserProfileUseCase: GetUserProfileUseCase = mockk()
+    private val prefetchTrainingPlanDetailsUseCase: PrefetchTrainingPlanDetailsUseCase = mockk(relaxed = true)
+    private val trainingActivePlanNotifier: TrainingActivePlanNotifier = mockk(relaxUnitFun = true)
 
     @Before
     fun setUp() {
@@ -60,16 +66,21 @@ class TrainingViewModelTest {
             flowOf(Result.Success(emptyList())),
         profileFlow: Flow<Result<com.jlsh.aifit.feature.user.domain.model.UserProfile>> =
             flowOf(Result.Success(fakeUserProfile())),
+        cachedPlans: List<com.jlsh.aifit.feature.training.domain.model.TrainingPlan> = emptyList(),
     ): TrainingViewModel {
+        coEvery { getCachedTrainingPlansUseCase() } returns cachedPlans
         every { getTrainingPlansUseCase() } returns plansFlow
         every { getUserProfileUseCase() } returns profileFlow
         return TrainingViewModel(
             getTrainingPlansUseCase,
+            getCachedTrainingPlansUseCase,
             getTrainingPlanDetailUseCase,
             generateTrainingPlanUseCase,
             deleteTrainingPlanUseCase,
             setActivePlanUseCase,
             getUserProfileUseCase,
+            prefetchTrainingPlanDetailsUseCase,
+            trainingActivePlanNotifier,
         )
     }
 

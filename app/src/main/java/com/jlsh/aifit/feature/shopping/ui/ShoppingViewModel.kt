@@ -55,6 +55,7 @@ class ShoppingViewModel @Inject constructor(
     private val deleteShoppingListUseCase: DeleteShoppingListUseCase,
     private val shoppingRepository: ShoppingRepository,
 ) : ViewModel() {
+    private val pendingDeletedListIds = mutableSetOf<String>()
 
     private val _listState = MutableStateFlow<ShoppingListUiState>(ShoppingListUiState.Loading)
 
@@ -88,7 +89,12 @@ class ShoppingViewModel @Inject constructor(
         viewModelScope.launch {
             getShoppingListsUseCase().collect { result ->
                 when (result) {
-                    is Result.Success -> _listState.value = ShoppingListUiState.Success(result.data)
+                    is Result.Success -> {
+                        val remoteIds = result.data.map { it.id }.toSet()
+                        pendingDeletedListIds.removeAll { id -> id !in remoteIds }
+                        val visibleLists = result.data.filterNot { pendingDeletedListIds.contains(it.id) }
+                        _listState.value = ShoppingListUiState.Success(visibleLists)
+                    }
                     is Result.Error -> _listState.value = ShoppingListUiState.Error(result.exception.toMessage())
                     is Result.Loading -> {
                         if (_listState.value !is ShoppingListUiState.Success) {
@@ -106,13 +112,22 @@ class ShoppingViewModel @Inject constructor(
      * @param id Identifier of the list to delete.
      */
     fun onDeleteList(id: String) {
+        val previousLists = (_listState.value as? ShoppingListUiState.Success)?.lists
+        pendingDeletedListIds.add(id)
+        if (previousLists != null) {
+            _listState.value = ShoppingListUiState.Success(previousLists.filterNot { it.id == id })
+        }
         viewModelScope.launch {
             when (val r = deleteShoppingListUseCase(id)) {
                 is Result.Success -> {
                     loadLists()
                     _events.send(ShoppingUiEvent.ShowSnackbar("Lista eliminada"))
                 }
-                is Result.Error -> _events.send(ShoppingUiEvent.ShowSnackbar(r.exception.toMessage()))
+                is Result.Error -> {
+                    pendingDeletedListIds.remove(id)
+                    previousLists?.let { _listState.value = ShoppingListUiState.Success(it) }
+                    _events.send(ShoppingUiEvent.ShowSnackbar(r.exception.toMessage()))
+                }
                 else -> Unit
             }
         }

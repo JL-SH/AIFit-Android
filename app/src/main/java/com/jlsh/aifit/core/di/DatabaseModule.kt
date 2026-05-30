@@ -3,6 +3,8 @@ package com.jlsh.aifit.core.di
 import android.content.Context
 import androidx.room.Room
 import com.jlsh.aifit.core.local.AiFitDatabase
+import com.jlsh.aifit.core.local.MIGRATION_15_16
+import com.jlsh.aifit.core.local.MIGRATION_16_17
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,7 +24,8 @@ object DatabaseModule {
             AiFitDatabase::class.java,
             "aifit_database"
         )
-            .fallbackToDestructiveMigration()
+            .addMigrations(MIGRATION_15_16, MIGRATION_16_17)
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
 }
 

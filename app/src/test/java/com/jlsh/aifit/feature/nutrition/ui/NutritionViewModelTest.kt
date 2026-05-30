@@ -5,7 +5,10 @@ import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.model.Meal
+import com.jlsh.aifit.feature.diet.domain.DietActivePlanNotifier
+import com.jlsh.aifit.feature.nutrition.domain.NutritionLogChangeNotifier
 import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
+import com.jlsh.aifit.feature.diet.domain.usecase.GetCachedDietPlansUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.SetActiveDietPlanUseCase
@@ -18,6 +21,7 @@ import com.jlsh.aifit.feature.nutrition.domain.usecase.DeleteMealLogUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTargetUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetNutritionLogUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.TrackMealUseCase
+import com.jlsh.aifit.feature.nutrition.domain.usecase.UpdateMealLogUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.UpdateNutritionTargetUseCase
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionHubUiState
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionTargetUiState
@@ -48,11 +52,15 @@ class NutritionViewModelTest {
     private val getDietPlansUseCase: GetDietPlansUseCase = mockk()
     private val getDietPlanDetailUseCase: GetDietPlanDetailUseCase = mockk()
     private val trackMealUseCase: TrackMealUseCase = mockk()
+    private val updateMealLogUseCase: UpdateMealLogUseCase = mockk()
     private val analyzeMealFromTextUseCase: AnalyzeMealFromTextUseCase = mockk()
     private val deleteMealLogUseCase: DeleteMealLogUseCase = mockk()
     private val updateNutritionTargetUseCase: UpdateNutritionTargetUseCase = mockk()
     private val setActiveDietPlanUseCase: SetActiveDietPlanUseCase = mockk()
     private val deleteDietPlanUseCase: DeleteDietPlanUseCase = mockk()
+    private val getCachedDietPlansUseCase: GetCachedDietPlansUseCase = mockk()
+    private val dietActivePlanNotifier = DietActivePlanNotifier()
+    private val nutritionLogChangeNotifier = NutritionLogChangeNotifier()
 
     @Before
     fun resetMocks() {
@@ -68,17 +76,23 @@ class NutritionViewModelTest {
         every { getCurrentNutritionTargetUseCase() } returns targetFlow
         every { getDietPlansUseCase() } returns dietPlansFlow
         coEvery { getDietPlanDetailUseCase(any()) } returns Result.Success(fakeDietPlan())
+        coEvery { getCachedDietPlansUseCase() } returns emptyList()
+        coEvery { getDietPlanDetailUseCase.fromCache(any()) } returns null
         return NutritionViewModel(
             getNutritionLogUseCase,
             getCurrentNutritionTargetUseCase,
             getDietPlansUseCase,
             getDietPlanDetailUseCase,
             trackMealUseCase,
+            updateMealLogUseCase,
             analyzeMealFromTextUseCase,
             deleteMealLogUseCase,
             updateNutritionTargetUseCase,
             setActiveDietPlanUseCase,
             deleteDietPlanUseCase,
+            getCachedDietPlansUseCase,
+            dietActivePlanNotifier,
+            nutritionLogChangeNotifier,
         )
     }
 
@@ -512,6 +526,7 @@ class NutritionViewModelTest {
             dietPlansFlow = flowOf(Result.Success(listOf(planWithDays))),
         )
         advanceUntilIdle()
+        coEvery { getDietPlanDetailUseCase.fromCache(planWithDays.id) } returns planWithDays
 
         vm.events.test {
             vm.onShowPlanMealPicker()
@@ -583,6 +598,36 @@ class NutritionViewModelTest {
 
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun `notifier de plan de dieta precarga comidas del picker sin abrir sheet`() = runTest {
+        val mealA = fakeMeal(id = "meal-a", name = "Desayuno A")
+        val mealB = fakeMeal(id = "meal-b", name = "Desayuno B")
+        val planA = fakeDietPlan(
+            id = "dp-a",
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeDietDay(meals = listOf(mealA))),
+        )
+        val planB = fakeDietPlan(
+            id = "dp-b",
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeDietDay(meals = listOf(mealB))),
+        )
+
+        val vm = createViewModel(
+            dietPlansFlow = flowOf(Result.Success(listOf(planA))),
+        )
+        advanceUntilIdle()
+
+        coEvery { getCachedDietPlansUseCase() } returns listOf(planB)
+        coEvery { getDietPlanDetailUseCase.fromCache("dp-b") } returns planB
+        dietActivePlanNotifier.notifyActivePlanChanged("dp-b")
+        advanceUntilIdle()
+
+        assertEquals(listOf(mealB), vm.planPickerMeals.value)
+        val hub = vm.hubState.value as NutritionHubUiState.Success
+        assertEquals("dp-b", hub.dietPlans.first { it.status == PlanStatus.ACTIVE }.id)
     }
 }
 

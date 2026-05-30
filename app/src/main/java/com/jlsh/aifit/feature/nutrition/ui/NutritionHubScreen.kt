@@ -27,15 +27,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +60,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.jlsh.aifit.R
 import com.jlsh.aifit.core.ui.components.buttons.PrimaryButton
 import com.jlsh.aifit.core.ui.components.display.AiFitCard
+import com.jlsh.aifit.core.ui.components.display.MacroProgressBar
 import com.jlsh.aifit.core.ui.components.display.MacroRingChart
 import com.jlsh.aifit.core.ui.components.display.MacroRingData
 import com.jlsh.aifit.core.ui.components.display.PlanStatusBadge
@@ -76,12 +80,15 @@ import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.components.layout.SectionHeader
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.core.ui.theme.MacroType
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.model.MealType
 import com.jlsh.aifit.feature.nutrition.domain.model.MealLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.model.TargetSource
+import com.jlsh.aifit.feature.nutrition.data.dto.TrackFoodItemRequestDto
+import com.jlsh.aifit.feature.nutrition.data.dto.UpdateMealRequestDto
 import com.jlsh.aifit.feature.nutrition.ui.components.SelectPlanMealSheet
 import com.jlsh.aifit.feature.nutrition.ui.components.TrackMealSheet
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionHubUiState
@@ -143,6 +150,7 @@ fun NutritionHubScreen(
     var showPlanMealSheet by remember { mutableStateOf(false) }
     var mealToDeleteId by remember { mutableStateOf<String?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var mealToEdit by remember { mutableStateOf<MealLog?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val planMealSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val planPickerMeals by viewModel.planPickerMeals.collectAsStateWithLifecycle()
@@ -243,6 +251,7 @@ fun NutritionHubScreen(
                         mealToDeleteId = mealId
                         showDeleteDialog = true
                     },
+                    onEditMeal = { mealToEdit = it },
                     onAddMeal = { showSheet = true },
                 )
                 1 -> DietPlanTab(
@@ -252,7 +261,7 @@ fun NutritionHubScreen(
                     onPlanClicked = viewModel::onDietPlanClicked,
                     onActivatePlan = viewModel::onActivateDietPlan,
                     onDeletePlan = viewModel::onDeleteDietPlan,
-                    onCreatePlan = { viewModel.onGenerateDietClicked() },
+                    onCreatePlan = viewModel::onGenerateDietClicked,
                 )
                 2 -> ShoppingTab(
                     dietPlans = successState.dietPlans,
@@ -276,6 +285,17 @@ fun NutritionHubScreen(
             onDismiss = {
                 showDeleteDialog = false
                 mealToDeleteId = null
+            },
+        )
+    }
+
+    mealToEdit?.let { meal ->
+        EditMealDialog(
+            meal = meal,
+            onDismiss = { mealToEdit = null },
+            onSave = { request ->
+                viewModel.onUpdateMeal(meal.id, request)
+                mealToEdit = null
             },
         )
     }
@@ -326,6 +346,7 @@ private fun TodayTab(
     todayState: TodayState,
     onRingClicked: () -> Unit,
     onDeleteMeal: (String) -> Unit,
+    onEditMeal: (MealLog) -> Unit,
     onAddMeal: () -> Unit,
 ) {
     val log = todayState.nutritionLog
@@ -370,25 +391,99 @@ private fun TodayTab(
         verticalArrangement = Arrangement.spacedBy(AiFitSpacing.md),
     ) {
         item(key = "ring") {
-            Box(
+            val consumed = log?.totalCalories ?: 0
+            val remaining = (target.calorieTarget - consumed).coerceAtLeast(0)
+            AiFitCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onRingClicked),
-                contentAlignment = Alignment.Center,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
             ) {
-                MacroRingChart(
-                    data = MacroRingData(
-                        currentCalories = (log?.totalCalories ?: 0).toFloat(),
-                        targetCalories = target.calorieTarget.toFloat(),
-                        currentProtein = (log?.totalProteinGrams ?: 0.0).toFloat(),
-                        targetProtein = target.proteinTarget.toFloat(),
-                        currentCarbs = (log?.totalCarbsGrams ?: 0.0).toFloat(),
-                        targetCarbs = target.carbsTarget.toFloat(),
-                        currentFat = (log?.totalFatGrams ?: 0.0).toFloat(),
-                        targetFat = target.fatTarget.toFloat(),
-                    ),
-                    size = 180.dp,
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(AiFitSpacing.md),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
+                ) {
+                    Text(
+                        text = stringResource(R.string.nutrition_hub_tab_today),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                    MacroRingChart(
+                        data = MacroRingData(
+                            currentCalories = consumed.toFloat(),
+                            targetCalories = target.calorieTarget.toFloat().coerceAtLeast(1f),
+                            currentProtein = (log?.totalProteinGrams ?: 0.0).toFloat(),
+                            targetProtein = target.proteinTarget.toFloat().coerceAtLeast(1f),
+                            currentCarbs = (log?.totalCarbsGrams ?: 0.0).toFloat(),
+                            targetCarbs = target.carbsTarget.toFloat().coerceAtLeast(1f),
+                            currentFat = (log?.totalFatGrams ?: 0.0).toFloat(),
+                            targetFat = target.fatTarget.toFloat().coerceAtLeast(1f),
+                        ),
+                        size = 180.dp,
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "$consumed",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                            )
+                            Text(
+                                text = "Consumidas",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "$remaining",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
+                            Text(
+                                text = "Restantes",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "${target.calorieTarget}",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Text(
+                                text = "Objetivo",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    MacroProgressBar(
+                        name = stringResource(R.string.home_macro_protein),
+                        current = (log?.totalProteinGrams ?: 0.0).toFloat(),
+                        target = target.proteinTarget.toFloat(),
+                        macro = MacroType.Protein,
+                    )
+                    MacroProgressBar(
+                        name = stringResource(R.string.home_macro_carbs),
+                        current = (log?.totalCarbsGrams ?: 0.0).toFloat(),
+                        target = target.carbsTarget.toFloat(),
+                        macro = MacroType.Carbs,
+                    )
+                    MacroProgressBar(
+                        name = stringResource(R.string.home_macro_fat),
+                        current = (log?.totalFatGrams ?: 0.0).toFloat(),
+                        target = target.fatTarget.toFloat(),
+                        macro = MacroType.Fat,
+                    )
+                }
             }
         }
 
@@ -425,7 +520,11 @@ private fun TodayTab(
                 SwipeableListItem(
                     onDelete = { onDeleteMeal(meal.id) },
                 ) {
-                    MealRow(meal = meal)
+                    MealRow(
+                        meal = meal,
+                        onEdit = { onEditMeal(meal) },
+                        onDelete = { onDeleteMeal(meal.id) },
+                    )
                 }
             }
         }
@@ -435,6 +534,8 @@ private fun TodayTab(
 @Composable
 private fun MealRow(
     meal: MealLog,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     val mealTypeLabel = mealTypeDisplay(meal.mealType)
     AiFitCard {
@@ -482,13 +583,182 @@ private fun MealRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Text(
-                text = "${meal.calories} kcal",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primaryContainer,
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "${meal.calories} kcal",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                )
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = PhosphorIcons.Regular.PencilSimpleLine,
+                        contentDescription = stringResource(R.string.common_edit),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = PhosphorIcons.Regular.Trash,
+                        contentDescription = stringResource(R.string.common_delete),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
         }
     }
+}
+
+
+@Composable
+private fun EditMealDialog(
+    meal: MealLog,
+    onDismiss: () -> Unit,
+    onSave: (UpdateMealRequestDto) -> Unit,
+) {
+    val firstItem = meal.items.firstOrNull()
+    var mealName by remember(meal.id) { mutableStateOf(meal.name ?: "") }
+    var mealTime by remember(meal.id) { mutableStateOf(meal.time) }
+    var quantity by remember(meal.id) { mutableStateOf((firstItem?.quantity ?: 1.0).toString()) }
+    var unit by remember(meal.id) { mutableStateOf(firstItem?.unit ?: "unit") }
+    var calories by remember(meal.id) { mutableStateOf(meal.calories.toString()) }
+    var protein by remember(meal.id) { mutableStateOf(meal.proteinGrams.toInt().toString()) }
+    var carbs by remember(meal.id) { mutableStateOf(meal.carbsGrams.toInt().toString()) }
+    var fat by remember(meal.id) { mutableStateOf(meal.fatGrams.toInt().toString()) }
+
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar comida") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm)) {
+                OutlinedTextField(
+                    value = mealName,
+                    onValueChange = { mealName = it },
+                    label = { Text("Nombre") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = mealTime,
+                    onValueChange = { mealTime = it },
+                    label = { Text("Hora") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = calories,
+                    onValueChange = { calories = it },
+                    label = { Text("Kcal") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm)) {
+                    OutlinedTextField(
+                        value = quantity,
+                        onValueChange = { quantity = it },
+                        label = { Text("Cantidad") },
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedTextField(
+                        value = unit,
+                        onValueChange = { unit = it },
+                        label = { Text("Unidad") },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                OutlinedTextField(
+                    value = protein,
+                    onValueChange = { protein = it },
+                    label = { Text("Proteína (g)") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = carbs,
+                    onValueChange = { carbs = it },
+                    label = { Text("Carbohidratos (g)") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = fat,
+                    onValueChange = { fat = it },
+                    label = { Text("Grasas (g)") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val resolvedName = mealName.ifBlank { null }
+                    val baseQuantity = firstItem?.quantity ?: 1.0
+                    val resolvedQuantity = quantity.toDoubleOrNull() ?: (firstItem?.quantity ?: 1.0)
+                    val resolvedUnit = unit.ifBlank { firstItem?.unit ?: "unit" }
+                    val quantityRatio = if (baseQuantity > 0.0) resolvedQuantity / baseQuantity else 1.0
+                    val caloriesManuallyEdited = calories != meal.calories.toString()
+                    val proteinManuallyEdited = protein != meal.proteinGrams.toInt().toString()
+                    val carbsManuallyEdited = carbs != meal.carbsGrams.toInt().toString()
+                    val fatManuallyEdited = fat != meal.fatGrams.toInt().toString()
+                    val resolvedCalories = if (caloriesManuallyEdited) {
+                        calories.toIntOrNull() ?: meal.calories
+                    } else {
+                        (meal.calories * quantityRatio).toInt()
+                    }
+                    val resolvedProtein = if (proteinManuallyEdited) {
+                        protein.toDoubleOrNull() ?: meal.proteinGrams
+                    } else {
+                        meal.proteinGrams * quantityRatio
+                    }
+                    val resolvedCarbs = if (carbsManuallyEdited) {
+                        carbs.toDoubleOrNull() ?: meal.carbsGrams
+                    } else {
+                        meal.carbsGrams * quantityRatio
+                    }
+                    val resolvedFat = if (fatManuallyEdited) {
+                        fat.toDoubleOrNull() ?: meal.fatGrams
+                    } else {
+                        meal.fatGrams * quantityRatio
+                    }
+                    val unchanged =
+                        resolvedName == meal.name &&
+                            mealTime == meal.time &&
+                            resolvedQuantity == (firstItem?.quantity ?: 1.0) &&
+                            resolvedUnit == (firstItem?.unit ?: "unit") &&
+                            resolvedCalories == meal.calories &&
+                            resolvedProtein == meal.proteinGrams &&
+                            resolvedCarbs == meal.carbsGrams &&
+                            resolvedFat == meal.fatGrams
+                    if (unchanged) {
+                        onDismiss()
+                        return@TextButton
+                    }
+                    val item = TrackFoodItemRequestDto(
+                        name = mealName.ifBlank { meal.name ?: "Comida" },
+                        quantity = resolvedQuantity,
+                        unit = resolvedUnit,
+                        calories = resolvedCalories,
+                        proteinGrams = resolvedProtein,
+                        carbsGrams = resolvedCarbs,
+                        fatGrams = resolvedFat,
+                        macrosPer100g = false,
+                    )
+                    onSave(
+                        UpdateMealRequestDto(
+                            mealType = meal.mealType.name,
+                            name = resolvedName,
+                            time = mealTime,
+                            items = listOf(item),
+                        ),
+                    )
+                },
+            ) {
+                Text(stringResource(R.string.common_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.common_cancel))
+            }
+        },
+    )
 }
 
 @Composable
@@ -789,6 +1059,7 @@ private fun ShoppingTab(
             onClick = { showGenerateSheet = true },
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            shape = CircleShape,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(AiFitSpacing.md),
@@ -889,6 +1160,7 @@ private fun NutritionHubTodayPreview() {
                 ),
                 onRingClicked = {},
                 onDeleteMeal = {},
+                onEditMeal = {},
                 onAddMeal = {},
             )
         }

@@ -16,6 +16,7 @@ import com.jlsh.aifit.feature.training.data.mapper.TrainingMapper.toDomain
 import com.jlsh.aifit.feature.training.data.mapper.TrainingMapper.toEntity
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import com.jlsh.aifit.feature.training.domain.TrainingActivePlanNotifier
 import com.jlsh.aifit.feature.training.domain.model.ExerciseSubstitution
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
 import com.jlsh.aifit.feature.training.domain.model.WarmUpProtocol
@@ -36,6 +37,7 @@ class TrainingRepositoryImpl @Inject constructor(
     private val dao: TrainingPlanDao,
     private val detailCacheDao: TrainingPlanDetailCacheDao,
     private val sessionManager: SessionManager,
+    private val activePlanNotifier: TrainingActivePlanNotifier,
 ) : BaseRemoteDataSource(), TrainingRepository {
 
     private val detailJson = Json { ignoreUnknownKeys = true }
@@ -123,6 +125,15 @@ class TrainingRepositoryImpl @Inject constructor(
         }
     }.distinctUntilChanged()
 
+    override suspend fun getCachedTrainingPlans(): List<TrainingPlan> {
+        val userId = sessionManager.getUserId() ?: return emptyList()
+        return withContext(Dispatchers.IO) {
+            dao.getAllByUserId(userId)
+                .map { it.toDomain() }
+                .filter { it.id !in recentlyDeletedIds }
+        }
+    }
+
     /**
      * Gets the detail of a plan from the JSON detail cache, without a network call.
      *
@@ -137,6 +148,15 @@ class TrainingRepositoryImpl @Inject constructor(
                 }.getOrNull()
             }
         }
+
+    override suspend fun prefetchTrainingPlanDetailsIfMissing(planIds: List<String>) {
+        withContext(Dispatchers.IO) {
+            planIds.distinct().forEach { planId ->
+                if (getCachedTrainingPlanDetail(planId) != null) return@forEach
+                getTrainingPlanDetail(planId)
+            }
+        }
+    }
 
     /**
      * Load the complete plan detail from the network and update cache and summary in Room.
@@ -272,13 +292,24 @@ class TrainingRepositoryImpl @Inject constructor(
 
         return when (val remote = safeApiCall { apiService.activatePlan(planId) }) {
             is Result.Success -> {
-                val plan = remote.data.toDomain()
+                val dto = remote.data
+                val plan = dto.toDomain()
                 // (1) Demote the old active plan to PAUSED before upserting the new one
                 if (previouslyActivePlan != null) {
                     dao.upsertAll(listOf(previouslyActivePlan.copy(status = "PAUSED")))
                 }
                 // (2) Upsert the newly activated plan
                 dao.upsertAll(listOf(plan.toEntity(userId)))
+                if (dto.days.isNotEmpty()) {
+                    detailCacheDao.upsert(
+                        TrainingPlanDetailCacheEntity(
+                            planId = planId,
+                            detailJson = detailJson.encodeToString(dto),
+                            cachedAt = System.currentTimeMillis(),
+                        ),
+                    )
+                }
+                activePlanNotifier.notifyActivePlanChanged(planId)
                 Result.Success(plan)
             }
             is Result.Error -> remote

@@ -49,6 +49,7 @@ fun AiFitCard(
     val colors = CardDefaults.cardColors(containerColor = resolvedContainerColor)
     val cardModifier = modifier
         .fillMaxWidth()
+        .clip(shape)
         .cardBorderModifier(variant, shape)
 
     if (onClick != null) {

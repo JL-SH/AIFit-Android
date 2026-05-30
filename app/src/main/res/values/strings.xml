@@ -736,6 +736,7 @@
     <string name="vision_retry">Reintentar</string>
     <string name="vision_confidence">Confianza: %1$d%%</string>
     <string name="vision_log_meal_btn">REGISTRAR COMIDA</string>
+    <string name="vision_meal_saved">Comida registrada</string>
     <string name="vision_try_again_btn">INTENTAR DE NUEVO</string>
 
     <!-- Common (shared) -->

@@ -6,6 +6,9 @@ import com.jlsh.aifit.core.network.ApiResponse
 import com.jlsh.aifit.core.session.SessionManager
 import com.jlsh.aifit.feature.diet.data.api.DietApiService
 import com.jlsh.aifit.feature.diet.data.local.DietPlanDao
+import com.jlsh.aifit.feature.diet.data.local.DietPlanDetailCacheDao
+import com.jlsh.aifit.feature.diet.data.local.DietPlanDetailCacheEntity
+import com.jlsh.aifit.feature.diet.domain.DietActivePlanNotifier
 import com.jlsh.aifit.testutil.*
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -18,12 +21,15 @@ class DietRepositoryImplTest {
 
     private val apiService: DietApiService = mockk()
     private val dao: DietPlanDao = mockk(relaxUnitFun = true)
+    private val detailCacheDao: DietPlanDetailCacheDao = mockk(relaxUnitFun = true)
     private val sessionManager: SessionManager = mockk()
+    private val activePlanNotifier: DietActivePlanNotifier = mockk(relaxUnitFun = true)
     private lateinit var sut: DietRepositoryImpl
 
     @Before
     fun setUp() {
-        sut = DietRepositoryImpl(apiService, dao, sessionManager)
+        coEvery { detailCacheDao.getById(any()) } returns null
+        sut = DietRepositoryImpl(apiService, dao, detailCacheDao, sessionManager, activePlanNotifier)
     }
 
     // ─── getDietPlans ──────────────────────────────────────────────────────────
@@ -196,6 +202,39 @@ class DietRepositoryImplTest {
         assertTrue(result is Result.Error)
         coVerify { dao.deleteById("dp-1") }
         coVerify { dao.upsertAll(listOf(backup)) }
+    }
+
+    // ─── setActiveDietPlan ─────────────────────────────────────────────────────
+
+    @Test
+    fun `setActiveDietPlan notifica y guarda detail cache cuando respuesta tiene days`() = runTest {
+        val dto = fakeDietPlanResponseDto(id = "dp-2", status = "ACTIVE")
+        every { sessionManager.getUserId() } returns FAKE_USER_ID
+        coEvery { dao.getAllByUserId(FAKE_USER_ID) } returns emptyList()
+        coEvery { apiService.activateDietPlan("dp-2") } returns ApiResponse(success = true, data = dto)
+
+        val result = sut.setActiveDietPlan("dp-2")
+
+        assertTrue(result is Result.Success)
+        verify { activePlanNotifier.notifyActivePlanChanged("dp-2") }
+        coVerify {
+            detailCacheDao.upsert(
+                match<DietPlanDetailCacheEntity> { it.planId == "dp-2" && it.detailJson.isNotBlank() },
+            )
+        }
+    }
+
+    @Test
+    fun `getCachedDietPlans lee solo Room sin llamar API`() = runTest {
+        val cached = listOf(fakeDietPlanEntity(id = "cached-1"))
+        every { sessionManager.getUserId() } returns FAKE_USER_ID
+        coEvery { dao.getAllByUserId(FAKE_USER_ID) } returns cached
+
+        val result = sut.getCachedDietPlans()
+
+        assertEquals(1, result.size)
+        assertEquals("cached-1", result[0].id)
+        coVerify(exactly = 0) { apiService.getDietPlans() }
     }
 }
 

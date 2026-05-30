@@ -11,6 +11,7 @@ import com.jlsh.aifit.feature.workout.data.local.WorkoutLogDao
 import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toDomain
 import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toDto
 import com.jlsh.aifit.feature.workout.data.mapper.WorkoutMapper.toEntity
+import com.jlsh.aifit.feature.workout.domain.WorkoutHistoryNotifier
 import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 import com.jlsh.aifit.feature.workout.domain.repository.WorkoutRepository
@@ -29,6 +30,7 @@ import javax.inject.Inject
 class WorkoutRepositoryImpl @Inject constructor(
     private val apiService: WorkoutApiService,
     private val dao: WorkoutLogDao,
+    private val workoutHistoryNotifier: WorkoutHistoryNotifier,
 ) : BaseRemoteDataSource(), WorkoutRepository {
 
     /** IDs whose delete API call is still in-flight.
@@ -162,6 +164,27 @@ class WorkoutRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getCachedWorkoutLogs(
+        planId: String?,
+        from: String?,
+        to: String?,
+    ): List<WorkoutLog> = withContext(Dispatchers.IO) {
+        val fromEpochDay = from?.let { LocalDate.parse(it).toEpochDay() }
+        val toEpochDay = to?.let { LocalDate.parse(it).toEpochDay() }
+        val entities = when {
+            fromEpochDay != null && toEpochDay != null ->
+                dao.getByDateRange(fromEpochDay, toEpochDay)
+            else ->
+                dao.getAll()
+        }
+        entities
+            .filter { entity ->
+                entity.id !in pendingDeleteIds &&
+                    (planId == null || entity.trainingPlanId == planId)
+            }
+            .map { it.toDomain() }
+    }
+
     /**
      * Obtains the details of a session log from the server.
      *
@@ -191,8 +214,7 @@ class WorkoutRepositoryImpl @Inject constructor(
 
         return when (val remote = safeApiCall { apiService.deleteWorkoutLog(id) }) {
             is Result.Success -> {
-                // Do NOT remove id from pendingDeleteIds here.
-                // See the FIX comment in getHistory() for the full explanation.
+                pendingDeleteIds.remove(id)
                 dao.deleteById(id) // ensure no racing upsert left the row behind
                 Result.Success(Unit)
             }
@@ -217,21 +239,30 @@ class WorkoutRepositoryImpl @Inject constructor(
         systemicFatigue: Int,
         jointPainReport: List<JointPainEntry>,
     ): Result<WorkoutLog> {
-        // TODO: remove diagnostic logs below
-        Log.d("AIFIT_REPO", "finalizeWorkoutSession called — logId=$logId")
+        val backup = dao.getById(logId)
+        val optimisticLog = backup?.toDomain()?.takeIf { !it.isLocked }?.copy(isLocked = true)
+        if (optimisticLog != null) {
+            dao.upsertAll(listOf(optimisticLog.toEntity()))
+            workoutHistoryNotifier.notifyWorkoutFinalized(optimisticLog)
+        }
         val request = FinalizeWorkoutSessionRequestDto(
             systemicFatigue = systemicFatigue,
             jointPainReport = jointPainReport.map { it.toDto() },
         )
         return when (val remote = safeApiCall { apiService.finalizeWorkoutSession(logId, request) }) {
             is Result.Success -> {
-                Log.d("AIFIT_REPO", "finalize API success — raw isLocked=${remote.data.isLocked} (from DTO)")
                 val log = remote.data.toDomain()
                 dao.upsertAll(listOf(log.toEntity()))
-                Log.d("AIFIT_REPO", "dao.upsertAll() called — saved isLocked=${log.isLocked}")
+                workoutHistoryNotifier.notifyWorkoutFinalized(log)
                 Result.Success(log)
             }
-            is Result.Error -> remote
+            is Result.Error -> {
+                if (backup != null) {
+                    dao.upsertAll(listOf(backup))
+                    workoutHistoryNotifier.notifyWorkoutFinalized(backup.toDomain())
+                }
+                remote
+            }
             else -> Result.Loading
         }
     }
@@ -249,6 +280,34 @@ class WorkoutRepositoryImpl @Inject constructor(
     ): Result<WorkoutLog?> {
         return when (val remote = safeApiCall { apiService.getWorkoutLogs(planId = planId, dayId = dayId) }) {
             is Result.Success -> Result.Success(remote.data.firstOrNull()?.toDomain())
+            is Result.Error -> remote
+            else -> Result.Loading
+        }
+    }
+
+    /**
+     * Looks up today's log for a plan day via API (bypasses [getHistory] pending-delete filter).
+     * Loads full detail when a summary exists so callers receive persisted sets.
+     */
+    override suspend fun findOpenLogForDay(
+        planId: String,
+        dayId: String,
+        date: String,
+    ): Result<WorkoutLog?> {
+        return when (
+            val remote = safeApiCall {
+                apiService.getWorkoutLogs(planId = planId, dayId = dayId, from = date, to = date)
+            }
+        ) {
+            is Result.Success -> {
+                val summary = remote.data.firstOrNull()
+                    ?: return Result.Success(null)
+                when (val detail = getLogDetail(summary.id)) {
+                    is Result.Success -> Result.Success(detail.data)
+                    is Result.Error -> detail
+                    else -> Result.Loading
+                }
+            }
             is Result.Error -> remote
             else -> Result.Loading
         }

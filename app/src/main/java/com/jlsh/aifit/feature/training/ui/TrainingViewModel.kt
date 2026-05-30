@@ -10,10 +10,13 @@ import com.jlsh.aifit.feature.training.data.dto.GenerateAdaptiveTrainingPlanRequ
 import com.jlsh.aifit.feature.training.data.dto.GenerateTrainingPlanRequestDto
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
+import com.jlsh.aifit.feature.training.domain.TrainingActivePlanNotifier
 import com.jlsh.aifit.feature.training.domain.usecase.DeleteTrainingPlanUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GenerateTrainingPlanUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
+import com.jlsh.aifit.feature.training.domain.usecase.GetCachedTrainingPlansUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlansUseCase
+import com.jlsh.aifit.feature.training.domain.usecase.PrefetchTrainingPlanDetailsUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.SetActivePlanUseCase
 import com.jlsh.aifit.feature.training.ui.state.GeneratePlanUiState
 import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
@@ -62,11 +65,14 @@ import javax.inject.Inject
 @HiltViewModel
 class TrainingViewModel @Inject constructor(
     private val getTrainingPlansUseCase: GetTrainingPlansUseCase,
+    private val getCachedTrainingPlansUseCase: GetCachedTrainingPlansUseCase,
     private val getTrainingPlanDetailUseCase: GetTrainingPlanDetailUseCase,
     private val generateTrainingPlanUseCase: GenerateTrainingPlanUseCase,
     private val deleteTrainingPlanUseCase: DeleteTrainingPlanUseCase,
     private val setActivePlanUseCase: SetActivePlanUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
+    private val prefetchTrainingPlanDetailsUseCase: PrefetchTrainingPlanDetailsUseCase,
+    private val trainingActivePlanNotifier: TrainingActivePlanNotifier,
 ) : ViewModel() {
 
     // 1. UI STATE
@@ -109,6 +115,7 @@ class TrainingViewModel @Inject constructor(
 
     private var fetchPlansJob: Job? = null
     private var isDeletingPlan = false
+    private var suppressFirstResumeRefresh = true
 
     /**
      * Debounced refresh trigger (Option A).
@@ -151,6 +158,10 @@ class TrainingViewModel @Inject constructor(
         // TODO: remove diagnostic log below
         Log.d("AIFIT_PLANS", "onRefresh triggered — isDeletingPlan=$isDeletingPlan")
         if (isDeletingPlan) return
+        if (suppressFirstResumeRefresh) {
+            suppressFirstResumeRefresh = false
+            return
+        }
         // Route through debounced trigger instead of calling fetchPlans() directly to
         // collapse rapid lifecycle-bounce events (e.g. repeatOnLifecycle firing 10+ times
         // per session during navigation transitions) into a single network call.
@@ -210,6 +221,14 @@ class TrainingViewModel @Inject constructor(
                 isActivatingPlan = true,
             )
             _hubUiState.value = computeHubState(optimisticPlans)
+            val optimisticActive = optimisticPlans.firstOrNull { it.id == planId }
+            trainingActivePlanNotifier.notifyOptimisticActivePlanChange(
+                planId = planId,
+                planName = optimisticActive?.name,
+            )
+            viewModelScope.launch {
+                prefetchTrainingPlanDetailsUseCase(listOf(planId))
+            }
         }
 
         viewModelScope.launch {
@@ -226,6 +245,7 @@ class TrainingViewModel @Inject constructor(
                 is Result.Error -> {
                     _uiState.value = previousUiState
                     _hubUiState.value = previousHubState
+                    trainingActivePlanNotifier.notifyActivePlanChangeReverted()
                     if (result.exception is AppException.NotFoundException) {
                         Log.d("AIFIT_PLANS", "onActivatePlan ERROR (NotFound) — planId=$planId")
                         emitEvent(TrainingUiEvent.ShowSnackbar("Este plan ya no existe. Actualizando lista..."))
@@ -430,47 +450,66 @@ class TrainingViewModel @Inject constructor(
         fetchPlansJob = viewModelScope.launch {
             // TODO: remove diagnostic log below
             Log.d("AIFIT_PLANS", "fetchPlans STARTED — jobId=${System.identityHashCode(coroutineContext)}")
-            // Only show Loading spinner on true first load; silent refresh otherwise
-            if (_hubUiState.value is TrainingHubUiState.Loading) {
-                _hubUiState.value = TrainingHubUiState.Loading
+            val cachedPlans = getCachedTrainingPlansUseCase()
+            val hadCachedPlans = cachedPlans.isNotEmpty()
+            if (hadCachedPlans) {
+                applyPlansFromList(cachedPlans)
+            } else {
+                if (_hubUiState.value is TrainingHubUiState.Loading) {
+                    _hubUiState.value = TrainingHubUiState.Loading
+                }
+                if (_uiState.value is TrainingUiState.Loading) {
+                    _uiState.value = TrainingUiState.Loading
+                }
             }
-            if (_uiState.value is TrainingUiState.Loading) {
-                _uiState.value = TrainingUiState.Loading
-            }
+
+            var successEmissions = 0
             getTrainingPlansUseCase().collect { result ->
-                _uiState.value = when (result) {
+                when (result) {
                     is Result.Success -> {
-                        val plans = result.data
-                        // TODO: remove diagnostic log below
-                        Log.d("AIFIT_PLANS", "fetchPlans EMISSION SUCCESS — count=${result.data.size}")
-                        val active = plans.firstOrNull { it.status == PlanStatus.ACTIVE }
-                        _hubUiState.value = computeHubState(plans)
-                        TrainingUiState.Success(
-                            plans = plans,
-                            activePlan = active,
-                        )
+                        successEmissions++
+                        applyPlansFromList(result.data)
+                        val done = if (hadCachedPlans) successEmissions >= 2 else successEmissions >= 1
+                        if (done) {
+                            fetchPlansJob?.cancel()
+                        }
                     }
                     is Result.Error -> {
-                        // TODO: remove diagnostic log below
                         Log.d("AIFIT_PLANS", "fetchPlans EMISSION ERROR — msg=${result.exception.message}")
-                        _hubUiState.value = TrainingHubUiState.Error(result.exception.toMessage())
-                        TrainingUiState.Error(result.exception.toMessage())
+                        if (!hadCachedPlans) {
+                            _hubUiState.value = TrainingHubUiState.Error(result.exception.toMessage())
+                            _uiState.value = TrainingUiState.Error(result.exception.toMessage())
+                        }
+                        fetchPlansJob?.cancel()
                     }
                     is Result.Loading -> {
-                        // Keep current state if data is already visible
-                        // TODO: remove diagnostic log below
                         Log.d("AIFIT_PLANS", "fetchPlans EMISSION LOADING — keeping current state")
-                        if (_hubUiState.value is TrainingHubUiState.ActivePlan ||
-                            _hubUiState.value is TrainingHubUiState.NoActivePlan) {
-                            _uiState.value
-                        } else {
+                        if (!hadCachedPlans &&
+                            _hubUiState.value !is TrainingHubUiState.ActivePlan &&
+                            _hubUiState.value !is TrainingHubUiState.NoActivePlan
+                        ) {
                             _hubUiState.value = TrainingHubUiState.Loading
-                            TrainingUiState.Loading
+                            _uiState.value = TrainingUiState.Loading
                         }
                     }
                 }
             }
         }
+    }
+
+    private fun applyPlansFromList(plans: List<TrainingPlan>) {
+        Log.d("AIFIT_PLANS", "fetchPlans EMISSION SUCCESS — count=${plans.size}")
+        val active = plans.firstOrNull { it.status == PlanStatus.ACTIVE }
+        _hubUiState.value = computeHubState(plans)
+        active?.id?.let { activeId ->
+            viewModelScope.launch {
+                prefetchTrainingPlanDetailsUseCase(listOf(activeId))
+            }
+        }
+        _uiState.value = TrainingUiState.Success(
+            plans = plans,
+            activePlan = active,
+        )
     }
 
     private fun computeHubState(plans: List<TrainingPlan>): TrainingHubUiState {

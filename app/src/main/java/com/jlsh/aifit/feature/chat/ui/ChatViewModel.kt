@@ -228,7 +228,15 @@ class ChatViewModel @Inject constructor(
 
     fun loadSession(id: String) {
         viewModelScope.launch {
-            _chatState.update { it.copy(isLoading = true, error = null) }
+            _chatState.update {
+                it.copy(
+                    isLoading = true,
+                    error = null,
+                    messages = emptyList(),
+                    sessionTitle = "",
+                )
+            }
+            var loadFailed = false
             getChatSessionUseCase(id).collect { result ->
                 when (result) {
                     is Result.Success -> {
@@ -236,20 +244,21 @@ class ChatViewModel @Inject constructor(
                             it.copy(
                                 messages = result.data.messages,
                                 sessionTitle = result.data.title,
-                                isLoading = false,
                                 error = null,
                             )
                         }
                     }
                     is Result.Error -> {
+                        loadFailed = true
                         _chatState.update {
                             it.copy(isLoading = false, error = result.exception.userMessage())
                         }
                     }
-                    is Result.Loading -> {
-                        _chatState.update { it.copy(isLoading = true) }
-                    }
+                    is Result.Loading -> Unit
                 }
+            }
+            if (!loadFailed) {
+                _chatState.update { it.copy(isLoading = false) }
             }
         }
     }

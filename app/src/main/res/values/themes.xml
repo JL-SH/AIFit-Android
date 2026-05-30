@@ -2,4 +2,9 @@
 <resources>
 
     <style name="Theme.AIFit" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.AIFit.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@android:color/white</item>
+        <item name="postSplashScreenTheme">@style/Theme.AIFit</item>
+    </style>
 </resources>

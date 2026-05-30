@@ -27,18 +27,23 @@ class ShoppingRepositoryImpl @Inject constructor(
     override fun getLists(): Flow<Result<List<ShoppingList>>> = flow {
         emit(Result.Loading)
 
-        val cached = shoppingDao.getAllLists()
-        if (cached.isNotEmpty()) {
-            emit(Result.Success(cached.map { it.toDomain() }))
-        }
-
         when (val remote = safeApiCall { apiService.getLists() }) {
             is Result.Success -> {
+                val remoteLists = remote.data.map { it.toDomain() }
+                val remoteIds = remoteLists.map { it.id }.toSet()
                 remote.data.forEach { cacheListEntity(it) }
-                emit(Result.Success(remote.data.map { it.toDomain() }))
+                shoppingDao.getAllLists()
+                    .filter { it.id !in remoteIds }
+                    .forEach { shoppingDao.deleteList(it.id) }
+                emit(Result.Success(remoteLists))
             }
             is Result.Error -> {
-                if (cached.isEmpty()) emit(remote)
+                val cached = shoppingDao.getAllLists()
+                if (cached.isNotEmpty()) {
+                    emit(Result.Success(cached.map { it.toDomain() }))
+                } else {
+                    emit(remote)
+                }
             }
             else -> Unit
         }
@@ -98,8 +103,9 @@ class ShoppingRepositoryImpl @Inject constructor(
             null
         }
 
-    override suspend fun deleteList(id: String): Result<Unit> =
-        when (val r = safeApiCall { apiService.deleteList(id) }) {
+    override suspend fun deleteList(id: String): Result<Unit> {
+        shoppingDao.deleteList(id)
+        return when (val r = safeApiCall { apiService.deleteList(id) }) {
             is Result.Success -> {
                 shoppingDao.deleteList(id)
                 shoppingDao.deleteAllLocalItems(id)
@@ -109,6 +115,7 @@ class ShoppingRepositoryImpl @Inject constructor(
             is Result.Error -> r
             else -> Result.Loading
         }
+    }
 
     override fun getCheckStates(listId: String): Flow<Map<String, Boolean>> =
         shoppingDao.getChecks(listId).map { checks ->

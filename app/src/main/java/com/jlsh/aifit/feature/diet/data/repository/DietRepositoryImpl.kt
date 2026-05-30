@@ -5,16 +5,25 @@ import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.BaseRemoteDataSource
 import com.jlsh.aifit.core.session.SessionManager
 import com.jlsh.aifit.feature.diet.data.api.DietApiService
+import com.jlsh.aifit.feature.diet.data.dto.DietPlanResponseDto
 import com.jlsh.aifit.feature.diet.data.dto.GenerateAdaptiveDietPlanRequestDto
 import com.jlsh.aifit.feature.diet.data.dto.GenerateDietPlanRequestDto
 import com.jlsh.aifit.feature.diet.data.local.DietPlanDao
+import com.jlsh.aifit.feature.diet.data.local.DietPlanDetailCacheDao
+import com.jlsh.aifit.feature.diet.data.local.DietPlanDetailCacheEntity
 import com.jlsh.aifit.feature.diet.data.mapper.DietMapper.toDomain
 import com.jlsh.aifit.feature.diet.data.mapper.DietMapper.toEntity
+import com.jlsh.aifit.feature.diet.domain.DietActivePlanNotifier
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.repository.DietRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 /**
@@ -25,8 +34,12 @@ import javax.inject.Inject
 class DietRepositoryImpl @Inject constructor(
     private val apiService: DietApiService,
     private val dao: DietPlanDao,
+    private val detailCacheDao: DietPlanDetailCacheDao,
     private val sessionManager: SessionManager,
+    private val activePlanNotifier: DietActivePlanNotifier,
 ) : BaseRemoteDataSource(), DietRepository {
+
+    private val detailJson = Json { ignoreUnknownKeys = true }
 
     /**
      * Plan IDs locally deleted while the server delete may still be in-flight.
@@ -49,9 +62,11 @@ class DietRepositoryImpl @Inject constructor(
             return@flow
         }
 
-        val cached = dao.getAllByUserId(userId)
-            .map { it.toDomain() }
-            .filter { it.id !in recentlyDeletedIds }
+        val cached = withContext(Dispatchers.IO) {
+            dao.getAllByUserId(userId)
+                .map { it.toDomain() }
+                .filter { it.id !in recentlyDeletedIds }
+        }
         if (cached.isNotEmpty()) {
             emit(Result.Success(cached))
         }
@@ -79,7 +94,25 @@ class DietRepositoryImpl @Inject constructor(
             }
             else -> Unit
         }
-    }.distinctUntilChanged()
+    }.flowOn(Dispatchers.IO).distinctUntilChanged()
+
+    override suspend fun getCachedDietPlans(): List<DietPlan> {
+        val userId = sessionManager.getUserId() ?: return emptyList()
+        return withContext(Dispatchers.IO) {
+            dao.getAllByUserId(userId)
+                .map { it.toDomain() }
+                .filter { it.id !in recentlyDeletedIds }
+        }
+    }
+
+    override suspend fun getCachedDietPlanDetail(planId: String): DietPlan? =
+        withContext(Dispatchers.IO) {
+            detailCacheDao.getById(planId)?.let { entity ->
+                runCatching {
+                    detailJson.decodeFromString<DietPlanResponseDto>(entity.detailJson).toDomain()
+                }.getOrNull()
+            }
+        }
 
     /**
      * Gets the details of a plan by id and updates the local cache.
@@ -88,16 +121,31 @@ class DietRepositoryImpl @Inject constructor(
      * @return [Result.Success] with the plan and its days, or [Result.Error].
      */
     override suspend fun getDietPlanDetail(planId: String): Result<DietPlan> {
+        val cached = getCachedDietPlanDetail(planId)
         return when (val remote = safeApiCall { apiService.getDietPlanById(planId) }) {
             is Result.Success -> {
-                val plan = remote.data.toDomain()
+                val dto = remote.data
+                val plan = dto.toDomain()
+                detailCacheDao.upsert(
+                    DietPlanDetailCacheEntity(
+                        planId = planId,
+                        detailJson = detailJson.encodeToString(dto),
+                        cachedAt = System.currentTimeMillis(),
+                    ),
+                )
                 val userId = sessionManager.getUserId()
                 if (userId != null) {
                     dao.upsertAll(listOf(plan.toEntity(userId)))
                 }
                 Result.Success(plan)
             }
-            is Result.Error -> remote
+            is Result.Error -> {
+                if (cached != null) {
+                    Result.Success(cached)
+                } else {
+                    remote
+                }
+            }
             else -> Result.Loading
         }
     }
@@ -161,11 +209,22 @@ class DietRepositoryImpl @Inject constructor(
 
         return when (val remote = safeApiCall { apiService.activateDietPlan(planId) }) {
             is Result.Success -> {
-                val activatedPlan = remote.data.toDomain()
+                val dto = remote.data
+                val activatedPlan = dto.toDomain()
                 if (previouslyActivePlan != null) {
                     dao.upsertAll(listOf(previouslyActivePlan.copy(status = "PAUSED")))
                 }
                 dao.upsertAll(listOf(activatedPlan.toEntity(userId)))
+                if (dto.days.isNotEmpty()) {
+                    detailCacheDao.upsert(
+                        DietPlanDetailCacheEntity(
+                            planId = planId,
+                            detailJson = detailJson.encodeToString(dto),
+                            cachedAt = System.currentTimeMillis(),
+                        ),
+                    )
+                }
+                activePlanNotifier.notifyActivePlanChanged(planId)
                 Result.Success(activatedPlan)
             }
             is Result.Error -> remote

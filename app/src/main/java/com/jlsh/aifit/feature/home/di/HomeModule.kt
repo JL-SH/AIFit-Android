@@ -1,7 +1,9 @@
 package com.jlsh.aifit.feature.home.di
 
 import com.jlsh.aifit.feature.home.data.api.HomeApiService
+import com.jlsh.aifit.feature.home.data.local.HomeBootstrapCacheDao
 import com.jlsh.aifit.feature.home.data.repository.HomeRepositoryImpl
+import com.jlsh.aifit.core.local.AiFitDatabase
 import com.jlsh.aifit.feature.home.domain.repository.HomeRepository
 import dagger.Binds
 import dagger.Module
@@ -20,6 +22,11 @@ abstract class HomeModule {
     abstract fun bindHomeRepository(impl: HomeRepositoryImpl): HomeRepository
 
     companion object {
+        @Provides
+        @Singleton
+        fun provideHomeBootstrapCacheDao(database: AiFitDatabase): HomeBootstrapCacheDao =
+            database.homeBootstrapCacheDao()
+
         @Provides
         @Singleton
         fun provideHomeApiService(retrofit: Retrofit): HomeApiService =

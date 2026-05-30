@@ -366,7 +366,6 @@ private fun HomeContent(
                     summary = state.weeklySummary,
                     weightEntries = state.weightEntries,
                     onTap = onProgressDashboard,
-                    onLogWeight = onLogWeight,
                 )
             }
         }
@@ -1052,7 +1051,6 @@ private fun WeeklyProgressCard(
     summary: WeeklyProgressSummary,
     weightEntries: List<BodyWeightLog>,
     onTap: () -> Unit,
-    onLogWeight: () -> Unit,
 ) {
     val currentWeight = weightEntries.lastOrNull()?.weight
     val previousWeight = weightEntries.dropLast(1).lastOrNull()?.weight
@@ -1220,33 +1218,6 @@ private fun WeeklyProgressCard(
                         }
                     }
                 }
-            }
-
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 0.5.dp,
-            )
-
-            // Log weight row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onLogWeight)
-                    .padding(vertical = AiFitSpacing.xs),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
-            ) {
-                Icon(
-                    imageVector = PhosphorIcons.Regular.Plus,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(18.dp),
-                )
-                Text(
-                    text = stringResource(R.string.home_log_weight_title),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                )
             }
         }
     }

@@ -15,12 +15,13 @@ import com.jlsh.aifit.feature.training.domain.usecase.GetWarmUpProtocolUseCase
 import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSessionRequestDto
 import com.jlsh.aifit.feature.workout.data.dto.LogWorkoutSetRequestDto
 import com.jlsh.aifit.feature.workout.domain.model.JointPainEntry
+import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutSetLog
 import com.jlsh.aifit.feature.workout.domain.usecase.AddSetToLogUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.DeleteWorkoutLogUseCase
+import com.jlsh.aifit.feature.workout.domain.usecase.FindOpenLogForDayUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.FinalizeWorkoutSessionUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.GetPreviousSessionForDayUseCase
-import com.jlsh.aifit.feature.workout.domain.usecase.GetWorkoutHistoryUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.LogWorkoutSessionUseCase
 import com.jlsh.aifit.feature.workout.domain.util.areAllExercisesComplete
 import com.jlsh.aifit.feature.workout.domain.util.calculateAccumulatedVolume
@@ -45,8 +46,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -77,7 +76,7 @@ class WorkoutSessionViewModel @Inject constructor(
     private val deleteWorkoutLogUseCase: DeleteWorkoutLogUseCase,
     private val finalizeWorkoutSessionUseCase: FinalizeWorkoutSessionUseCase,
     private val getPreviousSessionForDayUseCase: GetPreviousSessionForDayUseCase,
-    private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
+    private val findOpenLogForDayUseCase: FindOpenLogForDayUseCase,
     private val getExerciseSubstitutionsUseCase: GetExerciseSubstitutionsUseCase,
     private val getTrainingPlanDetailUseCase: GetTrainingPlanDetailUseCase,
     private val savedStateHandle: SavedStateHandle,
@@ -114,11 +113,18 @@ class WorkoutSessionViewModel @Inject constructor(
     private var warmUpProtocol: WarmUpProtocol? = null
     private var existingBackendSets: List<WorkoutSetLog> = emptyList()
     private var backendLogCreationInFlight = false
-    private val pendingSetDtos = mutableListOf<LogWorkoutSetRequestDto>()
+    private val pendingSets = mutableListOf<PendingSetUpload>()
     private val persistedSetIds = mutableSetOf<String>()
+    /** Server-side (exerciseId, setNumber) keys already stored — avoids duplicate POSTs. */
+    private val serverPersistedSetKeys = mutableSetOf<Pair<String, Int>>()
     private val logCreationMutex = Mutex()
     /** Sets included in the last successful bulk POST /workout-logs (finalize path). */
     private var lastBulkCreateSetCount = 0
+
+    private data class PendingSetUpload(
+        val localSetId: String,
+        val dto: LogWorkoutSetRequestDto,
+    )
 
     init {
         val planId = savedStateHandle.get<String>("planId") ?: ""
@@ -177,31 +183,32 @@ class WorkoutSessionViewModel @Inject constructor(
                 ghostSets = ghostResult.data?.sets ?: emptyList()
             }
 
-            // Check if a session log already exists for today (e.g. app was closed mid-session).
+            // Check if a session log already exists for today (direct API; not filtered by pending deletes).
             val today = LocalDate.now().toString()
-            val historyResult = getWorkoutHistoryUseCase(planId = currentPlanId, from = today, to = today)
-                .filter { it !is Result.Loading }
-                .first()
-            val todaysLog = (historyResult as? Result.Success)?.data
-                ?.find { it.trainingDayId == currentDayId }
-            when {
-                todaysLog != null && todaysLog.isLocked -> {
-                    // Session already finalized — navigate away instead of re-opening.
-                    Log.i("AIFIT_LOAD", "Session for dayId=$currentDayId is already locked, navigating away")
-                    _events.send(WorkoutSessionUiEvent.SessionAlreadyLocked)
-                    return@launch
+            when (val openLogResult = findOpenLogForDayUseCase(currentPlanId, currentDayId, today)) {
+                is Result.Success -> {
+                    val todaysLog = openLogResult.data
+                    when {
+                        todaysLog != null && todaysLog.isLocked -> {
+                            Log.i("AIFIT_LOAD", "Session for dayId=$currentDayId is already locked, navigating away")
+                            _events.send(WorkoutSessionUiEvent.SessionAlreadyLocked)
+                            return@launch
+                        }
+                        todaysLog != null -> {
+                            Log.i("AIFIT_LOAD", "Resuming existing session for dayId=$currentDayId, logId=${todaysLog.id}")
+                            applyRecoveredLog(todaysLog)
+                            existingBackendSets = todaysLog.sets
+                        }
+                        else -> {
+                            existingBackendSets = emptyList()
+                        }
+                    }
                 }
-                todaysLog != null -> {
-                    // Session was started but not yet finalized — resume it.
-                    Log.i("AIFIT_LOAD", "Resuming existing session for dayId=$currentDayId, logId=${todaysLog.id}")
-                    backendLogId = todaysLog.id
-                    existingBackendSets = todaysLog.sets
-                    persistedSetIds.clear()
-                    persistedSetIds.addAll(existingBackendSets.map { it.id })
-                }
-                else -> {
+                is Result.Error -> {
+                    Log.w("AIFIT_LOAD", "findOpenLogForDay failed: ${openLogResult.exception.message}")
                     existingBackendSets = emptyList()
                 }
+                else -> existingBackendSets = emptyList()
             }
 
             when (val warmUpResult = getWarmUpProtocolUseCase(planId, dayId)) {
@@ -406,7 +413,6 @@ class WorkoutSessionViewModel @Inject constructor(
 
             val needBulkCreate = backendLogId == null
             val allSetDtos = sessionData.registeredSets.map { it.toRequestDto() }
-            val unsyncedSets = sessionData.registeredSets.filter { it.id !in persistedSetIds }
 
             val logId = ensureBackendLogId(
                 setsForCreate = if (needBulkCreate && allSetDtos.isNotEmpty()) allSetDtos else emptyList(),
@@ -418,7 +424,7 @@ class WorkoutSessionViewModel @Inject constructor(
 
             when {
                 needBulkCreate && lastBulkCreateSetCount == sessionData.registeredSets.size -> {
-                    persistedSetIds.addAll(sessionData.registeredSets.map { it.id })
+                    markAllLocalSetsPersisted(sessionData.registeredSets)
                 }
                 else -> {
                     for (set in sessionData.registeredSets.filter { it.id !in persistedSetIds }) {
@@ -463,16 +469,16 @@ class WorkoutSessionViewModel @Inject constructor(
             return
         }
         if (backendLogCreationInFlight) {
-            pendingSetDtos.add(setDto)
+            enqueuePendingSet(localSetId, setDto)
             return
         }
         val logId = ensureBackendLogId(setsForCreate = createLogWithSets)
         if (logId == null) {
-            pendingSetDtos.add(setDto)
+            enqueuePendingSet(localSetId, setDto)
             return
         }
         if (createLogWithSets.isNotEmpty() && lastBulkCreateSetCount > 0) {
-            persistedSetIds.add(localSetId)
+            markLocalSetPersisted(localSetId, setDto)
             lastBulkCreateSetCount = 0
         } else {
             enqueueSetUpload(logId, setDto, localSetId)
@@ -507,6 +513,10 @@ class WorkoutSessionViewModel @Inject constructor(
                 is Result.Success -> {
                     backendLogId = result.data.id
                     lastBulkCreateSetCount = setsForCreate.size
+                    registerServerSets(result.data.sets)
+                    setsForCreate.forEach { dto ->
+                        serverPersistedSetKeys.add(setKey(dto))
+                    }
                     Log.i("AIFIT_REGISTER", "Backend log created: ${result.data.id}")
                     flushPendingSetQueue()
                     backendLogId
@@ -540,20 +550,56 @@ class WorkoutSessionViewModel @Inject constructor(
 
     private suspend fun recoverExistingLogId(): String? {
         val today = LocalDate.now().toString()
-        val historyResult = getWorkoutHistoryUseCase(currentPlanId, from = today, to = today)
-            .filter { it !is Result.Loading }
-            .first()
-        return (historyResult as? Result.Success)?.data
-            ?.find { it.trainingDayId == currentDayId }
-            ?.id
+        return when (val result = findOpenLogForDayUseCase(currentPlanId, currentDayId, today)) {
+            is Result.Success -> {
+                val log = result.data ?: return null
+                applyRecoveredLog(log)
+                log.id
+            }
+            else -> null
+        }
+    }
+
+    private fun applyRecoveredLog(log: WorkoutLog) {
+        backendLogId = log.id
+        persistedSetIds.clear()
+        serverPersistedSetKeys.clear()
+        registerServerSets(log.sets)
+    }
+
+    private fun registerServerSets(sets: List<WorkoutSetLog>) {
+        sets.forEach { set ->
+            serverPersistedSetKeys.add(set.trainingExerciseId to set.exerciseSetNumber)
+        }
+    }
+
+    private fun enqueuePendingSet(localSetId: String, dto: LogWorkoutSetRequestDto) {
+        if (pendingSets.none { it.localSetId == localSetId }) {
+            pendingSets.add(PendingSetUpload(localSetId, dto))
+        }
     }
 
     private suspend fun flushPendingSetQueue() {
         val logId = backendLogId ?: return
-        val queued = pendingSetDtos.toList()
-        pendingSetDtos.clear()
-        for (dto in queued) {
-            uploadSet(logId, dto)
+        val queued = pendingSets.toList()
+        pendingSets.clear()
+        for (pending in queued) {
+            if (pending.localSetId in persistedSetIds) continue
+            uploadSet(logId, pending.dto, pending.localSetId)
+        }
+    }
+
+    private fun setKey(dto: LogWorkoutSetRequestDto): Pair<String, Int> =
+        dto.trainingExerciseId to dto.exerciseSetNumber
+
+    private fun markLocalSetPersisted(localSetId: String, dto: LogWorkoutSetRequestDto) {
+        persistedSetIds.add(localSetId)
+        serverPersistedSetKeys.add(setKey(dto))
+    }
+
+    private fun markAllLocalSetsPersisted(sets: List<WorkoutSetLog>) {
+        sets.forEach { set ->
+            markLocalSetPersisted(set.id, set.toRequestDto())
         }
     }
 
@@ -570,8 +616,13 @@ class WorkoutSessionViewModel @Inject constructor(
         setDto: LogWorkoutSetRequestDto,
         localSetId: String? = null,
     ) {
+        val key = setKey(setDto)
+        if (key in serverPersistedSetKeys) {
+            localSetId?.let { markLocalSetPersisted(it, setDto) }
+            return
+        }
         when (val result = addSetToLogUseCase(logId, setDto)) {
-            is Result.Success -> localSetId?.let { persistedSetIds.add(it) }
+            is Result.Success -> localSetId?.let { markLocalSetPersisted(it, setDto) }
             is Result.Error -> {
                 Log.e("AIFIT_REGISTER", "addSetToLog failed: ${result.exception.message}")
                 _events.send(WorkoutSessionUiEvent.ShowSnackbar(result.exception.toMessage()))
@@ -605,8 +656,9 @@ class WorkoutSessionViewModel @Inject constructor(
                 viewModelScope.launch { deleteWorkoutLogUseCase(logId) }
             }
             backendLogId = null
-            pendingSetDtos.clear()
+            pendingSets.clear()
             persistedSetIds.clear()
+            serverPersistedSetKeys.clear()
 
             _events.send(WorkoutSessionUiEvent.NavigateBack)
         }

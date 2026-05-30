@@ -25,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -50,6 +51,7 @@ import com.jlsh.aifit.core.ui.components.layout.ScreenScaffold
 import com.jlsh.aifit.core.ui.components.list.SwipeableListItem
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.core.ui.theme.CardShape
 import com.jlsh.aifit.feature.chat.domain.model.ChatSession
 import com.jlsh.aifit.feature.chat.domain.model.ChatSessionStatus
 import com.jlsh.aifit.feature.chat.ui.state.ChatListUiState
@@ -185,17 +187,30 @@ private fun SessionRow(
     onRename: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = CardShape,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(start = AiFitSpacing.sm, end = 0.dp, top = AiFitSpacing.xs, bottom = AiFitSpacing.xs),
+            .padding(horizontal = AiFitSpacing.md, vertical = AiFitSpacing.sm),
+        verticalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
     ) {
-        // ── Row 1: title (truncated) + archived badge ───────────────────
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.sm),
         ) {
+            Icon(
+                imageVector = PhosphorIcons.Regular.ChatCircleDots,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp),
+            )
             Text(
                 text = session.title,
                 style = MaterialTheme.typography.titleSmall,
@@ -209,10 +224,10 @@ private fun SessionRow(
             }
         }
 
-        // ── Row 2: messages | date | buttons ────────────────────────────
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(AiFitSpacing.xs),
         ) {
             Text(
                 text = stringResource(R.string.chat_message_count, session.messageCount),
@@ -242,6 +257,7 @@ private fun SessionRow(
                 )
             }
         }
+    }
     }
 }
 

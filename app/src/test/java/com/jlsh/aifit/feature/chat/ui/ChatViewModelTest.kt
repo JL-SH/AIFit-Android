@@ -264,13 +264,26 @@ class ChatViewModelTest {
     }
 
     @Test
-    fun `loadSession con Loading pone isLoading en true`() = runTest {
-        every { getChatSessionUseCase("s1") } returns flowOf(Result.Loading)
+    fun `loadSession mantiene isLoading hasta que el flujo termina`() = runTest {
+        val cachedEmpty = fakeChatSession(id = "s1", title = "Cached", messages = emptyList())
+        val remote = fakeChatSession(
+            id = "s1",
+            title = "Cached",
+            messages = listOf(fakeChatMessage(id = "m1", content = "Hola")),
+        )
+        every { getChatSessionUseCase("s1") } returns flowOf(
+            Result.Loading,
+            Result.Success(cachedEmpty),
+            Result.Success(remote),
+        )
 
         val vm = buildViewModel(sessionId = "s1")
         advanceUntilIdle()
 
-        assertTrue(vm.chatState.value.isLoading)
+        val state = vm.chatState.value
+        assertFalse(state.isLoading)
+        assertEquals(1, state.messages.size)
+        assertEquals("Hola", state.messages.first().content)
     }
 
     // ── onInputChanged ──────────────────────────────────────────────────────

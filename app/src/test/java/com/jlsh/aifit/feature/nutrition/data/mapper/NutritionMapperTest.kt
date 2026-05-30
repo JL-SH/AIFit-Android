@@ -134,5 +134,18 @@ class NutritionMapperTest {
         assertEquals(42.0, result.totalFatGrams, 0.01)
         assertTrue(result.meals.isEmpty())
     }
+
+    @Test
+    fun `toEntity y toDomain preservan comidas en mealsJson`() {
+        val log = fakeNutritionLog(
+            meals = listOf(fakeMealLog(id = "meal-99", name = "Ensalada")),
+        )
+
+        val roundTripped = log.toEntity().toDomain()
+
+        assertEquals(1, roundTripped.meals.size)
+        assertEquals("meal-99", roundTripped.meals.first().id)
+        assertEquals("Ensalada", roundTripped.meals.first().name)
+    }
 }
 

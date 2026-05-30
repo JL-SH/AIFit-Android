@@ -83,6 +83,7 @@ dependencies {
 
     // Core
     implementation(libs.androidx.core.ktx)
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     // Compose
     implementation(platform(libs.compose.bom))

@@ -9,8 +9,11 @@ import com.jlsh.aifit.feature.nutrition.data.mapper.NutritionMapper.toDomain
 import com.jlsh.aifit.feature.nutrition.data.mapper.NutritionMapper.toEntity
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.repository.NutritionTargetRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class NutritionTargetRepositoryImpl @Inject constructor(
@@ -21,7 +24,7 @@ class NutritionTargetRepositoryImpl @Inject constructor(
     override fun getCurrentTarget(): Flow<Result<NutritionTarget>> = flow {
         emit(Result.Loading)
 
-        val cached = dao.getCurrent()
+        val cached = withContext(Dispatchers.IO) { dao.getCurrent() }
         if (cached != null) {
             emit(Result.Success(cached.toDomain()))
         }
@@ -37,7 +40,7 @@ class NutritionTargetRepositoryImpl @Inject constructor(
             }
             else -> Unit
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     override suspend fun updateTarget(request: UpdateNutritionTargetRequestDto): Result<NutritionTarget> {
         return when (val remote = safeApiCall { apiService.updateTarget(request) }) {

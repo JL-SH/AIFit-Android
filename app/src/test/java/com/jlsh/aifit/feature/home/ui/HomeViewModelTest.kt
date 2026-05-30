@@ -5,6 +5,8 @@ import app.cash.turbine.test
 import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
+import com.jlsh.aifit.feature.diet.domain.DietActivePlanNotifier
+import com.jlsh.aifit.feature.diet.domain.usecase.GetCachedDietPlansUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.gamification.domain.model.Streak
@@ -12,10 +14,12 @@ import com.jlsh.aifit.feature.gamification.domain.usecase.GetAllAchievementDefin
 import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserAchievementsUseCase
 import com.jlsh.aifit.feature.gamification.domain.usecase.GetUserStreaksUseCase
 import com.jlsh.aifit.feature.home.domain.model.HomeBootstrap
+import com.jlsh.aifit.feature.home.domain.usecase.GetCachedHomeBootstrapUseCase
 import com.jlsh.aifit.feature.home.domain.usecase.GetHomeBootstrapUseCase
 import com.jlsh.aifit.feature.home.ui.state.HomeUiEvent
 import com.jlsh.aifit.feature.home.ui.state.HomeUiState
 import com.jlsh.aifit.feature.home.ui.state.NextMealState
+import com.jlsh.aifit.feature.nutrition.domain.NutritionLogChangeNotifier
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTargetUseCase
@@ -29,11 +33,16 @@ import com.jlsh.aifit.feature.progress.domain.usecase.LogBodyWeightUseCase
 import com.jlsh.aifit.feature.training.domain.model.PlanStatus
 import com.jlsh.aifit.feature.training.domain.model.TrainingDayType
 import com.jlsh.aifit.feature.training.domain.model.TrainingPlan
+import com.jlsh.aifit.feature.training.domain.TrainingActivePlanNotifier
+import com.jlsh.aifit.feature.training.domain.usecase.GetCachedTrainingPlansUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlanDetailUseCase
 import com.jlsh.aifit.feature.training.domain.usecase.GetTrainingPlansUseCase
+import com.jlsh.aifit.feature.training.domain.usecase.PrefetchTrainingPlanDetailsUseCase
 import com.jlsh.aifit.feature.user.domain.model.UserProfile
 import com.jlsh.aifit.feature.user.domain.usecase.GetUserProfileUseCase
 import com.jlsh.aifit.feature.workout.domain.model.WorkoutLog
+import com.jlsh.aifit.feature.workout.domain.WorkoutHistoryNotifier
+import com.jlsh.aifit.feature.workout.domain.usecase.GetCachedWorkoutLogsUseCase
 import com.jlsh.aifit.feature.workout.domain.usecase.GetWorkoutHistoryUseCase
 import com.jlsh.aifit.testutil.*
 import io.mockk.*
@@ -75,6 +84,15 @@ class HomeViewModelTest {
     private val logBodyWeightUseCase: LogBodyWeightUseCase = mockk()
     private val trackMealUseCase: TrackMealUseCase = mockk()
     private val getHomeBootstrapUseCase: GetHomeBootstrapUseCase = mockk()
+    private val getCachedHomeBootstrapUseCase: GetCachedHomeBootstrapUseCase = mockk()
+    private val getCachedTrainingPlansUseCase: GetCachedTrainingPlansUseCase = mockk()
+    private val trainingActivePlanNotifier = TrainingActivePlanNotifier()
+    private val getCachedDietPlansUseCase: GetCachedDietPlansUseCase = mockk()
+    private val dietActivePlanNotifier = DietActivePlanNotifier()
+    private val prefetchTrainingPlanDetailsUseCase: PrefetchTrainingPlanDetailsUseCase = mockk(relaxed = true)
+    private val workoutHistoryNotifier = WorkoutHistoryNotifier()
+    private val nutritionLogChangeNotifier = NutritionLogChangeNotifier()
+    private val getCachedWorkoutLogsUseCase: GetCachedWorkoutLogsUseCase = mockk()
 
     @Before
     fun setUp() {
@@ -119,7 +137,14 @@ class HomeViewModelTest {
         workoutHistoryFlow: Flow<Result<List<WorkoutLog>>> =
             flowOf(Result.Success(emptyList())),
         bootstrapResult: Result<HomeBootstrap> = Result.Error(AppException.NetworkException),
+        cachedBootstrap: HomeBootstrap? = null,
+        cachedTrainingPlans: List<TrainingPlan> = emptyList(),
+        cachedDietPlans: List<DietPlan> = emptyList(),
     ): HomeViewModel {
+        coEvery { getCachedHomeBootstrapUseCase() } returns cachedBootstrap
+        coEvery { getCachedTrainingPlansUseCase() } returns cachedTrainingPlans
+        coEvery { getCachedDietPlansUseCase() } returns cachedDietPlans
+        coEvery { getCachedWorkoutLogsUseCase(from = any(), to = any(), planId = any()) } returns emptyList()
         every { getUserProfileUseCase() } returns profileFlow
         every { getTrainingPlansUseCase() } returns plansFlow
         coEvery { getTrainingPlanDetailUseCase(any()) } returns planDetailResult
@@ -154,6 +179,15 @@ class HomeViewModelTest {
             logBodyWeightUseCase,
             trackMealUseCase,
             getHomeBootstrapUseCase,
+            getCachedHomeBootstrapUseCase,
+            getCachedTrainingPlansUseCase,
+            trainingActivePlanNotifier,
+            prefetchTrainingPlanDetailsUseCase,
+            getCachedDietPlansUseCase,
+            dietActivePlanNotifier,
+            workoutHistoryNotifier,
+            nutritionLogChangeNotifier,
+            getCachedWorkoutLogsUseCase,
         )
     }
 
@@ -1146,6 +1180,148 @@ class HomeViewModelTest {
 
         val after = vm.uiState.value as HomeUiState.Success
         assertEquals(newUrl, after.avatarUrl)
+    }
+
+    @Test
+    fun `notifier de plan activo actualiza Home sin onResumed`() = runTest {
+        val planA = fakeTrainingPlan(
+            id = "plan-a",
+            name = "Plan A",
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeTrainingDay(dayType = TrainingDayType.REST)),
+        )
+        val planB = fakeTrainingPlan(
+            id = "plan-b",
+            name = "Plan B",
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeTrainingDay(id = "day-b", dayType = TrainingDayType.TRAINING)),
+        )
+
+        val vm = createViewModel(
+            plansFlow = flowOf(Result.Success(listOf(planA))),
+            planDetailResult = Result.Success(planA),
+            cachedTrainingPlans = listOf(planA),
+            bootstrapResult = Result.Success(
+                HomeBootstrap(
+                    profile = fakeUserProfile(),
+                    activeTrainingPlan = planA,
+                    nutritionLog = fakeNutritionLog(),
+                    nutritionTarget = fakeNutritionTarget(),
+                    weeklySummary = fakeWeeklyProgressSummary(),
+                    streaks = emptyList(),
+                    achievements = emptyList(),
+                    todayWorkouts = emptyList(),
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        val before = vm.uiState.value as HomeUiState.Success
+        assertEquals("plan-a", before.activePlan?.id)
+
+        coEvery { getCachedTrainingPlansUseCase() } returns listOf(planB)
+        coEvery { getTrainingPlanDetailUseCase.fromCache("plan-b") } returns planB
+        trainingActivePlanNotifier.notifyActivePlanChanged("plan-b")
+        advanceUntilIdle()
+
+        val after = vm.uiState.value as HomeUiState.Success
+        assertEquals("plan-b", after.activePlan?.id)
+        assertEquals("Plan B", after.activePlan?.name)
+    }
+
+    @Test
+    fun `notificacion optimista actualiza Home al instante sin esperar Room`() = runTest {
+        val planA = fakeTrainingPlan(
+            id = "plan-a",
+            name = "Plan A",
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeTrainingDay(dayType = TrainingDayType.REST)),
+        )
+        val planB = fakeTrainingPlan(
+            id = "plan-b",
+            name = "Plan B",
+            status = PlanStatus.ACTIVE,
+            days = listOf(fakeTrainingDay(id = "day-b", dayType = TrainingDayType.TRAINING)),
+        )
+
+        coEvery { getCachedTrainingPlansUseCase() } returns listOf(planA)
+
+        val vm = createViewModel(
+            plansFlow = flowOf(Result.Success(listOf(planA))),
+            planDetailResult = Result.Success(planA),
+            cachedTrainingPlans = listOf(planA),
+            bootstrapResult = Result.Success(
+                HomeBootstrap(
+                    profile = fakeUserProfile(),
+                    activeTrainingPlan = planA,
+                    nutritionLog = fakeNutritionLog(),
+                    nutritionTarget = fakeNutritionTarget(),
+                    weeklySummary = fakeWeeklyProgressSummary(),
+                    streaks = emptyList(),
+                    achievements = emptyList(),
+                    todayWorkouts = emptyList(),
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        coEvery { getTrainingPlanDetailUseCase.fromCache("plan-b") } returns planB
+        trainingActivePlanNotifier.notifyOptimisticActivePlanChange("plan-b", "Plan B")
+        advanceUntilIdle()
+
+        val after = vm.uiState.value as HomeUiState.Success
+        assertEquals("plan-b", after.activePlan?.id)
+        assertEquals("Plan B", after.activePlan?.name)
+    }
+
+    @Test
+    fun `notifier de sesion finalizada marca todayTraining completado al instante`() = runTest {
+        val trainingDay = fakeTrainingDay(
+            id = "day-1",
+            dayType = TrainingDayType.TRAINING,
+            exercises = listOf(fakeTrainingExercise()),
+        )
+        val plan = fakeTrainingPlan(
+            id = "plan-1",
+            status = PlanStatus.ACTIVE,
+            days = listOf(trainingDay),
+        )
+        val lockedLog = fakeWorkoutLog(
+            trainingPlanId = "plan-1",
+            trainingDayId = "day-1",
+            isLocked = true,
+            date = LocalDate.now(),
+        )
+
+        val vm = createViewModel(
+            plansFlow = flowOf(Result.Success(listOf(plan))),
+            planDetailResult = Result.Success(plan),
+            workoutHistoryFlow = flowOf(Result.Success(emptyList())),
+            cachedTrainingPlans = listOf(plan),
+            bootstrapResult = Result.Success(
+                HomeBootstrap(
+                    profile = fakeUserProfile(),
+                    activeTrainingPlan = plan,
+                    nutritionLog = fakeNutritionLog(),
+                    nutritionTarget = fakeNutritionTarget(),
+                    weeklySummary = fakeWeeklyProgressSummary(),
+                    streaks = emptyList(),
+                    achievements = emptyList(),
+                    todayWorkouts = emptyList(),
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        val before = vm.uiState.value as HomeUiState.Success
+        requireNotNull(before.todayTraining)
+        assertFalse(before.todayTraining!!.isCompleted)
+
+        workoutHistoryNotifier.notifyWorkoutFinalized(lockedLog)
+        advanceUntilIdle()
+
+        val after = vm.uiState.value as HomeUiState.Success
+        assertTrue(after.todayTraining!!.isCompleted)
     }
 }
 

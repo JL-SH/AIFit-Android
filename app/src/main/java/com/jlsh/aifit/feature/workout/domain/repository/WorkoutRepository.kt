@@ -11,9 +11,15 @@ interface WorkoutRepository {
     suspend fun logSession(request: LogWorkoutSessionRequestDto): Result<WorkoutLog>
     suspend fun addSetToLog(logId: String, set: LogWorkoutSetRequestDto): Result<Unit>
     fun getHistory(planId: String?, from: String?, to: String?): Flow<Result<List<WorkoutLog>>>
+    suspend fun getCachedWorkoutLogs(
+        planId: String? = null,
+        from: String? = null,
+        to: String? = null,
+    ): List<WorkoutLog>
     suspend fun getLogDetail(id: String): Result<WorkoutLog>
     suspend fun deleteLog(id: String): Result<Unit>
     suspend fun finalizeWorkoutSession(logId: String, systemicFatigue: Int, jointPainReport: List<JointPainEntry>): Result<WorkoutLog>
     suspend fun getPreviousSessionForDay(planId: String, dayId: String): Result<WorkoutLog?>
+    suspend fun findOpenLogForDay(planId: String, dayId: String, date: String): Result<WorkoutLog?>
 }
 

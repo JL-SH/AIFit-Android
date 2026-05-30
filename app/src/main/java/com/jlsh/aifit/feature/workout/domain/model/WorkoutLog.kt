@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 data class WorkoutLog(
     val id: String,
-    val trainingPlanId: String,
+    val trainingPlanId: String?,
     val trainingDayId: String,
     val date: LocalDate,
     val durationMinutes: Int?,

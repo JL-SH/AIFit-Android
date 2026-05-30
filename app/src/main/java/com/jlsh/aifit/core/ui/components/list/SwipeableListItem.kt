@@ -19,12 +19,13 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import com.jlsh.aifit.core.ui.theme.AIFitTheme
 import com.jlsh.aifit.core.ui.theme.AiFitSpacing
+import com.jlsh.aifit.core.ui.theme.CardShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,12 +51,6 @@ fun SwipeableListItem(
         },
     )
 
-    LaunchedEffect(dismissState.currentValue) {
-        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
-            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
-        }
-    }
-
     SwipeToDismissBox(
         state = dismissState,
         modifier = modifier.fillMaxWidth(),
@@ -69,6 +64,7 @@ fun SwipeableListItem(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
+                            .clip(CardShape)
                             .background(MaterialTheme.colorScheme.errorContainer),
                         contentAlignment = Alignment.CenterEnd,
                     ) {
@@ -84,6 +80,7 @@ fun SwipeableListItem(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
+                            .clip(CardShape)
                             .background(MaterialTheme.colorScheme.tertiaryContainer),
                         contentAlignment = Alignment.CenterStart,
                     ) {
@@ -102,7 +99,7 @@ fun SwipeableListItem(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface),
+                    .clip(CardShape),
             ) {
                 content()
             }

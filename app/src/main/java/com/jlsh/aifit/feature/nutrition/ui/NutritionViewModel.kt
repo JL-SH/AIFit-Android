@@ -6,19 +6,26 @@ import com.jlsh.aifit.core.common.AppException
 import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.feature.diet.domain.model.DietPlan
 import com.jlsh.aifit.feature.diet.domain.model.Meal
+import com.jlsh.aifit.feature.diet.domain.DietActivePlanNotifier
+import com.jlsh.aifit.feature.nutrition.domain.NutritionLogChangeNotifier
+import com.jlsh.aifit.feature.nutrition.domain.model.NutritionLog
 import com.jlsh.aifit.feature.diet.domain.usecase.DeleteDietPlanUseCase
+import com.jlsh.aifit.feature.diet.domain.usecase.GetCachedDietPlansUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlanDetailUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.GetDietPlansUseCase
 import com.jlsh.aifit.feature.diet.domain.usecase.SetActiveDietPlanUseCase
 import com.jlsh.aifit.feature.nutrition.data.dto.AnalyzeMealFromTextRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.TrackFoodItemRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.TrackMealRequestDto
+import com.jlsh.aifit.feature.nutrition.data.dto.UpdateMealRequestDto
 import com.jlsh.aifit.feature.nutrition.data.dto.UpdateNutritionTargetRequestDto
 import com.jlsh.aifit.feature.nutrition.domain.usecase.AnalyzeMealFromTextUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.DeleteMealLogUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetCurrentNutritionTargetUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.GetNutritionLogUseCase
 import com.jlsh.aifit.feature.nutrition.domain.usecase.TrackMealUseCase
+import com.jlsh.aifit.feature.nutrition.domain.usecase.UpdateMealLogUseCase
+import com.jlsh.aifit.feature.nutrition.domain.model.NutritionTarget
 import com.jlsh.aifit.feature.nutrition.domain.usecase.UpdateNutritionTargetUseCase
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionHubUiState
 import com.jlsh.aifit.feature.nutrition.ui.state.NutritionTargetUiState
@@ -37,8 +44,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -62,11 +72,15 @@ class NutritionViewModel @Inject constructor(
     private val getDietPlansUseCase: GetDietPlansUseCase,
     private val getDietPlanDetailUseCase: GetDietPlanDetailUseCase,
     private val trackMealUseCase: TrackMealUseCase,
+    private val updateMealLogUseCase: UpdateMealLogUseCase,
     private val analyzeMealFromTextUseCase: AnalyzeMealFromTextUseCase,
     private val deleteMealLogUseCase: DeleteMealLogUseCase,
     private val updateNutritionTargetUseCase: UpdateNutritionTargetUseCase,
     private val setActiveDietPlanUseCase: SetActiveDietPlanUseCase,
     private val deleteDietPlanUseCase: DeleteDietPlanUseCase,
+    private val getCachedDietPlansUseCase: GetCachedDietPlansUseCase,
+    private val dietActivePlanNotifier: DietActivePlanNotifier,
+    private val nutritionLogChangeNotifier: NutritionLogChangeNotifier,
 ) : ViewModel() {
 
     private val _hubState = MutableStateFlow<NutritionHubUiState>(NutritionHubUiState.Loading)
@@ -104,6 +118,7 @@ class NutritionViewModel @Inject constructor(
 
     private var fetchDietPlansJob: Job? = null
     private var isDeletingPlan = false
+    private var suppressFirstResumeRefresh = true
 
     private val _refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
@@ -111,8 +126,18 @@ class NutritionViewModel @Inject constructor(
         fetchHubData()
         viewModelScope.launch {
             _refreshTrigger
-                .debounce(500L)
+                .debounce(200L)
                 .collect { fetchHubData() }
+        }
+        viewModelScope.launch {
+            dietActivePlanNotifier.activePlanChanges.collect {
+                refreshDietFromLocalCache()
+            }
+        }
+        viewModelScope.launch {
+            nutritionLogChangeNotifier.changes.collect { log ->
+                applyNutritionLogFromNotifier(log)
+            }
         }
     }
 
@@ -121,56 +146,92 @@ class NutritionViewModel @Inject constructor(
     private fun fetchHubData() {
         fetchDietPlansJob?.cancel()
         fetchDietPlansJob = viewModelScope.launch {
-            val logDeferred = async {
-                lastSuccessFromFlow(getNutritionLogUseCase(LocalDate.now()))
-            }
+            val today = LocalDate.now()
+            val logDeferred = async { loadLatestNutritionLog(today) }
             val targetDeferred = async {
                 getCurrentNutritionTargetUseCase()
                     .first { it !is Result.Loading }
                     .let { r -> if (r is Result.Success) r.data else null }
             }
+            val cachedPlansDeferred = async { sortDietPlans(getCachedDietPlansUseCase()) }
 
             val log = logDeferred.await()
             val target = targetDeferred.await()
+            val cachedPlans = cachedPlansDeferred.await()
+            val hadCachedPlans = cachedPlans.isNotEmpty()
 
-            if (_hubState.value is NutritionHubUiState.Loading) {
+            if (hadCachedPlans || log != null || target != null) {
+                applyHubSuccess(cachedPlans, log, target)
+                suppressFirstResumeRefresh = true
+            } else if (_hubState.value !is NutritionHubUiState.Success) {
                 _hubState.value = NutritionHubUiState.Loading
             }
 
-            getDietPlansUseCase().collect { result ->
-                when (result) {
-                    is Result.Success -> {
-                        val plans = sortDietPlans(result.data)
-                        safeLogDebug("fetchHubData: dietPlans=${plans.size}")
-                        val current = _hubState.value
-                        val filter = (current as? NutritionHubUiState.Success)?.selectedDietPlanFilter
-                        _hubState.value = NutritionHubUiState.Success(
-                            todayState = TodayState(nutritionLog = log, target = target),
-                            dietPlans = plans,
-                            selectedTabIndex = _selectedTabIndex.value,
-                            selectedDietPlanFilter = filter,
-                            isActivatingPlan = (current as? NutritionHubUiState.Success)?.isActivatingPlan == true,
-                        )
+            val planEmissions = getDietPlansUseCase()
+                .filter { it !is Result.Loading }
+                .take(if (hadCachedPlans) 2 else 1)
+                .toList()
+            val latestLog = loadLatestNutritionLog(today) ?: log
+            when (val planResult = planEmissions.lastOrNull()) {
+                is Result.Success -> {
+                    safeLogDebug("fetchHubData: dietPlans=${planResult.data.size}")
+                    applyHubSuccess(sortDietPlans(planResult.data), latestLog, target)
+                }
+                is Result.Error -> {
+                    if (!hadCachedPlans) {
+                        applyHubSuccess(emptyList(), latestLog, target)
+                    } else if (latestLog != log) {
+                        val current = _hubState.value as? NutritionHubUiState.Success
+                        if (current != null) {
+                            applyHubSuccess(current.dietPlans, latestLog, target)
+                        }
                     }
-                    is Result.Error -> {
-                        val current = _hubState.value
-                        val filter = (current as? NutritionHubUiState.Success)?.selectedDietPlanFilter
-                        _hubState.value = NutritionHubUiState.Success(
-                            todayState = TodayState(nutritionLog = log, target = target),
-                            dietPlans = emptyList(),
-                            selectedTabIndex = _selectedTabIndex.value,
-                            selectedDietPlanFilter = filter,
-                            isActivatingPlan = false,
-                        )
-                    }
-                    is Result.Loading -> {
-                        if (_hubState.value !is NutritionHubUiState.Success) {
-                            _hubState.value = NutritionHubUiState.Loading
+                }
+                else -> {
+                    if (latestLog != log) {
+                        val current = _hubState.value as? NutritionHubUiState.Success
+                        if (current != null) {
+                            applyHubSuccess(current.dietPlans, latestLog, target)
                         }
                     }
                 }
             }
         }
+    }
+
+    /** Cache-first, then optional network emission (up to two Success values). */
+    private suspend fun loadLatestNutritionLog(today: LocalDate): NutritionLog? =
+        when (
+            val last = getNutritionLogUseCase(today)
+                .filter { it !is Result.Loading }
+                .take(2)
+                .toList()
+                .lastOrNull()
+        ) {
+            is Result.Success -> last.data
+            else -> null
+        }
+
+    private fun applyNutritionLogFromNotifier(log: NutritionLog) {
+        if (log.date != LocalDate.now()) return
+        val current = _hubState.value as? NutritionHubUiState.Success ?: return
+        applyHubSuccess(current.dietPlans, log, current.todayState.target)
+    }
+
+    private fun applyHubSuccess(
+        dietPlans: List<DietPlan>,
+        log: NutritionLog?,
+        target: NutritionTarget?,
+    ) {
+        val current = _hubState.value
+        val filter = (current as? NutritionHubUiState.Success)?.selectedDietPlanFilter
+        _hubState.value = NutritionHubUiState.Success(
+            todayState = TodayState(nutritionLog = log, target = target),
+            dietPlans = dietPlans,
+            selectedTabIndex = _selectedTabIndex.value,
+            selectedDietPlanFilter = filter,
+            isActivatingPlan = (current as? NutritionHubUiState.Success)?.isActivatingPlan == true,
+        )
     }
 
     private fun sortDietPlans(plans: List<DietPlan>): List<DietPlan> =
@@ -214,6 +275,10 @@ class NutritionViewModel @Inject constructor(
     /** Reload log of the day, goals and diet plans (with internal debounce).*/
     fun onRefresh() {
         if (isDeletingPlan) return
+        if (suppressFirstResumeRefresh) {
+            suppressFirstResumeRefresh = false
+            return
+        }
         _refreshTrigger.tryEmit(Unit)
     }
 
@@ -228,6 +293,19 @@ class NutritionViewModel @Inject constructor(
                 is Result.Success -> {
                     emitEvent(NutritionUiEvent.MealDeleted)
                     emitEvent(NutritionUiEvent.ShowSnackbar("Comida eliminada"))
+                    fetchHubData()
+                }
+                is Result.Error -> emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.userMessage()))
+                else -> Unit
+            }
+        }
+    }
+
+    fun onUpdateMeal(mealId: String, request: UpdateMealRequestDto) {
+        viewModelScope.launch {
+            when (val result = updateMealLogUseCase(mealId, request)) {
+                is Result.Success -> {
+                    emitEvent(NutritionUiEvent.ShowSnackbar("Comida actualizada"))
                     fetchHubData()
                 }
                 is Result.Error -> emitEvent(NutritionUiEvent.ShowSnackbar(result.exception.userMessage()))
@@ -492,18 +570,28 @@ class NutritionViewModel @Inject constructor(
 
     // ===== HELPERS =====
 
+    private suspend fun refreshDietFromLocalCache() {
+        val cachedPlans = sortDietPlans(getCachedDietPlansUseCase())
+        val current = _hubState.value
+        if (current is NutritionHubUiState.Success) {
+            _hubState.value = current.copy(dietPlans = cachedPlans)
+        }
+        _planPickerMeals.value = loadActivePlanMealsForToday()
+    }
+
     private suspend fun loadActivePlanMealsForToday(): List<Meal> {
-        val hub = _hubState.value as? NutritionHubUiState.Success ?: return emptyList()
-        val activePlan = hub.dietPlans.firstOrNull { it.status == PlanStatus.ACTIVE }
+        val activePlanId = (_hubState.value as? NutritionHubUiState.Success)
+            ?.dietPlans
+            ?.firstOrNull { it.status == PlanStatus.ACTIVE }
+            ?.id
+            ?: getCachedDietPlansUseCase().firstOrNull { it.status == PlanStatus.ACTIVE }?.id
             ?: return emptyList()
-        val planWithDays = if (activePlan.days.isNotEmpty()) {
-            activePlan
-        } else {
-            when (val result = getDietPlanDetailUseCase(activePlan.id)) {
+
+        val planWithDays = getDietPlanDetailUseCase.fromCache(activePlanId)
+            ?: when (val result = getDietPlanDetailUseCase(activePlanId)) {
                 is Result.Success -> result.data
                 else -> return emptyList()
             }
-        }
         return mealsForToday(planWithDays)
     }
 
@@ -520,12 +608,6 @@ class NutritionViewModel @Inject constructor(
 
     private fun safeLogDebug(message: String) {
         runCatching { android.util.Log.d("AIFIT_DEBUG", "[NutritionVM] $message") }
-    }
-
-    private suspend fun <T> lastSuccessFromFlow(flow: kotlinx.coroutines.flow.Flow<Result<T>>): T? {
-        var latest: T? = null
-        flow.collect { if (it is Result.Success) latest = it.data }
-        return latest
     }
 
     private fun mealsForToday(plan: DietPlan): List<Meal> {

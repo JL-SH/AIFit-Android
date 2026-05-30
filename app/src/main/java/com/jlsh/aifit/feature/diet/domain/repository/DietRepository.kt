@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface DietRepository {
     fun getDietPlans(): Flow<Result<List<DietPlan>>>
+    suspend fun getCachedDietPlans(): List<DietPlan>
+    suspend fun getCachedDietPlanDetail(planId: String): DietPlan?
     suspend fun getDietPlanDetail(planId: String): Result<DietPlan>
     suspend fun generateDietPlan(request: GenerateDietPlanRequestDto): Result<DietPlan>
     suspend fun generateAdaptiveDietPlan(request: GenerateAdaptiveDietPlanRequestDto): Result<DietPlan>

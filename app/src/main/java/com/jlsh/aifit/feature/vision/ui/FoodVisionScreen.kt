@@ -78,14 +78,12 @@ import com.jlsh.aifit.feature.vision.ui.state.VisionUiState
  * analysis/result/error statuses and list of foods detected with macros.
  * Allows you to record the food or retry. Hide the bottom navigation bar.
  *
- * @param onNavigateBack Returns to the previous screen.
- * @param onNavigateToTrackMeal Navigate to the food record with serialized prefilled data.
+ * @param onNavigateBack Returns to the previous screen after save or cancellation.
  * @param viewModel ViewModel injected by Hilt.
  */
 @Composable
 fun FoodVisionScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToTrackMeal: (prefilled: String) -> Unit,
     viewModel: VisionViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -125,8 +123,10 @@ fun FoodVisionScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is VisionUiEvent.NavigateToTrackMeal -> onNavigateToTrackMeal(event.prefilled)
                 is VisionUiEvent.NavigateBack -> onNavigateBack()
+                is VisionUiEvent.MealLogged -> snackbarHostState.showSnackbar(
+                    context.getString(R.string.vision_meal_saved),
+                )
                 is VisionUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
             }
         }
@@ -183,6 +183,7 @@ fun FoodVisionScreen(
                     is VisionUiState.Result -> ResultOverlay(
                         paddingValues = paddingValues,
                         result = state.result,
+                        isSaving = state.isSaving,
                         onLogMeal = viewModel::onLogMeal,
                         onTryAgain = viewModel::onTryAgain,
                     )
@@ -318,6 +319,7 @@ private fun CameraContent(
 private fun ResultOverlay(
     paddingValues: PaddingValues,
     result: FoodPhotoAnalysisResult,
+    isSaving: Boolean,
     onLogMeal: () -> Unit,
     onTryAgain: () -> Unit,
 ) {
@@ -375,12 +377,15 @@ private fun ResultOverlay(
             Column(verticalArrangement = Arrangement.spacedBy(AiFitSpacing.sm)) {
                 PrimaryButton(
                     text = stringResource(R.string.vision_log_meal_btn),
+                    isLoading = isSaving,
                     onClick = onLogMeal,
+                    enabled = !isSaving,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 SecondaryButton(
                     text = stringResource(R.string.vision_try_again_btn),
                     onClick = onTryAgain,
+                    enabled = !isSaving,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

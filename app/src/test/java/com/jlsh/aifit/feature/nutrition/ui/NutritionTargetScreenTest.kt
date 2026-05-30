@@ -58,11 +58,15 @@ class NutritionTargetScreenTest {
             getDietPlansUseCase = getDietPlans,
             getDietPlanDetailUseCase = getDietPlanDetail,
             trackMealUseCase = mockk(),
+            updateMealLogUseCase = mockk(),
             analyzeMealFromTextUseCase = mockk(),
             deleteMealLogUseCase = mockk(),
             updateNutritionTargetUseCase = mockk(),
             setActiveDietPlanUseCase = mockk(),
             deleteDietPlanUseCase = mockk(),
+            getCachedDietPlansUseCase = mockk(relaxed = true),
+            dietActivePlanNotifier = com.jlsh.aifit.feature.diet.domain.DietActivePlanNotifier(),
+            nutritionLogChangeNotifier = com.jlsh.aifit.feature.nutrition.domain.NutritionLogChangeNotifier(),
         )
     }
 

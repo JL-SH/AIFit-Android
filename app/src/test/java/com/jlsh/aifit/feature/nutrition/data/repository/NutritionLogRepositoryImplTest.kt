@@ -5,6 +5,7 @@ import com.jlsh.aifit.core.common.Result
 import com.jlsh.aifit.core.network.ApiResponse
 import com.jlsh.aifit.feature.nutrition.data.api.NutritionLogApiService
 import com.jlsh.aifit.feature.nutrition.data.local.NutritionLogDao
+import com.jlsh.aifit.feature.nutrition.domain.NutritionLogChangeNotifier
 import com.jlsh.aifit.testutil.*
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -17,11 +18,12 @@ class NutritionLogRepositoryImplTest {
 
     private val apiService: NutritionLogApiService = mockk()
     private val dao: NutritionLogDao = mockk()
+    private val notifier: NutritionLogChangeNotifier = mockk(relaxed = true)
     private lateinit var sut: NutritionLogRepositoryImpl
 
     @Before
     fun setUp() {
-        sut = NutritionLogRepositoryImpl(apiService, dao)
+        sut = NutritionLogRepositoryImpl(apiService, dao, notifier)
     }
 
     // ─── getNutritionLog ───────────────────────────────────────────────────────
@@ -115,17 +117,24 @@ class NutritionLogRepositoryImplTest {
     // ─── trackMeal ─────────────────────────────────────────────────────────────
 
     @Test
-    fun `trackMeal retorna Success e invalida cache del día`() = runTest {
+    fun `trackMeal actualiza cache y notifica en lugar de borrar`() = runTest {
         val request = fakeTrackMealRequestDto()
+        val freshDto = fakeNutritionLogResponseDto()
         coEvery { apiService.trackMeal(request) } returns ApiResponse(
             success = true, data = fakeMealLogResponseDto(),
         )
-        coEvery { dao.deleteByDate(any()) } just Runs
+        coEvery { dao.getByDate(any()) } returns null
+        coEvery { dao.upsert(any()) } just Runs
+        coEvery { apiService.getNutritionLog(any()) } returns ApiResponse(
+            success = true, data = freshDto,
+        )
 
         val result = sut.trackMeal(request)
 
         assertTrue(result is Result.Success)
-        coVerify { dao.deleteByDate(any()) }
+        coVerify(atLeast = 1) { dao.upsert(any()) }
+        coVerify { notifier.notifyLogChanged(any()) }
+        coVerify(exactly = 0) { dao.deleteByDate(any()) }
     }
 
     @Test
@@ -141,17 +150,24 @@ class NutritionLogRepositoryImplTest {
     // ─── analyzeMealFromText ───────────────────────────────────────────────────
 
     @Test
-    fun `analyzeMealFromText retorna Success e invalida cache del día`() = runTest {
+    fun `analyzeMealFromText actualiza cache y notifica`() = runTest {
         val request = fakeAnalyzeMealFromTextRequestDto()
+        val freshDto = fakeNutritionLogResponseDto()
         coEvery { apiService.analyzeMealFromText(request) } returns ApiResponse(
             success = true, data = fakeMealLogResponseDto(),
         )
-        coEvery { dao.deleteByDate(any()) } just Runs
+        coEvery { dao.getByDate(any()) } returns null
+        coEvery { dao.upsert(any()) } just Runs
+        coEvery { apiService.getNutritionLog(any()) } returns ApiResponse(
+            success = true, data = freshDto,
+        )
 
         val result = sut.analyzeMealFromText(request)
 
         assertTrue(result is Result.Success)
-        coVerify { dao.deleteByDate(any()) }
+        coVerify(atLeast = 1) { dao.upsert(any()) }
+        coVerify { notifier.notifyLogChanged(any()) }
+        coVerify(exactly = 0) { dao.deleteByDate(any()) }
     }
 
     @Test
@@ -167,16 +183,21 @@ class NutritionLogRepositoryImplTest {
     // ─── deleteMealLog ─────────────────────────────────────────────────────────
 
     @Test
-    fun `deleteMealLog retorna Success e invalida cache`() = runTest {
+    fun `deleteMealLog refresca cache en lugar de borrarla`() = runTest {
+        val freshDto = fakeNutritionLogResponseDto()
         coEvery { apiService.deleteMealLog(any()) } returns ApiResponse(
             success = true, data = Unit,
         )
-        coEvery { dao.deleteByDate(any()) } just Runs
+        coEvery { apiService.getNutritionLog(any()) } returns ApiResponse(
+            success = true, data = freshDto,
+        )
+        coEvery { dao.upsert(any()) } just Runs
 
         val result = sut.deleteMealLog("meal-1")
 
         assertTrue(result is Result.Success)
-        coVerify { dao.deleteByDate(any()) }
+        coVerify { dao.upsert(any()) }
+        coVerify(exactly = 0) { dao.deleteByDate(any()) }
     }
 
     @Test
@@ -188,5 +209,3 @@ class NutritionLogRepositoryImplTest {
         assertTrue(result is Result.Error)
     }
 }
-
-
